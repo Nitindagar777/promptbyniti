@@ -214,14 +214,14 @@
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
-  padding: var(--space-3xl) var(--space-xl);
+  padding: var(--space-xl) var(--space-md);
   text-align: center;
   position: relative;
   overflow: hidden;
 }
 
 .p-cta__title {
-  font-size: 4rem;
+  font-size: clamp(2.5rem, 8vw, 4.5rem);
 }
 
 .p-cta__subtitle {

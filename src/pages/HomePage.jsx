@@ -144,12 +144,12 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
+            <br /> <br /> <br />
       {/* 05. TESTIMONIAL / CTA */}
-      <section className="p-cta container section-spacing">
+      <section className="p-cta container" style={{ paddingBottom: 'var(--space-2xl)' }}>
         <div className="p-cta__inner reveal">
           <div className="p-cta__content">
-            <h2 className="h-display p-cta__title">Start your journey today!</h2>
+            <h2 className="h-display p-cta__title">Start your <span className="text-orange">journey</span> <span className="text-cyan">today!</span></h2>
             <p className="p-cta__subtitle">Join 12,000+ creators who upgraded their AI game. No more guessing, just creating.</p>
             <Link to="/generate" className="btn btn-primary btn-xl">
               Get Started for Free <Sparkles size={20} />
