@@ -179,3 +179,27 @@ p {
 .text-pink { color: var(--color-pink) !important; }
 .text-blue { color: var(--color-blue) !important; }
 .text-green { color: var(--color-green) !important; }
+
+/* --- INPUTS --- */
+.textarea, .input {
+  width: 100%;
+  padding: 16px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  transition: var(--transition);
+  outline: none;
+}
+
+.textarea:focus, .input:focus {
+  border-color: var(--color-orange);
+  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.1);
+}
+
+.textarea {
+  min-height: 120px;
+  resize: vertical;
+}

@@ -5,7 +5,7 @@ import { useApp } from '../context/AppContext';
 import { generatePrompt } from '../data/promptEngine';
 import { categories, styles, moods, lightingOptions, cameraAngles, aiModels, promptTemplates } from '../data/promptData';
 import PromptOutput from '../components/PromptOutput';
-import { Sparkles, Zap, AlertTriangle, Lock, Crown, RefreshCw, Image as ImageIcon, Info } from 'lucide-react';
+import { Sparkles, Zap, AlertTriangle, Lock, Crown, RefreshCw, Image as ImageIcon, Info, ChevronDown, ChevronUp } from 'lucide-react';
 import './GeneratePage.css';
 
 export default function GeneratePage() {
@@ -27,6 +27,25 @@ export default function GeneratePage() {
   const [showPaywall, setShowPaywall] = useState(false);
   const [showMoreModels, setShowMoreModels] = useState(false);
   const [showMoreCategories, setShowMoreCategories] = useState(false);
+  const [showMoreStyles, setShowMoreStyles] = useState(false);
+  const [showMoreMoods, setShowMoreMoods] = useState(false);
+  const [showMoreLighting, setShowMoreLighting] = useState(false);
+  const [showMoreCamera, setShowMoreCamera] = useState(false);
+  
+  // Collapse state for sections
+  const [openSections, setOpenSections] = useState({
+    model: false,
+    category: false,
+    style: false,
+    mood: false,
+    lighting: false,
+    camera: false,
+    consistency: false
+  });
+
+  const toggleSection = (key) => {
+    setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
+  };
 
   /* Load template if passed in URL */
   useEffect(() => {
@@ -93,11 +112,6 @@ export default function GeneratePage() {
                 ? 'Unlimited credits'
                 : `${state.credits} credits remaining`}
             </span>
-            {!isPremium && (
-              <Link to="/pricing" className="generate-page__upgrade">
-                <Crown size={12} /> Upgrade
-              </Link>
-            )}
           </div>
         </div>
 
@@ -105,162 +119,270 @@ export default function GeneratePage() {
         <div className="generate-page__grid">
           <div className="generate-page__form">
             {/* AI Model Selection */}
-            <div className="gen-section" id="gen-model">
-              <h3 className="gen-section__title">AI Model Format</h3>
-              <div className="gen-chips gen-chips--wrap">
-                {aiModels.slice(0, showMoreModels ? aiModels.length : 6).map(m => (
-                  <button
-                    key={m.id}
-                    className={`gen-chip ${form.model === m.id ? 'gen-chip--active' : ''} ${m.premium && !isPremium ? 'gen-chip--locked' : ''}`}
-                    onClick={() => {
-                      if (m.premium && !isPremium) {
-                        setShowPaywall(true);
-                        return;
-                      }
-                      updateForm('model', m.id);
-                    }}
-                    id={`model-${m.id}`}
-                  >
-                    <span>{m.icon}</span>
-                    <span>{m.label}</span>
-                    {m.premium && !isPremium && <Lock size={12} />}
-                  </button>
-                ))}
-                <button 
-                  className="gen-chip gen-chip--toggle" 
-                  onClick={() => setShowMoreModels(!showMoreModels)}
-                >
-                  {showMoreModels ? 'Show Less' : `+${aiModels.length - 6} More Models`}
-                </button>
+            <div className={`gen-section ${openSections.model ? 'gen-section--expanded' : ''}`} id="gen-model">
+              <div 
+                className="gen-section__header-toggle" 
+                onClick={() => toggleSection('model')}
+              >
+                <h3 className="gen-section__title">AI Model Format</h3>
+                <div className="gen-section__status">
+                  <span className="text-muted text-xs">Selected: {aiModels.find(m => m.id === form.model)?.label}</span>
+                </div>
+                <div className="gen-section__chevron">
+                  {openSections.model ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                </div>
               </div>
+
+              {openSections.model && (
+                <div className="gen-chips gen-chips--wrap mt-4">
+                  {aiModels.slice(0, showMoreModels ? aiModels.length : 6).map(m => (
+                    <button
+                      key={m.id}
+                      className={`gen-chip ${form.model === m.id ? 'gen-chip--active' : ''}`}
+                      onClick={() => updateForm('model', m.id)}
+                      id={`model-${m.id}`}
+                    >
+                      <span>{m.icon}</span>
+                      <span>{m.label}</span>
+                    </button>
+                  ))}
+                  <button 
+                    className="gen-chip gen-chip--toggle" 
+                    onClick={(e) => { e.stopPropagation(); setShowMoreModels(!showMoreModels); }}
+                  >
+                    {showMoreModels ? 'Show Less' : `+${aiModels.length - 6} More Models`}
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Category */}
-            <div className="gen-section" id="gen-category">
-              <h3 className="gen-section__title">Category</h3>
-              <div className="gen-chips gen-chips--wrap">
-                {categories.slice(0, showMoreCategories ? categories.length : 12).map(cat => (
-                  <button
-                    key={cat.id}
-                    className={`gen-chip ${form.category === cat.id ? 'gen-chip--active' : ''}`}
-                    onClick={() => updateForm('category', cat.id)}
-                    title={cat.desc}
-                    id={`cat-${cat.id}`}
-                  >
-                    <span>{cat.emoji}</span>
-                    <span>{cat.label}</span>
-                  </button>
-                ))}
-                <button 
-                  className="gen-chip gen-chip--toggle" 
-                  onClick={() => setShowMoreCategories(!showMoreCategories)}
-                >
-                  {showMoreCategories ? 'Show Less' : `+${categories.length - 12} More Categories`}
-                </button>
+            <div className={`gen-section ${openSections.category ? 'gen-section--expanded' : ''}`} id="gen-category">
+              <div 
+                className="gen-section__header-toggle" 
+                onClick={() => toggleSection('category')}
+              >
+                <h3 className="gen-section__title">Category</h3>
+                <div className="gen-section__status">
+                  <span className="text-muted text-xs">Selected: {categories.find(c => c.id === form.category)?.label}</span>
+                </div>
+                <div className="gen-section__chevron">
+                  {openSections.category ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                </div>
               </div>
+
+              {openSections.category && (
+                <div className="gen-chips gen-chips--wrap mt-4">
+                  {categories.slice(0, showMoreCategories ? categories.length : 12).map(cat => (
+                    <button
+                      key={cat.id}
+                      className={`gen-chip ${form.category === cat.id ? 'gen-chip--active' : ''}`}
+                      onClick={() => updateForm('category', cat.id)}
+                      title={cat.desc}
+                      id={`cat-${cat.id}`}
+                    >
+                      <span>{cat.emoji}</span>
+                      <span>{cat.label}</span>
+                    </button>
+                  ))}
+                  <button 
+                    className="gen-chip gen-chip--toggle" 
+                    onClick={(e) => { e.stopPropagation(); setShowMoreCategories(!showMoreCategories); }}
+                  >
+                    {showMoreCategories ? 'Show Less' : `+${categories.length - 12} More Categories`}
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Style */}
-            <div className="gen-section" id="gen-style">
-              <h3 className="gen-section__title">Art Style</h3>
-              <div className="gen-chips gen-chips--wrap">
-                {styles.map(s => (
-                  <button
-                    key={s.id}
-                    className={`gen-chip gen-chip--sm ${form.style === s.id ? 'gen-chip--active' : ''}`}
-                    onClick={() => updateForm('style', s.id)}
-                    id={`style-${s.id}`}
-                  >
-                    {s.label}
-                  </button>
-                ))}
+            <div className={`gen-section ${openSections.style ? 'gen-section--expanded' : ''}`} id="gen-style">
+              <div 
+                className="gen-section__header-toggle" 
+                onClick={() => toggleSection('style')}
+              >
+                <h3 className="gen-section__title">Art Style</h3>
+                <div className="gen-section__status">
+                  <span className="text-muted text-xs">Selected: {styles.find(s => s.id === form.style)?.label}</span>
+                </div>
+                <div className="gen-section__chevron">
+                  {openSections.style ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                </div>
               </div>
+
+              {openSections.style && (
+                <div className="gen-chips gen-chips--wrap mt-4">
+                  {styles.slice(0, showMoreStyles ? styles.length : 12).map(s => (
+                    <button
+                      key={s.id}
+                      className={`gen-chip gen-chip--sm ${form.style === s.id ? 'gen-chip--active' : ''}`}
+                      onClick={() => updateForm('style', s.id)}
+                      id={`style-${s.id}`}
+                    >
+                      {s.label}
+                    </button>
+                  ))}
+                  <button 
+                    className="gen-chip gen-chip--toggle gen-chip--sm" 
+                    onClick={(e) => { e.stopPropagation(); setShowMoreStyles(!showMoreStyles); }}
+                  >
+                    {showMoreStyles ? 'Show Less' : `+${styles.length - 12} More Styles`}
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Mood */}
-            <div className="gen-section" id="gen-mood">
-              <h3 className="gen-section__title">Mood</h3>
-              <div className="gen-chips gen-chips--wrap">
-                {moods.map(m => (
-                  <button
-                    key={m.id}
-                    className={`gen-chip gen-chip--sm ${form.mood === m.id ? 'gen-chip--active' : ''}`}
-                    onClick={() => updateForm('mood', m.id)}
-                    id={`mood-${m.id}`}
-                  >
-                    {m.label}
-                  </button>
-                ))}
+            <div className={`gen-section ${openSections.mood ? 'gen-section--expanded' : ''}`} id="gen-mood">
+              <div 
+                className="gen-section__header-toggle" 
+                onClick={() => toggleSection('mood')}
+              >
+                <h3 className="gen-section__title">Mood</h3>
+                <div className="gen-section__status">
+                  <span className="text-muted text-xs">Selected: {moods.find(m => m.id === form.mood)?.label}</span>
+                </div>
+                <div className="gen-section__chevron">
+                  {openSections.mood ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                </div>
               </div>
+
+              {openSections.mood && (
+                <div className="gen-chips gen-chips--wrap mt-4">
+                  {moods.slice(0, showMoreMoods ? moods.length : 12).map(m => (
+                    <button
+                      key={m.id}
+                      className={`gen-chip gen-chip--sm ${form.mood === m.id ? 'gen-chip--active' : ''}`}
+                      onClick={() => updateForm('mood', m.id)}
+                      id={`mood-${m.id}`}
+                    >
+                      {m.label}
+                    </button>
+                  ))}
+                  <button 
+                    className="gen-chip gen-chip--toggle gen-chip--sm" 
+                    onClick={(e) => { e.stopPropagation(); setShowMoreMoods(!showMoreMoods); }}
+                  >
+                    {showMoreMoods ? 'Show Less' : `+${moods.length - 12} More Moods`}
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Lighting */}
-            <div className="gen-section" id="gen-lighting">
-              <h3 className="gen-section__title">Lighting</h3>
-              <div className="gen-chips gen-chips--wrap">
-                {lightingOptions.map(l => (
-                  <button
-                    key={l.id}
-                    className={`gen-chip gen-chip--sm ${form.lighting === l.id ? 'gen-chip--active' : ''}`}
-                    onClick={() => updateForm('lighting', l.id)}
-                    id={`light-${l.id}`}
-                  >
-                    {l.label}
-                  </button>
-                ))}
+            <div className={`gen-section ${openSections.lighting ? 'gen-section--expanded' : ''}`} id="gen-lighting">
+              <div 
+                className="gen-section__header-toggle" 
+                onClick={() => toggleSection('lighting')}
+              >
+                <h3 className="gen-section__title">Lighting</h3>
+                <div className="gen-section__status">
+                  <span className="text-muted text-xs">Selected: {lightingOptions.find(l => l.id === form.lighting)?.label}</span>
+                </div>
+                <div className="gen-section__chevron">
+                  {openSections.lighting ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                </div>
               </div>
+
+              {openSections.lighting && (
+                <div className="gen-chips gen-chips--wrap mt-4">
+                  {lightingOptions.slice(0, showMoreLighting ? lightingOptions.length : 12).map(l => (
+                    <button
+                      key={l.id}
+                      className={`gen-chip gen-chip--sm ${form.lighting === l.id ? 'gen-chip--active' : ''}`}
+                      onClick={() => updateForm('lighting', l.id)}
+                      id={`light-${l.id}`}
+                    >
+                      {l.label}
+                    </button>
+                  ))}
+                  <button 
+                    className="gen-chip gen-chip--toggle gen-chip--sm" 
+                    onClick={(e) => { e.stopPropagation(); setShowMoreLighting(!showMoreLighting); }}
+                  >
+                    {showMoreLighting ? 'Show Less' : `+${lightingOptions.length - 12} More Lighting`}
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Camera Angle */}
-            <div className="gen-section" id="gen-camera">
-              <h3 className="gen-section__title">Camera Angle</h3>
-              <div className="gen-chips gen-chips--wrap">
-                {cameraAngles.map(c => (
-                  <button
-                    key={c.id}
-                    className={`gen-chip gen-chip--sm ${form.camera === c.id ? 'gen-chip--active' : ''}`}
-                    onClick={() => updateForm('camera', c.id)}
-                    id={`cam-${c.id}`}
-                  >
-                    {c.label}
-                  </button>
-                ))}
+            <div className={`gen-section ${openSections.camera ? 'gen-section--expanded' : ''}`} id="gen-camera">
+              <div 
+                className="gen-section__header-toggle" 
+                onClick={() => toggleSection('camera')}
+              >
+                <h3 className="gen-section__title">Camera Angle</h3>
+                <div className="gen-section__status">
+                  <span className="text-muted text-xs">Selected: {cameraAngles.find(c => c.id === form.camera)?.label}</span>
+                </div>
+                <div className="gen-section__chevron">
+                  {openSections.camera ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                </div>
               </div>
+
+              {openSections.camera && (
+                <div className="gen-chips gen-chips--wrap mt-4">
+                  {cameraAngles.slice(0, showMoreCamera ? cameraAngles.length : 12).map(c => (
+                    <button
+                      key={c.id}
+                      className={`gen-chip gen-chip--sm ${form.camera === c.id ? 'gen-chip--active' : ''}`}
+                      onClick={() => updateForm('camera', c.id)}
+                      id={`cam-${c.id}`}
+                    >
+                      {c.label}
+                    </button>
+                  ))}
+                  <button 
+                    className="gen-chip gen-chip--toggle gen-chip--sm" 
+                    onClick={(e) => { e.stopPropagation(); setShowMoreCamera(!showMoreCamera); }}
+                  >
+                    {showMoreCamera ? 'Show Less' : `+${cameraAngles.length - 12} More Camera Angles`}
+                  </button>
+                </div>
+              )}
             </div>
 
-            {/* Character Consistency (Premium) */}
-            <div className="gen-section gen-section--premium" id="gen-consistency">
-              <div className="gen-section__header-flex">
+            <div className={`gen-section ${openSections.consistency ? 'gen-section--expanded' : ''}`} id="gen-consistency">
+              <div 
+                className="gen-section__header-toggle" 
+                onClick={() => toggleSection('consistency')}
+              >
                 <h3 className="gen-section__title">Character Consistency</h3>
-                <span className="badge badge-warning"><Crown size={10} /> Premium</span>
-              </div>
-              <div className="consistency-upload">
-                <div className="upload-placeholder">
-                  <ImageIcon size={24} />
-                  <p className="text-sm">Upload Reference Image</p>
-                  <span className="text-xs text-muted">Supports JPG, PNG</span>
+                <div className="gen-section__status">
+                   <span className="text-muted text-xs">{openSections.consistency ? 'Upload reference' : 'Character reference'}</span>
                 </div>
-                <div className="consistency-info">
-                  <div className="info-badge">
-                    <Info size={12} />
-                    <span>How it works</span>
+                <div className="gen-section__chevron">
+                  {openSections.consistency ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                </div>
+              </div>
+              
+              {openSections.consistency && (
+                <div className="consistency-upload mt-4">
+                  <div className="upload-placeholder">
+                    <ImageIcon size={24} />
+                    <p className="text-sm">Upload Reference Image</p>
+                    <span className="text-xs text-muted">Supports JPG, PNG</span>
                   </div>
-                  <p className="text-xs text-muted mt-2">
-                    Our AI identifies the character in your reference image and maintains their 
-                    identity across different scenes and styles.
-                  </p>
+                  <div className="consistency-info">
+                    <div className="info-badge">
+                      <Info size={12} />
+                      <span>How it works</span>
+                    </div>
+                    <p className="text-xs text-muted mt-2">
+                      Our AI identifies the character in your reference image and maintains their 
+                      identity across different scenes and styles.
+                    </p>
+                  </div>
                 </div>
-              </div>
-              {!isPremium && <div className="section-lock-overlay">
-                <button className="btn btn-primary btn-sm" onClick={() => setShowPaywall(true)}>
-                  <Lock size={12} /> Unlock Feature
-                </button>
-              </div>}
+              )}
             </div>
 
             {/* Description */}
-            <div className="gen-section" id="gen-description">
-              <h3 className="gen-section__title">Your Description</h3>
+            <div className="gen-section gen-section--full" id="gen-description">
+              <h3 className="gen-section__title">
+                <span className="text-orange">Your Description</span>
+              </h3>
               <textarea
                 className="textarea"
                 placeholder="Describe what you want to create in detail... The more specific, the better your prompt!"
@@ -272,30 +394,32 @@ export default function GeneratePage() {
             </div>
 
             {/* Generate Button */}
-            <button
-              className={`btn btn-primary btn-lg gen-submit ${isGenerating ? 'gen-submit--loading' : ''}`}
-              onClick={result ? handleRegenerate : handleGenerate}
-              disabled={isGenerating}
-              id="gen-submit-btn"
-            >
-              {isGenerating ? (
-                <>
-                  <RefreshCw size={18} className="gen-spin" />
-                  Crafting Your Prompt...
-                </>
-              ) : result ? (
-                <>
-                  <RefreshCw size={18} />
-                  Regenerate
-                </>
-              ) : (
-                <>
-                  <Sparkles size={18} />
-                  Generate Prompt
-                  {state.plan !== 'unlimited' && <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>(-1 credit)</span>}
-                </>
-              )}
-            </button>
+            <div className="gen-section--full">
+              <button
+                className={`btn btn-primary btn-lg gen-submit ${isGenerating ? 'gen-submit--loading' : ''}`}
+                onClick={result ? handleRegenerate : handleGenerate}
+                disabled={isGenerating}
+                id="gen-submit-btn"
+              >
+                {isGenerating ? (
+                  <>
+                    <RefreshCw size={18} className="gen-spin" />
+                    Crafting Your Prompt...
+                  </>
+                ) : result ? (
+                  <>
+                    <RefreshCw size={18} />
+                    Regenerate
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={18} />
+                    Generate Prompt
+                    {state.plan !== 'unlimited' && <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>(-1 credit)</span>}
+                  </>
+                )}
+              </button>
+            </div>
           </div>
 
           {/* Output / Preview panel */}
@@ -304,10 +428,9 @@ export default function GeneratePage() {
               <PromptOutput result={result} />
             ) : (
               <div className="generate-page__preview">
-                <div className="generate-page__preview-icon animate-float">
-                  <Sparkles size={48} />
-                </div>
-                <h3>Your Prompt Will Appear Here</h3>
+                <h3>
+                  <span className="text-cyan">Your Prompt Will Appear Here</span>
+                </h3>
                 <p>Select your preferences and hit Generate to create a professional AI prompt</p>
               </div>
             )}
