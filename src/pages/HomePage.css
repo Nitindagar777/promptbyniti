@@ -138,7 +138,7 @@
 }
 
 .p-benefit__icon-inner {
-  filter: drop-shadow(0 0 10px rgba(255,255,255,0.1));
+  filter: none;
 }
 
 .p-benefit h3 {
@@ -237,29 +237,30 @@
 .text-center { text-align: center; }
 
 /* ICON ANIMATIONS */
-.icon-bounce {
-  animation: icon-bounce 3s infinite ease-in-out;
+.icon-tilt {
+  animation: icon-tilt 3s infinite ease-in-out;
 }
 .icon-pulse {
   animation: icon-pulse 4s infinite ease-in-out;
 }
-.icon-float {
-  animation: icon-float 3.5s infinite ease-in-out;
+.icon-bounce {
+  animation: icon-bounce 2s infinite ease-in-out;
+}
+
+@keyframes icon-tilt {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(10deg); }
+  75% { transform: rotate(-10deg); }
+}
+
+@keyframes icon-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
 }
 
 @keyframes icon-bounce {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-}
-
-@keyframes icon-pulse {
-  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 5px currentColor); }
-  50% { transform: scale(1.05); filter: drop-shadow(0 0 15px currentColor); }
-}
-
-@keyframes icon-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+  50% { transform: translateY(-12px); }
 }
 
 /* UTILS */

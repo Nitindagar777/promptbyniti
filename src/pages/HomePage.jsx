@@ -122,7 +122,7 @@ export default function HomePage() {
         </div>
         <div className="p-benefits__grid">
           <div className="p-benefit reveal" style={{ animationDelay: '0.1s' }}>
-            <div className="p-benefit__icon icon-bounce">
+            <div className="p-benefit__icon icon-tilt">
               <Zap size={48} color="var(--color-orange)" strokeWidth={1.5} />
             </div>
             <h3>1. <span className="text-orange">Get Tokens</span></h3>
@@ -136,7 +136,7 @@ export default function HomePage() {
             <p>Transform any basic idea into a professional, optimized prompt in seconds.</p>
           </div>
           <div className="p-benefit reveal" style={{ animationDelay: '0.3s' }}>
-            <div className="p-benefit__icon icon-float">
+            <div className="p-benefit__icon icon-bounce">
               <ShoppingBag size={48} color="var(--color-pink)" strokeWidth={1.5} />
             </div>
             <h3>3. <span className="text-pink">Sell & Earn</span></h3>
