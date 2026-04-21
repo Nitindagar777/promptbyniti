@@ -1,0 +1,181 @@
+/* ============================================================
+   PROMPT BY NITI — VIBRANT HUMAN DESIGN
+   ============================================================ */
+
+/* --- RESET & ROOT --- */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  /* Core Palette - Rich & Vibrant (NO GRADIENTS) */
+  --bg-primary: #0f172a;    /* Deep Slate Navy */
+  --bg-secondary: #1e293b;  /* Lighter Slate */
+  --bg-surface: #334155;
+  --bg-card: #1e293b;
+  --border-color: #334155;
+  
+  /* Vibrant Solid Accents */
+  --color-orange: #f97316;
+  --color-cyan: #06b6d4;
+  --color-purple: #a855f7;
+  --color-pink: #ec4899;
+  --color-blue: #3b82f6;
+  --color-green: #22c55e;
+
+  /* Use specific colors for actions */
+  --accent-primary: var(--color-blue);
+  --accent-secondary: var(--color-purple);
+
+  /* Typography Colors */
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #64748b;
+
+  /* Spacing */
+  --space-xs: 8px;
+  --space-sm: 16px;
+  --space-md: 24px;
+  --space-lg: 40px;
+  --space-xl: 64px;
+  --space-2xl: 96px;
+  --space-3xl: 160px; /* Huge spacing for modern look */
+
+  /* Radius - Friendlier rounded corners */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 24px;
+  --radius-full: 9999px;
+
+  /* Typography - Only using Chewy for a unique human brand */
+  --font-display: 'Chewy', cursive;
+  --font-body: 'Chewy', cursive;
+
+  /* Transitions */
+  --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html {
+  scroll-behavior: smooth;
+  background-color: var(--bg-primary);
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  padding-top: 64px; /* Offset for fixed navbar */
+  letter-spacing: 0.02em; /* Chewy needs a bit of breathing room */
+}
+
+/* --- TYPOGRAPHY --- */
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+h4, h5, h6 {
+  font-family: var(--font-body);
+  font-weight: 600;
+}
+
+p {
+  font-family: var(--font-body);
+  color: var(--text-secondary);
+}
+
+/* --- BUTTONS - Vibrant Solid Colors --- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px 32px;
+  border-radius: 16px;
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  border: none;
+  color: white;
+  text-decoration: none !important;
+  user-select: none;
+  position: relative;
+}
+
+.btn-xl {
+  padding: 18px 40px;
+  font-size: 1.4rem;
+}
+
+.btn-primary {
+  background: var(--color-orange);
+  box-shadow: 0 6px 0 #c2410c; /* Darker orange base */
+}
+
+.btn-primary:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 0 #c2410c;
+  filter: brightness(1.1);
+}
+
+.btn-primary:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #c2410c;
+}
+
+.btn-secondary {
+  background: var(--color-cyan);
+  box-shadow: 0 6px 0 #0e7490; /* Darker cyan base */
+}
+
+.btn-secondary:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 0 #0e7490;
+  filter: brightness(1.1);
+}
+
+.btn-secondary:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #0e7490;
+}
+
+/* --- CARDS --- */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  transition: var(--transition);
+}
+
+/* --- SECTIONS --- */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--space-md);
+}
+
+.section-tag {
+  display: inline-block;
+  padding: 6px 16px;
+  border-radius: var(--radius-full);
+  background: var(--color-orange);
+  color: white;
+  font-size: 0.85rem;
+  margin-bottom: var(--space-sm);
+  text-transform: uppercase;
+}
+
+/* Color Utilities */
+.text-orange { color: var(--color-orange); }
+.text-cyan { color: var(--color-cyan); }
+.text-purple { color: var(--color-purple); }
+.text-pink { color: var(--color-pink); }
+.text-blue { color: var(--color-blue); }
+.text-green { color: var(--color-green); }

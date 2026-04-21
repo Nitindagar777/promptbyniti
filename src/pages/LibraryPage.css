@@ -1,0 +1,112 @@
+/* LibraryPage Styles */
+.library-page {
+  padding-top: calc(80px + var(--space-2xl));
+  padding-bottom: var(--space-4xl);
+  min-height: 100vh;
+}
+
+.library-page__header {
+  text-align: center;
+  margin-bottom: var(--space-2xl);
+}
+
+.library-page__controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin-bottom: var(--space-2xl);
+  background: var(--bg-card);
+  padding: var(--space-md);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+}
+
+.library-page__search {
+  position: relative;
+  width: 100%;
+}
+
+.library-page__search-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+}
+
+.library-page__search-input {
+  padding-left: 48px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+}
+
+.library-page__search-input:focus {
+  background: var(--bg-card);
+}
+
+.library-page__filters {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.library-page__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: var(--space-lg);
+}
+
+.library-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  animation: fadeInUp 0.4s ease both;
+}
+
+.library-card__body {
+  flex-grow: 1;
+  padding-bottom: var(--space-md);
+}
+
+.library-card__meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-md);
+}
+
+.library-card__prompt-text {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  line-height: 1.6;
+  font-style: italic;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.library-card__footer {
+  padding-top: var(--space-md);
+  border-top: 1px dashed var(--border-subtle);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.library-page__empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: var(--space-4xl);
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px dashed var(--border-subtle);
+  color: var(--text-secondary);
+}
+
+@media (max-width: 768px) {
+  .library-page__grid {
+    grid-template-columns: 1fr;
+  }
+}

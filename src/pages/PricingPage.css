@@ -1,0 +1,79 @@
+/* PricingPage Styles */
+.pricing-page {
+  padding-top: calc(80px + var(--space-2xl));
+  padding-bottom: var(--space-4xl);
+  min-height: 100vh;
+}
+
+.pricing-page__header {
+  text-align: center;
+  margin-bottom: var(--space-3xl);
+}
+
+.pricing-card--current {
+  border-color: var(--accent-success);
+}
+
+.pricing-card__current-tag {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  color: var(--accent-success);
+  background: rgba(34, 197, 94, 0.1);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  letter-spacing: 0.03em;
+}
+
+.pricing-card__cta {
+  width: 100%;
+}
+
+.pricing-card__cta:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.pricing-trust {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-3xl);
+  margin-top: var(--space-4xl);
+  flex-wrap: wrap;
+}
+
+.trust-badge {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+  min-width: 250px;
+}
+
+.trust-badge__icon {
+  color: var(--accent-secondary);
+}
+
+.trust-badge h4 {
+  font-size: 1rem;
+  margin-bottom: 2px;
+  color: var(--text-primary);
+}
+
+.trust-badge p {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 768px) {
+  .pricing-trust {
+    flex-direction: column;
+    gap: var(--space-md);
+    align-items: center;
+  }
+}
