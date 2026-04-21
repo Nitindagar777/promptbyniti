@@ -173,9 +173,9 @@ p {
 }
 
 /* Color Utilities */
-.text-orange { color: var(--color-orange); }
-.text-cyan { color: var(--color-cyan); }
-.text-purple { color: var(--color-purple); }
-.text-pink { color: var(--color-pink); }
-.text-blue { color: var(--color-blue); }
-.text-green { color: var(--color-green); }
+.text-orange { color: var(--color-orange) !important; }
+.text-cyan { color: var(--color-cyan) !important; }
+.text-purple { color: var(--color-purple) !important; }
+.text-pink { color: var(--color-pink) !important; }
+.text-blue { color: var(--color-blue) !important; }
+.text-green { color: var(--color-green) !important; }

@@ -49,7 +49,7 @@
 
 .footer__column h4 {
   margin-bottom: var(--space-md);
-  color: var(--text-primary);
+  color: inherit;
   font-size: 1.1rem;
 }
 
