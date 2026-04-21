@@ -2,7 +2,11 @@
    PROMPT ENGINE — Core logic for generating structured prompts
    ============================================================ */
 
-import { categories, styles, moods, lightingOptions, cameraAngles } from './promptData';
+import { 
+  categories, styles, moods, lightingOptions, cameraAngles, 
+  lensSettings, compositions, colorPalettes, qualityTags, 
+  renderingEngines, motionActions 
+} from './promptData';
 
 const getLabel = (list, id) => {
   const item = list.find(i => i.id === id);
@@ -90,61 +94,112 @@ const cameraDescriptors = {
 };
 
 /* Quality/rendering keywords */
-const qualityKeywords = [
-  'masterpiece',
-  'best quality',
-  'highly detailed',
-  'sharp focus',
-  'intricate details',
-  'professional',
-  'award-winning',
-];
+const qualityKeywordMap = {
+  'ultra-detailed': 'ultra-detailed, intricate textures, fine details',
+  '8k': '8k resolution, extreme detail, highly sharp',
+  '4k': '4k resolution, high dynamic range, crisp',
+  'sharp-focus': 'sharp focus, in-focus, clear outlines',
+  hdr: 'hdr, high dynamic range, vibrant lighting',
+  'high-res': 'high resolution, massive pixel count',
+  masterpiece: 'masterpiece, top-tier artwork, award winning',
+  'best-quality': 'best quality, high-end production',
+  'hyper-detailed': 'hyper-detailed, microscopic level detail',
+};
+
+const renderingKeywordMap = {
+  'unreal-engine': 'unreal engine 5, octane render, physically based rendering (pbr), unreal engine render',
+  octane: 'octane render, maxwell render, red-shift, global illumination',
+  blender: 'rendered in blender cycles, procedural textures, volumetric path-tracing',
+  vray: 'v-ray render, photorealistic materials, industrial design quality',
+  photographic: 'photographic style, dslr quality, raw image, fine grain',
+};
+
+const lensKeywordMap = {
+  '35mm': '35mm lens, cinematic field of view, wide shot',
+  '50mm': '50mm prime lens, natural perspective, portrait depth',
+  '85mm': '85mm portrait lens, compression, beautiful skin tones',
+  bokeh: 'heavy bokeh, blurred background, shallow depth of field',
+  'f1-8': 'f/1.8 aperture, super shallow dof, creamy background',
+};
+
+const compositionKeywordMap = {
+  'rule-of-thirds': 'rule of thirds composition, balanced framing',
+  center: 'center composition, symmetrical framing, focal point',
+  symmetry: 'perfect symmetry, mirror reflection, balanced geometry',
+  'leading-lines': 'leading lines, perspective depth, eye-guiding paths',
+};
+
+const colorKeywordMap = {
+  warm: 'warm color palette, amber and orange tones, golden lighting',
+  cool: 'cool color palette, blue and silver tones, frosty atmosphere',
+  monochrome: 'monochrome palette, single color tonality, artistic tint',
+  pastel: 'soft pastel colors, muted tonality, gentle hues',
+  neon: 'neon color palette, vibrant cyberpunk glow, electric saturation',
+};
 
 /* Negative prompts by category */
 const negativePrompts = {
   default: 'blurry, low quality, watermark, text overlay, cropped, out of frame, duplicate, deformed, disfigured, bad anatomy, bad proportions, extra limbs, mutated hands, poorly drawn face, mutation, jpeg artifacts, ugly, tiling, poorly drawn, oversaturated',
   portrait: 'blurry, low quality, watermark, text, cropped, out of frame, deformed face, bad anatomy, extra fingers, mutated hands, poorly drawn face, asymmetric eyes, distorted features, ugly, disfigured, duplicate, jpeg artifacts',
-  anime: 'blurry, low quality, watermark, text, bad anatomy, extra limbs, poorly drawn, deformed, disfigured, realistic photo, 3D render, western style, ugly, duplicate',
-  product: 'blurry, low quality, watermark, text, cropped, messy background, cluttered, low resolution, amateur, poorly lit, distorted, cheap-looking, unfocused',
-  landscape: 'blurry, low quality, watermark, text, cropped, oversaturated, unrealistic colors, flat composition, boring perspective, duplicate elements, haze artifacts',
-  tattoo: 'blurry, low quality, watermark, text, distorted lines, messy details, uneven spacing, smudged, muddy colors, out of focus, poorly drawn',
 };
 
 /**
- * Generate a structured prompt from user selections
+ * Generate a structured prompt from user selections (Professional 18-step Workflow)
  */
-export function generatePrompt({ category, style, mood, lighting, camera, description, model = 'midjourney' }) {
-  const catLabel = getLabel(categories, category);
-  const subjectDetail = subjectExpansions[category] || subjectExpansions.portrait;
-  const styleKw = styleKeywords[style] || styleKeywords.photorealistic;
-  const moodDesc = moodDescriptors[mood] || moodDescriptors.aesthetic;
-  const lightDesc = lightingDescriptors[lighting] || lightingDescriptors['soft-light'];
-  const cameraDesc = cameraDescriptors[camera] || cameraDescriptors['medium-shot'];
-  const quality = qualityKeywords.join(', ');
-  const negPrompt = negativePrompts[category] || negativePrompts.default;
+export function generatePrompt(form) {
+  const { 
+    category, style, mood, lighting, camera, description, model, 
+    subjectDetails, action, environment, lens, composition, 
+    color, quality, rendering, negativePrompt, modelParams 
+  } = form;
 
-  /* Build the main prompt */
-  const mainParts = [
+  const catLabel = getLabel(categories, category);
+  const styleKw = styleKeywords[style] || getLabel(styles, style);
+  const moodDesc = moodDescriptors[mood] || getLabel(moods, mood);
+  const lightDesc = lightingDescriptors[lighting] || getLabel(lightingOptions, lighting);
+  const cameraDesc = cameraDescriptors[camera] || getLabel(cameraAngles, camera);
+  
+  // New expansions with dynamic fallbacks
+  const lensDesc = lensKeywordMap[lens] || getLabel(lensSettings, lens);
+  const compositionDesc = compositionKeywordMap[composition] || getLabel(compositions, composition);
+  const colorDesc = colorKeywordMap[color] || getLabel(colorPalettes, color);
+  const qualityDesc = qualityKeywordMap[quality] || getLabel(qualityTags, quality);
+  const renderingDesc = renderingKeywordMap[rendering] || getLabel(renderingEngines, rendering);
+  const actionDesc = action !== 'default' ? getLabel(motionActions, action) : '';
+
+  const subjectExpansion = subjectExpansions[category] || '';
+
+  /* Build the main prompt structure */
+  const parts = [
     description || `${catLabel} scene`,
-    subjectDetail,
+    subjectDetails,
+    subjectExpansion,
+    actionDesc ? `action: ${actionDesc}` : '',
+    environment,
     moodDesc,
     lightDesc,
-    cameraDesc,
     styleKw,
-    quality,
-  ];
+    cameraDesc,
+    lensDesc,
+    compositionDesc,
+    colorDesc,
+    qualityDesc,
+    renderingDesc,
+  ].filter(p => p && p.length > 0 && p !== 'Default');
 
-  let mainPrompt = mainParts.join(', ');
+  let mainPrompt = parts.join(', ');
 
   /* Format for specific AI model */
-  if (model === 'midjourney') {
-    mainPrompt += ' --ar 16:9 --v 6 --q 2 --s 750';
-  } else if (model === 'stable-diffusion') {
-    mainPrompt = `(${description || catLabel} scene:1.3), (${subjectDetail}:1.2), ${moodDesc}, ${lightDesc}, ${cameraDesc}, (${styleKw}:1.1), ${quality}, steps: 30, cfg: 7.5`;
+  if (model === 'midjourney' || model.includes('mj')) {
+    mainPrompt += ` ${modelParams || '--ar 16:9 --v 6'}`;
+  } else if (model.includes('stable-diffusion') || model.includes('flux')) {
+    mainPrompt = `(${description || catLabel}:1.3), ${parts.slice(1).join(', ')}, ${modelParams}`;
   }
 
   /* Generate variations */
-  const variations = generateVariations({ category, style, mood, lighting, camera, description, model });
+  const variations = generateVariations(form);
+
+  const negPrompt = negativePrompt || negativePrompts[category] || negativePrompts.default;
 
   /* Build structured output */
   return {
@@ -153,17 +208,14 @@ export function generatePrompt({ category, style, mood, lighting, camera, descri
     variations,
     structured: {
       subject: description || `${catLabel} scene`,
-      subjectDetails: subjectDetail,
-      environment: moodDesc,
-      lighting: lightDesc,
-      camera: cameraDesc,
-      styleKeywords: styleKw,
-      renderingQuality: quality,
-      negativePrompt: negPrompt,
+      details: subjectDetails,
+      style: styleKw,
+      environment,
+      quality: qualityDesc || 'High End',
     },
     model,
     timestamp: Date.now(),
-    id: `prompt_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    id: `prompt_${Date.now()}`,
   };
 }
 
