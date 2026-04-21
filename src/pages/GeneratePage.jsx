@@ -36,12 +36,14 @@ export default function GeneratePage() {
   const [result, setResult] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
-  const [showMoreModels, setShowMoreModels] = useState(false);
-  const [showMoreCategories, setShowMoreCategories] = useState(false);
-  const [showMoreStyles, setShowMoreStyles] = useState(false);
-  const [showMoreMoods, setShowMoreMoods] = useState(false);
   const [showMoreLighting, setShowMoreLighting] = useState(false);
   const [showMoreCamera, setShowMoreCamera] = useState(false);
+  const [showMoreLens, setShowMoreLens] = useState(false);
+  const [showMoreComposition, setShowMoreComposition] = useState(false);
+  const [showMoreColor, setShowMoreColor] = useState(false);
+  const [showMoreQuality, setShowMoreQuality] = useState(false);
+  const [showMoreRendering, setShowMoreRendering] = useState(false);
+  const [showMoreAction, setShowMoreAction] = useState(false);
   
   // Collapse state for sections
   const [openSections, setOpenSections] = useState({
@@ -109,6 +111,26 @@ export default function GeneratePage() {
     }, 800);
   };
 
+  const handleRandomize = () => {
+    const randomPick = (list) => list[Math.floor(Math.random() * list.length)].id;
+    
+    setForm(prev => ({
+      ...prev,
+      category: randomPick(categories),
+      style: randomPick(styles),
+      mood: randomPick(moods),
+      lighting: randomPick(lightingOptions),
+      camera: randomPick(cameraAngles),
+      lens: randomPick(lensSettings),
+      composition: randomPick(compositions),
+      color: randomPick(colorPalettes),
+      quality: randomPick(qualityTags),
+      rendering: randomPick(renderingEngines),
+      action: randomPick(motionActions),
+      description: "A random masterpiece of " + categories[Math.floor(Math.random() * categories.length)].label
+    }));
+  };
+
   const handleRegenerate = () => {
     setResult(null);
     setTimeout(() => handleGenerate(), 100);
@@ -152,14 +174,11 @@ export default function GeneratePage() {
               </div>
               {openSections.model && (
                 <div className="gen-chips gen-chips--wrap mt-4">
-                  {aiModels.slice(0, showMoreModels ? aiModels.length : 6).map(m => (
+                  {aiModels.map(m => (
                     <button key={m.id} className={`gen-chip ${form.model === m.id ? 'gen-chip--active' : ''}`} onClick={() => updateForm('model', m.id)}>
                       <span>{m.icon}</span> <span>{m.label}</span>
                     </button>
                   ))}
-                  <button className="gen-chip gen-chip--toggle" onClick={(e) => { e.stopPropagation(); setShowMoreModels(!showMoreModels); }}>
-                    {showMoreModels ? 'Show Less' : `+${aiModels.length - 6} More Models`}
-                  </button>
                 </div>
               )}
             </div>
@@ -177,14 +196,11 @@ export default function GeneratePage() {
               </div>
               {openSections.category && (
                 <div className="gen-chips gen-chips--wrap mt-4">
-                  {categories.slice(0, showMoreCategories ? categories.length : 12).map(cat => (
+                  {categories.map(cat => (
                     <button key={cat.id} className={`gen-chip ${form.category === cat.id ? 'gen-chip--active' : ''}`} onClick={() => updateForm('category', cat.id)} title={cat.desc}>
                       <span>{cat.emoji}</span> <span>{cat.label}</span>
                     </button>
                   ))}
-                  <button className="gen-chip gen-chip--toggle" onClick={(e) => { e.stopPropagation(); setShowMoreCategories(!showMoreCategories); }}>
-                    {showMoreCategories ? 'Show Less' : `+${categories.length - 12} More Categories`}
-                  </button>
                 </div>
               )}
             </div>
@@ -272,14 +288,11 @@ export default function GeneratePage() {
               </div>
               {openSections.style && (
                 <div className="gen-chips gen-chips--wrap mt-4">
-                  {styles.slice(0, showMoreStyles ? styles.length : 12).map(s => (
+                  {styles.map(s => (
                     <button key={s.id} className={`gen-chip gen-chip--sm ${form.style === s.id ? 'gen-chip--active' : ''}`} onClick={() => updateForm('style', s.id)}>
                       {s.label}
                     </button>
                   ))}
-                  <button className="gen-chip gen-chip--toggle gen-chip--sm" onClick={(e) => { e.stopPropagation(); setShowMoreStyles(!showMoreStyles); }}>
-                    {showMoreStyles ? 'Show Less' : `+${styles.length - 12} More Styles`}
-                  </button>
                 </div>
               )}
             </div>
@@ -297,14 +310,11 @@ export default function GeneratePage() {
               </div>
               {openSections.mood && (
                 <div className="gen-chips gen-chips--wrap mt-4">
-                  {moods.slice(0, showMoreMoods ? moods.length : 12).map(m => (
+                  {moods.map(m => (
                     <button key={m.id} className={`gen-chip gen-chip--sm ${form.mood === m.id ? 'gen-chip--active' : ''}`} onClick={() => updateForm('mood', m.id)}>
                       {m.label}
                     </button>
                   ))}
-                  <button className="gen-chip gen-chip--toggle gen-chip--sm" onClick={(e) => { e.stopPropagation(); setShowMoreMoods(!showMoreMoods); }}>
-                    {showMoreMoods ? 'Show Less' : `+${moods.length - 12} More Moods`}
-                  </button>
                 </div>
               )}
             </div>
@@ -322,14 +332,11 @@ export default function GeneratePage() {
               </div>
               {openSections.lighting && (
                 <div className="gen-chips gen-chips--wrap mt-4">
-                  {lightingOptions.slice(0, showMoreLighting ? lightingOptions.length : 12).map(l => (
+                  {lightingOptions.map(l => (
                     <button key={l.id} className={`gen-chip gen-chip--sm ${form.lighting === l.id ? 'gen-chip--active' : ''}`} onClick={() => updateForm('lighting', l.id)}>
                       {l.label}
                     </button>
                   ))}
-                  <button className="gen-chip gen-chip--toggle gen-chip--sm" onClick={(e) => { e.stopPropagation(); setShowMoreLighting(!showMoreLighting); }}>
-                    {showMoreLighting ? 'Show Less' : `+${lightingOptions.length - 12} More Lighting`}
-                  </button>
                 </div>
               )}
             </div>
@@ -347,14 +354,11 @@ export default function GeneratePage() {
               </div>
               {openSections.camera && (
                 <div className="gen-chips gen-chips--wrap mt-4">
-                  {cameraAngles.slice(0, showMoreCamera ? cameraAngles.length : 12).map(c => (
+                  {cameraAngles.map(c => (
                     <button key={c.id} className={`gen-chip gen-chip--sm ${form.camera === c.id ? 'gen-chip--active' : ''}`} onClick={() => updateForm('camera', c.id)}>
                       {c.label}
                     </button>
                   ))}
-                  <button className="gen-chip gen-chip--toggle gen-chip--sm" onClick={(e) => { e.stopPropagation(); setShowMoreCamera(!showMoreCamera); }}>
-                    {showMoreCamera ? 'Show Less' : `+${cameraAngles.length - 12} More Camera Angles`}
-                  </button>
                 </div>
               )}
             </div>
@@ -547,10 +551,31 @@ export default function GeneratePage() {
               )}
             </div>
 
-            {/* Generate Button */}
-            <div className="gen-section--full">
+            {/* Your Description */}
+            <div className={`gen-section gen-section--full ${form.description ? 'gen-section--expanded' : ''}`} id="gen-description">
+              <h3 className="gen-section__title mb-4" style={{ color: '#ff0080', fontSize: '1.2rem' }}>Your Description</h3>
+              <textarea
+                className="gen-textarea"
+                placeholder="Describe your scene here... (e.g., A futuristic cyberpunk city with neon rainy streets, cinematic lighting)"
+                value={form.description}
+                onChange={(e) => updateForm('description', e.target.value)}
+                style={{ minHeight: '120px', fontSize: '1.1rem' }}
+                id="gen-main-description"
+              ></textarea>
+            </div>
+
+            {/* Generate Actions */}
+            <div className="gen-section--full gen-actions">
+              <button 
+                className="btn btn-secondary btn-lg gen-random"
+                onClick={handleRandomize}
+                disabled={isGenerating}
+              >
+                <Dices size={20} /> Surprise Me
+              </button>
+
               <button
-                className={`btn btn-primary btn-lg gen-submit ${isGenerating ? 'gen-submit--loading' : ''}`}
+                className={`btn btn-primary btn-lg gen-submit ${isGenerating ? 'gen-submit--loading' : ''} ${form.description.length > 5 ? 'gen-submit--glow' : ''}`}
                 onClick={result ? handleRegenerate : handleGenerate}
                 disabled={isGenerating}
                 id="gen-submit-btn"
@@ -558,7 +583,7 @@ export default function GeneratePage() {
                 {isGenerating ? (
                   <>
                     <RefreshCw size={18} className="gen-spin" />
-                    Crafting Your Prompt...
+                    Crafting...
                   </>
                 ) : result ? (
                   <>
