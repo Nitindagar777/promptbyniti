@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { generatePrompt } from '../data/promptEngine';
 import PromptOutput from '../components/PromptOutput';
-import { ArrowRight, Sparkles, Zap, Image, Layers, Heart, Wand2, Rocket, Star, Palette, MessageSquare, ShieldCheck, Zap as ZapIcon } from 'lucide-react';
+import { ArrowRight, Sparkles, Zap, Image, Layers, Heart, Wand2, Rocket, Star, Palette, MessageSquare, ShieldCheck, Zap as ZapIcon, ShoppingBag } from 'lucide-react';
+import { marketplaceItems } from '../data/marketplaceData';
 import { useState } from 'react';
 import './HomePage.css';
 
@@ -89,30 +90,26 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 03. CATEGORIES — SWAPPED */}
+      {/* 03. PROMPT STORE — NEW */}
       <section className="p-categories bg-secondary section-spacing">
         <div className="container">
-          <div className="p-categories__header reveal">
-            <h2 className="h-display">Ready for <span className="text-pink">Everything</span></h2>
-            <Link to="/templates" className="btn btn-secondary">See all templates</Link>
+          <div className="p-market-header reveal">
+            <h2 className="h-display">Prompt <span className="text-pink">Store</span></h2>
+            <Link to="/templates" className="btn btn-secondary">
+               See all Prompts <ShoppingBag size={18} style={{marginLeft: '8px'}}/>
+            </Link>
           </div>
-          <div className="p-categories__grid">
-            <Link to="/generate?cat=portrait" className="p-cat-card reveal bg-orange" style={{ animationDelay: '0.1s' }}>
-              <span>📸 Portraits</span>
-              <ArrowRight size={20} />
-            </Link>
-            <Link to="/generate?cat=landscape" className="p-cat-card reveal bg-cyan" style={{ animationDelay: '0.2s' }}>
-              <span>🏔️ Landscapes</span>
-              <ArrowRight size={20} />
-            </Link>
-            <Link to="/generate?cat=product" className="p-cat-card reveal bg-purple" style={{ animationDelay: '0.3s' }}>
-              <span>📦 Product</span>
-              <ArrowRight size={20} />
-            </Link>
-            <Link to="/generate?cat=fantasy" className="p-cat-card reveal bg-pink" style={{ animationDelay: '0.4s' }}>
-              <span>🐉 Fantasy</span>
-              <ArrowRight size={20} />
-            </Link>
+          
+          <div className="p-market-grid">
+            {marketplaceItems.map((item, i) => (
+              <div key={item.id} className="p-market-card reveal" style={{ animationDelay: `${0.1 * (i+1)}s` }}>
+                <img src={item.image} alt={item.title} className="p-market-img" />
+                <div className="p-market-footer">
+                  <span className="p-market-name">{item.slug}</span>
+                  <span className="p-market-price">${item.price}</span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
