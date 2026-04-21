@@ -26,6 +26,7 @@ export default function GeneratePage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
   const [showMoreModels, setShowMoreModels] = useState(false);
+  const [showMoreCategories, setShowMoreCategories] = useState(false);
 
   /* Load template if passed in URL */
   useEffect(() => {
@@ -138,7 +139,7 @@ export default function GeneratePage() {
             <div className="gen-section" id="gen-category">
               <h3 className="gen-section__title">Category</h3>
               <div className="gen-chips gen-chips--wrap">
-                {categories.map(cat => (
+                {categories.slice(0, showMoreCategories ? categories.length : 12).map(cat => (
                   <button
                     key={cat.id}
                     className={`gen-chip ${form.category === cat.id ? 'gen-chip--active' : ''}`}
@@ -150,6 +151,12 @@ export default function GeneratePage() {
                     <span>{cat.label}</span>
                   </button>
                 ))}
+                <button 
+                  className="gen-chip gen-chip--toggle" 
+                  onClick={() => setShowMoreCategories(!showMoreCategories)}
+                >
+                  {showMoreCategories ? 'Show Less' : `+${categories.length - 12} More Categories`}
+                </button>
               </div>
             </div>
 

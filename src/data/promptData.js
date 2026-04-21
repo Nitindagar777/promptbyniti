@@ -3,18 +3,183 @@
    ============================================================ */
 
 export const categories = [
+  // --- CORE & DEFAULTS ---
+  { id: 'default', label: 'Default', emoji: '✨', desc: 'Standard AI generation' },
+  { id: 'none', label: 'None', emoji: '⚪', desc: 'No specific category' },
+
+  // --- PORTRAIT & CHARACTERS ---
   { id: 'portrait', label: 'Portrait', emoji: '👤', desc: 'People, faces, character art' },
-  { id: 'product', label: 'Product', emoji: '📦', desc: 'Ads, packaging, merchandise' },
-  { id: 'landscape', label: 'Landscape', emoji: '🏔️', desc: 'Nature, environment, scenery' },
-  { id: 'tattoo', label: 'Tattoo', emoji: '🎨', desc: 'Ink designs, body art' },
-  { id: 'thumbnail', label: 'Thumbnail', emoji: '🖼️', desc: 'YouTube, social media' },
+  { id: 'group', label: 'Group', emoji: '👥', desc: 'Couples, groups, crowds' },
+  { id: 'expression', label: 'Expression', emoji: '😊', desc: 'Specific facial expressions' },
+  { id: 'lifestyle', label: 'Lifestyle', emoji: '🧑🤝🧑', desc: 'Candid, real-life scenes' },
   { id: 'ai-influencer', label: 'AI Influencer', emoji: '🤖', desc: 'Virtual influencer content' },
+  { id: 'baby', label: 'Baby', emoji: '👶', desc: 'Infants and kids' },
+  { id: 'old-age', label: 'Old Age', emoji: '🧓', desc: 'Elderly portraits' },
+  { id: 'character', label: 'Character', emoji: '🧑🎤', desc: 'Original characters' },
+  { id: 'sci-fi-char', label: 'Sci-Fi Character', emoji: '🧑🚀', desc: 'Futuristic beings' },
+  { id: 'fantasy-char', label: 'Fantasy Character', emoji: '🧙', desc: 'Magical beings' },
+  { id: 'horror-char', label: 'Horror Character', emoji: '🧛', desc: 'Scary monsters' },
+  { id: 'cosplay', label: 'Cosplay', emoji: '🧑🎭', desc: 'Costume play' },
+  { id: 'headshot', label: 'Professional Headshot', emoji: '👔', desc: 'Business profile photos' },
+  { id: 'selfie', label: 'Selfie', emoji: '📸', desc: 'Causal mobile camera look' },
+
+  // --- FASHION & BEAUTY ---
   { id: 'fashion', label: 'Fashion', emoji: '👗', desc: 'Clothing, editorial looks' },
-  { id: 'architecture', label: 'Architecture', emoji: '🏛️', desc: 'Buildings, interiors, spaces' },
-  { id: 'food', label: 'Food', emoji: '🍕', desc: 'Culinary, recipes, plating' },
-  { id: 'abstract', label: 'Abstract', emoji: '🌀', desc: 'Conceptual, non-representational' },
-  { id: 'anime', label: 'Anime', emoji: '⛩️', desc: 'Japanese animation style' },
-  { id: 'fantasy', label: 'Fantasy', emoji: '🐉', desc: 'Mythical, magical worlds' },
+  { id: 'streetwear', label: 'Streetwear', emoji: '👕', desc: 'Urban fashion' },
+  { id: 'luxury-fashion', label: 'Luxury Fashion', emoji: '👠', desc: 'High-end branding' },
+  { id: 'beauty', label: 'Beauty', emoji: '💄', desc: 'Cosmetic shots' },
+  { id: 'hairstyle', label: 'Hairstyle', emoji: '💇', desc: 'Hair design and color' },
+  { id: 'makeup', label: 'Makeup', emoji: '💅', desc: 'Detailed makeup art' },
+  { id: 'outfit-design', label: 'Outfit Design', emoji: '🧥', desc: 'Apparel concepts' },
+
+  // --- BUSINESS & PRODUCT ---
+  { id: 'product', label: 'Product', emoji: '📦', desc: 'Ads, packaging, merchandise' },
+  { id: 'e-commerce', label: 'E-commerce', emoji: '🛍️', desc: 'Catalog photography' },
+  { id: 'advertisement', label: 'Advertisement', emoji: '📢', desc: 'Marketing creative' },
+  { id: 'branding', label: 'Branding', emoji: '🏷️', desc: 'Logo and identity' },
+  { id: 'marketing', label: 'Marketing', emoji: '📊', desc: 'Business visuals' },
+  { id: 'social-media', label: 'Social Media Post', emoji: '🎯', desc: 'IG, FB, X content' },
+  { id: 'thumbnail', label: 'Thumbnail', emoji: '🖼️', desc: 'YouTube clickbait' },
+  { id: 'app-ui', label: 'App UI', emoji: '📱', desc: 'Mobile app screens' },
+  { id: 'website-ui', label: 'Website UI', emoji: '💻', desc: 'Web design layouts' },
+  { id: 'poster', label: 'Poster', emoji: '📰', desc: 'Graphic posters' },
+  { id: 'book-cover', label: 'Book Cover', emoji: '📘', desc: 'Novel and book art' },
+  { id: 'movie-poster', label: 'Movie Poster', emoji: '🎬', desc: 'Cinematic key art' },
+
+  // --- LANDSCAPE & NATURE ---
+  { id: 'landscape', label: 'Landscape', emoji: '🏔️', desc: 'Nature scenery' },
+  { id: 'sunset', label: 'Sunset', emoji: '🌅', desc: 'Evening golden light' },
+  { id: 'sunrise', label: 'Sunrise', emoji: '🌄', desc: 'Morning first light' },
+  { id: 'cityscape', label: 'Cityscape', emoji: '🌃', desc: 'City skylines' },
+  { id: 'urban', label: 'Urban', emoji: '🏙️', desc: 'Street scenes' },
+  { id: 'night-city', label: 'Night City', emoji: '🌆', desc: 'Neon city vibes' },
+  { id: 'space', label: 'Space', emoji: '🌌', desc: 'Galaxies and stars' },
+  { id: 'nature', label: 'Nature', emoji: '🌍', desc: 'General nature' },
+  { id: 'forest', label: 'Forest', emoji: '🌳', desc: 'Woods and greenery' },
+  { id: 'tropical', label: 'Tropical', emoji: '🌴', desc: 'Beaches and palms' },
+  { id: 'desert', label: 'Desert', emoji: '🏜️', desc: 'Sand and dunes' },
+  { id: 'mountains', label: 'Mountains', emoji: '🏔️', desc: 'Peaks and valleys' },
+  { id: 'ocean', label: 'Ocean', emoji: '🌊', desc: 'Seas and water' },
+  { id: 'snow', label: 'Snow', emoji: '❄️', desc: 'Winter landscapes' },
+  { id: 'volcano', label: 'Volcano', emoji: '🌋', desc: 'Lava and eruptions' },
+
+  // --- ARCHITECTURE ---
+  { id: 'architecture', label: 'Architecture', emoji: '🏛️', desc: 'Building design' },
+  { id: 'interior-design', label: 'Interior Design', emoji: '🏠', desc: 'Room aesthetics' },
+  { id: 'exterior-design', label: 'Exterior Design', emoji: '🏢', desc: 'Building faces' },
+  { id: 'building-concept', label: 'Building Concept', emoji: '🏗️', desc: 'Modern structures' },
+  { id: 'historical', label: 'Historical', emoji: '🏰', desc: 'Castles and ruins' },
+  { id: 'futuristic-arch', label: 'Futuristic Architecture', emoji: '🏯', desc: 'Sci-fi buildings' },
+
+  // --- FOOD & DRINK ---
+  { id: 'food', label: 'Food', emoji: '🍕', desc: 'Culinary shots' },
+  { id: 'fast-food', label: 'Fast Food', emoji: '🍔', desc: 'Burgers and more' },
+  { id: 'dessert', label: 'Dessert', emoji: '🍰', desc: 'Sweets and cakes' },
+  { id: 'drinks', label: 'Drinks', emoji: '🍹', desc: 'Cocktails and juices' },
+  { id: 'coffee-art', label: 'Coffee Art', emoji: '☕', desc: 'Latte art' },
+  { id: 'fine-dining', label: 'Fine Dining', emoji: '🍽️', desc: 'Gourmet plating' },
+
+  // --- ART & STYLE ---
+  { id: 'tattoo', label: 'Tattoo', emoji: '🎨', desc: 'Ink designs' },
+  { id: 'illustration', label: 'Illustration', emoji: '🖌️', desc: 'Drawing and art' },
+  { id: 'digital-art', label: 'Digital Art', emoji: '🧑🎨', desc: 'CGI and tablet art' },
+  { id: 'painting', label: 'Painting', emoji: '🖼️', desc: 'Canvas styles' },
+  { id: 'line-art', label: 'Line Art', emoji: '🧵', desc: 'Minimalist lines' },
+  { id: 'sketch', label: 'Sketch', emoji: '🪄', desc: 'Hand-drawn looks' },
+  { id: '3d-render', label: '3D Render', emoji: '🧱', desc: 'Octane, C4D looks' },
+  { id: 'isometric', label: 'Isometric', emoji: '🧊', desc: '3D perspective art' },
+
+  // --- ABSTRACT ---
+  { id: 'abstract', label: 'Abstract', emoji: '🌀', desc: 'Non-representational' },
+  { id: 'colorful', label: 'Colorful', emoji: '🌈', desc: 'Vibrant colors' },
+  { id: 'geometric', label: 'Geometric', emoji: '🔳', desc: 'Shapes and patterns' },
+  { id: 'surreal', label: 'Surreal', emoji: '🧠', desc: 'Dream-like logic' },
+  { id: 'psychedelic', label: 'Psychedelic', emoji: '🫧', desc: 'Trippy visuals' },
+  { id: 'minimalist', label: 'Minimalist', emoji: '✨', desc: 'Simple and clean' },
+
+  // --- POP CULTURE ---
+  { id: 'anime', label: 'Anime', emoji: '⛩️', desc: 'Japanese animation' },
+  { id: 'game-art', label: 'Game Art', emoji: '🎮', desc: 'Concept art for games' },
+  { id: 'pixel-art', label: 'Pixel Art', emoji: '🕹️', desc: '8-bit / 16-bit looks' },
+  { id: 'cartoon', label: 'Cartoon', emoji: '🧸', desc: 'Animated characters' },
+  { id: 'comic', label: 'Comic', emoji: '📺', desc: 'Comic book styles' },
+  { id: 'superhero', label: 'Superhero', emoji: '🦸', desc: 'Heroic characters' },
+  { id: 'fantasy-world', label: 'Fantasy', emoji: '🐉', desc: 'Magic and dragons' },
+  { id: 'mythology', label: 'Mythology', emoji: '🧝', desc: 'Gods and legends' },
+
+  // --- VEHICLES ---
+  { id: 'vehicles', label: 'Vehicles', emoji: '🚗', desc: 'General transport' },
+  { id: 'cars', label: 'Cars', emoji: '🚘', desc: 'Modern cars' },
+  { id: 'sports-cars', label: 'Sports Cars', emoji: '🏎️', desc: 'High performance' },
+  { id: 'spaceships', label: 'Spaceships', emoji: '🚀', desc: 'Interstellar crafts' },
+  { id: 'aircraft', label: 'Aircraft', emoji: '✈️', desc: 'Planes and drones' },
+  { id: 'ships', label: 'Ships', emoji: '🚢', desc: 'Boats and vessels' },
+
+  // --- WILDLIFE ---
+  { id: 'animals', label: 'Animals', emoji: '🐶', desc: 'General animals' },
+  { id: 'pets', label: 'Pets', emoji: '🐱', desc: 'Dogs and cats' },
+  { id: 'wildlife', label: 'Wildlife', emoji: '🐅', desc: 'Nature predators' },
+  { id: 'creatures', label: 'Creatures', emoji: '🐉', desc: 'Mythical animals' },
+  { id: 'underwater', label: 'Underwater Life', emoji: '🐠', desc: 'Fish and reefs' },
+
+  // --- ACTION & DRAMA ---
+  { id: 'action', label: 'Action', emoji: '⚔️', desc: 'High energy scenes' },
+  { id: 'explosion', label: 'Explosion', emoji: '💥', desc: 'FX and smoke' },
+  { id: 'war', label: 'War', emoji: '🔫', desc: 'Battlefield scenes' },
+  { id: 'medieval', label: 'Medieval', emoji: '🛡️', desc: 'Knights and swords' },
+  { id: 'apocalypse', label: 'Apocalypse', emoji: '🧟', desc: 'Post-apocalyptic' },
+
+  // --- EMOTIONS ---
+  { id: 'emotions', label: 'Emotions', emoji: '🎭', desc: 'Human feelings' },
+  { id: 'sad', label: 'Sad', emoji: '💔', desc: 'Sorrowful scenes' },
+  { id: 'love', label: 'Love', emoji: '❤️', desc: 'Romantic visuals' },
+  { id: 'angry', label: 'Angry', emoji: '😡', desc: 'Rage and fury' },
+  { id: 'funny', label: 'Funny', emoji: '😂', desc: 'Humorous art' },
+  { id: 'celebration-em', label: 'Celebration', emoji: '🎉', desc: 'Happy moments' },
+
+  // --- SCI & EDU ---
+  { id: 'education', label: 'Education', emoji: '🎓', desc: 'Schools and learning' },
+  { id: 'infographic', label: 'Infographic', emoji: '📚', desc: 'Data and charts' },
+  { id: 'data-viz', label: 'Data Visualization', emoji: '📊', desc: 'Technical graphs' },
+  { id: 'science', label: 'Science', emoji: '🧪', desc: 'Lab and experiments' },
+  { id: 'medical', label: 'Medical', emoji: '🧬', desc: 'Healthcare and anatomy' },
+
+  // --- MUSIC ---
+  { id: 'music', label: 'Music', emoji: '🎧', desc: 'Musical instruments' },
+  { id: 'concert', label: 'Concert', emoji: '🎤', desc: 'Live performances' },
+  { id: 'band', label: 'Band', emoji: '🎸', desc: 'Group musicians' },
+  { id: 'album-cover', label: 'Album Cover', emoji: '💿', desc: 'CD and vinyl art' },
+
+  // --- FILM ---
+  { id: 'cinematic-film', label: 'Cinematic', emoji: '🎥', desc: 'Movie style' },
+  { id: 'film-still', label: 'Film Still', emoji: '🎞️', desc: 'Captured scene' },
+  { id: 'documentary', label: 'Documentary', emoji: '📽️', desc: 'Realistic storytelling' },
+  { id: 'scene-design', label: 'Scene Design', emoji: '🎬', desc: 'Production art' },
+
+  // --- TRAVEL ---
+  { id: 'travel', label: 'Travel', emoji: '🧳', desc: 'Vacation and tourism' },
+  { id: 'adventure', label: 'Adventure', emoji: '🗺️', desc: 'Exploring the unknown' },
+  { id: 'camping', label: 'Camping', emoji: '🏕️', desc: 'Outdoor life' },
+  { id: 'exploration', label: 'Exploration', emoji: '🚶', desc: 'Journeying' },
+
+  // --- WELLNESS ---
+  { id: 'wellness', label: 'Wellness', emoji: '🧘', desc: 'Yoga and meditation' },
+  { id: 'fitness', label: 'Fitness', emoji: '🏋️', desc: 'Gym and workouts' },
+  { id: 'mental-health', label: 'Mental Health', emoji: '🧠', desc: 'Mind and focus' },
+  { id: 'spa', label: 'Spa', emoji: '🛀', desc: 'Relaxation' },
+
+  // --- FESTIVAL ---
+  { id: 'festival', label: 'Festival', emoji: '🎁', desc: 'Events and parties' },
+  { id: 'christmas', label: 'Christmas', emoji: '🎄', desc: 'Holiday spirit' },
+  { id: 'halloween', label: 'Halloween', emoji: '🎃', desc: 'Spooky season' },
+  { id: 'diwali', label: 'Diwali', emoji: '🪔', desc: 'Festival of lights' },
+  { id: 'celebration', label: 'Celebration', emoji: '🎆', desc: 'Fireworks and fun' },
+
+  // --- FUTURISTIC ---
+  { id: 'futuristic-world', label: 'Futuristic', emoji: '🛸', desc: 'Next-gen themes' },
+  { id: 'cyberpunk', label: 'Cyberpunk', emoji: '🤖', desc: 'Hi-tech low-life' },
+  { id: 'metaverse', label: 'Metaverse', emoji: '🌐', desc: 'Digital reality' },
+  { id: 'ai-world', label: 'AI Generated World', emoji: '🧬', desc: 'Artificial horizons' },
 ];
 
 export const styles = [
