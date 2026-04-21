@@ -114,27 +114,27 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 04. CORE BENEFITS — SWAPPED */}
+      {/* 04. HOW IT WORKS */}
       <section className="p-benefits container section-spacing">
         <div className="p-benefits__header reveal">
-          <h2 className="h-display">Built for <span className="text-cyan">Creative</span> People</h2>
-          <p>We've engineered out the complexity so you can focus on the art.</p>
+          <h2 className="h-display">How it <span className="text-cyan">Works</span></h2>
+          <p>Master the art of AI prompt engineering in three simple steps.</p>
         </div>
         <div className="p-benefits__grid">
           <div className="p-benefit reveal" style={{ animationDelay: '0.1s' }}>
-            <div className="p-benefit__icon bg-cyan"><Rocket size={24} /></div>
-            <h3>Bullet Speed</h3>
-            <p>From idea to studio-grade prompt in less than 3 seconds.</p>
+            <div className="p-benefit__icon bg-cyan"><ZapIcon size={24} /></div>
+            <h3>1. Get Tokens</h3>
+            <p>Purchase credits to fuel your creative journey and generate high-end prompts.</p>
           </div>
           <div className="p-benefit reveal" style={{ animationDelay: '0.2s' }}>
-            <div className="p-benefit__icon bg-pink"><Palette size={24} /></div>
-            <h3>Artistic Control</h3>
-            <p>Fine-tune lighting, camera angles, and mood with one click.</p>
+            <div className="p-benefit__icon bg-pink"><Wand2 size={24} /></div>
+            <h3>2. Generate</h3>
+            <p>Transform any basic idea into a professional, optimized prompt in seconds.</p>
           </div>
           <div className="p-benefit reveal" style={{ animationDelay: '0.3s' }}>
-            <div className="p-benefit__icon bg-purple"><ShieldCheck size={24} /></div>
-            <h3>Multi-Model</h3>
-            <p>One engine supports Midjourney, DALL·E 3, and Stable Diffusion.</p>
+            <div className="p-benefit__icon bg-purple"><ShoppingBag size={24} /></div>
+            <h3>3. Sell & Earn</h3>
+            <p>List your unique prompt art in our exclusive store and turn your creativity into profit.</p>
           </div>
         </div>
       </section>
