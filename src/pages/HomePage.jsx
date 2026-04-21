@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { generatePrompt } from '../data/promptEngine';
 import PromptOutput from '../components/PromptOutput';
-import { ArrowRight, Sparkles, Zap, Image, Layers, Heart, Wand2, Rocket, Star, Palette, MessageSquare, ShieldCheck, Zap as ZapIcon, ShoppingBag } from 'lucide-react';
+import { ArrowRight, Sparkles, Zap, Image, Layers, Heart, Wand2, Rocket, Star, Palette, MessageSquare, ShieldCheck, Zap as ZapIcon, ShoppingBag, Coins, DollarSign } from 'lucide-react';
 import { marketplaceItems } from '../data/marketplaceData';
 import { useState } from 'react';
 import './HomePage.css';
@@ -122,18 +122,18 @@ export default function HomePage() {
         </div>
         <div className="p-benefits__grid">
           <div className="p-benefit reveal" style={{ animationDelay: '0.1s' }}>
-            <div className="p-benefit__icon bg-cyan"><ZapIcon size={24} /></div>
-            <h3>1. Get Tokens</h3>
+            <div className="p-benefit__icon bg-orange icon-bounce"><Coins size={28} /></div>
+            <h3>1. <span className="text-orange">Get Tokens</span></h3>
             <p>Purchase credits to fuel your creative journey and generate high-end prompts.</p>
           </div>
           <div className="p-benefit reveal" style={{ animationDelay: '0.2s' }}>
-            <div className="p-benefit__icon bg-pink"><Wand2 size={24} /></div>
-            <h3>2. Generate</h3>
+            <div className="p-benefit__icon bg-cyan icon-pulse"><Sparkles size={28} /></div>
+            <h3>2. <span className="text-cyan">Generate</span></h3>
             <p>Transform any basic idea into a professional, optimized prompt in seconds.</p>
           </div>
           <div className="p-benefit reveal" style={{ animationDelay: '0.3s' }}>
-            <div className="p-benefit__icon bg-purple"><ShoppingBag size={24} /></div>
-            <h3>3. Sell & Earn</h3>
+            <div className="p-benefit__icon bg-pink icon-float"><DollarSign size={28} /></div>
+            <h3>3. <span className="text-pink">Sell & Earn</span></h3>
             <p>List your unique prompt art in our exclusive store and turn your creativity into profit.</p>
           </div>
         </div>
