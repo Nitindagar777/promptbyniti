@@ -1,23 +1,23 @@
 export const marketplaceItems = [
   {
-    id: 'tattoo-gen',
-    title: 'Precision Tattoo Placement Generator',
-    price: 4,
-    image: '/assets/market-tattoo.png',
-    slug: 'precision-tattoo-placement-generator'
+    id: 'steampunk-mech',
+    title: 'Ancient Steampunk Mech',
+    price: 12,
+    image: '/assets/market-steampunk.png',
+    slug: 'ancient steampunk mechanical beast'
   },
   {
-    id: 'bikini-gen',
-    title: 'Luxury Bikini Pose Generator',
-    price: 7,
-    image: '/assets/market-bikini.png',
-    slug: 'luxury-bikini-pose-generator'
+    id: 'cyber-city',
+    title: 'Cyberpunk Metropolis 2099',
+    price: 8,
+    image: '/assets/market-cyberpunk.png',
+    slug: 'neon cyberpunk future cityscape'
   },
   {
-    id: 'saree-gen',
-    title: 'Ultra-Realistic Indian Saree Model',
-    price: 5,
-    image: '/assets/market-saree.png',
-    slug: 'ultra-realistic-indian-saree-model'
+    id: 'ethereal-islands',
+    title: 'Surreal Floating Islands',
+    price: 14,
+    image: '/assets/market-islands.png',
+    slug: 'surreal floating islands fantasy'
   }
 ];
