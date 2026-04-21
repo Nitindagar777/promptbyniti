@@ -1,7 +1,7 @@
 /* GeneratePage Styles */
 .generate-page {
-  padding-top: calc(80px + var(--space-2xl));
-  padding-bottom: var(--space-4xl);
+  padding-top: calc(40px + var(--space-xl));
+  padding-bottom: var(--space-3xl);
   min-height: 100vh;
 }
 
@@ -161,6 +161,19 @@
 .gen-chip--locked {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.gen-chip--toggle {
+  background: rgba(249, 115, 22, 0.05);
+  border-color: rgba(249, 115, 22, 0.2);
+  color: var(--color-orange);
+  font-weight: 600;
+}
+
+.gen-chip--toggle:hover {
+  background: rgba(249, 115, 22, 0.1);
+  border-color: var(--color-orange);
+  transform: translateY(-2px);
 }
 
 /* Submit */

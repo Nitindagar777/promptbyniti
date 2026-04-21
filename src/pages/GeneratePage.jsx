@@ -25,6 +25,7 @@ export default function GeneratePage() {
   const [result, setResult] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
+  const [showMoreModels, setShowMoreModels] = useState(false);
 
   /* Load template if passed in URL */
   useEffect(() => {
@@ -78,7 +79,7 @@ export default function GeneratePage() {
         {/* Header */}
         <div className="generate-page__header">
           <h1 className="generate-page__title">
-            <Sparkles size={28} /> Prompt Generator
+            Prompt <span className="text-orange">Generator</span>
           </h1>
           <p className="generate-page__subtitle">
             Select your preferences and describe your vision — we'll craft the perfect prompt
@@ -105,8 +106,8 @@ export default function GeneratePage() {
             {/* AI Model Selection */}
             <div className="gen-section" id="gen-model">
               <h3 className="gen-section__title">AI Model Format</h3>
-              <div className="gen-chips">
-                {aiModels.map(m => (
+              <div className="gen-chips gen-chips--wrap">
+                {aiModels.slice(0, showMoreModels ? aiModels.length : 6).map(m => (
                   <button
                     key={m.id}
                     className={`gen-chip ${form.model === m.id ? 'gen-chip--active' : ''} ${m.premium && !isPremium ? 'gen-chip--locked' : ''}`}
@@ -124,6 +125,12 @@ export default function GeneratePage() {
                     {m.premium && !isPremium && <Lock size={12} />}
                   </button>
                 ))}
+                <button 
+                  className="gen-chip gen-chip--toggle" 
+                  onClick={() => setShowMoreModels(!showMoreModels)}
+                >
+                  {showMoreModels ? 'Show Less' : `+${aiModels.length - 6} More Models`}
+                </button>
               </div>
             </div>
 

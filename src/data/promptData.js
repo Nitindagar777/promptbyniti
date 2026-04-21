@@ -78,10 +78,51 @@ export const cameraAngles = [
 ];
 
 export const aiModels = [
-  { id: 'midjourney', label: 'Midjourney', icon: '🎨' },
-  { id: 'stable-diffusion', label: 'Stable Diffusion', icon: '🖥️' },
-  { id: 'dall-e', label: 'DALL·E 3', icon: '🤖' },
-  { id: 'video-ai', label: 'Video AI', icon: '🎬', premium: true },
+  // --- IMAGE MODELS ---
+  { id: 'midjourney', label: 'Midjourney', icon: '🎨', type: 'image' },
+  { id: 'stable-diffusion', label: 'Stable Diffusion', icon: '🖥️', type: 'image' },
+  { id: 'dall-e', label: 'DALL·E 3', icon: '🤖', type: 'image' },
+  { id: 'flux', label: 'FLUX', icon: '✨', type: 'image' },
+  { id: 'leonardo-ai', label: 'Leonardo AI', icon: '🦁', type: 'image' },
+  { id: 'ideogram', label: 'Ideogram', icon: '🔡', type: 'image' },
+  { id: 'playground-ai', label: 'Playground AI', icon: '🎡', type: 'image' },
+  { id: 'recraft', label: 'Recraft', icon: '🛠️', type: 'image' },
+  { id: 'krea-ai', label: 'Krea AI', icon: '🧠', type: 'image' },
+  { id: 'firefly', label: 'Adobe Firefly', icon: '🔥', type: 'image' },
+  { id: 'meta-ai', label: 'Meta AI', icon: '♾️', type: 'image' },
+  { id: 'google-imagen', label: 'Google Imagen', icon: '🔍', type: 'image' },
+  { id: 'canva', label: 'Canva Magic', icon: '🪄', type: 'image' },
+  { id: 'bluewillow', label: 'BlueWillow', icon: '🌿', type: 'image' },
+  { id: 'nightcafe', label: 'NightCafe', icon: '🌃', type: 'image' },
+  { id: 'starryai', label: 'StarryAI', icon: '🌌', type: 'image' },
+  { id: 'imagineart', label: 'ImagineArt', icon: '💭', type: 'image' },
+  
+  // --- VIDEO MODELS ---
+  { id: 'sora', label: 'OpenAI Sora', icon: '🎥', type: 'video', premium: true },
+  { id: 'kling-ai', label: 'KLING AI', icon: '🎬', type: 'video', premium: true },
+  { id: 'hailuo-ai', label: 'Hailuo AI', icon: '🐚', type: 'video', premium: true },
+  { id: 'runway-ml', label: 'Runway ML', icon: '🛣️', type: 'video', premium: true },
+  { id: 'pika', label: 'Pika Labs', icon: '🐭', type: 'video', premium: true },
+  { id: 'luma-ai', label: 'Luma AI', icon: '🔦', type: 'video', premium: true },
+  { id: 'genmo', label: 'Genmo', icon: '🌋', type: 'video', premium: true },
+  { id: 'kaiber', label: 'Kaiber', icon: '🧬', type: 'video', premium: true },
+  { id: 'veo', label: 'Google Veo', icon: '👁️', type: 'video', premium: true },
+  { id: 'wan', label: 'Wan AI', icon: '☁️', type: 'video', premium: true },
+  
+  // --- CHAT / LLM MODELS ---
+  { id: 'chatgpt', label: 'ChatGPT / GPT-4', icon: '💬', type: 'chat' },
+  { id: 'claude', label: 'Claude 3.5', icon: '📝', type: 'chat' },
+  { id: 'gemini', label: 'Google Gemini', icon: '♊', type: 'chat' },
+  { id: 'llama', label: 'Meta Llama 3', icon: '🦙', type: 'chat' },
+  { id: 'deepseek', label: 'DeepSeek', icon: '🐋', type: 'chat' },
+  { id: 'grok', label: 'xAI Grok', icon: '🇽', type: 'chat' },
+  { id: 'mistral', label: 'Mistral AI', icon: '🌬️', type: 'chat' },
+  { id: 'qwen', label: 'Qwen', icon: '🎎', type: 'chat' },
+
+  // --- TOOLS ---
+  { id: 'comfyui', label: 'ComfyUI', icon: '🧱', type: 'tool' },
+  { id: 'automatic1111', label: 'A1111', icon: '⚙️', type: 'tool' },
+  { id: 'invoke-ai', label: 'InvokeAI', icon: '🪄', type: 'tool' },
 ];
 
 export const promptTemplates = [
