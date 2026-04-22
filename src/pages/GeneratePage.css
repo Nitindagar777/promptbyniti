@@ -189,15 +189,18 @@
 
 /* Submit & Actions */
 .gen-actions {
+  grid-column: 1 / -1;
   display: flex;
   gap: var(--space-md);
   margin-top: var(--space-md);
+  background: transparent;
 }
 
 .gen-random {
-  flex: 0 0 240px;
+  flex: 0 0 260px;
   background: var(--bg-surface) !important;
   box-shadow: 0 6px 0 #1e293b !important;
+  line-height: 1.2;
 }
 
 .gen-submit {

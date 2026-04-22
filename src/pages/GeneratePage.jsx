@@ -5,7 +5,11 @@ import { useApp } from '../context/AppContext';
 import { generatePrompt } from '../data/promptEngine';
 import { categories, styles, moods, lightingOptions, cameraAngles, aiModels, promptTemplates, lensSettings, compositions, colorPalettes, qualityTags, renderingEngines, motionActions } from '../data/promptData';
 import PromptOutput from '../components/PromptOutput';
-import { Sparkles, Zap, AlertTriangle, Lock, Crown, RefreshCw, Image as ImageIcon, Info, ChevronDown, ChevronUp } from 'lucide-react';
+import { 
+  Sparkles, Info, Image as ImageIcon, ChevronDown, ChevronUp, 
+  RefreshCw, Copy, Check, Download, Share2, Wand2, AlertTriangle, 
+  Crown, Dices, Zap 
+} from 'lucide-react';
 import './GeneratePage.css';
 
 export default function GeneratePage() {
@@ -565,13 +569,18 @@ export default function GeneratePage() {
             </div>
 
             {/* Generate Actions */}
-            <div className="gen-section--full gen-actions">
+            <div className="gen-actions">
               <button 
                 className="btn btn-secondary btn-lg gen-random"
                 onClick={handleRandomize}
                 disabled={isGenerating}
               >
-                <Dices size={20} /> Surprise Me
+                <div>
+                  <div className="flex items-center gap-2 justify-center">
+                    <Dices size={20} /> Surprise Me
+                  </div>
+                  <span className="text-xs opacity-70 block mt-1" style={{ fontSize: '0.75rem', fontWeight: 400 }}>Random Generate</span>
+                </div>
               </button>
 
               <button
