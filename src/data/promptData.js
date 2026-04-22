@@ -673,7 +673,7 @@ export const promptTemplates = [
     title: 'Instagram Model',
     emoji: '📸',
     category: 'ai-influencer',
-    thumbnail: 'C:\\Users\\nitin.LAPTOP-NAG2MKGV\\.gemini\\antigravity\\brain\\5e766948-dbd4-459e-9e32-715295641879\\store_instagram_model_1776877095396.png',
+    thumbnail: '/assets/store/instagram-model.png',
     description: 'Create stunning Instagram-worthy portraits',
     config: {
       category: 'portrait',
@@ -690,7 +690,7 @@ export const promptTemplates = [
     title: 'Product Ad Shot',
     emoji: '🛍️',
     category: 'product',
-    thumbnail: 'C:\\Users\\nitin.LAPTOP-NAG2MKGV\\.gemini\\antigravity\\brain\\5e766948-dbd4-459e-9e32-715295641879\\store_luxury_watch_1776877111468.png',
+    thumbnail: '/assets/store/product-ad.png',
     description: 'Professional product photography for ads',
     config: {
       category: 'product',
@@ -707,7 +707,7 @@ export const promptTemplates = [
     title: 'Tattoo Design',
     emoji: '🖋️',
     category: 'tattoo',
-    thumbnail: 'C:\\Users\\nitin.LAPTOP-NAG2MKGV\\.gemini\\antigravity\\brain\\5e766948-dbd4-459e-9e32-715295641879\\store_tattoo_dragon_1776877127244.png',
+    thumbnail: '/assets/store/tattoo-design.png',
     description: 'Unique tattoo concepts and designs',
     config: {
       category: 'tattoo',
@@ -756,7 +756,7 @@ export const promptTemplates = [
     title: 'Fantasy World',
     emoji: '🐉',
     category: 'fantasy',
-    thumbnail: 'C:\\Users\\nitin.LAPTOP-NAG2MKGV\\.gemini\\antigravity\\brain\\5e766948-dbd4-459e-9e32-715295641879\\store_fantasy_dragon_1776877150700.png',
+    thumbnail: '/assets/store/fantasy-world.png',
     description: 'Epic fantasy landscapes and characters',
     config: {
       category: 'fantasy',
@@ -773,7 +773,7 @@ export const promptTemplates = [
     title: 'Anime Character',
     emoji: '⛩️',
     category: 'anime',
-    thumbnail: 'C:\\Users\\nitin.LAPTOP-NAG2MKGV\\.gemini\\antigravity\\brain\\5e766948-dbd4-459e-9e32-715295641879\\store_anime_girl_1776877168669.png',
+    thumbnail: '/assets/store/anime-character.png',
     description: 'Beautiful anime-style character art',
     config: {
       category: 'anime',
