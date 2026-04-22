@@ -811,7 +811,7 @@ export const pricingPlans = [
     credits: 10,
     period: 'forever',
     features: [
-      '10 prompt generations',
+      '10 Tokens',
       'Public prompt library',
       'Basic styles & moods',
       'Midjourney format',
@@ -827,7 +827,7 @@ export const pricingPlans = [
     credits: 200,
     period: 'month',
     features: [
-      '200 prompt generations/mo',
+      '200 Tokens/mo',
       'Private prompt mode',
       'All styles & moods',
       'All AI model formats',
@@ -845,7 +845,7 @@ export const pricingPlans = [
     credits: -1,
     period: 'month',
     features: [
-      'Unlimited generations',
+      'Unlimited Tokens',
       'Private prompt mode',
       'Character consistency',
       'Video AI prompts',

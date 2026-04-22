@@ -127,3 +127,8 @@
     grid-template-columns: 1fr;
   }
 }
+
+.btn-copy-black {
+  color: #fff !important;
+  font-weight: 700;
+}

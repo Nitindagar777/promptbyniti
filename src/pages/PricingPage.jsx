@@ -18,10 +18,7 @@ export default function PricingPage() {
       <div className="container">
         {/* Header */}
         <div className="pricing-page__header">
-          <div className="section-tag">
-            <Crown size={14} /> Premium Access
-          </div>
-          <h1 className="section-title">Invest in Better Prompts</h1>
+          <h1 className="section-title">Get More <span className="text-orange">Tokens</span></h1>
           <p className="section-desc">
             Unlock the full power of Prompt by Niti. Generate unlimited, private, and optimized prompts.
           </p>

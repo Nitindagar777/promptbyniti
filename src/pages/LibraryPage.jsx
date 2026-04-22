@@ -10,6 +10,7 @@ export default function LibraryPage() {
   const { state } = useApp();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCat, setActiveCat] = useState('all');
+  const [copiedId, setCopiedId] = useState(null);
 
   // Since we don't have a real backend, we'll use the user's public prompts and mock some data
   const mockPublicPrompts = [
@@ -109,14 +110,18 @@ export default function LibraryPage() {
                     "{prompt.mainPrompt}"
                   </p>
                 </div>
-                <div className="library-card__footer">
-                  <button 
-                    className="btn btn-ghost btn-sm"
-                    onClick={() => navigator.clipboard.writeText(prompt.mainPrompt)}
-                  >
-                    Copy Prompt
-                  </button>
-                </div>
+                  <div className="library-card__footer">
+                    <button 
+                      className="btn btn-primary btn-sm btn-copy-black"
+                      onClick={() => {
+                        navigator.clipboard.writeText(prompt.mainPrompt);
+                        setCopiedId(prompt.id);
+                        setTimeout(() => setCopiedId(null), 2000);
+                      }}
+                    >
+                      {copiedId === prompt.id ? 'Copied!' : 'Copy Prompt'}
+                    </button>
+                  </div>
               </div>
             ))
           ) : (
