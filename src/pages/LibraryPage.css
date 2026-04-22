@@ -1,7 +1,7 @@
 /* LibraryPage Styles */
 .library-page {
   padding-top: calc(40px + var(--space-lg));
-  padding-bottom: var(--space-4xl);
+  padding-bottom: 80px;
   min-height: 100vh;
 }
 

@@ -1,7 +1,7 @@
 /* TemplatesPage Styles */
 .templates-page {
   padding-top: calc(40px + var(--space-lg));
-  padding-bottom: 200px;
+  padding-bottom: 80px;
   min-height: 100vh;
 }
 
@@ -9,7 +9,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: var(--space-md);
-  margin-bottom: 150px; /* Extra space after last row */
+  margin-bottom: 60px; /* Reduced space */
 }
 
 .templates-page__empty {
