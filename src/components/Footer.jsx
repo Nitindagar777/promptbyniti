@@ -28,8 +28,8 @@ export default function Footer() {
           <div className="footer__column">
             <h4 className="text-cyan">Platform</h4>
             <Link to="/generate">Generator</Link>
-            <Link to="/templates">Templates</Link>
-            <Link to="/library">Library</Link>
+            <Link to="/templates">Store</Link>
+            <Link to="/library">Free</Link>
             <Link to="/pricing">Pricing</Link>
           </div>
           <div className="footer__column">
