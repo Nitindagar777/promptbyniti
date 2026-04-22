@@ -44,59 +44,67 @@ export default function TemplatesPage() {
         </div>
 
         <div className="templates-page__grid">
-          {filteredTemplates.map((tmpl, i) => (
-            <Link
-              key={tmpl.id}
-              to={tmpl.premium && !isPremium ? '/pricing' : `/generate?template=${tmpl.id}`}
-              className="template-card card"
-              id={`template-${tmpl.id}`}
-              style={{ animationDelay: `${i * 0.05}s`, textDecoration: 'none' }}
-            >
-              {tmpl.thumbnail || tmpl.video ? (
-                <div className="template-card__visual">
-                  {tmpl.video ? (
-                    <video src={tmpl.video} autoPlay muted loop className="template-card__media" />
-                  ) : (
-                    <img src={tmpl.thumbnail} alt={tmpl.title} className="template-card__media" />
-                  )}
-                  
-                  {/* Model Overlay (Top) */}
-                  <div className="template-card__overlay template-card__overlay--top">
-                    <span className="template-card__model-tag">
-                      {tmpl.category === 'anime' ? 'Niji v6' : 'Flux.1'}
-                    </span>
-                  </div>
-                  
-                  {/* Name & Token Overlay (Bottom) */}
-                  <div className="template-card__overlay template-card__overlay--bottom">
-                    <h3 className="template-card__title-overlay">{tmpl.title}</h3>
-                    <div className="template-card__token-badge">
-                      <Zap size={10} fill="currentColor" /> 5
+          {filteredTemplates.length > 0 ? (
+            filteredTemplates.map((tmpl, i) => (
+              <Link
+                key={tmpl.id}
+                to={tmpl.premium && !isPremium ? '/pricing' : `/generate?template=${tmpl.id}`}
+                className="template-card card"
+                id={`template-${tmpl.id}`}
+                style={{ animationDelay: `${i * 0.05}s`, textDecoration: 'none' }}
+              >
+                {tmpl.thumbnail || tmpl.video ? (
+                  <div className="template-card__visual">
+                    {tmpl.video ? (
+                      <video src={tmpl.video} autoPlay muted loop className="template-card__media" />
+                    ) : (
+                      <img src={tmpl.thumbnail} alt={tmpl.title} className="template-card__media" />
+                    )}
+                    
+                    {/* Model Overlay (Top) */}
+                    <div className="template-card__overlay template-card__overlay--top">
+                      <span className="template-card__model-tag">
+                        {tmpl.category === 'anime' ? 'Niji v6' : 'Flux.1'}
+                      </span>
+                    </div>
+                    
+                    {/* Name & Token Overlay (Bottom) */}
+                    <div className="template-card__overlay template-card__overlay--bottom">
+                      <h3 className="template-card__title-overlay">{tmpl.title}</h3>
+                      <div className="template-card__token-badge">
+                        <Zap size={10} fill="currentColor" /> 5
+                      </div>
                     </div>
                   </div>
-                </div>
-              ) : (
-                <div className="template-card__content template-card__content--text">
-                  {/* Model Overlay (Top) */}
-                  <div className="template-card__overlay template-card__overlay--top">
-                    <span className="template-card__model-tag template-card__model-tag--text">
-                      {tmpl.category === 'chat' ? 'GPT-4o' : 'Claude 3.5'}
-                    </span>
-                  </div>
+                ) : (
+                  <div className="template-card__content template-card__content--text">
+                    {/* Model Overlay (Top) */}
+                    <div className="template-card__overlay template-card__overlay--top">
+                      <span className="template-card__model-tag template-card__model-tag--text">
+                        {tmpl.category === 'chat' ? 'GPT-4o' : 'Claude 3.5'}
+                      </span>
+                    </div>
 
-                  {/* Centered Name */}
-                  <h3 className="template-card__title-center">{tmpl.title}</h3>
+                    {/* Centered Name */}
+                    <h3 className="template-card__title-center">{tmpl.title}</h3>
 
-                  {/* Token Overlay (Bottom Right) */}
-                  <div className="template-card__overlay template-card__overlay--bottom template-card__overlay--right">
-                    <div className="template-card__token-badge template-card__token-badge--text">
-                      <Zap size={10} fill="currentColor" /> 5 Tokens
+                    {/* Token Overlay (Bottom Right) */}
+                    <div className="template-card__overlay template-card__overlay--bottom template-card__overlay--right">
+                      <div className="template-card__token-badge template-card__token-badge--text">
+                        <Zap size={10} fill="currentColor" /> 5 Tokens
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
-            </Link>
-          ))}
+                )}
+              </Link>
+            ))
+          ) : (
+            <div className="templates-page__empty">
+              <Sparkles size={48} className="text-muted mb-4 mx-auto" />
+              <h3>No prompts found</h3>
+              <p>Try selecting another category to discover more premium prompts.</p>
+            </div>
+          )}
         </div>
       </div>
     </div>

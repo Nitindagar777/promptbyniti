@@ -50,10 +50,9 @@ export default function LibraryPage() {
       <div className="container">
         {/* Header */}
         <div className="library-page__header">
-          <div className="section-tag">
-            <Globe size={14} /> Public Library
-          </div>
-          <h1 className="section-title">Community Prompts</h1>
+          <h1 className="section-title">
+            <span className="text-purple">Free</span> Prompts
+          </h1>
           <p className="section-desc">
             Discover prompts created by the community. Access world-class generation formulas for free.
           </p>
@@ -73,22 +72,24 @@ export default function LibraryPage() {
           </div>
 
           <div className="library-page__filters">
-            <Filter size={16} className="text-muted" />
-            <button
-              className={`gen-chip gen-chip--sm ${activeCat === 'all' ? 'gen-chip--active' : ''}`}
-              onClick={() => setActiveCat('all')}
-            >
-              All
-            </button>
-            {categories.slice(0, 5).map(cat => (
+            <Filter size={16} className="text-muted flex-shrink-0" />
+            <div className="library-page__filters-scroll">
               <button
-                key={cat.id}
-                className={`gen-chip gen-chip--sm ${activeCat === cat.id ? 'gen-chip--active' : ''}`}
-                onClick={() => setActiveCat(cat.id)}
+                className={`gen-chip gen-chip--sm ${activeCat === 'all' ? 'gen-chip--active' : ''}`}
+                onClick={() => setActiveCat('all')}
               >
-                {cat.label}
+                All
               </button>
-            ))}
+              {categories.map(cat => (
+                <button
+                  key={cat.id}
+                  className={`gen-chip gen-chip--sm ${activeCat === cat.id ? 'gen-chip--active' : ''}`}
+                  onClick={() => setActiveCat(cat.id)}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 

@@ -1,6 +1,6 @@
 /* LibraryPage Styles */
 .library-page {
-  padding-top: calc(80px + var(--space-2xl));
+  padding-top: calc(40px + var(--space-lg));
   padding-bottom: var(--space-4xl);
   min-height: 100vh;
 }
@@ -47,8 +47,26 @@
 .library-page__filters {
   display: flex;
   align-items: center;
+  gap: var(--space-md);
+  overflow: hidden;
+}
+
+.library-page__filters-scroll {
+  display: flex;
+  align-items: center;
   gap: var(--space-sm);
-  flex-wrap: wrap;
+  overflow-x: auto;
+  padding-bottom: 4px; /* Space for hidden scrollbar */
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.library-page__filters-scroll::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
+.library-page__filters-scroll .gen-chip {
+  flex-shrink: 0;
 }
 
 .library-page__grid {
@@ -98,10 +116,9 @@
 .library-page__empty {
   grid-column: 1 / -1;
   text-align: center;
-  padding: var(--space-4xl);
-  background: var(--bg-card);
-  border-radius: var(--radius-lg);
-  border: 1px dashed var(--border-subtle);
+  padding: var(--space-4xl) var(--space-md);
+  background: transparent;
+  border: none;
   color: var(--text-secondary);
 }
 
