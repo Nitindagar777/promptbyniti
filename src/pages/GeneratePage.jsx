@@ -525,34 +525,24 @@ export default function GeneratePage() {
             </div>
 
             {/* Character Consistency */}
-            <div className={`gen-section ${openSections.consistency ? 'gen-section--expanded' : ''}`} id="gen-consistency">
-              <div className="gen-section__header-toggle" onClick={() => toggleSection('consistency')}>
-                <h3 className="gen-section__title">Character Consistency</h3>
-                <div className="gen-section__status">
-                   <span className="text-muted text-xs">{openSections.consistency ? 'Upload reference' : 'Character reference'}</span>
+            <div className="gen-section gen-section--expanded" id="gen-consistency">
+              <h3 className="gen-section__title mb-4" style={{ color: '#ff0080', fontSize: '1.2rem' }}>Character Consistency</h3>
+              <div className="consistency-upload">
+                <div className="upload-placeholder">
+                  <ImageIcon size={24} />
+                  <p className="text-sm">Upload Reference Image</p>
+                  <span className="text-xs text-muted">Supports JPG, PNG</span>
                 </div>
-                <div className="gen-section__chevron">
-                  {openSections.consistency ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                <div className="consistency-info">
+                  <div className="info-badge">
+                    <Info size={12} /> <span>How it works</span>
+                  </div>
+                  <p className="text-xs text-muted mt-2">
+                    Our AI identifies the character in your reference image and maintains their 
+                    identity across different scenes and styles.
+                  </p>
                 </div>
               </div>
-              {openSections.consistency && (
-                <div className="consistency-upload mt-4">
-                  <div className="upload-placeholder">
-                    <ImageIcon size={24} />
-                    <p className="text-sm">Upload Reference Image</p>
-                    <span className="text-xs text-muted">Supports JPG, PNG</span>
-                  </div>
-                  <div className="consistency-info">
-                    <div className="info-badge">
-                      <Info size={12} /> <span>How it works</span>
-                    </div>
-                    <p className="text-xs text-muted mt-2">
-                      Our AI identifies the character in your reference image and maintains their 
-                      identity across different scenes and styles.
-                    </p>
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Your Description */}
