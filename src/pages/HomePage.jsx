@@ -4,7 +4,7 @@ import { useApp } from '../context/AppContext';
 import { generatePrompt } from '../data/promptEngine';
 import PromptOutput from '../components/PromptOutput';
 import { ArrowRight, Sparkles, Zap, Image, Layers, Heart, Wand2, Rocket, Star, Palette, MessageSquare, ShieldCheck, Zap as ZapIcon, ShoppingBag, Coins, DollarSign } from 'lucide-react';
-import { marketplaceItems } from '../data/marketplaceData';
+import { promptTemplates } from '../data/promptData';
 import { useState } from 'react';
 import './HomePage.css';
 
@@ -101,14 +101,58 @@ export default function HomePage() {
           </div>
           
           <div className="p-market-grid">
-            {marketplaceItems.map((item, i) => (
-              <div key={item.id} className="p-market-card reveal" style={{ animationDelay: `${0.1 * (i+1)}s` }}>
-                <img src={item.image} alt={item.title} className="p-market-img" />
-                <div className="p-market-footer">
-                  <span className="p-market-name">{item.slug}</span>
-                  <span className="p-market-price">${item.price}</span>
-                </div>
-              </div>
+            {promptTemplates.slice(0, 8).map((tmpl, i) => (
+              <Link
+                key={tmpl.id}
+                to={tmpl.premium && !state.isPremium ? '/pricing' : `/generate?template=${tmpl.id}`}
+                className="template-card card reveal"
+                id={`template-${tmpl.id}`}
+                style={{ animationDelay: `${i * 0.05}s`, textDecoration: 'none' }}
+              >
+                {tmpl.thumbnail || tmpl.video ? (
+                  <div className="template-card__visual">
+                    {tmpl.video ? (
+                      <video src={tmpl.video} autoPlay muted loop className="template-card__media" />
+                    ) : (
+                      <img src={tmpl.thumbnail} alt={tmpl.title} className="template-card__media" />
+                    )}
+                    
+                    {/* Model Overlay (Top) */}
+                    <div className="template-card__overlay template-card__overlay--top">
+                      <span className="template-card__model-tag">
+                        {tmpl.category === 'anime' ? 'Niji v6' : 'Flux.1'}
+                      </span>
+                    </div>
+                    
+                    {/* Name & Token Overlay (Bottom) */}
+                    <div className="template-card__overlay template-card__overlay--bottom">
+                      <h3 className="template-card__title-overlay">{tmpl.title}</h3>
+                      <div className="template-card__token-badge">
+                        <ZapIcon size={10} fill="currentColor" /> 5
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="template-card__content template-card__content--text">
+                    {/* Model Overlay (Top) */}
+                    <div className="template-card__overlay template-card__overlay--top">
+                      <span className="template-card__model-tag template-card__model-tag--text">
+                        {tmpl.category === 'chat' ? 'GPT-4o' : 'Claude 3.5'}
+                      </span>
+                    </div>
+
+                    {/* Centered Name */}
+                    <h3 className="template-card__title-center">{tmpl.title}</h3>
+
+                    {/* Token Overlay (Bottom Right) */}
+                    <div className="template-card__overlay template-card__overlay--bottom template-card__overlay--right">
+                      <div className="template-card__token-badge template-card__token-badge--text">
+                        <ZapIcon size={10} fill="currentColor" /> 5 Tokens
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </Link>
             ))}
           </div>
         </div>

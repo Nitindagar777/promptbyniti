@@ -1,218 +1,262 @@
 /* PricingPage Styles */
 .pricing-page {
-  padding-top: calc(40px + var(--space-lg));
-  padding-bottom: 80px;
+  padding-top: 60px;
+  padding-bottom: 120px;
   min-height: 100vh;
-  background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.05), transparent 400px),
-              radial-gradient(circle at bottom left, rgba(236, 72, 153, 0.05), transparent 400px);
 }
 
 .pricing-page__header {
   text-align: center;
-  margin-bottom: var(--space-3xl);
+  margin-bottom: 60px;
 }
 
-/* Grid & Cards */
 .pricing-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: var(--space-xl);
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  gap: 24px;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 var(--space-md);
+  padding: 0 20px;
 }
 
+/* Base Card Styling */
 .pricing-card {
-  background: rgba(30, 41, 59, 0.4);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: var(--radius-2xl);
-  padding: var(--space-xl);
+  flex: 1;
+  max-width: 380px;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 24px;
+  padding: 40px;
   display: flex;
   flex-direction: column;
   position: relative;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  height: 100%;
+  transition: all 0.4s cubic-bezier(0.2, 1, 0.3, 1);
 }
 
 .pricing-card:hover {
-  transform: translateY(-8px);
-  background: rgba(30, 41, 59, 0.6);
-  border-color: rgba(99, 102, 241, 0.4);
-  box-shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.5);
+  transform: translateY(-12px);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.4);
 }
 
+/* Popular (Creator) Plan Styling - The 'WOW' Card */
 .pricing-card--popular {
-  border: 2px solid var(--accent-primary);
-  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.8) 0%, rgba(15, 23, 42, 0.4) 100%);
+  transform: scale(1.02);
 }
 
-.pricing-card--current {
-  border-color: var(--accent-success);
+.pricing-card--popular::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  padding: 1px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.5), rgba(236, 72, 153, 0.5));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.pricing-card--popular:hover {
+  transform: scale(1.02) translateY(-12px);
 }
 
 .pricing-card__popular-tag {
   position: absolute;
-  top: 0;
+  top: -14px;
   left: 50%;
-  transform: translate(-50%, -50%);
-  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  transform: translateX(-50%);
+  background: linear-gradient(90deg, #8b5cf6, #ec4899);
   color: #fff;
-  padding: 6px 16px;
-  border-radius: 30px;
-  font-size: 0.75rem;
+  font-size: 11px;
   font-weight: 800;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
-  z-index: 2;
-}
-
-.pricing-card__current-tag {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: var(--accent-success);
-  background: rgba(34, 197, 94, 0.15);
-  padding: 4px 10px;
-  border-radius: 20px;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 1.5px;
+  padding: 6px 16px;
+  border-radius: 100px;
+  box-shadow: 0 8px 20px rgba(139, 92, 246, 0.3);
+  z-index: 10;
 }
 
+/* Card Content Hierarchy */
 .pricing-card__name {
-  font-size: 1.25rem;
+  font-size: 14px;
   font-weight: 700;
-  margin-bottom: var(--space-md);
-  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--text-muted);
+  margin-bottom: 24px;
 }
 
 .pricing-card__price {
-  margin-bottom: var(--space-md);
+  margin-bottom: 12px;
   display: flex;
   align-items: baseline;
 }
 
 .pricing-card__amount {
-  font-size: 3.5rem;
+  font-size: 56px;
   font-weight: 800;
   color: #fff;
   line-height: 1;
+  letter-spacing: -2px;
 }
 
 .pricing-card__currency {
-  font-size: 1.5rem;
-  margin-right: 2px;
+  font-size: 24px;
+  font-weight: 600;
   color: var(--text-secondary);
+  margin-right: 4px;
 }
 
 .pricing-card__period {
-  font-size: 0.9rem;
+  font-size: 14px;
   color: var(--text-muted);
-  margin-left: 4px;
+  margin-left: 8px;
 }
 
 .pricing-card__credits {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--accent-primary);
-  margin-bottom: var(--space-xl);
-  padding: 8px 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+  margin-bottom: 32px;
+  opacity: 0.8;
 }
 
+/* Features List */
 .pricing-card__features {
   list-style: none;
   padding: 0;
-  margin: 0 0 var(--space-xl) 0;
+  margin: 0 0 40px 0;
   flex-grow: 1;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: 32px;
 }
 
 .pricing-card__features li {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
-  margin-bottom: var(--space-md);
-  font-size: 0.9rem;
+  margin-bottom: 16px;
+  font-size: 14px;
   color: var(--text-secondary);
-  line-height: 1.4;
 }
 
 .pricing-card__features li svg {
-  color: var(--accent-success);
-  flex-shrink: 0;
-  margin-top: 2px;
+  color: #8b5cf6;
+  width: 18px;
+  height: 18px;
 }
 
+/* CTA Button */
 .pricing-card__cta {
   width: 100%;
-  padding: var(--space-md);
-  font-size: 1rem;
+  height: 54px;
+  border-radius: 14px;
+  font-size: 15px;
   font-weight: 700;
-  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: all 0.3s ease;
+  cursor: pointer;
+  border: none;
+}
+
+.pricing-card--popular .pricing-card__cta {
+  background: #fff;
+  color: #000;
+}
+
+.pricing-card--popular .pricing-card__cta:hover {
+  background: rgba(255, 255, 255, 0.9);
+  transform: scale(1.02);
+}
+
+.pricing-card:not(.pricing-card--popular) .pricing-card__cta {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pricing-card:not(.pricing-card--popular) .pricing-card__cta:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .pricing-card__cta:disabled {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--text-muted);
+  opacity: 0.5;
   cursor: not-allowed;
-  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-/* Trust Badges */
+/* Current Plan Tag (Top Right) */
+.pricing-card__current-tag {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  font-size: 10px;
+  font-weight: 800;
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+  padding: 4px 10px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Trust Badges - Minimalist */
 .pricing-trust {
   display: flex;
   justify-content: center;
-  gap: var(--space-2xl);
-  margin-top: var(--space-4xl);
-  padding-top: var(--space-3xl);
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  gap: 48px;
+  margin-top: 80px;
+  opacity: 0.5;
 }
 
 .trust-badge {
   display: flex;
   align-items: center;
-  gap: 16px;
-  color: var(--text-secondary);
+  gap: 12px;
 }
 
 .trust-badge__icon {
-  color: var(--text-muted);
+  width: 20px;
+  height: 20px;
 }
 
 .trust-badge h4 {
-  font-size: 0.9rem;
+  font-size: 13px;
   font-weight: 600;
   margin: 0;
-  color: var(--text-primary);
 }
 
 .trust-badge p {
-  font-size: 0.8rem;
-  margin: 0;
-  color: var(--text-muted);
+  display: none;
 }
 
+/* Mobile Responsiveness */
 @media (max-width: 1024px) {
   .pricing-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 768px) {
-  .pricing-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .pricing-trust {
     flex-direction: column;
     align-items: center;
-    gap: var(--space-xl);
+  }
+  
+  .pricing-card {
+    width: 100%;
+    max-width: 450px;
+  }
+  
+  .pricing-card--popular {
+    transform: none;
+  }
+  
+  .pricing-card--popular:hover {
+    transform: translateY(-12px);
   }
 }
 

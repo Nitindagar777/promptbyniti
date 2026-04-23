@@ -135,7 +135,7 @@
 }
 
 .template-card__model-tag {
-  color: rgba(255,255,255,0.7);
+  color: #ffffff;
   font-size: 0.65rem;
   font-family: var(--font-display);
   text-transform: uppercase;
@@ -173,7 +173,7 @@
 }
 
 .template-card__model-tag--text {
-  color: var(--text-muted);
+  color: #ffffff;
   text-shadow: none;
 }
 
