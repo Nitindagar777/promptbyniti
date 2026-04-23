@@ -674,6 +674,11 @@ export const promptTemplates = [
     emoji: '📸',
     category: 'ai-influencer',
     thumbnail: '/assets/store/instagram-model.png',
+    samples: [
+      '/assets/store/instagram-model.png',
+      'https://images.unsplash.com/photo-1524504281769-c270e17621f3?w=500&auto=format&fit=crop&q=60',
+      'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&auto=format&fit=crop&q=60'
+    ],
     description: 'Create stunning Instagram-worthy portraits',
     config: {
       category: 'portrait',
@@ -691,6 +696,11 @@ export const promptTemplates = [
     emoji: '🛍️',
     category: 'product',
     thumbnail: '/assets/store/product-ad.png',
+    samples: [
+      '/assets/store/product-ad.png',
+      'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&auto=format&fit=crop&q=60',
+      'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&auto=format&fit=crop&q=60'
+    ],
     description: 'Professional product photography for ads',
     config: {
       category: 'product',
@@ -708,6 +718,11 @@ export const promptTemplates = [
     emoji: '🖋️',
     category: 'tattoo',
     thumbnail: '/assets/store/tattoo-design.png',
+    samples: [
+      '/assets/store/tattoo-design.png',
+      'https://images.unsplash.com/photo-1598371839696-5c5bb00bdc28?w=500&auto=format&fit=crop&q=60',
+      'https://images.unsplash.com/photo-1562725227-7cd508e6c76e?w=500&auto=format&fit=crop&q=60'
+    ],
     description: 'Unique tattoo concepts and designs',
     config: {
       category: 'tattoo',
@@ -757,6 +772,11 @@ export const promptTemplates = [
     emoji: '🐉',
     category: 'fantasy',
     thumbnail: '/assets/store/fantasy-world.png',
+    samples: [
+      '/assets/store/fantasy-world.png',
+      'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=500&auto=format&fit=crop&q=60',
+      'https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?w=500&auto=format&fit=crop&q=60'
+    ],
     description: 'Epic fantasy landscapes and characters',
     config: {
       category: 'fantasy',
@@ -774,6 +794,11 @@ export const promptTemplates = [
     emoji: '⛩️',
     category: 'anime',
     thumbnail: '/assets/store/anime-character.png',
+    samples: [
+      '/assets/store/anime-character.png',
+      'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=500&auto=format&fit=crop&q=60',
+      'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=500&auto=format&fit=crop&q=60'
+    ],
     description: 'Beautiful anime-style character art',
     config: {
       category: 'anime',

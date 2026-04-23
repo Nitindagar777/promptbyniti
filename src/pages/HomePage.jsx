@@ -112,9 +112,22 @@ export default function HomePage() {
                 {tmpl.thumbnail || tmpl.video ? (
                   <div className="template-card__visual">
                     {tmpl.video ? (
-                      <video src={tmpl.video} autoPlay muted loop className="template-card__media" />
+                      <video src={tmpl.video} autoPlay muted loop className="template-card__media template-card__media-main" />
                     ) : (
-                      <img src={tmpl.thumbnail} alt={tmpl.title} className="template-card__media" />
+                      <>
+                        <img src={tmpl.thumbnail} alt={tmpl.title} className="template-card__media template-card__media-main" />
+                        {tmpl.samples && tmpl.samples.length >= 3 && (
+                          <div className="template-card__gallery">
+                            <div className="template-card__gallery-main">
+                              <img src={tmpl.samples[0]} alt={`${tmpl.title} sample 1`} />
+                            </div>
+                            <div className="template-card__gallery-side">
+                              <img src={tmpl.samples[1]} alt={`${tmpl.title} sample 2`} />
+                              <img src={tmpl.samples[2]} alt={`${tmpl.title} sample 3`} />
+                            </div>
+                          </div>
+                        )}
+                      </>
                     )}
                     
                     {/* Model Overlay (Top) */}

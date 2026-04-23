@@ -48,13 +48,26 @@ export default function Navbar() {
         </ul>
 
         <div className="navbar__actions">
-          <div className="navbar__credits" title="Remaining Credits">
-            <Zap size={16} fill="currentColor" />
-            <span>{state?.credits ?? 0}</span>
-          </div>
-          <Link to="/settings" className="navbar__avatar">
-            <User size={20} />
-          </Link>
+          {state?.user ? (
+            <>
+              <div className="navbar__credits" title="Remaining Credits">
+                <Zap size={16} fill="currentColor" />
+                <span>{state?.credits ?? 0}</span>
+              </div>
+              <Link to="/settings" className="navbar__avatar" title="Settings">
+                <User size={20} />
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link to="/login" className="btn btn-blue" style={{ padding: '8px 16px', fontSize: '0.9rem' }}>
+                Login
+              </Link>
+              <Link to="/signup" className="btn btn-primary" style={{ padding: '8px 16px', fontSize: '0.9rem', marginLeft: '6px' }}>
+                Register
+              </Link>
+            </>
+          )}
         </div>
       </div>
 

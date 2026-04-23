@@ -10,6 +10,7 @@ import LibraryPage from './pages/LibraryPage';
 import PricingPage from './pages/PricingPage';
 import DashboardPage from './pages/DashboardPage';
 import SettingsPage from './pages/SettingsPage';
+import AuthPage from './pages/AuthPage';
 
 import './App.css';
 
@@ -26,6 +27,8 @@ function App() {
             <Route path="/pricing" element={<PricingPage />} />
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/login" element={<AuthPage initialMode="login" />} />
+            <Route path="/signup" element={<AuthPage initialMode="signup" />} />
             <Route path="*" element={
               <div style={{ textAlign: 'center', padding: '100px 20px', minHeight: '60vh' }}>
                 <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '3rem', marginBottom: '20px' }}>404</h1>

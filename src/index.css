@@ -145,6 +145,22 @@ p {
   box-shadow: 0 2px 0 #0e7490;
 }
 
+.btn-blue {
+  background: #3b82f6;
+  box-shadow: 0 6px 0 #1d4ed8;
+}
+
+.btn-blue:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 0 #1d4ed8;
+  filter: brightness(1.1);
+}
+
+.btn-blue:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #1d4ed8;
+}
+
 /* --- CARDS --- */
 .card {
   background: var(--bg-card);
