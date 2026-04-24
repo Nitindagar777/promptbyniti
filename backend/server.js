@@ -45,6 +45,10 @@ const verifyCloudinary = async () => {
 };
 
 // Routes
+const authRoutes = require('./routes/auth');
+app.use('/api/auth', authRoutes);
+
+// Health check
 app.get('/', (req, res) => {
   res.json({ 
     message: "Prompt by Niti API - System Online", 

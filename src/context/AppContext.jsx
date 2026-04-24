@@ -106,6 +106,8 @@ function appReducer(state, action) {
       return {
         ...state,
         user: action.payload,
+        credits: action.payload.credits ?? state.credits,
+        plan: action.payload.plan ?? state.plan,
       };
 
     case actions.LOGOUT:
