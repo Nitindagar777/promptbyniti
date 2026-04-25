@@ -1,7 +1,7 @@
 /* SettingsPage Styles */
 .settings-page {
   padding-top: var(--space-xl);
-  padding-bottom: var(--space-4xl);
+  padding-bottom: var(--space-3xl);
   min-height: calc(100vh - 64px);
   position: relative;
   overflow: hidden;
@@ -221,6 +221,127 @@
 .settings-section--danger {
   border-color: rgba(236, 72, 153, 0.3) !important;
   background: rgba(15, 23, 42, 0.5) !important;
+  margin-bottom: var(--space-2xl);
+}
+
+/* Profile Upload */
+.profile-upload-container {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-xl);
+}
+
+.profile-avatar-wrapper {
+  position: relative;
+  width: 120px;
+  height: 120px;
+}
+
+.profile-avatar-preview {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: var(--bg-primary);
+  border: 3px solid var(--color-orange);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.profile-avatar-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-edit-btn {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--color-cyan);
+  border: 3px solid var(--bg-card);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.avatar-edit-btn:hover {
+  transform: scale(1.1);
+  background: var(--color-orange);
+}
+
+.profile-upload-info h4 {
+  font-size: 1.2rem;
+  margin-bottom: 4px;
+}
+
+.profile-upload-info p {
+  font-size: 0.9rem;
+}
+
+/* Alert Toast */
+.alert-toast {
+  position: fixed;
+  top: 100px;
+  right: 24px;
+  padding: 16px 24px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: white;
+  z-index: 10000;
+  animation: slideIn 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  font-weight: 600;
+}
+
+.alert-toast--success {
+  background: var(--color-green);
+  border-left: 6px solid #166534;
+}
+
+.alert-toast--error {
+  background: #ef4444;
+  border-left: 6px solid #991b1b;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* Danger Box Cleanup */
+.danger-box {
+  background: rgba(236, 72, 153, 0.05);
+  border: 1px solid rgba(236, 72, 153, 0.2);
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.danger-btn {
+  background: var(--color-pink);
+  padding: 12px 24px;
+  font-size: 1rem;
+  box-shadow: 0 4px 0 #9d174d;
+}
+
+.danger-btn:hover {
+  background: var(--color-pink);
+  filter: brightness(1.1);
 }
 
 @media (max-width: 992px) {

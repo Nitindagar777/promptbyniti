@@ -7,6 +7,7 @@ import { createContext, useContext, useReducer, useEffect } from 'react';
 const AppContext = createContext();
 
 const STORAGE_KEY = 'promptbyniti_state';
+const TOKEN_KEY = 'promptbyniti_token';
 
 /* Default state */
 const defaultState = {
@@ -139,8 +140,14 @@ export function AppProvider({ children }) {
     deletePrompt: (id) => dispatch({ type: actions.DELETE_PROMPT, payload: id }),
     toggleFavorite: (id) => dispatch({ type: actions.TOGGLE_FAVORITE, payload: id }),
     setPlan: (plan) => dispatch({ type: actions.SET_PLAN, payload: plan }),
-    login: (user) => dispatch({ type: actions.LOGIN, payload: user }),
-    logout: () => dispatch({ type: actions.LOGOUT }),
+    login: (user, token) => {
+      if (token) localStorage.setItem(TOKEN_KEY, token);
+      dispatch({ type: actions.LOGIN, payload: user });
+    },
+    logout: () => {
+      localStorage.removeItem(TOKEN_KEY);
+      dispatch({ type: actions.LOGOUT });
+    },
     canGenerate: state.plan === 'unlimited' || state.credits > 0,
     isPremium: state.plan !== 'free',
   };
