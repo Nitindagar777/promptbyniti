@@ -212,6 +212,17 @@
   justify-content: flex-end;
 }
 
+.settings-tab--danger:hover {
+  background: rgba(236, 72, 153, 0.1);
+  color: var(--color-pink);
+  border-color: rgba(236, 72, 153, 0.3);
+}
+
+.settings-section--danger {
+  border-color: rgba(236, 72, 153, 0.3) !important;
+  background: rgba(15, 23, 42, 0.5) !important;
+}
+
 @media (max-width: 992px) {
   .settings-grid {
     grid-template-columns: 1fr;

@@ -55,7 +55,15 @@ export default function Navbar() {
                 <span>{state?.credits ?? 0}</span>
               </div>
               <Link to="/settings" className="navbar__avatar" title="Settings">
-                <User size={20} />
+                {state.user?.avatar ? (
+                  <img 
+                    src={state.user.avatar} 
+                    alt="User" 
+                    className="navbar__avatar-img" 
+                  />
+                ) : (
+                  <User size={20} />
+                )}
               </Link>
             </>
           ) : (

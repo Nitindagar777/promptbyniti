@@ -29,6 +29,10 @@ export default function SettingsPage() {
               <CreditCard size={20} className="icon-billing" />
               <span>Subscription</span>
             </button>
+            <button className="settings-tab settings-tab--danger">
+              <LogOut size={20} />
+              <span>Danger Zone</span>
+            </button>
           </div>
 
           {/* Settings Content */}
@@ -100,12 +104,26 @@ export default function SettingsPage() {
               </div>
             </section>
 
-            {/* Account Actions */}
-            <div className="settings-actions">
-              <button className="btn btn-ghost text-danger" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-pink)', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-display)', fontSize: '1.1rem' }} onClick={logout}>
-                <LogOut size={20} /> Sign Out
-              </button>
-            </div>
+            {/* Danger Zone Section */}
+            <section className="settings-section settings-section--danger card">
+              <h3 className="settings-section-title">
+                <LogOut size={22} className="text-pink" /> 
+                <span className="text-pink">Danger Zone</span>
+              </h3>
+              <div className="danger-box" style={{ background: 'rgba(236, 72, 153, 0.05)', border: '1px solid rgba(236, 72, 153, 0.2)', padding: 'var(--space-md)', borderRadius: 'var(--radius-md)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <h4 style={{ color: 'var(--text-primary)', marginBottom: '4px' }}>Sign Out</h4>
+                  <p className="text-sm text-muted">Logout from your account on this device.</p>
+                </div>
+                <button 
+                  className="btn" 
+                  style={{ background: 'var(--color-pink)', padding: '12px 24px', fontSize: '1rem', boxShadow: '0 4px 0 #9d174d' }}
+                  onClick={logout}
+                >
+                  Sign Out
+                </button>
+              </div>
+            </section>
           </div>
         </div>
       </div>
