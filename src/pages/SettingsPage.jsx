@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { Shield, CreditCard, User, Moon, Lock, LogOut, Camera, Check, AlertCircle, Loader2 } from 'lucide-react';
@@ -25,6 +25,27 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
   const [preview, setPreview] = useState(null);
+
+  // Sync state with formData when user data loads
+  useEffect(() => {
+    if (state.user) {
+      setFormData({
+        name: state.user.name || '',
+        bio: state.user.bio || '',
+        avatar: state.user.avatar || '',
+      });
+    }
+  }, [state.user]);
+
+  // Auto-hide messages after 5 seconds
+  useEffect(() => {
+    if (message.text) {
+      const timer = setTimeout(() => {
+        setMessage({ type: '', text: '' });
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [message.text]);
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8844/api';
 

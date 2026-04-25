@@ -49,6 +49,16 @@ export default function AuthPage() {
     setIsVerifying(false);
   };
 
+  // Auto-hide errors after 5 seconds
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => {
+        setError('');
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
+
   // Handle Google credential response
   const handleGoogleResponse = useCallback(async (response) => {
     setLoading(true);
