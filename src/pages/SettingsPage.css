@@ -1,153 +1,231 @@
 /* SettingsPage Styles */
 .settings-page {
-  padding-top: calc(80px + var(--space-2xl));
+  padding-top: var(--space-xl);
   padding-bottom: var(--space-4xl);
-  min-height: 100vh;
+  min-height: calc(100vh - 64px);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Background Glow */
+.settings-page::before {
+  content: '';
+  position: absolute;
+  top: -200px;
+  right: -100px;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.1) 0%, transparent 70%);
+  z-index: -1;
+}
+
+.settings-page::after {
+  content: '';
+  position: absolute;
+  bottom: -200px;
+  left: -100px;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.1) 0%, transparent 70%);
+  z-index: -1;
 }
 
 .settings-header {
-  margin-bottom: var(--space-2xl);
+  margin-bottom: var(--space-xl);
+  position: relative;
 }
 
 .settings-title {
-  font-size: 2.2rem;
+  font-size: 3.5rem;
   margin-bottom: var(--space-xs);
+  background: linear-gradient(135deg, var(--color-orange), var(--color-pink));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 4px 12px rgba(249, 115, 22, 0.3));
+}
+
+.settings-header p {
+  color: var(--color-cyan);
+  font-size: 1.2rem;
+  opacity: 0.9;
+  text-shadow: 0 0 10px rgba(6, 182, 212, 0.3);
 }
 
 .settings-grid {
   display: grid;
-  grid-template-columns: 250px 1fr;
-  gap: var(--space-2xl);
+  grid-template-columns: 280px 1fr;
+  gap: var(--space-xl);
+  align-items: start;
 }
 
 .settings-sidebar {
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
+  background: rgba(30, 41, 59, 0.5);
+  padding: var(--space-md);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  backdrop-filter: blur(10px);
 }
 
 .settings-tab {
   display: flex;
   align-items: center;
   gap: var(--space-md);
-  padding: var(--space-md);
-  border: 1px solid transparent;
+  padding: 14px 20px;
+  border: 2px solid transparent;
   border-radius: var(--radius-md);
   background: transparent;
   color: var(--text-secondary);
   font-family: var(--font-display);
-  font-size: 1rem;
+  font-size: 1.1rem;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: all var(--transition);
   text-align: left;
 }
 
 .settings-tab:hover {
   background: rgba(255, 255, 255, 0.05);
   color: var(--text-primary);
+  transform: translateX(4px);
 }
 
 .settings-tab--active {
-  background: rgba(168, 85, 247, 0.1);
-  border-color: rgba(168, 85, 247, 0.2);
-  color: var(--accent-primary);
+  background: rgba(6, 182, 212, 0.1);
+  border-color: var(--color-cyan);
+  color: var(--color-cyan);
+  box-shadow: 0 0 20px rgba(6, 182, 212, 0.2);
 }
+
+/* Specific colors for icons when active */
+.settings-tab--active .icon-profile { color: var(--color-orange); }
+.settings-tab--active .icon-security { color: var(--color-purple); }
+.settings-tab--active .icon-billing { color: var(--color-green); }
 
 .settings-content {
   display: flex;
   flex-direction: column;
-  gap: var(--space-xl);
+  gap: var(--space-lg);
 }
 
 .settings-section {
-  padding: var(--space-xl);
+  padding: var(--space-lg);
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease;
+}
+
+.settings-section:hover {
+  transform: translateY(-2px);
 }
 
 .settings-section-title {
-  font-size: 1.2rem;
-  margin-bottom: var(--space-xl);
+  font-size: 1.4rem;
+  margin-bottom: var(--space-lg);
   color: var(--text-primary);
-  border-bottom: 1px solid var(--border-subtle);
-  padding-bottom: var(--space-sm);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.settings-section-title::after {
+  content: '';
+  flex: 1;
+  height: 2px;
+  background: linear-gradient(to right, var(--border-color), transparent);
 }
 
 .settings-field {
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
-  margin-bottom: var(--space-lg);
-  max-width: 400px;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-md);
+  max-width: 500px;
 }
 
 .settings-field label {
-  font-size: 0.9rem;
+  font-size: 1rem;
   color: var(--text-secondary);
+  margin-left: 4px;
 }
 
 .settings-toggle-field {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: var(--space-md);
+  background: rgba(15, 23, 42, 0.3);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .settings-toggle-field h4 {
-  font-size: 1rem;
+  font-size: 1.2rem;
   margin-bottom: 4px;
+  color: var(--text-primary);
 }
 
-/* Toggle Switch Style */
+/* Custom Toggle Switch */
 .toggle {
-  width: 44px;
-  height: 24px;
-  background: var(--bg-input);
-  border: 1px solid var(--border-subtle);
+  width: 52px;
+  height: 28px;
+  background: #334155;
   border-radius: var(--radius-full);
   position: relative;
   cursor: pointer;
-  transition: all var(--transition-normal);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .toggle--active {
-  background: var(--accent-primary);
-  border-color: var(--accent-primary);
+  background: var(--color-orange);
 }
 
 .toggle--locked {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
+  filter: grayscale(1);
 }
 
 .toggle-handle {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   background: white;
   border-radius: 50%;
   position: absolute;
-  top: 2px;
-  left: 2px;
-  transition: transform var(--transition-normal);
+  top: 4px;
+  left: 4px;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .toggle--active .toggle-handle {
-  transform: translateX(20px);
+  transform: translateX(24px);
 }
 
 .settings-actions {
-  margin-top: var(--space-lg);
-  padding-top: var(--space-lg);
-  border-top: 1px solid var(--border-subtle);
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+  display: flex;
+  justify-content: flex-end;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 992px) {
   .settings-grid {
     grid-template-columns: 1fr;
   }
+  
   .settings-sidebar {
     flex-direction: row;
     overflow-x: auto;
-    padding-bottom: var(--space-sm);
+    padding: var(--space-sm);
+    gap: var(--space-xs);
   }
+  
   .settings-tab {
     white-space: nowrap;
+    padding: 10px 16px;
   }
 }
