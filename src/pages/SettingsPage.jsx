@@ -78,8 +78,65 @@ export default function SettingsPage() {
   };
 
   const [activeTab, setActiveTab] = useState('profile');
+  const [securityStep, setSecurityStep] = useState('start'); // start | otp | password
+  const [securityOtp, setSecurityOtp] = useState('');
+  const [securityNewPassword, setSecurityNewPassword] = useState('');
+  const [securityLoading, setSecurityLoading] = useState(false);
 
-  // ... (keep handleImageChange and handleUpdateProfile)
+  // Handle Security Flow
+  const handleSecurityFlow = async (e) => {
+    e.preventDefault();
+    setSecurityLoading(true);
+    setMessage({ type: '', text: '' });
+
+    try {
+      if (securityStep === 'start') {
+        const res = await fetch(`${API_URL}/auth/forgot-password`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: state.user.email })
+        });
+        const data = await res.json();
+        if (data.success) {
+          setSecurityStep('otp');
+          setMessage({ type: 'success', text: 'Verification code sent to your email!' });
+        } else {
+          setMessage({ type: 'error', text: data.message || 'Error sending code' });
+        }
+      } else if (securityStep === 'otp') {
+        const res = await fetch(`${API_URL}/auth/verify-reset-otp`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: state.user.email, otp: securityOtp })
+        });
+        const data = await res.json();
+        if (data.success) {
+          setSecurityStep('password');
+        } else {
+          setMessage({ type: 'error', text: data.message || 'Invalid verification code' });
+        }
+      } else if (securityStep === 'password') {
+        const res = await fetch(`${API_URL}/auth/reset-password`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: state.user.email, otp: securityOtp, password: securityNewPassword })
+        });
+        const data = await res.json();
+        if (data.success) {
+          setSecurityStep('start');
+          setSecurityOtp('');
+          setSecurityNewPassword('');
+          setMessage({ type: 'success', text: 'Password updated successfully!' });
+        } else {
+          setMessage({ type: 'error', text: data.message || 'Failed to update password' });
+        }
+      }
+    } catch (err) {
+      setMessage({ type: 'error', text: 'Connection error. Please try again.' });
+    } finally {
+      setSecurityLoading(false);
+    }
+  };
 
   return (
     <div className="settings-page" id="settings-page">
@@ -245,11 +302,90 @@ export default function SettingsPage() {
                   </p>
                 </div>
                 
-                <div style={{ marginTop: 'var(--space-xl)', padding: 'var(--space-md)', background: 'rgba(168, 85, 247, 0.05)', borderRadius: 'var(--radius-md)', border: '1px dashed var(--color-purple)' }}>
+                <form 
+                  onSubmit={handleSecurityFlow}
+                  style={{ marginTop: 'var(--space-xl)', padding: 'var(--space-md)', background: 'rgba(168, 85, 247, 0.05)', borderRadius: 'var(--radius-md)', border: '1px dashed var(--color-purple)' }}
+                >
                   <h4 style={{ color: 'var(--text-primary)', marginBottom: '8px' }}>Password</h4>
-                  <p className="text-sm text-muted">To change your password or security settings, please use the secure link sent to your verified email.</p>
-                  <button className="btn btn-secondary btn-sm" style={{ marginTop: '16px', padding: '10px 20px' }}>Request Reset Link</button>
-                </div>
+                  
+                  {securityStep === 'start' && (
+                    <>
+                      <p className="text-sm text-muted">To change your password or security settings, please use the secure link sent to your verified email.</p>
+                      <button 
+                        type="submit" 
+                        className="btn btn-secondary btn-sm" 
+                        style={{ marginTop: '16px', padding: '10px 20px' }}
+                        disabled={securityLoading}
+                      >
+                        {securityLoading ? 'Sending...' : 'Request Reset Link'}
+                      </button>
+                    </>
+                  )}
+
+                  {securityStep === 'otp' && (
+                    <div style={{ marginTop: '12px' }}>
+                      <p className="text-sm text-muted">Enter the 4-digit code sent to your email.</p>
+                      <input 
+                        type="text" 
+                        className="input" 
+                        placeholder="0000" 
+                        maxLength={4}
+                        value={securityOtp}
+                        onChange={(e) => setSecurityOtp(e.target.value)}
+                        required
+                        style={{ maxWidth: '120px', textAlign: 'center', fontSize: '1.2rem', marginTop: '12px' }}
+                      />
+                      <div style={{ marginTop: '16px', display: 'flex', gap: '10px' }}>
+                        <button 
+                          type="submit" 
+                          className="btn btn-primary btn-sm"
+                          disabled={securityLoading}
+                        >
+                          {securityLoading ? 'Verifying...' : 'Verify Code'}
+                        </button>
+                        <button 
+                          type="button" 
+                          className="btn btn-secondary btn-sm" 
+                          onClick={() => setSecurityStep('start')}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {securityStep === 'password' && (
+                    <div style={{ marginTop: '12px' }}>
+                      <p className="text-sm text-muted">Enter your new password below.</p>
+                      <input 
+                        type="password" 
+                        className="input" 
+                        placeholder="New Password" 
+                        minLength={6}
+                        value={securityNewPassword}
+                        onChange={(e) => setSecurityNewPassword(e.target.value)}
+                        required
+                        style={{ marginTop: '12px' }}
+                      />
+                      <div style={{ marginTop: '16px', display: 'flex', gap: '10px' }}>
+                        <button 
+                          type="submit" 
+                          className="btn btn-primary btn-sm"
+                          disabled={securityLoading}
+                        >
+                          {securityLoading ? 'Updating...' : 'Set New Password'}
+                        </button>
+                        <button 
+                          type="button" 
+                          className="btn btn-secondary btn-sm" 
+                          onClick={() => setSecurityStep('start')}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </form>
               </section>
             )}
 
