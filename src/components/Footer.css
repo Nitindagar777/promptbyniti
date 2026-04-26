@@ -12,12 +12,23 @@
   margin-bottom: var(--space-2xl);
 }
 
+.footer__logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: var(--space-md);
+}
+
+.footer__logo-img {
+  height: 32px;
+  width: auto;
+  object-fit: contain;
+}
+
 .footer__logo-text {
   font-family: var(--font-display);
   font-size: 1.5rem;
   color: var(--text-primary);
-  display: block;
-  margin-bottom: var(--space-sm);
 }
 
 .footer__tagline {

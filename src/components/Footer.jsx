@@ -11,6 +11,7 @@ export default function Footer() {
       <div className="container footer__grid">
         <div className="footer__brand">
           <div className="footer__logo">
+            <img src="/image.png" alt="Prompt by Niti" className="footer__logo-img" />
             <span className="footer__logo-text">
               Prompt <span className="text-secondary" style={{ fontSize: '0.8em' }}>by</span> <span className="text-orange">Niti</span>
             </span>
