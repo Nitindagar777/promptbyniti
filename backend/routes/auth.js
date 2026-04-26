@@ -24,15 +24,33 @@ const sendOTPEmail = async (email, otp) => {
     to: email,
     subject: 'Your Verification Code',
     html: `
-      <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px; max-width: 400px; margin: auto;">
-        <h2 style="color: #f97316; text-align: center;">Verification Code</h2>
-        <p style="font-size: 16px; color: #333;">Your 4-digit verification code for Prompt by Niti is:</p>
-        <div style="font-size: 32px; font-weight: bold; text-align: center; letter-spacing: 10px; color: #06b6d4; padding: 20px; background: #f8fafc; border-radius: 8px;">
+      <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 30px; border: 1px solid #e2e8f0; border-radius: 16px; max-width: 450px; margin: auto; text-align: center; background-color: #ffffff;">
+        <div style="margin-bottom: 24px;">
+          <img src="cid:logo" alt="Prompt by Niti" style="height: 60px; width: auto;" />
+        </div>
+        <h2 style="color: #f97316; margin-bottom: 16px; font-size: 24px;">Verification Code</h2>
+        <p style="font-size: 16px; color: #475569; line-height: 1.5; margin-bottom: 24px;">
+          Your 4-digit verification code for <strong style="color: #0f172a;">Prompt by Niti</strong> is:
+        </p>
+        <div style="font-size: 36px; font-weight: 800; text-align: center; letter-spacing: 12px; color: #06b6d4; padding: 24px; background: #f1f5f9; border-radius: 12px; margin-bottom: 24px;">
           ${otp}
         </div>
-        <p style="font-size: 14px; color: #666; margin-top: 20px;">This code will expire in 10 minutes.</p>
+        <p style="font-size: 14px; color: #64748b; margin-top: 20px;">
+          This code is valid for <strong>10 minutes</strong>. Please do not share this code with anyone.
+        </p>
+        <div style="border-top: 1px solid #e2e8f0; margin-top: 30px; padding-top: 20px;">
+          <p style="font-size: 12px; color: #94a3b8; line-height: 1.4;">
+            If you didn't request this code, you can safely ignore this email.<br />
+            © ${new Date().getFullYear()} Prompt by Niti. All rights reserved.
+          </p>
+        </div>
       </div>
-    `
+    `,
+    attachments: [{
+      filename: 'logo.png',
+      path: 'c:\\Users\\nitin.LAPTOP-NAG2MKGV\\Desktop\\prompt_gene\\public\\image.png',
+      cid: 'logo'
+    }]
   };
   return transporter.sendMail(mailOptions);
 };
