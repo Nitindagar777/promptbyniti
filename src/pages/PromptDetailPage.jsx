@@ -1,0 +1,196 @@
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useApp } from '../context/AppContext';
+import { promptTemplates, aiModels } from '../data/promptData';
+import { 
+  Zap, ArrowLeft, Copy, Check, ShoppingBag, 
+  Sparkles, Image, MessageSquare, Play, 
+  Download, Share2, Heart, ShieldCheck 
+} from 'lucide-react';
+import './PromptDetailPage.css';
+
+export default function PromptDetailPage() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { state, useCredit } = useApp();
+  const [template, setTemplate] = useState(null);
+  const [copied, setCopied] = useState(false);
+  const [activeImage, setActiveImage] = useState(0);
+
+  useEffect(() => {
+    const found = promptTemplates.find(t => t.id === id);
+    if (found) {
+      setTemplate(found);
+    } else {
+      // Fallback
+    }
+    window.scrollTo(0, 0);
+  }, [id]);
+
+  if (!template) return <div className="p-detail-loading container">Loading prompt details...</div>;
+
+  const isVisual = template.thumbnail || template.video || template.samples;
+  const model = aiModels.find(m => m.id === template.config?.model) || aiModels[0];
+  const isPremium = template.premium && !state.isPremium;
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(template.config?.description || '');
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="p-detail" id="prompt-detail-page">
+      <div className="container">
+        {/* Navigation */}
+        <div className="p-detail__nav">
+          <button onClick={() => navigate(-1)} className="p-detail__back">
+            <ArrowLeft size={20} /> Back
+          </button>
+          <div className="p-detail__breadcrumbs">
+            <Link to="/">Home</Link> / <Link to="/templates">Store</Link> / <span>{template.title}</span>
+          </div>
+        </div>
+
+        <div className="p-detail__grid">
+          {/* LEFT COLUMN: Visual Media OR Text Focus */}
+          <div className="p-detail__media-section">
+            {isVisual ? (
+              <div className="visual-display card">
+                <div className="visual-main">
+                  {template.video ? (
+                    <video src={template.video} autoPlay muted loop controls />
+                  ) : (
+                    <img 
+                      src={template.samples ? template.samples[activeImage] : template.thumbnail} 
+                      alt={template.title} 
+                    />
+                  )}
+                  <div className="visual-badge">
+                    {template.video ? <Play size={16} fill="white" /> : <Image size={16} fill="white" />}
+                    {template.video ? 'Video Prompt' : 'Image Prompt'}
+                  </div>
+                </div>
+                
+                {template.samples && template.samples.length > 1 && (
+                  <div className="visual-thumbs">
+                    {template.samples.map((img, idx) => (
+                      <div 
+                        key={idx} 
+                        className={`visual-thumb ${activeImage === idx ? 'visual-thumb--active' : ''}`}
+                        onClick={() => setActiveImage(idx)}
+                      >
+                        <img src={img} alt={`Sample ${idx + 1}`} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-display card">
+                <div className="text-header">
+                  <MessageSquare size={32} className="text-cyan" />
+                  <h2>Prompt Template</h2>
+                </div>
+                <div className="text-body">
+                  <p className="text-muted" style={{ marginBottom: '15px' }}>This is a specialized chat/text prompt designed for {model.label}.</p>
+                  <div className="prompt-preview-box">
+                    <pre>{template.config?.description}</pre>
+                  </div>
+                </div>
+                <div className="text-footer">
+                  <ShieldCheck size={16} /> Verified by Prompt by Niti
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* RIGHT COLUMN: Actions & Info */}
+          <div className="p-detail__info-section">
+            <div className="p-detail__header-info">
+              <span className="p-detail__category-tag">{template.category.replace('-', ' ')}</span>
+              <h1 className="p-detail__title">{template.title}</h1>
+              <p className="p-detail__desc">{template.description || "A professional high-end prompt optimized for creative production."}</p>
+            </div>
+
+            <div className="p-detail__stats card">
+              <div className="stat-item">
+                <span className="stat-label">Model</span>
+                <span className="stat-value">{model.label}</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-label">Category</span>
+                <span className="stat-value" style={{ textTransform: 'capitalize' }}>{template.category.replace('-', ' ')}</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-label">Released</span>
+                <span className="stat-value">April 2026</span>
+              </div>
+            </div>
+
+            <div className="p-detail__actions">
+              <div className="p-detail__price-row">
+                <div className="token-price">
+                  <Zap size={24} fill="var(--color-orange)" className="text-orange" />
+                  <span>5 Tokens</span>
+                </div>
+                <div className="price-label">Per Generation</div>
+              </div>
+
+              <Link 
+                to={isPremium ? '/pricing' : `/generate?template=${template.id}`} 
+                className="btn btn-primary btn-xl w-full"
+                style={{ width: '100%' }}
+              >
+                {isPremium ? 'Upgrade to Unlock' : 'Use this Prompt'} <Sparkles size={20} />
+              </Link>
+
+              <div className="p-detail__secondary-actions">
+                <button className="btn btn-secondary" onClick={handleCopy} style={{ flex: 1 }}>
+                  {copied ? <Check size={18} /> : <Copy size={18} />}
+                  {copied ? 'Copied!' : 'Copy Template'}
+                </button>
+                <button className="btn btn-surface">
+                  <Heart size={18} />
+                </button>
+                <button className="btn btn-surface">
+                  <Share2 size={18} />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-detail__security card">
+              <div className="security-item">
+                <div className="security-icon"><ShieldCheck size={24} className="text-green" /></div>
+                <div>
+                  <h4 style={{ color: 'white', marginBottom: '4px' }}>Verified Quality</h4>
+                  <p className="text-xs text-muted">Tested on {model.label} for consistent results.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* RELATED SECTION */}
+        <section className="p-detail__related section-spacing">
+          <h2 className="h-display" style={{ fontSize: '2.5rem', marginBottom: 'var(--space-lg)' }}>
+            More like <span className="text-orange">this</span>
+          </h2>
+          <div className="related-grid">
+            {promptTemplates
+              .filter(t => t.category === template.category && t.id !== template.id)
+              .slice(0, 4)
+              .map(t => (
+                <Link key={t.id} to={`/prompt/${t.id}`} className="related-card card" style={{ textDecoration: 'none' }}>
+                  <div className="related-card__media">
+                    <img src={t.thumbnail || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop&q=60'} alt={t.title} />
+                  </div>
+                  <h4 style={{ marginTop: '12px', color: 'white' }}>{t.title}</h4>
+                </Link>
+              ))}
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}

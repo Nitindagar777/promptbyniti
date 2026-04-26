@@ -66,6 +66,7 @@
 .navbar__nav li:nth-child(3) .navbar__link { color: var(--color-cyan); }
 .navbar__nav li:nth-child(4) .navbar__link { color: var(--color-purple); }
 .navbar__nav li:nth-child(5) .navbar__link { color: var(--color-pink); }
+.navbar__nav li:nth-child(6) .navbar__link { color: #fbbf24; } /* Golden Color */
 
 .navbar__link:hover {
   opacity: 0.8;

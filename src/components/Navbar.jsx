@@ -40,6 +40,9 @@ export default function Navbar() {
             <Link to="/templates" className={`navbar__link ${isActive('/templates') ? 'navbar__link--active' : ''}`}>Store</Link>
           </li>
           <li>
+            <Link to="/sell" className={`navbar__link ${isActive('/sell') ? 'navbar__link--active' : ''}`}>Sell</Link>
+          </li>
+          <li>
             <Link to="/library" className={`navbar__link ${isActive('/library') ? 'navbar__link--active' : ''}`}>Free</Link>
           </li>
           <li>

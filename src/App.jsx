@@ -12,6 +12,8 @@ import PricingPage from './pages/PricingPage';
 import DashboardPage from './pages/DashboardPage';
 import SettingsPage from './pages/SettingsPage';
 import AuthPage from './pages/AuthPage';
+import PromptDetailPage from './pages/PromptDetailPage';
+import SellPage from './pages/SellPage';
 
 import './App.css';
 
@@ -40,6 +42,8 @@ function App() {
             <Route path="/templates" element={<TemplatesPage />} />
             <Route path="/library" element={<LibraryPage />} />
             <Route path="/pricing" element={<PricingPage />} />
+            <Route path="/prompt/:id" element={<PromptDetailPage />} />
+            <Route path="/sell" element={<SellPage />} />
             <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
             <Route path="/login" element={<GuestRoute><AuthPage initialMode="login" /></GuestRoute>} />

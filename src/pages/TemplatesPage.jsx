@@ -48,7 +48,7 @@ export default function TemplatesPage() {
             filteredTemplates.map((tmpl, i) => (
               <Link
                 key={tmpl.id}
-                to={tmpl.premium && !isPremium ? '/pricing' : `/generate?template=${tmpl.id}`}
+                to={`/prompt/${tmpl.id}`}
                 className="template-card card"
                 id={`template-${tmpl.id}`}
                 style={{ animationDelay: `${i * 0.05}s`, textDecoration: 'none' }}

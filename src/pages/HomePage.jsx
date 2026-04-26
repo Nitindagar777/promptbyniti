@@ -126,7 +126,7 @@ export default function HomePage() {
             {promptTemplates.slice(0, 8).map((tmpl, i) => (
               <Link
                 key={tmpl.id}
-                to={tmpl.premium && !state.isPremium ? '/pricing' : `/generate?template=${tmpl.id}`}
+                to={`/prompt/${tmpl.id}`}
                 className="template-card card reveal"
                 id={`template-${tmpl.id}`}
                 style={{ animationDelay: `${i * 0.05}s`, textDecoration: 'none' }}
