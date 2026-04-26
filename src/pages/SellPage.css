@@ -86,42 +86,61 @@
 .samples-container {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 12px;
 }
 
 .sample-box {
   background: var(--bg-primary) !important;
   border: 1px solid var(--border-color);
-  padding: 20px !important;
+  padding: 12px 16px !important;
+  display: grid;
+  grid-template-columns: 1fr 120px;
+  gap: 16px;
+  align-items: start; /* Align to top to avoid weird gaps */
 }
 
 .sample-header {
-  margin-bottom: 16px;
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.sample-output-label {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: white;
 }
 
 .sample-num {
   font-family: var(--font-display);
   color: var(--color-orange);
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
+.sample-box .form-group {
+  margin-bottom: 0; /* Remove bottom margin for side-by-side */
+}
+
 .input-sm {
-  padding: 12px;
-  font-size: 0.9rem;
+  padding: 10px;
+  font-size: 0.85rem;
 }
 
 .textarea-sm {
-  min-height: 80px;
-  font-size: 0.9rem;
-  padding: 12px;
+  min-height: 60px;
+  font-size: 0.85rem;
+  padding: 10px;
 }
 
 .sample-media-upload {
-  width: 100%;
-  aspect-ratio: 16/9;
-  border: 2px dashed var(--border-color);
+  width: 120px;
+  height: 120px;
+  aspect-ratio: 1/1;
+  border: 1px dashed var(--border-color);
   border-radius: var(--radius-sm);
   overflow: hidden;
   position: relative;
@@ -134,10 +153,16 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 4px;
   cursor: pointer;
   color: var(--text-muted);
   transition: var(--transition);
+  text-align: center;
+  padding: 4px;
+}
+
+.sample-upload-btn span {
+  font-size: 0.7rem;
 }
 
 .sample-upload-btn:hover {

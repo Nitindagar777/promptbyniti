@@ -222,6 +222,7 @@ export default function SellPage() {
                   <div key={sample.id} className="sample-box card">
                     <div className="sample-header">
                       <span className="sample-num">Sample #{index + 1}</span>
+                      <span className="sample-output-label">Output {formData.generateType === 'text' ? 'Text' : 'Media'}</span>
                     </div>
 
                     <div className="form-group">
@@ -234,7 +235,6 @@ export default function SellPage() {
                     </div>
 
                     <div className="form-group">
-                      <label>Output {formData.generateType === 'text' ? 'Text' : 'Media'}</label>
                       {formData.generateType === 'text' ? (
                         <textarea
                           required className="textarea textarea-sm"
