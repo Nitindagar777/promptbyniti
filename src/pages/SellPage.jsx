@@ -219,67 +219,86 @@ export default function SellPage() {
 
               <div className="samples-container">
                 {samples.map((sample, index) => (
-                  <div key={sample.id} className="sample-box card">
+                  <div key={sample.id} className={`sample-box card ${formData.generateType === 'text' ? 'sample-box--text' : ''}`}>
                     <div className="sample-header">
                       <span className="sample-num">Sample #{index + 1}</span>
-                      <span className="sample-output-label">Output {formData.generateType === 'text' ? 'Text' : 'Media'}</span>
-                    </div>
-
-                    <div className="form-group">
-                      <label>Input Prompt</label>
-                      <input
-                        type="text" required className="input input-sm"
-                        placeholder="Specific input used for this sample"
-                        value={sample.input} onChange={e => handleInputChange(sample.id, e.target.value)}
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      {formData.generateType === 'text' ? (
-                        <textarea
-                          required className="textarea textarea-sm"
-                          placeholder="Paste the AI's response here..."
-                          value={sample.output || ''} onChange={e => handleTextOutputChange(sample.id, e.target.value)}
-                        ></textarea>
-                      ) : (
-                        <div className="sample-media-upload">
-                          {sample.output ? (
-                            <div className="sample-media-preview">
-                              {formData.generateType === 'video' ? (
-                                <video src={sample.output} autoPlay muted loop />
-                              ) : (
-                                <img src={sample.output} alt={`Sample ${index + 1}`} />
-                              )}
-                              <button type="button" className="media-remove" onClick={() => handleTextOutputChange(sample.id, null)}>×</button>
-                            </div>
-                          ) : (
-                            <label className="sample-upload-btn">
-                              <input
-                                type="file" hidden accept={formData.generateType === 'video' ? 'video/*' : 'image/*'}
-                                onChange={e => handleMediaChange(sample.id, e)}
-                              />
-                              <Upload size={20} />
-                              <span>Upload {formData.generateType}</span>
-                            </label>
-                          )}
-                        </div>
+                      {formData.generateType !== 'text' && (
+                        <span className="sample-output-label">Output {formData.generateType === 'video' ? 'Video' : 'Media'}</span>
                       )}
                     </div>
+
+                    {formData.generateType === 'text' ? (
+                      // VERTICAL STACK FOR TEXT
+                      <div className="sample-content-text">
+                        <div className="form-group">
+                          <label>Input Prompt</label>
+                          <input 
+                            type="text" required className="input input-sm" 
+                            placeholder="Specific input used for this sample"
+                            value={sample.input} onChange={e => handleInputChange(sample.id, e.target.value)}
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Output Response</label>
+                          <textarea 
+                            required className="textarea textarea-sm" 
+                            placeholder="Paste the AI's response here..."
+                            value={sample.output || ''} onChange={e => handleTextOutputChange(sample.id, e.target.value)}
+                          ></textarea>
+                        </div>
+                      </div>
+                    ) : (
+                      // SIDE BY SIDE FOR IMAGE/VIDEO (Input Left, Media Right)
+                      <>
+                        <div className="form-group">
+                          <label>Input Prompt</label>
+                          <input 
+                            type="text" required className="input input-sm" 
+                            placeholder="Specific input used for this sample"
+                            value={sample.input} onChange={e => handleInputChange(sample.id, e.target.value)}
+                          />
+                        </div>
+
+                        <div className="sample-media-section">
+                          <div className="sample-media-upload">
+                            {sample.output ? (
+                              <div className="sample-media-preview">
+                                {formData.generateType === 'video' ? (
+                                  <video src={sample.output} autoPlay muted loop />
+                                ) : (
+                                  <img src={sample.output} alt={`Sample ${index + 1}`} />
+                                )}
+                                <button type="button" className="media-remove" onClick={() => handleTextOutputChange(sample.id, null)}>×</button>
+                              </div>
+                            ) : (
+                              <label className="sample-upload-btn">
+                                <input 
+                                  type="file" hidden accept={formData.generateType === 'video' ? 'video/*' : 'image/*'}
+                                  onChange={e => handleMediaChange(sample.id, e)}
+                                />
+                                <Upload size={20} />
+                                <span>Upload</span>
+                              </label>
+                            )}
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
                 ))}
               </div>
             </div>
-
-            <div className="sell-footer mt-lg">
-              <div className="security-note">
-                <ShieldCheck size={18} className="text-green" />
-                <span>Verified Listing - 70% Creator Royalty</span>
-              </div>
-              <button type="submit" className="btn btn-primary btn-xl w-full" disabled={loading}>
-                {loading ? 'Submitting Package...' : 'Publish to Store'} <ChevronRight size={20} />
-              </button>
-            </div>
           </div>
+        </div>
+
+        <div className="sell-footer mt-2xl">
+          <div className="security-note">
+            <ShieldCheck size={18} className="text-green" />
+            <span>Verified Listing - 70% Creator Royalty</span>
+          </div>
+          <button type="submit" className="btn btn-primary btn-xl" disabled={loading} style={{ minWidth: '300px' }}>
+            {loading ? 'Submitting Package...' : 'Publish to Store'} <ChevronRight size={20} />
+          </button>
         </div>
       </form>
     </div>
