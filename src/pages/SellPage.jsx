@@ -18,6 +18,7 @@ export default function SellPage() {
     model: '',
     tokens: '5',
     template: '',
+    keywords: [],
   });
 
   const [samples, setSamples] = useState([
@@ -207,6 +208,39 @@ export default function SellPage() {
                 <span className="input-hint">
                   <Info size={14} /> Use <strong>[square brackets]</strong> for variables like [subject], [style], etc.
                 </span>
+              </div>
+
+              <div className="form-group mt-md">
+                <label>Keywords (Select at least 4)</label>
+                <div className="keywords-grid">
+                  {[
+                    'Portrait', 'Group', 'Expression', 'Lifestyle', 
+                    'AI Influencer', 'Baby', 'Old Age', 'Character', 
+                    'Sci-Fi Character', 'Fantasy Character', 'Cyberpunk', 
+                    'Nature', 'Architecture', 'Animal', 'Fashion'
+                  ].map(kw => (
+                    <button
+                      key={kw}
+                      type="button"
+                      className={`keyword-tag ${formData.keywords?.includes(kw) ? 'active' : ''}`}
+                      onClick={() => {
+                        const current = formData.keywords || [];
+                        if (current.includes(kw)) {
+                          setFormData({ ...formData, keywords: current.filter(k => k !== kw) });
+                        } else {
+                          setFormData({ ...formData, keywords: [...current, kw] });
+                        }
+                      }}
+                    >
+                      {kw}
+                    </button>
+                  ))}
+                </div>
+                {(!formData.keywords || formData.keywords.length < 4) && (
+                  <span className="text-xs text-orange mt-2">
+                    Please select {4 - (formData.keywords?.length || 0)} more keywords
+                  </span>
+                )}
               </div>
             </div>
           </div>
