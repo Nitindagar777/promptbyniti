@@ -29,6 +29,21 @@ export default function HomePage() {
     addPrompt(result);
   };
 
+  const handleRandomGenerate = () => {
+    const randomPrompts = [
+      "A futuristic cyberpunk city with neon lights and flying cars in the rain.",
+      "An underwater kingdom with glowing jellyfish and ancient ruins.",
+      "A cozy cottage in a mystical forest with talking animals and fairy dust.",
+      "A majestic dragon guarding a treasure hoard in a volcanic cavern.",
+      "An astronaut exploring a vibrant alien planet with purple vegetation.",
+      "A Victorian steampunk laboratory filled with brass gears and steam.",
+      "A peaceful Japanese garden with cherry blossoms and a koi pond.",
+      "A gritty noir detective standing in a dark alley with a trench coat."
+    ];
+    const randomIndex = Math.floor(Math.random() * randomPrompts.length);
+    setDemoInput(randomPrompts[randomIndex]);
+  };
+
   return (
     <div className="p-home" id="home-page">
       {/* 01. HERO */}
@@ -71,7 +86,7 @@ export default function HomePage() {
               onChange={e => setDemoInput(e.target.value)}
             />
           </div>
-          <div className="p-playground__footer" style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
+          <div className="p-playground__footer" style={{ display: 'flex', justifyContent: 'center', gap: '15px', marginTop: '20px', flexWrap: 'wrap' }}>
             <button
               className="btn btn-primary btn-xl"
               onClick={handleDemoGenerate}
@@ -79,6 +94,13 @@ export default function HomePage() {
               style={{ minWidth: '320px' }}
             >
               <Wand2 size={24} /> Transform into Professional Prompt
+            </button>
+            <button
+              className="btn btn-sky btn-xl"
+              onClick={handleRandomGenerate}
+              style={{ minWidth: '220px' }}
+            >
+              <ZapIcon size={24} /> Randomly Generate
             </button>
           </div>
           {state.credits < 5 && demoInput.trim() && (

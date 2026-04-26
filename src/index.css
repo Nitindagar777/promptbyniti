@@ -161,6 +161,22 @@ p {
   box-shadow: 0 2px 0 #1d4ed8;
 }
 
+.btn-sky {
+  background: #0ea5e9;
+  box-shadow: 0 6px 0 #0369a1;
+}
+
+.btn-sky:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 0 #0369a1;
+  filter: brightness(1.1);
+}
+
+.btn-sky:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #0369a1;
+}
+
 /* --- CARDS --- */
 .card {
   background: var(--bg-card);
