@@ -235,3 +235,23 @@ p {
   min-height: 120px;
   resize: vertical;
 }
+
+/* --- UTILITIES --- */
+.mt-sm { margin-top: var(--space-sm) !important; }
+.mt-md { margin-top: var(--space-md) !important; }
+.mt-lg { margin-top: var(--space-lg) !important; }
+.mt-xl { margin-top: var(--space-xl) !important; }
+.mt-2xl { margin-top: var(--space-2xl) !important; }
+
+.mb-sm { margin-bottom: var(--space-sm) !important; }
+.mb-md { margin-bottom: var(--space-md) !important; }
+.mb-lg { margin-bottom: var(--space-lg) !important; }
+
+.ml-2 { margin-left: 8px !important; }
+.mr-2 { margin-right: 8px !important; }
+
+.w-full { width: 100% !important; }
+.text-center { text-align: center !important; }
+.text-xs { font-size: 0.75rem !important; }
+.text-sm { font-size: 0.875rem !important; }
+.text-muted { color: var(--text-muted) !important; }

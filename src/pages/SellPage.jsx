@@ -21,6 +21,32 @@ export default function SellPage() {
     keywords: [],
   });
 
+  const [showKeywordModal, setShowKeywordModal] = useState(false);
+  const [customKeyword, setCustomKeyword] = useState('');
+
+  const ALL_KEYWORDS = [
+    'Portrait', 'Group', 'Expression', 'Lifestyle', 'AI Influencer', 'Baby', 'Old Age', 
+    'Character', 'Sci-Fi Character', 'Fantasy Character', 'Horror Character', 'Cosplay',
+    'Professional Headshot', 'Selfie', 'Fashion', 'Streetwear', 'Luxury Fashion', 'Beauty', 
+    'Hairstyle', 'Makeup', 'Outfit Design', 'Product', 'E-commerce', 'Advertisement', 
+    'Branding', 'Marketing', 'Social Media Post', 'Thumbnail', 'App UI', 'Website UI', 
+    'Poster', 'Book Cover', 'Movie Poster', 'Landscape', 'Sunset', 'Sunrise', 'Cityscape', 
+    'Urban', 'Night City', 'Space', 'Nature', 'Forest', 'Tropical', 'Desert', 'Mountains', 
+    'Ocean', 'Snow', 'Volcano', 'Architecture', 'Interior Design', 'Exterior Design', 
+    'Building Concept', 'Historical', 'Futuristic Architecture', 'Food', 'Fast Food', 
+    'Dessert', 'Drinks', 'Coffee Art', 'Fine Dining', 'Tattoo', 'Illustration', 'Digital Art', 
+    'Painting', 'Line Art', 'Sketch', '3D Render', 'Isometric', 'Abstract', 'Colorful', 
+    'Geometric', 'Surreal', 'Psychedelic', 'Minimalist', 'Anime', 'Game Art', 'Pixel Art', 
+    'Cartoon', 'Comic', 'Superhero', 'Fantasy', 'Mythology', 'Vehicles', 'Cars', 'Sports Cars', 
+    'Spaceships', 'Aircraft', 'Ships', 'Animals', 'Pets', 'Wildlife', 'Creatures', 
+    'Underwater Life', 'Action', 'Explosion', 'War', 'Medieval', 'Apocalypse', 'Emotions', 
+    'Sad', 'Love', 'Angry', 'Funny', 'Celebration', 'Education', 'Infographic', 
+    'Data Visualization', 'Science', 'Medical', 'Music', 'Concert', 'Band', 'Album Cover', 
+    'Cinematic', 'Film Still', 'Documentary', 'Scene Design', 'Travel', 'Adventure', 
+    'Camping', 'Exploration', 'Wellness', 'Fitness', 'Mental Health', 'Spa', 'Festival', 
+    'Christmas', 'Halloween', 'Diwali', 'Futuristic', 'Cyberpunk', 'Metaverse', 'AI Generated World'
+  ];
+
   const [samples, setSamples] = useState([
     { id: 1, input: '', output: null },
     { id: 2, input: '', output: null },
@@ -108,10 +134,8 @@ export default function SellPage() {
         <h1 className="h-display">Sell Your <span className="text-orange">AI Excellence</span></h1>
         <p className="section-desc">Create a listing with 3 samples to prove your prompt's power and start earning tokens.</p>
       </div>
-
       <form className="sell-form-v2" onSubmit={handleSubmit}>
         <div className="sell-page__grid">
-          {/* MAIN CONFIG */}
           <div className="sell-section reveal" style={{ animationDelay: '0.1s' }}>
             <div className="card">
               <h3 className="section-subtitle"><Zap size={20} className="text-orange" /> Basic Information</h3>
@@ -129,52 +153,27 @@ export default function SellPage() {
                   value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })}
                 ></textarea>
               </div>
-
               <div className="form-row">
                 <div className="form-group">
                   <label>Generate Type</label>
                   <div className="type-selector">
-                    <button
-                      type="button" className={`type-btn ${formData.generateType === 'image' ? 'active' : ''}`}
-                      onClick={() => setFormData({ ...formData, generateType: 'image' })}
-                    >
-                      <Image size={18} /> Image
-                    </button>
-                    <button
-                      type="button" className={`type-btn ${formData.generateType === 'video' ? 'active' : ''}`}
-                      onClick={() => setFormData({ ...formData, generateType: 'video' })}
-                    >
-                      <Video size={18} /> Video
-                    </button>
-                    <button
-                      type="button" className={`type-btn ${formData.generateType === 'text' ? 'active' : ''}`}
-                      onClick={() => setFormData({ ...formData, generateType: 'text' })}
-                    >
-                      <Type size={18} /> Text
-                    </button>
+                    <button type="button" className={`type-btn ${formData.generateType === 'image' ? 'active' : ''}`} onClick={() => setFormData({ ...formData, generateType: 'image' })}><Image size={18} /> Image</button>
+                    <button type="button" className={`type-btn ${formData.generateType === 'video' ? 'active' : ''}`} onClick={() => setFormData({ ...formData, generateType: 'video' })}><Video size={18} /> Video</button>
+                    <button type="button" className={`type-btn ${formData.generateType === 'text' ? 'active' : ''}`} onClick={() => setFormData({ ...formData, generateType: 'text' })}><Type size={18} /> Text</button>
                   </div>
                 </div>
               </div>
-
               <div className="form-row">
                 <div className="form-group">
                   <label>Model</label>
-                  <select
-                    className="input" required
-                    value={formData.model} onChange={e => setFormData({ ...formData, model: e.target.value })}
-                  >
-                    {filteredModels.map(m => (
-                      <option key={m.id} value={m.id}>{m.label}</option>
-                    ))}
+                  <select className="input" required value={formData.model} onChange={e => setFormData({ ...formData, model: e.target.value })}>
+                    {filteredModels.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
                     <option value="other">Other (Custom Model)</option>
                   </select>
                 </div>
                 <div className="form-group">
                   <label>Price (Tokens)</label>
-                  <select
-                    className="input"
-                    value={formData.tokens} onChange={e => setFormData({ ...formData, tokens: e.target.value })}
-                  >
+                  <select className="input" value={formData.tokens} onChange={e => setFormData({ ...formData, tokens: e.target.value })}>
                     <option value="5">5 Tokens</option>
                     <option value="10">10 Tokens</option>
                     <option value="25">25 Tokens</option>
@@ -184,135 +183,66 @@ export default function SellPage() {
                   </select>
                 </div>
               </div>
-
               {formData.model === 'other' && (
                 <div className="form-group reveal">
                   <label>Custom Model Name</label>
-                  <input
-                    type="text" required className="input"
-                    placeholder="Enter the name of the AI model used..."
-                    value={formData.customModel || ''}
-                    onChange={e => setFormData({ ...formData, customModel: e.target.value })}
-                  />
+                  <input type="text" required className="input" placeholder="Enter the name of the AI model used..." value={formData.customModel || ''} onChange={e => setFormData({ ...formData, customModel: e.target.value })} />
                 </div>
               )}
-
               <div className="form-group">
                 <label>Prompt Template</label>
-                <textarea
-                  required className="textarea"
-                  style={{ minHeight: '120px', fontFamily: 'monospace' }}
-                  placeholder="A portrait of [subject] in [style] with [lighting]..."
-                  value={formData.template} onChange={e => setFormData({ ...formData, template: e.target.value })}
-                ></textarea>
-                <span className="input-hint">
-                  <Info size={14} /> Use <strong>[square brackets]</strong> for variables like [subject], [style], etc.
-                </span>
+                <textarea required className="textarea" style={{ minHeight: '120px', fontFamily: 'monospace' }} placeholder="A portrait of [subject] in [style] with [lighting]..." value={formData.template} onChange={e => setFormData({ ...formData, template: e.target.value })}></textarea>
+                <span className="input-hint"><Info size={14} /> Use <strong>[square brackets]</strong> for variables.</span>
               </div>
-
               <div className="form-group mt-md">
                 <label>Keywords (Select at least 4)</label>
-                <div className="keywords-grid">
-                  {[
-                    'Portrait', 'Group', 'Expression', 'Lifestyle', 
-                    'AI Influencer', 'Baby', 'Old Age', 'Character', 
-                    'Sci-Fi Character', 'Fantasy Character', 'Cyberpunk', 
-                    'Nature', 'Architecture', 'Animal', 'Fashion'
-                  ].map(kw => (
-                    <button
-                      key={kw}
-                      type="button"
-                      className={`keyword-tag ${formData.keywords?.includes(kw) ? 'active' : ''}`}
-                      onClick={() => {
-                        const current = formData.keywords || [];
-                        if (current.includes(kw)) {
-                          setFormData({ ...formData, keywords: current.filter(k => k !== kw) });
-                        } else {
-                          setFormData({ ...formData, keywords: [...current, kw] });
-                        }
-                      }}
-                    >
-                      {kw}
-                    </button>
-                  ))}
+                <div className="selected-keywords-preview">
+                  {formData.keywords?.length > 0 ? (
+                    <div className="keywords-grid">
+                      {formData.keywords.map(kw => (
+                        <span key={kw} className="keyword-tag active">
+                          {kw}
+                          <button type="button" className="kw-remove" onClick={() => setFormData({ ...formData, keywords: formData.keywords.filter(k => k !== kw) })}>×</button>
+                        </span>
+                      ))}
+                    </div>
+                  ) : <p className="text-sm text-muted">No keywords selected yet.</p>}
+                  <button type="button" className="btn btn-secondary btn-sm mt-md" onClick={() => setShowKeywordModal(true)}><Plus size={16} /> Add Keywords</button>
                 </div>
                 {(!formData.keywords || formData.keywords.length < 4) && (
-                  <span className="text-xs text-orange mt-2">
-                    Please select {4 - (formData.keywords?.length || 0)} more keywords
-                  </span>
+                  <span className="text-xs text-orange mt-2">Please select {Math.max(0, 4 - (formData.keywords?.length || 0))} more keywords</span>
                 )}
               </div>
             </div>
           </div>
-
-          {/* SAMPLES SECTION */}
           <div className="sell-section reveal" style={{ animationDelay: '0.2s' }}>
             <div className="card">
               <h3 className="section-subtitle"><Sparkles size={20} className="text-cyan" /> Proof of Concept (3 Samples)</h3>
-              <p className="text-sm text-muted mb-4">You must provide 3 pairs of input prompts and their actual outputs.</p>
-
+              <p className="text-sm text-muted mb-4">Provide 3 input prompts and their actual outputs.</p>
               <div className="samples-container">
                 {samples.map((sample, index) => (
                   <div key={sample.id} className={`sample-box card ${formData.generateType === 'text' ? 'sample-box--text' : ''}`}>
                     <div className="sample-header">
                       <span className="sample-num">Sample #{index + 1}</span>
-                      {formData.generateType !== 'text' && (
-                        <span className="sample-output-label">Output {formData.generateType === 'video' ? 'Video' : 'Media'}</span>
-                      )}
+                      {formData.generateType !== 'text' && <span className="sample-output-label">Output {formData.generateType === 'video' ? 'Video' : 'Media'}</span>}
                     </div>
-
                     {formData.generateType === 'text' ? (
-                      // VERTICAL STACK FOR TEXT
                       <div className="sample-content-text">
-                        <div className="form-group">
-                          <label>Input Prompt</label>
-                          <input 
-                            type="text" required className="input input-sm" 
-                            placeholder="Specific input used for this sample"
-                            value={sample.input} onChange={e => handleInputChange(sample.id, e.target.value)}
-                          />
-                        </div>
-                        <div className="form-group">
-                          <label>Output Response</label>
-                          <textarea 
-                            required className="textarea textarea-sm" 
-                            placeholder="Paste the AI's response here..."
-                            value={sample.output || ''} onChange={e => handleTextOutputChange(sample.id, e.target.value)}
-                          ></textarea>
-                        </div>
+                        <div className="form-group"><label>Input Prompt</label><input type="text" required className="input input-sm" placeholder="Input used" value={sample.input} onChange={e => handleInputChange(sample.id, e.target.value)} /></div>
+                        <div className="form-group"><label>Output Response</label><textarea required className="textarea textarea-sm" placeholder="AI's response" value={sample.output || ''} onChange={e => handleTextOutputChange(sample.id, e.target.value)}></textarea></div>
                       </div>
                     ) : (
-                      // SIDE BY SIDE FOR IMAGE/VIDEO (Input Left, Media Right)
                       <>
-                        <div className="form-group">
-                          <label>Input Prompt</label>
-                          <input 
-                            type="text" required className="input input-sm" 
-                            placeholder="Specific input used for this sample"
-                            value={sample.input} onChange={e => handleInputChange(sample.id, e.target.value)}
-                          />
-                        </div>
-
+                        <div className="form-group"><label>Input Prompt</label><input type="text" required className="input input-sm" placeholder="Input used" value={sample.input} onChange={e => handleInputChange(sample.id, e.target.value)} /></div>
                         <div className="sample-media-section">
                           <div className="sample-media-upload">
                             {sample.output ? (
                               <div className="sample-media-preview">
-                                {formData.generateType === 'video' ? (
-                                  <video src={sample.output} autoPlay muted loop />
-                                ) : (
-                                  <img src={sample.output} alt={`Sample ${index + 1}`} />
-                                )}
+                                {formData.generateType === 'video' ? <video src={sample.output} autoPlay muted loop /> : <img src={sample.output} alt="Sample" />}
                                 <button type="button" className="media-remove" onClick={() => handleTextOutputChange(sample.id, null)}>×</button>
                               </div>
                             ) : (
-                              <label className="sample-upload-btn">
-                                <input 
-                                  type="file" hidden accept={formData.generateType === 'video' ? 'video/*' : 'image/*'}
-                                  onChange={e => handleMediaChange(sample.id, e)}
-                                />
-                                <Upload size={20} />
-                                <span>Upload</span>
-                              </label>
+                              <label className="sample-upload-btn"><input type="file" hidden accept={formData.generateType === 'video' ? 'video/*' : 'image/*'} onChange={e => handleMediaChange(sample.id, e)} /><Upload size={20} /><span>Upload</span></label>
                             )}
                           </div>
                         </div>
@@ -324,17 +254,70 @@ export default function SellPage() {
             </div>
           </div>
         </div>
-
         <div className="sell-footer mt-2xl">
-          <div className="security-note">
-            <ShieldCheck size={18} className="text-green" />
-            <span>Verified Listing - 70% Creator Royalty</span>
-          </div>
-          <button type="submit" className="btn btn-primary btn-xl" disabled={loading} style={{ minWidth: '300px' }}>
-            {loading ? 'Submitting Package...' : 'Publish to Store'} <ChevronRight size={20} />
-          </button>
+          <div className="security-note"><ShieldCheck size={18} className="text-green" /><span>Verified Listing - 70% Creator Royalty</span></div>
+          <button type="submit" className="btn btn-primary btn-xl" disabled={loading} style={{ minWidth: '300px' }}>{loading ? 'Submitting...' : 'Publish to Store'} <ChevronRight size={20} /></button>
         </div>
       </form>
+      {showKeywordModal && (
+        <div className="keyword-modal-overlay" onClick={() => setShowKeywordModal(false)}>
+          <div className="keyword-modal card" onClick={e => e.stopPropagation()}>
+            <div className="modal-header"><h3><Plus size={24} className="text-cyan" /> Select Keywords</h3><button className="modal-close" onClick={() => setShowKeywordModal(false)}>×</button></div>
+            
+            <div className="custom-keyword-row mb-4">
+              <input 
+                type="text" 
+                className="input input-sm" 
+                placeholder="Can't find a keyword? Type your own here..."
+                value={customKeyword}
+                onChange={e => setCustomKeyword(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (customKeyword.trim()) {
+                      const current = formData.keywords || [];
+                      if (!current.includes(customKeyword.trim())) {
+                        setFormData({ ...formData, keywords: [...current, customKeyword.trim()] });
+                      }
+                      setCustomKeyword('');
+                    }
+                  }
+                }}
+              />
+              <button 
+                type="button" 
+                className="btn btn-secondary btn-sm"
+                onClick={() => {
+                  if (customKeyword.trim()) {
+                    const current = formData.keywords || [];
+                    if (!current.includes(customKeyword.trim())) {
+                      setFormData({ ...formData, keywords: [...current, customKeyword.trim()] });
+                    }
+                    setCustomKeyword('');
+                  }
+                }}
+              >
+                Add
+              </button>
+            </div>
+
+            <p className="text-muted mb-4">Or select from our categories:</p>
+            <div className="modal-keywords-grid">
+              {ALL_KEYWORDS.map(kw => (
+                <button key={kw} type="button" className={`keyword-tag ${formData.keywords?.includes(kw) ? 'active' : ''}`} onClick={() => {
+                  const current = formData.keywords || [];
+                  if (current.includes(kw)) setFormData({ ...formData, keywords: current.filter(k => k !== kw) });
+                  else setFormData({ ...formData, keywords: [...current, kw] });
+                }}>{kw}</button>
+              ))}
+            </div>
+            <div className="modal-footer mt-lg">
+              <div className="selection-status"><span className={formData.keywords?.length >= 4 ? 'text-green' : 'text-orange'}>{formData.keywords?.length || 0} selected</span>{formData.keywords?.length < 4 && <span className="text-xs ml-2">(Need {4 - formData.keywords.length} more)</span>}</div>
+              <button className="btn btn-primary" onClick={() => setShowKeywordModal(false)} disabled={formData.keywords?.length < 4}>Save Selection</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
