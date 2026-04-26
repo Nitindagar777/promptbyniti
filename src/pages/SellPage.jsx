@@ -268,7 +268,7 @@ export default function SellPage() {
               <input 
                 type="text" 
                 className="input input-sm" 
-                placeholder="Can't find a keyword? Type your own here..."
+                placeholder="Search or add custom keyword..."
                 value={customKeyword}
                 onChange={e => setCustomKeyword(e.target.value)}
                 onKeyDown={e => {
@@ -301,15 +301,22 @@ export default function SellPage() {
               </button>
             </div>
 
-            <p className="text-muted mb-4">Or select from our categories:</p>
+            <p className="text-muted mb-4">
+              {customKeyword ? `Matching keywords (${ALL_KEYWORDS.filter(k => k.toLowerCase().includes(customKeyword.toLowerCase())).length}):` : 'Or select from our categories:'}
+            </p>
             <div className="modal-keywords-grid">
-              {ALL_KEYWORDS.map(kw => (
-                <button key={kw} type="button" className={`keyword-tag ${formData.keywords?.includes(kw) ? 'active' : ''}`} onClick={() => {
-                  const current = formData.keywords || [];
-                  if (current.includes(kw)) setFormData({ ...formData, keywords: current.filter(k => k !== kw) });
-                  else setFormData({ ...formData, keywords: [...current, kw] });
-                }}>{kw}</button>
-              ))}
+              {ALL_KEYWORDS
+                .filter(kw => kw.toLowerCase().includes(customKeyword.toLowerCase()))
+                .map(kw => (
+                  <button key={kw} type="button" className={`keyword-tag ${formData.keywords?.includes(kw) ? 'active' : ''}`} onClick={() => {
+                    const current = formData.keywords || [];
+                    if (current.includes(kw)) setFormData({ ...formData, keywords: current.filter(k => k !== kw) });
+                    else setFormData({ ...formData, keywords: [...current, kw] });
+                  }}>{kw}</button>
+                ))}
+              {customKeyword && ALL_KEYWORDS.filter(k => k.toLowerCase().includes(customKeyword.toLowerCase())).length === 0 && (
+                <p className="text-sm text-muted w-full text-center py-4">No matching categories found. Click "Add" to create this as a custom keyword!</p>
+              )}
             </div>
             <div className="modal-footer mt-lg">
               <div className="selection-status"><span className={formData.keywords?.length >= 4 ? 'text-green' : 'text-orange'}>{formData.keywords?.length || 0} selected</span>{formData.keywords?.length < 4 && <span className="text-xs ml-2">(Need {4 - formData.keywords.length} more)</span>}</div>
