@@ -23,6 +23,7 @@ export default function Navbar() {
     <nav className={`navbar ${scrolled ? 'navbar--scrolled' : ''}`} id="main-navbar">
       <div className="navbar__inner container">
         <Link to="/" className="navbar__logo" id="nav-logo">
+          <img src="/image.png" alt="Prompt by Niti" className="navbar__logo-img" />
           <span className="navbar__logo-text">
             Prompt <span className="text-secondary" style={{ fontSize: '0.8em' }}>by</span> <span className="text-orange">Niti</span>
           </span>

@@ -33,10 +33,24 @@
 }
 
 .navbar__logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   text-decoration: none;
   font-family: var(--font-display);
   font-size: 1.5rem;
   color: var(--text-primary);
+}
+
+.navbar__logo-img {
+  height: 32px;
+  width: auto;
+  object-fit: contain;
+  transition: transform 0.3s ease;
+}
+
+.navbar__logo:hover .navbar__logo-img {
+  transform: scale(1.1);
 }
 
 /* NAVIGATION LINKS */
