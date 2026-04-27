@@ -1,19 +1,46 @@
 /* TemplatesPage — Prompt templates gallery */
 import { Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { promptTemplates, categories } from '../data/promptData';
-import { Crown, Lock, ArrowRight, Sparkles, Filter, Zap } from 'lucide-react';
-import { useState } from 'react';
+import { promptTemplates as staticTemplates, categories } from '../data/promptData';
+import { Crown, Lock, ArrowRight, Sparkles, Filter, Zap, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import './TemplatesPage.css';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8844/api';
 
 export default function TemplatesPage() {
   const { isPremium } = useApp();
   const [selectedCat, setSelectedCat] = useState('all');
+  const [prompts, setPrompts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchPrompts();
+  }, []);
+
+  const fetchPrompts = async () => {
+    try {
+      const res = await fetch(`${API_URL}/prompts`);
+      const data = await res.json();
+      if (data.success) {
+        // Merge static templates with dynamic ones from backend
+        // In production, we might want to only show backend ones
+        setPrompts([...staticTemplates, ...data.prompts]);
+      } else {
+        setPrompts(staticTemplates);
+      }
+    } catch (err) {
+      console.error('Failed to fetch prompts:', err);
+      setPrompts(staticTemplates);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredTemplates =
     selectedCat === 'all'
-      ? promptTemplates
-      : promptTemplates.filter(t => t.category === selectedCat);
+      ? prompts
+      : prompts.filter(t => t.category === selectedCat);
 
   const templateCategories = ['all', ...categories.filter(c => c.id !== 'default' && c.id !== 'none').map(c => c.id)];
 
@@ -43,82 +70,89 @@ export default function TemplatesPage() {
           ))}
         </div>
 
-        <div className="templates-page__grid">
-          {filteredTemplates.length > 0 ? (
-            filteredTemplates.map((tmpl, i) => (
-              <Link
-                key={tmpl.id}
-                to={`/prompt/${tmpl.id}`}
-                className="template-card card"
-                id={`template-${tmpl.id}`}
-                style={{ animationDelay: `${i * 0.05}s`, textDecoration: 'none' }}
-              >
-                {tmpl.thumbnail || tmpl.video ? (
-                  <div className="template-card__visual">
-                    {tmpl.video ? (
-                      <video src={tmpl.video} autoPlay muted loop className="template-card__media template-card__media-main" />
-                    ) : (
-                      <>
-                        <img src={tmpl.thumbnail} alt={tmpl.title} className="template-card__media template-card__media-main" />
-                        {tmpl.samples && tmpl.samples.length >= 3 && (
-                          <div className="template-card__gallery">
-                            <div className="template-card__gallery-main">
-                              <img src={tmpl.samples[0]} alt={`${tmpl.title} sample 1`} />
+        {loading ? (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '400px', gap: '1rem' }}>
+            <Loader2 className="animate-spin text-cyan" size={48} />
+            <p className="text-muted">Loading premium prompts...</p>
+          </div>
+        ) : (
+          <div className="templates-page__grid">
+            {filteredTemplates.length > 0 ? (
+              filteredTemplates.map((tmpl, i) => (
+                <Link
+                  key={tmpl.id || tmpl._id}
+                  to={`/prompt/${tmpl.id || tmpl._id}`}
+                  className="template-card card"
+                  id={`template-${tmpl.id || tmpl._id}`}
+                  style={{ animationDelay: `${i * 0.05}s`, textDecoration: 'none' }}
+                >
+                  {tmpl.thumbnail || tmpl.video ? (
+                    <div className="template-card__visual">
+                      {tmpl.video ? (
+                        <video src={tmpl.video} autoPlay muted loop className="template-card__media template-card__media-main" />
+                      ) : (
+                        <>
+                          <img src={tmpl.thumbnail} alt={tmpl.title} className="template-card__media template-card__media-main" />
+                          {tmpl.samples && tmpl.samples.length >= 3 && (
+                            <div className="template-card__gallery">
+                              <div className="template-card__gallery-main">
+                                <img src={tmpl.samples[0]} alt={`${tmpl.title} sample 1`} />
+                              </div>
+                              <div className="template-card__gallery-side">
+                                <img src={tmpl.samples[1]} alt={`${tmpl.title} sample 2`} />
+                                <img src={tmpl.samples[2]} alt={`${tmpl.title} sample 3`} />
+                              </div>
                             </div>
-                            <div className="template-card__gallery-side">
-                              <img src={tmpl.samples[1]} alt={`${tmpl.title} sample 2`} />
-                              <img src={tmpl.samples[2]} alt={`${tmpl.title} sample 3`} />
-                            </div>
-                          </div>
-                        )}
-                      </>
-                    )}
-                    
-                    {/* Model Overlay (Top) */}
-                    <div className="template-card__overlay template-card__overlay--top">
-                      <span className="template-card__model-tag">
-                        {tmpl.category === 'anime' ? 'Niji v6' : 'Flux.1'}
-                      </span>
-                    </div>
-                    
-                    {/* Name & Token Overlay (Bottom) */}
-                    <div className="template-card__overlay template-card__overlay--bottom">
-                      <h3 className="template-card__title-overlay">{tmpl.title}</h3>
-                      <div className="template-card__token-badge">
-                        <Zap size={10} fill="currentColor" /> 5
+                          )}
+                        </>
+                      )}
+                      
+                      {/* Model Overlay (Top) */}
+                      <div className="template-card__overlay template-card__overlay--top">
+                        <span className="template-card__model-tag">
+                          {tmpl.category === 'anime' ? 'Niji v6' : 'Flux.1'}
+                        </span>
+                      </div>
+                      
+                      {/* Name & Token Overlay (Bottom) */}
+                      <div className="template-card__overlay template-card__overlay--bottom">
+                        <h3 className="template-card__title-overlay">{tmpl.title}</h3>
+                        <div className="template-card__token-badge">
+                          <Zap size={10} fill="currentColor" /> {tmpl.priceTokens || 5}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ) : (
-                  <div className="template-card__content template-card__content--text">
-                    {/* Model Overlay (Top) */}
-                    <div className="template-card__overlay template-card__overlay--top">
-                      <span className="template-card__model-tag template-card__model-tag--text">
-                        {tmpl.category === 'chat' ? 'GPT-4o' : 'Claude 3.5'}
-                      </span>
-                    </div>
+                  ) : (
+                    <div className="template-card__content template-card__content--text">
+                      {/* Model Overlay (Top) */}
+                      <div className="template-card__overlay template-card__overlay--top">
+                        <span className="template-card__model-tag template-card__model-tag--text">
+                          {tmpl.category === 'chat' ? 'GPT-4o' : 'Claude 3.5'}
+                        </span>
+                      </div>
 
-                    {/* Centered Name */}
-                    <h3 className="template-card__title-center">{tmpl.title}</h3>
+                      {/* Centered Name */}
+                      <h3 className="template-card__title-center">{tmpl.title}</h3>
 
-                    {/* Token Overlay (Bottom Right) */}
-                    <div className="template-card__overlay template-card__overlay--bottom template-card__overlay--right">
-                      <div className="template-card__token-badge template-card__token-badge--text">
-                        <Zap size={10} fill="currentColor" /> 5 Tokens
+                      {/* Token Overlay (Bottom Right) */}
+                      <div className="template-card__overlay template-card__overlay--bottom template-card__overlay--right">
+                        <div className="template-card__token-badge template-card__token-badge--text">
+                          <Zap size={10} fill="currentColor" /> {tmpl.priceTokens || 5} Tokens
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
-              </Link>
-            ))
-          ) : (
-            <div className="templates-page__empty">
-              <Sparkles size={48} className="text-muted mb-4 mx-auto" />
-              <h3>No prompts found</h3>
-              <p>Try selecting another category to discover more premium prompts.</p>
-            </div>
-          )}
-        </div>
+                  )}
+                </Link>
+              ))
+            ) : (
+              <div className="templates-page__empty">
+                <Sparkles size={48} className="text-muted mb-4 mx-auto" />
+                <h3>No prompts found</h3>
+                <p>Try selecting another category to discover more premium prompts.</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

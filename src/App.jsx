@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useApp } from './context/AppContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import ScrollToTop from './components/ScrollToTop';
 
 // Pages
 import HomePage from './pages/HomePage';
@@ -34,6 +35,7 @@ function GuestRoute({ children }) {
 function App() {
   return (
     <div className="app">
+        <ScrollToTop />
         <Navbar />
         <main className="main-content">
           <Routes>

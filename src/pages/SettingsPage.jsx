@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { Shield, CreditCard, User, Moon, Lock, LogOut, Camera, Check, AlertCircle, Loader2 } from 'lucide-react';
+import AdminDashboard from '../components/AdminDashboard';
 import './SettingsPage.css';
 
 export default function SettingsPage() {
@@ -104,6 +105,45 @@ export default function SettingsPage() {
   const [securityNewPassword, setSecurityNewPassword] = useState('');
   const [securityLoading, setSecurityLoading] = useState(false);
 
+  // Admin Session State
+  const [isAdminAuth, setIsAdminAuth] = useState(false);
+  const [showAdminModal, setShowAdminModal] = useState(false);
+  const [adminInput, setAdminInput] = useState('');
+  const [adminError, setAdminError] = useState('');
+  const isAdminEmail = state.user?.email === 'nitindagar0800@gmail.com';
+
+  useEffect(() => {
+    // Check for existing valid admin session
+    const adminSession = localStorage.getItem('admin_session');
+    if (adminSession) {
+      const { timestamp } = JSON.parse(adminSession);
+      const now = Date.now();
+      // 12 hours in ms: 12 * 60 * 60 * 1000 = 43,200,000
+      if (now - timestamp < 43200000) {
+        setIsAdminAuth(true);
+      } else {
+        localStorage.removeItem('admin_session');
+      }
+    }
+  }, []);
+
+  const handleAdminSubmit = (e) => {
+    e.preventDefault();
+    if (adminInput === '@Nitin800') {
+      setIsAdminAuth(true);
+      setShowAdminModal(false);
+      setAdminInput('');
+      setAdminError('');
+      localStorage.setItem('admin_session', JSON.stringify({
+        authenticated: true,
+        timestamp: Date.now()
+      }));
+      setActiveTab('admin');
+    } else {
+      setAdminError('Incorrect Password');
+    }
+  };
+
   // Handle Security Flow
   const handleSecurityFlow = async (e) => {
     e.preventDefault();
@@ -198,6 +238,21 @@ export default function SettingsPage() {
               <CreditCard size={20} className="icon-billing" />
               <span>Subscription</span>
             </button>
+            {isAdminEmail && (
+              <button 
+                className={`settings-tab ${activeTab === 'admin' ? 'settings-tab--active' : ''}`}
+                onClick={() => {
+                  if (!isAdminAuth) {
+                    setShowAdminModal(true);
+                  } else {
+                    setActiveTab('admin');
+                  }
+                }}
+              >
+                <Lock size={20} className="icon-admin" />
+                <span>Admin Panel</span>
+              </button>
+            )}
           </div>
 
           {/* Settings Content */}
@@ -440,9 +495,49 @@ export default function SettingsPage() {
                 </div>
               </section>
             )}
+
+            {activeTab === 'admin' && isAdminAuth && (
+              <section className="settings-section card no-padding">
+                <AdminDashboard />
+              </section>
+            )}
           </div>
         </div>
       </div>
+      {/* Admin Password Modal */}
+      {showAdminModal && (
+        <div className="modal-overlay" onClick={() => setShowAdminModal(false)}>
+          <div className="modal-container card" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="modal-title">Admin Access</h3>
+              <button className="modal-close" onClick={() => setShowAdminModal(false)}>&times;</button>
+            </div>
+            <form className="modal-body" onSubmit={handleAdminSubmit}>
+              <p className="text-muted mb-4">Please enter the security password to access the Admin Panel.</p>
+              <div className="settings-field">
+                <label>Admin Password</label>
+                <input 
+                  type="password" 
+                  className={`input ${adminError ? 'input--error' : ''}`}
+                  placeholder="••••••••"
+                  value={adminInput}
+                  onChange={(e) => {
+                    setAdminInput(e.target.value);
+                    setAdminError('');
+                  }}
+                  autoFocus
+                  required
+                />
+                {adminError && <p className="text-xs text-pink mt-2">{adminError}</p>}
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={() => setShowAdminModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary">Verify & Unlock</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -98,14 +98,38 @@ export default function SellPage() {
     setSamples(newSamples);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
+    
+    try {
+      const payload = {
+        ...formData,
+        samples: samples.map(s => ({ input: s.input, output: s.output }))
+      };
+
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8844/api'}/prompts`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setSubmitted(true);
+        window.scrollTo(0, 0);
+      } else {
+        alert(data.message || 'Failed to submit prompt');
+      }
+    } catch (err) {
+      console.error('Submission error:', err);
+      alert('Network error. Please try again.');
+    } finally {
       setLoading(false);
-      setSubmitted(true);
-      window.scrollTo(0, 0);
-    }, 2500);
+    }
   };
 
   if (submitted) {
