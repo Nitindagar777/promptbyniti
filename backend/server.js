@@ -47,7 +47,10 @@ const verifyCloudinary = async () => {
 
 // Routes
 const authRoutes = require('./routes/auth');
+const paymentRoutes = require('./routes/payment');
+
 app.use('/api/auth', authRoutes);
+app.use('/api/payment', paymentRoutes);
 
 // Health check
 app.get('/', (req, res) => {

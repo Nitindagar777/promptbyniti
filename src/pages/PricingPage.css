@@ -240,7 +240,6 @@
 .trust-badge__icon {
   width: 24px;
   height: 24px;
-  filter: drop-shadow(0 0 8px currentColor);
 }
 
 .trust-badge h4 {

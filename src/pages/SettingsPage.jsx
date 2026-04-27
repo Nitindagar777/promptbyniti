@@ -414,26 +414,28 @@ export default function SettingsPage() {
               <section className="settings-section card">
                 <h3 className="settings-section-title">
                   <CreditCard size={22} className="text-cyan" /> 
-                  <span className="text-cyan">Subscription Plan</span>
+                  <span className="text-cyan">Account & Packs</span>
                 </h3>
                 
                 <div className="plan-card" style={{ background: 'var(--bg-primary)', padding: 'var(--space-lg)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
                     <span className="section-tag" style={{ background: state.plan === 'free' ? 'var(--text-muted)' : 'var(--color-orange)' }}>
-                      {state.plan.toUpperCase()} PLAN
+                      {state.plan.toUpperCase()} {state.plan === 'free' ? 'STARTER' : 'PACK'}
                     </span>
-                    <h2 style={{ fontSize: '2rem', margin: '8px 0' }}>{state.plan === 'free' ? 'Standard Access' : 'Pro Creator'}</h2>
-                    <p className="text-muted">You have <span className="text-cyan">{state.credits === -1 ? 'Unlimited' : state.credits}</span> generations remaining.</p>
+                    <h2 style={{ fontSize: '2rem', margin: '8px 0' }}>
+                      {state.plan === 'free' ? 'Free Access' : (state.plan === 'pro' ? 'Creator Pack' : 'Studio Pack')}
+                    </h2>
+                    <p className="text-muted">You have <span className="text-cyan">{state.credits}</span> Prompt Packs remaining.</p>
                   </div>
-                  {state.plan === 'free' && (
-                    <button className="btn btn-primary">Upgrade Now</button>
-                  )}
+                  <button className="btn btn-primary" onClick={() => navigate('/pricing')}>
+                    {state.plan === 'free' ? 'Get More Packs' : 'Purchase More'}
+                  </button>
                 </div>
 
                 <div style={{ marginTop: 'var(--space-xl)' }}>
-                  <h4 style={{ marginBottom: 'var(--space-md)' }}>Billing History</h4>
+                  <h4 style={{ marginBottom: 'var(--space-md)' }}>Recent Transactions</h4>
                   <p className="text-muted" style={{ textAlign: 'center', padding: 'var(--space-xl)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)' }}>
-                    No recent transactions found.
+                    Your one-time pack purchases will appear here.
                   </p>
                 </div>
               </section>

@@ -851,10 +851,10 @@ export const pricingPlans = [
     name: '<span class="text-cyan">Creator</span>',
     price: 10,
     credits: 25,
-    period: 'month',
+    period: 'one-time',
     description: 'Best for <span class="text-cyan">creators & freelancers</span>',
     features: [
-      '<span class="text-cyan">25</span> Complete Prompt Packs / month',
+      '<span class="text-cyan">25</span> Complete Prompt Packs',
       'Full pack: title, description, prompts, samples',
       '<span class="text-purple">Private</span> prompt mode',
       'All styles & moods unlocked',
@@ -862,7 +862,7 @@ export const pricingPlans = [
       '<span class="text-orange">Prompt optimization</span> engine',
       'Save & organize prompts',
     ],
-    cta: 'Start Creating',
+    cta: 'Get Packs',
     popular: true,
   },
   {
@@ -870,10 +870,10 @@ export const pricingPlans = [
     name: '<span class="text-purple">Studio</span>',
     price: 29,
     credits: 80,
-    period: 'month',
+    period: 'one-time',
     description: 'For <span class="text-purple">power users & professionals</span>',
     features: [
-      '<span class="text-purple">80</span> Complete Prompt Packs / month',
+      '<span class="text-purple">80</span> Complete Prompt Packs',
       '<span class="text-cyan">Advanced</span> high-quality generation',
       'Character consistency support',
       '<span class="text-pink">Video + image</span> prompt support',
@@ -882,7 +882,7 @@ export const pricingPlans = [
       'Priority support',
       '<span class="text-orange">Early access</span> to new features',
     ],
-    cta: 'Go Unlimited',
+    cta: 'Get Packs',
     popular: false,
   },
 ];

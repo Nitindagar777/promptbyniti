@@ -12,8 +12,8 @@ const TOKEN_KEY = 'promptbyniti_token';
 /* Default state */
 const defaultState = {
   user: null,
-  credits: 10,
-  maxCredits: 10,
+  credits: 2,
+  maxCredits: 2,
   plan: 'free', // free | pro | unlimited
   prompts: [],
   favorites: [],
@@ -82,15 +82,15 @@ function appReducer(state, action) {
 
     case actions.SET_PLAN: {
       const planCredits = {
-        free: 10,
-        pro: 200,
-        unlimited: -1,
+        free: 2,
+        pro: 25,
+        unlimited: 80,
       };
       return {
         ...state,
         plan: action.payload,
-        credits: planCredits[action.payload] || 10,
-        maxCredits: planCredits[action.payload] || 10,
+        credits: planCredits[action.payload] || 2,
+        maxCredits: planCredits[action.payload] || 2,
         isPrivateMode: action.payload !== 'free',
       };
     }
@@ -99,8 +99,8 @@ function appReducer(state, action) {
       return { ...state, isPrivateMode: action.payload };
 
     case actions.RESET_CREDITS: {
-      const planCredits = { free: 10, pro: 200, unlimited: -1 };
-      return { ...state, credits: planCredits[state.plan] || 10 };
+      const planCredits = { free: 2, pro: 25, unlimited: 80 };
+      return { ...state, credits: planCredits[state.plan] || 2 };
     }
 
     case actions.LOGIN:
