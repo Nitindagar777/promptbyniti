@@ -2,7 +2,7 @@
    APP CONTEXT — Global state for user, credits, prompts
    ============================================================ */
 
-import { createContext, useContext, useReducer, useEffect } from 'react';
+import { createContext, useContext, useReducer, useEffect, useState } from 'react';
 
 const AppContext = createContext();
 
@@ -125,6 +125,7 @@ function appReducer(state, action) {
 /* Provider */
 export function AppProvider({ children }) {
   const [state, dispatch] = useReducer(appReducer, null, loadState);
+  const [showBanModal, setShowBanModal] = useState(false);
 
   /* Persist to localStorage */
   useEffect(() => {
@@ -148,7 +149,7 @@ export function AppProvider({ children }) {
           localStorage.removeItem(TOKEN_KEY);
           dispatch({ type: actions.LOGOUT });
           if (data.message && data.message.toLowerCase().includes('banned')) {
-            alert('Your account has been banned. You have been logged out.');
+            setShowBanModal(true);
           }
         } else {
           // Optionally update user data
@@ -183,7 +184,52 @@ export function AppProvider({ children }) {
     isPremium: state.plan !== 'free',
   };
 
-  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
+  return (
+    <AppContext.Provider value={value}>
+      {children}
+      {showBanModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(15, 23, 42, 0.9)', zIndex: 99999,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          backdropFilter: 'blur(8px)', animation: 'fadeIn 0.3s ease-out'
+        }}>
+          <div style={{
+            background: '#1e293b', border: '1px solid #ef4444',
+            padding: '40px', borderRadius: '24px', maxWidth: '400px', width: '90%',
+            textAlign: 'center', boxShadow: '0 20px 40px rgba(239, 68, 68, 0.2)'
+          }}>
+            <div style={{
+              width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(239, 68, 68, 0.1)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px'
+            }}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+                <path d="M12 9v4"/>
+                <path d="M12 17h.01"/>
+              </svg>
+            </div>
+            <h2 style={{ fontFamily: 'var(--font-display)', color: '#ef4444', fontSize: '2rem', marginBottom: '12px' }}>Account Suspended</h2>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '24px', lineHeight: '1.6' }}>
+              Your account has been banned due to a violation of our terms of service. You have been logged out.
+            </p>
+            <button 
+              onClick={() => setShowBanModal(false)}
+              style={{
+                background: '#ef4444', color: 'white', border: 'none', padding: '12px 32px',
+                borderRadius: '12px', fontFamily: 'var(--font-display)', fontSize: '1.2rem',
+                cursor: 'pointer', transition: 'all 0.2s', width: '100%'
+              }}
+              onMouseOver={(e) => e.target.style.background = '#dc2626'}
+              onMouseOut={(e) => e.target.style.background = '#ef4444'}
+            >
+              Understood
+            </button>
+          </div>
+        </div>
+      )}
+    </AppContext.Provider>
+  );
 }
 
 /* Hook */

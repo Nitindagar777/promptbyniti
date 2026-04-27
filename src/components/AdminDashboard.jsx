@@ -139,8 +139,8 @@ const AdminDashboard = () => {
               </td>
               <td className="actions">
                 {user.email !== 'nitindagar0800@gmail.com' && (
-                  <button 
-                    className={user.isBanned ? 'approve-btn' : 'reject-btn'} 
+                  <button
+                    className={user.isBanned ? 'approve-btn' : 'reject-btn'}
                     onClick={() => handleUserBan(user._id, user.isBanned)}
                   >
                     {user.isBanned ? 'Unban' : 'Ban'}

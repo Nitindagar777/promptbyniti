@@ -259,7 +259,7 @@ router.post('/google', async (req, res) => {
         googleId,
         avatar: picture || '',
         provider: 'google',
-        credits: 10,
+        credits: 2,
         plan: 'free',
         isVerified: true
       });

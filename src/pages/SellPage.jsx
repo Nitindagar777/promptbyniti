@@ -25,25 +25,25 @@ export default function SellPage() {
   const [customKeyword, setCustomKeyword] = useState('');
 
   const ALL_KEYWORDS = [
-    'Portrait', 'Group', 'Expression', 'Lifestyle', 'AI Influencer', 'Baby', 'Old Age', 
+    'Portrait', 'Group', 'Expression', 'Lifestyle', 'AI Influencer', 'Baby', 'Old Age',
     'Character', 'Sci-Fi Character', 'Fantasy Character', 'Horror Character', 'Cosplay',
-    'Professional Headshot', 'Selfie', 'Fashion', 'Streetwear', 'Luxury Fashion', 'Beauty', 
-    'Hairstyle', 'Makeup', 'Outfit Design', 'Product', 'E-commerce', 'Advertisement', 
-    'Branding', 'Marketing', 'Social Media Post', 'Thumbnail', 'App UI', 'Website UI', 
-    'Poster', 'Book Cover', 'Movie Poster', 'Landscape', 'Sunset', 'Sunrise', 'Cityscape', 
-    'Urban', 'Night City', 'Space', 'Nature', 'Forest', 'Tropical', 'Desert', 'Mountains', 
-    'Ocean', 'Snow', 'Volcano', 'Architecture', 'Interior Design', 'Exterior Design', 
-    'Building Concept', 'Historical', 'Futuristic Architecture', 'Food', 'Fast Food', 
-    'Dessert', 'Drinks', 'Coffee Art', 'Fine Dining', 'Tattoo', 'Illustration', 'Digital Art', 
-    'Painting', 'Line Art', 'Sketch', '3D Render', 'Isometric', 'Abstract', 'Colorful', 
-    'Geometric', 'Surreal', 'Psychedelic', 'Minimalist', 'Anime', 'Game Art', 'Pixel Art', 
-    'Cartoon', 'Comic', 'Superhero', 'Fantasy', 'Mythology', 'Vehicles', 'Cars', 'Sports Cars', 
-    'Spaceships', 'Aircraft', 'Ships', 'Animals', 'Pets', 'Wildlife', 'Creatures', 
-    'Underwater Life', 'Action', 'Explosion', 'War', 'Medieval', 'Apocalypse', 'Emotions', 
-    'Sad', 'Love', 'Angry', 'Funny', 'Celebration', 'Education', 'Infographic', 
-    'Data Visualization', 'Science', 'Medical', 'Music', 'Concert', 'Band', 'Album Cover', 
-    'Cinematic', 'Film Still', 'Documentary', 'Scene Design', 'Travel', 'Adventure', 
-    'Camping', 'Exploration', 'Wellness', 'Fitness', 'Mental Health', 'Spa', 'Festival', 
+    'Professional Headshot', 'Selfie', 'Fashion', 'Streetwear', 'Luxury Fashion', 'Beauty',
+    'Hairstyle', 'Makeup', 'Outfit Design', 'Product', 'E-commerce', 'Advertisement',
+    'Branding', 'Marketing', 'Social Media Post', 'Thumbnail', 'App UI', 'Website UI',
+    'Poster', 'Book Cover', 'Movie Poster', 'Landscape', 'Sunset', 'Sunrise', 'Cityscape',
+    'Urban', 'Night City', 'Space', 'Nature', 'Forest', 'Tropical', 'Desert', 'Mountains',
+    'Ocean', 'Snow', 'Volcano', 'Architecture', 'Interior Design', 'Exterior Design',
+    'Building Concept', 'Historical', 'Futuristic Architecture', 'Food', 'Fast Food',
+    'Dessert', 'Drinks', 'Coffee Art', 'Fine Dining', 'Tattoo', 'Illustration', 'Digital Art',
+    'Painting', 'Line Art', 'Sketch', '3D Render', 'Isometric', 'Abstract', 'Colorful',
+    'Geometric', 'Surreal', 'Psychedelic', 'Minimalist', 'Anime', 'Game Art', 'Pixel Art',
+    'Cartoon', 'Comic', 'Superhero', 'Fantasy', 'Mythology', 'Vehicles', 'Cars', 'Sports Cars',
+    'Spaceships', 'Aircraft', 'Ships', 'Animals', 'Pets', 'Wildlife', 'Creatures',
+    'Underwater Life', 'Action', 'Explosion', 'War', 'Medieval', 'Apocalypse', 'Emotions',
+    'Sad', 'Love', 'Angry', 'Funny', 'Celebration', 'Education', 'Infographic',
+    'Data Visualization', 'Science', 'Medical', 'Music', 'Concert', 'Band', 'Album Cover',
+    'Cinematic', 'Film Still', 'Documentary', 'Scene Design', 'Travel', 'Adventure',
+    'Camping', 'Exploration', 'Wellness', 'Fitness', 'Mental Health', 'Spa', 'Festival',
     'Christmas', 'Halloween', 'Diwali', 'Futuristic', 'Cyberpunk', 'Metaverse', 'AI Generated World'
   ];
 
@@ -101,7 +101,7 @@ export default function SellPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
+
     try {
       const payload = {
         ...formData,
@@ -287,11 +287,11 @@ export default function SellPage() {
         <div className="keyword-modal-overlay" onClick={() => setShowKeywordModal(false)}>
           <div className="keyword-modal card" onClick={e => e.stopPropagation()}>
             <div className="modal-header"><h3><Plus size={24} className="text-cyan" /> Select Keywords</h3><button className="modal-close" onClick={() => setShowKeywordModal(false)}>×</button></div>
-            
+
             <div className="custom-keyword-row mb-4">
-              <input 
-                type="text" 
-                className="input input-sm" 
+              <input
+                type="text"
+                className="input input-sm"
                 placeholder="Search or add custom keyword..."
                 value={customKeyword}
                 onChange={e => setCustomKeyword(e.target.value)}
@@ -308,8 +308,8 @@ export default function SellPage() {
                   }
                 }}
               />
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className="btn btn-secondary btn-sm"
                 onClick={() => {
                   if (customKeyword.trim()) {
