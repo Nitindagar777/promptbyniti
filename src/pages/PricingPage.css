@@ -90,7 +90,15 @@
   text-transform: uppercase;
   letter-spacing: 2px;
   color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.pricing-card__description {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.5;
   margin-bottom: 24px;
+  opacity: 0.8;
 }
 
 .pricing-card__price {
@@ -209,34 +217,44 @@
   letter-spacing: 1px;
 }
 
-/* Trust Badges - Minimalist */
+/* Trust Badges - Enhanced Visibility */
 .pricing-trust {
   display: flex;
   justify-content: center;
-  gap: 48px;
-  margin-top: 80px;
-  opacity: 0.5;
+  flex-wrap: wrap;
+  gap: 40px;
+  margin-top: 100px;
+  padding: 40px;
+  background: rgba(15, 23, 42, 0.4);
+  border-radius: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.03);
 }
 
 .trust-badge {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
+  min-width: 180px;
 }
 
 .trust-badge__icon {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
+  filter: drop-shadow(0 0 8px currentColor);
 }
 
 .trust-badge h4 {
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 700;
   margin: 0;
+  white-space: nowrap;
 }
 
 .trust-badge p {
-  display: none;
+  display: block;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
 }
 
 /* Mobile Responsiveness */
