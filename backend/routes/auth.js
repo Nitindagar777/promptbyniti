@@ -141,6 +141,10 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Please use Google Sign-in' });
     }
 
+    if (user.isBanned) {
+      return res.status(403).json({ success: false, message: 'Your account has been banned.' });
+    }
+
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res.status(401).json({ success: false, message: 'Invalid email or password' });
@@ -237,6 +241,10 @@ router.post('/google', async (req, res) => {
     let user = await User.findOne({ $or: [{ googleId }, { email }] });
 
     if (user) {
+      if (user.isBanned) {
+        return res.status(403).json({ success: false, message: 'Your account has been banned.' });
+      }
+
       if (!user.googleId) {
         user.googleId = googleId;
         user.provider = 'google';
@@ -293,6 +301,10 @@ router.get('/me', async (req, res) => {
 
     if (!user || !user.isVerified) {
       return res.status(401).json({ success: false, message: 'Not authenticated or verified' });
+    }
+
+    if (user.isBanned) {
+      return res.status(403).json({ success: false, message: 'Your account has been banned. Please contact support.' });
     }
 
     res.json({

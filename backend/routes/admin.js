@@ -32,8 +32,9 @@ router.get('/stats', isAdmin, async (req, res) => {
     const usersCount = await User.countDocuments();
     const promptsCount = await Prompt.countDocuments();
     const pendingPrompts = await Prompt.countDocuments({ status: 'pending' });
-    const transactions = await Transaction.find();
-    const totalRevenue = transactions.reduce((sum, tx) => sum + (tx.amount || 0), 0);
+    const completedTransactions = await Transaction.find({ status: 'completed' });
+    const totalRevenue = completedTransactions.reduce((sum, tx) => sum + (tx.amount || 0), 0);
+    const allTransactions = await Transaction.find();
 
     res.json({
       success: true,
@@ -41,8 +42,8 @@ router.get('/stats', isAdmin, async (req, res) => {
         usersCount,
         promptsCount,
         pendingPrompts,
-        totalRevenue: totalRevenue / 100, // Assuming amount is in cents/paise
-        salesCount: transactions.length
+        totalRevenue: totalRevenue, 
+        salesCount: completedTransactions.length
       }
     });
   } catch (err) {
@@ -55,6 +56,30 @@ router.get('/users', isAdmin, async (req, res) => {
   try {
     const users = await User.find().sort({ createdAt: -1 });
     res.json({ success: true, users });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// UPDATE User Ban Status
+router.patch('/users/:id/ban', isAdmin, async (req, res) => {
+  try {
+    const { isBanned } = req.body;
+    const user = await User.findById(req.params.id);
+    
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    
+    // Prevent banning the admin
+    if (user.email === 'nitindagar0800@gmail.com') {
+      return res.status(403).json({ success: false, message: 'Cannot ban admin' });
+    }
+
+    user.isBanned = isBanned;
+    await user.save();
+    
+    res.json({ success: true, user });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

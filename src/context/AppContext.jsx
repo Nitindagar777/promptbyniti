@@ -131,6 +131,37 @@ export function AppProvider({ children }) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }, [state]);
 
+  /* Validate User Session on Mount */
+  useEffect(() => {
+    const validateSession = async () => {
+      const token = localStorage.getItem(TOKEN_KEY);
+      if (!token || !state.user) return;
+
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8844/api'}/auth/me`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        
+        if (!data.success) {
+          // Token invalid or user banned
+          localStorage.removeItem(TOKEN_KEY);
+          dispatch({ type: actions.LOGOUT });
+          if (data.message && data.message.toLowerCase().includes('banned')) {
+            alert('Your account has been banned. You have been logged out.');
+          }
+        } else {
+          // Optionally update user data
+          dispatch({ type: actions.LOGIN, payload: data.user });
+        }
+      } catch (err) {
+        console.error('Session validation error:', err);
+      }
+    };
+
+    validateSession();
+  }, []);
+
   const value = {
     state,
     dispatch,

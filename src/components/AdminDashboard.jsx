@@ -67,6 +67,28 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleUserBan = async (id, currentStatus) => {
+    try {
+      const isBanned = !currentStatus;
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8844/api'}/admin/users/${id}/ban`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('promptbyniti_token')}`
+        },
+        body: JSON.stringify({ isBanned })
+      });
+      const json = await response.json();
+      if (json.success) {
+        setData(data.map(item => item._id === id ? { ...item, isBanned } : item));
+      } else {
+        alert(json.message);
+      }
+    } catch (err) {
+      console.error('Ban error:', err);
+    }
+  };
+
   const renderOverview = () => (
     <div className="admin-overview">
       <div className="stats-grid">
@@ -97,8 +119,10 @@ const AdminDashboard = () => {
           <tr>
             <th>Name</th>
             <th>Email</th>
-            <th>Tokens</th>
+            <th>Credits</th>
             <th>Joined</th>
+            <th>Status</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -106,8 +130,23 @@ const AdminDashboard = () => {
             <tr key={user._id}>
               <td>{user.name}</td>
               <td>{user.email}</td>
-              <td>{user.tokens}</td>
+              <td>{user.credits}</td>
               <td>{new Date(user.createdAt).toLocaleDateString()}</td>
+              <td>
+                <span className={`status-badge ${user.isBanned ? 'rejected' : 'approved'}`}>
+                  {user.isBanned ? 'Banned' : 'Active'}
+                </span>
+              </td>
+              <td className="actions">
+                {user.email !== 'nitindagar0800@gmail.com' && (
+                  <button 
+                    className={user.isBanned ? 'approve-btn' : 'reject-btn'} 
+                    onClick={() => handleUserBan(user._id, user.isBanned)}
+                  >
+                    {user.isBanned ? 'Unban' : 'Ban'}
+                  </button>
+                )}
+              </td>
             </tr>
           ))}
         </tbody>
@@ -130,7 +169,7 @@ const AdminDashboard = () => {
         <tbody>
           {data.map(prompt => (
             <tr key={prompt._id}>
-              <td>{prompt.title}</td>
+              <td>{prompt.name}</td>
               <td>{prompt.seller?.name || 'Unknown'}</td>
               <td>₹{prompt.price}</td>
               <td>

@@ -3,6 +3,8 @@ const router = express.Router();
 const Prompt = require('../models/Prompt');
 const jwt = require('jsonwebtoken');
 
+const User = require('../models/User');
+
 // Middleware: Auth Check
 const auth = async (req, res, next) => {
   try {
@@ -10,6 +12,11 @@ const auth = async (req, res, next) => {
     if (!authHeader) return res.status(401).json({ success: false, message: 'No token' });
     const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret');
+    
+    const user = await User.findById(decoded.id);
+    if (!user) return res.status(401).json({ success: false, message: 'User not found' });
+    if (user.isBanned) return res.status(403).json({ success: false, message: 'Your account has been banned.' });
+    
     req.userId = decoded.id;
     next();
   } catch (err) {

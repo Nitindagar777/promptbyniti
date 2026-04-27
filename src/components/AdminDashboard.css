@@ -15,7 +15,7 @@
 .admin-header h1 {
   font-family: var(--font-display);
   font-size: 2rem;
-  background: linear-gradient(135deg, #fff 0%, #aaa 100%);
+  background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 50%, #45B7D1 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -36,14 +36,17 @@
   background: transparent;
   color: var(--text-secondary);
   cursor: pointer;
-  font-weight: 500;
+  font-family: var(--font-display);
+  font-weight: normal;
+  font-size: 1.1rem;
+  letter-spacing: 1px;
   transition: all 0.3s ease;
 }
 
 .admin-tabs button.active {
-  background: var(--primary-color);
+  background: var(--color-orange);
   color: white;
-  box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
 }
 
 .stats-grid {
@@ -67,16 +70,20 @@
 }
 
 .stat-card h3 {
-  color: var(--text-secondary);
   font-size: 0.9rem;
   margin-bottom: 10px;
   text-transform: uppercase;
   letter-spacing: 1px;
 }
 
+.stat-card:nth-child(1) h3 { color: #FF6B6B; }
+.stat-card:nth-child(2) h3 { color: #4ECDC4; }
+.stat-card:nth-child(3) h3 { color: #FFE66D; }
+.stat-card:nth-child(4) h3 { color: #9B59B6; }
+
 .stat-value {
   font-size: 2.5rem;
-  font-weight: 700;
+  font-weight: normal;
   font-family: var(--font-display);
 }
 
@@ -104,11 +111,12 @@
 }
 
 .admin-table th {
-  color: var(--text-secondary);
-  font-weight: 600;
-  font-size: 0.85rem;
+  color: var(--color-cyan);
+  font-family: var(--font-display);
+  font-weight: normal;
+  font-size: 1.1rem;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 2px;
 }
 
 .admin-table tr:last-child td {
@@ -118,8 +126,9 @@
 .status-badge {
   padding: 4px 12px;
   border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.85rem;
+  font-family: var(--font-body);
+  font-weight: normal;
   text-transform: capitalize;
 }
 
@@ -144,8 +153,10 @@
   border-radius: 6px;
   border: none;
   cursor: pointer;
-  font-weight: 600;
-  font-size: 0.8rem;
+  font-family: var(--font-display);
+  font-weight: normal;
+  font-size: 1rem;
+  letter-spacing: 1px;
   transition: opacity 0.2s;
 }
 
