@@ -16,22 +16,62 @@ export default function PromptDetailPage() {
   const [template, setTemplate] = useState(null);
   const [copied, setCopied] = useState(false);
   const [activeImage, setActiveImage] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const found = promptTemplates.find(t => t.id === id);
-    if (found) {
-      setTemplate(found);
-    } else {
-      // Fallback
-    }
+    const fetchTemplate = async () => {
+      setLoading(true);
+      setError(null);
+      
+      // 1. Try static templates first
+      const found = promptTemplates.find(t => t.id === id);
+      if (found) {
+        setTemplate(found);
+        setLoading(false);
+      } else {
+        // 2. Try fetching from Database
+        try {
+          const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8844/api';
+          const res = await fetch(`${API_URL}/prompts/${id}`);
+          const data = await res.json();
+          if (data.success) {
+            setTemplate(data.prompt);
+          } else {
+            setError("Prompt not found");
+          }
+        } catch (err) {
+          console.error("Fetch error:", err);
+          setError("Failed to load prompt details");
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchTemplate();
     window.scrollTo(0, 0);
   }, [id]);
 
-  if (!template) return <div className="p-detail-loading container">Loading prompt details...</div>;
+  if (loading) return (
+    <div className="p-detail-loading container" style={{ padding: '100px 0', textAlign: 'center' }}>
+      <Sparkles size={48} className="spin text-orange mb-4 mx-auto" />
+      <h2 style={{ fontFamily: 'var(--font-display)' }}>Unlocking Prompt Secrets...</h2>
+    </div>
+  );
 
-  const isVisual = template.thumbnail || template.video || template.samples;
-  const model = aiModels.find(m => m.id === template.config?.model) || aiModels[0];
+  if (error || !template) return (
+    <div className="p-detail-loading container" style={{ padding: '100px 0', textAlign: 'center' }}>
+      <h2 style={{ color: 'var(--color-orange)' }}>Oops! {error || "Prompt not found"}</h2>
+      <Link to="/templates" className="btn btn-secondary mt-md">Back to Store</Link>
+    </div>
+  );
+
+  const isVisual = template.thumbnail || template.video || template.samples || template.generateType !== 'text';
+  const modelId = template.config?.model || template.model;
+  const model = aiModels.find(m => m.id === modelId) || aiModels[0];
   const isPremium = template.premium && !state.isPremium;
+  const category = (template.category || template.keywords?.[0] || 'Art');
 
   const handleCopy = () => {
     navigator.clipboard.writeText(template.config?.description || '');
@@ -58,17 +98,21 @@ export default function PromptDetailPage() {
             {isVisual ? (
               <div className="visual-display card">
                 <div className="visual-main">
-                  {template.video ? (
-                    <video src={template.video} autoPlay muted loop controls />
+                  {template.video || template.generateType === 'video' ? (
+                    <video src={template.video || (template.samples?.[activeImage]?.output || template.samples?.[activeImage])} autoPlay muted loop controls />
                   ) : (
                     <img 
-                      src={template.samples ? template.samples[activeImage] : template.thumbnail} 
-                      alt={template.title} 
+                      src={
+                        template.samples 
+                          ? (template.samples[activeImage]?.output || template.samples[activeImage]) 
+                          : template.thumbnail
+                      } 
+                      alt={template.title || template.name} 
                     />
                   )}
                   <div className="visual-badge">
-                    {template.video ? <Play size={16} fill="white" /> : <Image size={16} fill="white" />}
-                    {template.video ? 'Video Prompt' : 'Image Prompt'}
+                    {(template.video || template.generateType === 'video') ? <Play size={16} fill="white" /> : <Image size={16} fill="white" />}
+                    {(template.video || template.generateType === 'video') ? 'Video Prompt' : 'Image Prompt'}
                   </div>
                 </div>
                 
@@ -108,8 +152,8 @@ export default function PromptDetailPage() {
           {/* RIGHT COLUMN: Actions & Info */}
           <div className="p-detail__info-section">
             <div className="p-detail__header-info">
-              <span className="p-detail__category-tag">{template.category.replace('-', ' ')}</span>
-              <h1 className="p-detail__title">{template.title}</h1>
+              <span className="p-detail__category-tag">{category.replace('-', ' ')}</span>
+              <h1 className="p-detail__title">{template.title || template.name}</h1>
               <p className="p-detail__desc">{template.description || "A professional high-end prompt optimized for creative production."}</p>
             </div>
 
@@ -120,7 +164,9 @@ export default function PromptDetailPage() {
               </div>
               <div className="stat-item">
                 <span className="stat-label">Category</span>
-                <span className="stat-value" style={{ textTransform: 'capitalize' }}>{template.category.replace('-', ' ')}</span>
+                <span className="stat-value" style={{ textTransform: 'capitalize' }}>
+                  {category.replace('-', ' ')}
+                </span>
               </div>
               <div className="stat-item">
                 <span className="stat-label">Released</span>
@@ -138,7 +184,7 @@ export default function PromptDetailPage() {
               </div>
 
               <Link 
-                to={isPremium ? '/pricing' : `/generate?template=${template.id}`} 
+                to={isPremium ? '/pricing' : `/generate?template=${template.id || template._id}`} 
                 className="btn btn-primary btn-xl w-full"
                 style={{ width: '100%' }}
               >
@@ -171,21 +217,24 @@ export default function PromptDetailPage() {
           </div>
         </div>
 
-        {/* RELATED SECTION */}
         <section className="p-detail__related section-spacing">
           <h2 className="h-display" style={{ fontSize: '2.5rem', marginBottom: 'var(--space-lg)' }}>
             More like <span className="text-orange">this</span>
           </h2>
           <div className="related-grid">
-            {promptTemplates
-              .filter(t => t.category === template.category && t.id !== template.id)
+            {[...promptTemplates, ...state.prompts]
+              .filter(t => (t.category || t.keywords?.[0]) === category && (t.id || t._id) !== (template.id || template._id))
               .slice(0, 4)
               .map(t => (
-                <Link key={t.id} to={`/prompt/${t.id}`} className="related-card card" style={{ textDecoration: 'none' }}>
+                <Link key={t.id || t._id} to={`/prompt/${t.id || t._id}`} className="related-card card" style={{ textDecoration: 'none' }}>
                   <div className="related-card__media">
-                    <img src={t.thumbnail || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop&q=60'} alt={t.title} />
+                    <img 
+                      src={t.thumbnail || (t.samples?.[0]?.output || t.samples?.[0]) || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop&q=60'} 
+                      alt={t.title || t.name} 
+                      onError={(e) => e.target.src = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop&q=60'}
+                    />
                   </div>
-                  <h4 style={{ marginTop: '12px', color: 'white' }}>{t.title}</h4>
+                  <h4 style={{ marginTop: '12px', color: 'white' }}>{t.title || t.name}</h4>
                 </Link>
               ))}
           </div>
