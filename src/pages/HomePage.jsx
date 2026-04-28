@@ -198,20 +198,18 @@ export default function HomePage() {
                         <span className="template-card__model-tag">
                           {tmpl.model || (tmpl.category === 'anime' ? 'Niji v6' : 'Flux.1')}
                         </span>
+                        <div className="template-card__view-badge">
+                          <Eye size={12} /> {tmpl.views || 0}
+                        </div>
                       </div>
 
                       {/* Title + tokens (bottom) */}
                       <div className="template-card__overlay template-card__overlay--bottom">
                         <div style={{ flex: 1 }}>
                           <h3 className="template-card__title-overlay">{tmpl.title || tmpl.name}</h3>
-                          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                            <div className="template-card__token-badge">
-                              <ZapIcon size={10} fill="currentColor" /> {tmpl.priceTokens || tmpl.tokens || 5}
-                            </div>
-                            <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.6)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                              <Eye size={10} /> {tmpl.views || 0}
-                            </div>
-                          </div>
+                        </div>
+                        <div className="template-card__token-badge">
+                          <ZapIcon size={12} fill="currentColor" /> {tmpl.priceTokens || tmpl.tokens || 5}
                         </div>
                       </div>
                     </div>
@@ -221,11 +219,14 @@ export default function HomePage() {
                         <span className="template-card__model-tag template-card__model-tag--text">
                           {tmpl.model || 'GPT-4o'}
                         </span>
+                        <div className="template-card__view-badge">
+                          <Eye size={12} /> {tmpl.views || 0}
+                        </div>
                       </div>
                       <h3 className="template-card__title-center">{tmpl.title || tmpl.name}</h3>
                       <div className="template-card__overlay template-card__overlay--bottom template-card__overlay--right">
                         <div className="template-card__token-badge template-card__token-badge--text">
-                          <ZapIcon size={10} fill="currentColor" /> {tmpl.priceTokens || tmpl.tokens || 5} Tokens
+                          <ZapIcon size={12} fill="currentColor" /> {tmpl.priceTokens || tmpl.tokens || 5} Tokens
                         </div>
                       </div>
                     </div>

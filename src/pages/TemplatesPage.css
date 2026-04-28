@@ -175,7 +175,9 @@
   align-items: center;
   justify-content: space-between;
   z-index: 10;
-  pointer-events: none; /* Let clicks pass to the card link if needed, but action-overlay should be clickable */
+  pointer-events: none;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .template-card__overlay--top {
@@ -208,6 +210,18 @@
   align-items: center;
   gap: 4px;
   text-shadow: 0 1px 5px rgba(0,0,0,0.9);
+}
+
+.template-card__view-badge {
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(4px);
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .template-card__model-tag {

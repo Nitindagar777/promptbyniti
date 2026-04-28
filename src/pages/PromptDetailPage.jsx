@@ -6,7 +6,7 @@ import {
   Zap, ArrowLeft, Copy, Check, ShoppingBag, 
   Sparkles, Image, MessageSquare, Play, 
   Download, Share2, Heart, ShieldCheck,
-  ChevronLeft, ChevronRight, Eye 
+  ChevronLeft, ChevronRight, Eye, ArrowRight, Star 
 } from 'lucide-react';
 import './PromptDetailPage.css';
 
@@ -73,8 +73,6 @@ export default function PromptDetailPage() {
           const data = await res.json();
           if (data.success) {
             setTemplate(data.prompt);
-            // Record view
-            fetch(`${API_URL}/prompts/${id}/view`, { method: 'POST' }).catch(e => console.error("View tracking error:", e));
           } else {
             setError("Prompt not found");
           }
@@ -245,61 +243,123 @@ export default function PromptDetailPage() {
             </div>
 
             <div className="p-detail__actions">
-              <div className="p-detail__price-row">
-                <div className="token-price">
-                  <Zap size={24} fill="var(--color-orange)" className="text-orange" />
-                  <span>5 Tokens</span>
+              {state.user ? (
+                <>
+                  <div className="p-detail__price-row">
+                    <div className="token-price">
+                      <Zap size={24} fill="var(--color-orange)" className="text-orange" />
+                      <span>5 Tokens</span>
+                    </div>
+                    <div className="price-label">Per Generation</div>
+                  </div>
+
+                  <Link 
+                    to={isPremium ? '/pricing' : `/generate?template=${template.id || template._id}`} 
+                    className="btn btn-primary btn-xl w-full"
+                    style={{ width: '100%' }}
+                  >
+                    {isPremium ? 'Upgrade to Unlock' : 'Use this Prompt'} <Sparkles size={20} />
+                  </Link>
+
+                  <div className="p-detail__secondary-actions">
+                    <button className="btn btn-secondary btn-xl" onClick={handleShare} style={{ flex: 1, gap: '10px', height: '56px' }}>
+                      <Share2 size={20} /> Share this Prompt
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="p-detail__auth-gate">
+                  <p className="text-muted" style={{ marginBottom: '15px', textAlign: 'center' }}>Login to unlock and use this professional prompt.</p>
+                  <Link to="/login" className="btn btn-primary btn-xl w-full" style={{ width: '100%' }}>
+                    Login or Register <ArrowRight size={20} />
+                  </Link>
                 </div>
-                <div className="price-label">Per Generation</div>
-              </div>
-
-              <Link 
-                to={isPremium ? '/pricing' : `/generate?template=${template.id || template._id}`} 
-                className="btn btn-primary btn-xl w-full"
-                style={{ width: '100%' }}
-              >
-                {isPremium ? 'Upgrade to Unlock' : 'Use this Prompt'} <Sparkles size={20} />
-              </Link>
-
-              <div className="p-detail__secondary-actions">
-                <button className="btn btn-secondary btn-xl" onClick={handleShare} style={{ flex: 1, gap: '10px', height: '56px' }}>
-                  <Share2 size={20} /> Share this Prompt
-                </button>
-              </div>
+              )}
             </div>
 
-            <div className="p-detail__security card">
-              <div className="security-item">
-                <div className="security-icon"><ShieldCheck size={24} className="text-green" /></div>
-                <div>
-                  <h4 style={{ color: 'white', marginBottom: '4px' }}>Verified Quality</h4>
-                  <p className="text-xs text-muted">Tested on {model.label} for consistent results.</p>
-                </div>
-              </div>
+            <div className="p-detail__verified">
+              <ShieldCheck size={18} className="text-green" />
+              <span className="verified-text">Verified Quality: Tested on <strong>{model.label}</strong></span>
             </div>
           </div>
         </div>
 
-        <section className="p-detail__related section-spacing">
-          <h2 className="h-display" style={{ fontSize: '2.5rem', marginBottom: 'var(--space-lg)' }}>
-            More like <span className="text-orange">this</span>
-          </h2>
-          <div className="related-grid">
-            {state.prompts
-              .filter(t => (t.category || t.keywords?.[0]) === category && (t.id || t._id) !== (template.id || template._id))
-              .slice(0, 4)
-              .map(t => (
-                <Link key={t.id || t._id} to={`/prompt/${t.id || t._id}`} className="related-card card" style={{ textDecoration: 'none' }}>
-                  <div className="related-card__media">
-                    <img 
-                      src={t.thumbnail || (t.samples?.[0]?.output || t.samples?.[0]) || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop&q=60'} 
-                      alt={t.title || t.name} 
-                      onError={(e) => e.target.src = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop&q=60'}
-                    />
+        <section className="p-detail__bottom-section section-spacing">
+          <div className="p-detail__bottom-grid">
+            {/* Left: Reviews */}
+            <div className="p-detail__reviews">
+              <div className="reviews-header">
+                <div className="reviews-summary-new">
+                  <span className="reviews-count-big">603</span>
+                  <span className="reviews-label-main">Creator Reviews</span>
+                  <div className="reviews-rating-pill">
+                    <Star size={14} fill="currentColor" />
+                    <span>4.9</span>
                   </div>
-                  <h4 style={{ marginTop: '12px', color: 'white' }}>{t.title || t.name}</h4>
-                </Link>
-              ))}
+                </div>
+              </div>
+
+              <div className="reviews-list">
+                {[
+                  {
+                    author: "obscura666veil",
+                    date: "21 Apr",
+                    text: "A very well-written prompt! The variations are endless, and the portraits emanate a rich, atmospheric quality. Bravo!",
+                    rating: 5,
+                    color: "var(--color-cyan)"
+                  },
+                  {
+                    author: "creative_mind",
+                    date: "18 Apr",
+                    text: "That vintage prompt is absolutely brilliant. The AI doesn't lie—this one was fantastic for my project!",
+                    rating: 5,
+                    color: "var(--color-orange)"
+                  }
+                ].map((rev, idx) => (
+                  <div key={idx} className="review-card-premium">
+                    <div className="review-card-premium__header">
+                      <div className="review-user-info">
+                        <div className="user-initial" style={{ background: rev.color }}>{rev.author[0].toUpperCase()}</div>
+                        <div>
+                          <span className="review-author-name">@{rev.author}</span>
+                          <span className="review-date-new">{rev.date}</span>
+                        </div>
+                      </div>
+                      <div className="review-stars-new">
+                        {[...Array(rev.rating)].map((_, i) => <Star key={i} size={12} fill="currentColor" />)}
+                      </div>
+                    </div>
+                    <p className="review-body-text">"{rev.text}"</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Right: Related */}
+            <div className="p-detail__related-side">
+              <h2 className="h-display" style={{ fontSize: '2rem', marginBottom: 'var(--space-lg)' }}>
+                More like <span className="text-orange">this</span>
+              </h2>
+              <div className="related-grid-vertical">
+                {state.prompts
+                  .filter(t => (t.category || t.keywords?.[0]) === category && (t.id || t._id) !== (template.id || template._id))
+                  .slice(0, 3)
+                  .map(t => (
+                    <Link key={t.id || t._id} to={`/prompt/${t.id || t._id}`} className="related-card-small card" style={{ textDecoration: 'none' }}>
+                      <div className="related-card-small__media">
+                        <img 
+                          src={t.thumbnail || (t.samples?.[0]?.output || t.samples?.[0]) || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop&q=60'} 
+                          alt={t.title || t.name} 
+                        />
+                      </div>
+                      <div className="related-card-small__info">
+                        <h4>{t.title || t.name}</h4>
+                        <span className="text-muted" style={{fontSize: '0.8rem'}}>{t.model || 'Flux.1'}</span>
+                      </div>
+                    </Link>
+                  ))}
+              </div>
+            </div>
           </div>
         </section>
       </div>
