@@ -22,6 +22,52 @@ export default function PromptDetailPage() {
   const [imageRatio, setImageRatio] = useState(null); // null = not yet detected
   const [reviewsLimit, setReviewsLimit] = useState(2);
   const [relatedLimit, setRelatedLimit] = useState(3);
+  const [replyingToIdx, setReplyingToIdx] = useState(null);
+  const [replyText, setReplyText] = useState('');
+  const [reviews, setReviews] = useState([
+    {
+      author: "obscura666veil",
+      date: "21 Apr",
+      text: "A very well-written prompt! The variations are endless, and the portraits emanate a rich, atmospheric quality. Bravo!",
+      rating: 5,
+      color: "var(--color-cyan)",
+      tag: "Top Buyer",
+      reply: "Thanks for the nice review! Glad you like the atmospheric style."
+    },
+    {
+      author: "creative_mind",
+      date: "18 Apr",
+      text: "That vintage prompt is absolutely brilliant. The AI doesn't lie—this one was fantastic for my project!",
+      rating: 5,
+      color: "var(--color-orange)",
+      tag: "Verified"
+    },
+    {
+      author: "pixel_artist",
+      date: "15 Apr",
+      text: "Exceeded my expectations. The lighting details in the generated output are exactly what I needed for my portfolio.",
+      rating: 5,
+      color: "var(--color-purple)",
+      tag: "Verified"
+    },
+    {
+      author: "neo_designer",
+      date: "10 Apr",
+      text: "Amazing value. These prompts are highly optimized and save me hours of trial and error. Highly recommend!",
+      rating: 5,
+      color: "var(--color-blue)",
+      tag: "Pro User"
+    }
+  ]);
+
+  const handleReplySubmit = (idx) => {
+    if (!replyText.trim()) return;
+    const newReviews = [...reviews];
+    newReviews[idx].reply = replyText;
+    setReviews(newReviews);
+    setReplyingToIdx(null);
+    setReplyText('');
+  };
 
   const handlePrevImage = (e) => {
     e.preventDefault();
@@ -307,42 +353,8 @@ export default function PromptDetailPage() {
               </div>
 
               <div className="reviews-list">
-                {[
-                  {
-                    author: "obscura666veil",
-                    date: "21 Apr",
-                    text: "A very well-written prompt! The variations are endless, and the portraits emanate a rich, atmospheric quality. Bravo!",
-                    rating: 5,
-                    color: "var(--color-cyan)",
-                    tag: "Top Buyer",
-                    reply: "Thanks for the nice review! Glad you like the atmospheric style."
-                  },
-                  {
-                    author: "creative_mind",
-                    date: "18 Apr",
-                    text: "That vintage prompt is absolutely brilliant. The AI doesn't lie—this one was fantastic for my project!",
-                    rating: 5,
-                    color: "var(--color-orange)",
-                    tag: "Verified"
-                  },
-                  {
-                    author: "pixel_artist",
-                    date: "15 Apr",
-                    text: "Exceeded my expectations. The lighting details in the generated output are exactly what I needed for my portfolio.",
-                    rating: 5,
-                    color: "var(--color-purple)",
-                    tag: "Verified"
-                  },
-                  {
-                    author: "neo_designer",
-                    date: "10 Apr",
-                    text: "Amazing value. These prompts are highly optimized and save me hours of trial and error. Highly recommend!",
-                    rating: 5,
-                    color: "var(--color-blue)",
-                    tag: "Pro User"
-                  }
-                ].slice(0, reviewsLimit).map((rev, idx) => {
-                  const isCreator = state.user?._id === (template?.userId || template?.user?._id);
+                {reviews.slice(0, reviewsLimit).map((rev, idx) => {
+                  const isCreator = state.user && state.user._id && (state.user._id === (template?.userId || template?.user?._id));
                   return (
                     <div key={idx} className="review-container">
                       <div className="review-card-premium review-card-premium--glowing">
@@ -363,11 +375,27 @@ export default function PromptDetailPage() {
                         </div>
                         <p className="review-body-text">"{rev.text}"</p>
                         
-                        {isCreator && !rev.reply && (
+                        {isCreator && !rev.reply && replyingToIdx !== idx && (
                           <div className="review-actions-creator">
-                            <button className="btn-text-only" style={{ fontSize: '0.8rem', color: 'var(--color-cyan)', marginTop: '10px' }}>
+                            <button className="btn-text-only" onClick={() => setReplyingToIdx(idx)} style={{ fontSize: '0.8rem', color: 'var(--color-cyan)', marginTop: '10px' }}>
                               <MessageSquare size={14} /> Reply to review
                             </button>
+                          </div>
+                        )}
+
+                        {replyingToIdx === idx && (
+                          <div className="reply-editor" style={{ marginTop: '15px' }}>
+                            <textarea 
+                              className="form-control" 
+                              placeholder={`Reply to @${rev.author}...`}
+                              value={replyText}
+                              onChange={(e) => setReplyText(e.target.value)}
+                              style={{ minHeight: '80px', fontSize: '0.9rem', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)' }}
+                            />
+                            <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                              <button className="btn btn-primary btn-sm" onClick={() => handleReplySubmit(idx)}>Post Reply</button>
+                              <button className="btn btn-secondary btn-sm" onClick={() => { setReplyingToIdx(null); setReplyText(''); }}>Cancel</button>
+                            </div>
                           </div>
                         )}
                       </div>
