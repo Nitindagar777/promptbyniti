@@ -49,12 +49,22 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET Single Prompt
+// GET Single Prompt (Public)
 router.get('/:id', async (req, res) => {
   try {
     const prompt = await Prompt.findById(req.params.id).populate('seller', 'name');
     if (!prompt) return res.status(404).json({ success: false, message: 'Prompt not found' });
     res.json({ success: true, prompt });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// POST Increment View (Public)
+router.post('/:id/view', async (req, res) => {
+  try {
+    await Prompt.findByIdAndUpdate(req.params.id, { $inc: { views: 1 } });
+    res.json({ success: true });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

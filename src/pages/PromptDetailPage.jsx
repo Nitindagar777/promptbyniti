@@ -6,7 +6,7 @@ import {
   Zap, ArrowLeft, Copy, Check, ShoppingBag, 
   Sparkles, Image, MessageSquare, Play, 
   Download, Share2, Heart, ShieldCheck,
-  ChevronLeft, ChevronRight 
+  ChevronLeft, ChevronRight, Eye 
 } from 'lucide-react';
 import './PromptDetailPage.css';
 
@@ -44,6 +44,23 @@ export default function PromptDetailPage() {
     }
   };
 
+  const handleShare = async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: template.title || template.name,
+          text: template.description,
+          url: window.location.href,
+        });
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        alert('Link copied to clipboard!');
+      }
+    } catch (err) {
+      console.error('Error sharing:', err);
+    }
+  };
+
   useEffect(() => {
     const fetchTemplate = async () => {
       setLoading(true);
@@ -52,10 +69,12 @@ export default function PromptDetailPage() {
       // Try fetching from Database
         try {
           const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8844/api';
-          const res = await fetch(`${API_URL}/prompts/${id}`);
+          const res = await fetch(`${API_URL}/prompts/${id}?t=${Date.now()}`);
           const data = await res.json();
           if (data.success) {
             setTemplate(data.prompt);
+            // Record view
+            fetch(`${API_URL}/prompts/${id}/view`, { method: 'POST' }).catch(e => console.error("View tracking error:", e));
           } else {
             setError("Prompt not found");
           }
@@ -74,7 +93,7 @@ export default function PromptDetailPage() {
   if (loading) return (
     <div className="p-detail-loading container" style={{ padding: '100px 0', textAlign: 'center' }}>
       <Sparkles size={48} className="spin text-orange mb-4 mx-auto" />
-      <h2 style={{ fontFamily: 'var(--font-display)' }}>Unlocking Prompt Secrets...</h2>
+      <h2 style={{ fontFamily: 'var(--font-display)' }}>Open Prompt...</h2>
     </div>
   );
 
@@ -192,12 +211,26 @@ export default function PromptDetailPage() {
               <span className="p-detail__category-tag">{category.replace('-', ' ')}</span>
               <h1 className="p-detail__title">{template.title || template.name}</h1>
               <p className="p-detail__desc">{template.description || "A professional high-end prompt optimized for creative production."}</p>
+              
+              {template.keywords && template.keywords.length > 0 && (
+                <div className="p-detail__keywords">
+                  {template.keywords.map((kw, i) => (
+                    <span key={i} className="p-detail__keyword-tag">#{kw}</span>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="p-detail__stats card">
               <div className="stat-item">
                 <span className="stat-label">Model</span>
                 <span className="stat-value">{model.label}</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-label">Views</span>
+                <span className="stat-value" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Eye size={14} className="text-muted" /> {template.views || 0}
+                </span>
               </div>
               <div className="stat-item">
                 <span className="stat-label">Category</span>
@@ -229,15 +262,8 @@ export default function PromptDetailPage() {
               </Link>
 
               <div className="p-detail__secondary-actions">
-                <button className="btn btn-secondary" onClick={handleCopy} style={{ flex: 1 }}>
-                  {copied ? <Check size={18} /> : <Copy size={18} />}
-                  {copied ? 'Copied!' : 'Copy Template'}
-                </button>
-                <button className="btn btn-surface">
-                  <Heart size={18} />
-                </button>
-                <button className="btn btn-surface">
-                  <Share2 size={18} />
+                <button className="btn btn-secondary btn-xl" onClick={handleShare} style={{ flex: 1, gap: '10px', height: '56px' }}>
+                  <Share2 size={20} /> Share this Prompt
                 </button>
               </div>
             </div>

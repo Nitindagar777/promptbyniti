@@ -2,7 +2,7 @@
 import { Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { categories } from '../data/promptData';
-import { Crown, Lock, ArrowRight, Sparkles, Filter, Zap, Loader2 } from 'lucide-react';
+import { Crown, Lock, ArrowRight, Sparkles, Filter, Zap, Loader2, Eye } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import './TemplatesPage.css';
 
@@ -119,9 +119,16 @@ export default function TemplatesPage() {
                           </span>
                         </div>
                         <div className="template-card__overlay template-card__overlay--bottom">
-                          <h3 className="template-card__title-overlay">{tmpl.title || tmpl.name}</h3>
-                          <div className="template-card__token-badge">
-                            <Zap size={10} fill="currentColor" /> {tmpl.priceTokens || tmpl.tokens || 5}
+                          <div style={{ flex: 1 }}>
+                            <h3 className="template-card__title-overlay">{tmpl.title || tmpl.name}</h3>
+                            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                              <div className="template-card__token-badge">
+                                <Zap size={10} fill="currentColor" /> {tmpl.priceTokens || tmpl.tokens || 5}
+                              </div>
+                              <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.6)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <Eye size={10} /> {tmpl.views || 0}
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>

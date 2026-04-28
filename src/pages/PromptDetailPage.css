@@ -233,6 +233,30 @@
   font-size: 1.1rem;
   color: var(--text-secondary);
   line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.p-detail__keywords {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.p-detail__keyword-tag {
+  font-size: 0.85rem;
+  color: var(--color-cyan);
+  background: rgba(6, 182, 212, 0.05);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(6, 182, 212, 0.1);
+  transition: var(--transition);
+}
+
+.p-detail__keyword-tag:hover {
+  background: rgba(6, 182, 212, 0.15);
+  border-color: var(--color-cyan);
+  transform: translateY(-2px);
 }
 
 .p-detail__stats {

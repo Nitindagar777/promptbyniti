@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { generatePrompt } from '../data/promptEngine';
 import PromptOutput from '../components/PromptOutput';
-import { ArrowRight, Sparkles, Zap, Image, Layers, Heart, Wand2, Rocket, Star, Palette, MessageSquare, ShieldCheck, Zap as ZapIcon, ShoppingBag, Coins, DollarSign } from 'lucide-react';
+import { ArrowRight, Sparkles, Zap, Image, Layers, Heart, Wand2, Rocket, Star, Palette, MessageSquare, ShieldCheck, Zap as ZapIcon, ShoppingBag, Coins, DollarSign, Eye } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import './HomePage.css';
 
@@ -202,9 +202,16 @@ export default function HomePage() {
 
                       {/* Title + tokens (bottom) */}
                       <div className="template-card__overlay template-card__overlay--bottom">
-                        <h3 className="template-card__title-overlay">{tmpl.title || tmpl.name}</h3>
-                        <div className="template-card__token-badge">
-                          <ZapIcon size={10} fill="currentColor" /> {tmpl.priceTokens || tmpl.tokens || 5}
+                        <div style={{ flex: 1 }}>
+                          <h3 className="template-card__title-overlay">{tmpl.title || tmpl.name}</h3>
+                          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                            <div className="template-card__token-badge">
+                              <ZapIcon size={10} fill="currentColor" /> {tmpl.priceTokens || tmpl.tokens || 5}
+                            </div>
+                            <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.6)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <Eye size={10} /> {tmpl.views || 0}
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
