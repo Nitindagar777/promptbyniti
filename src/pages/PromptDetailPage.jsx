@@ -5,7 +5,8 @@ import { promptTemplates, aiModels } from '../data/promptData';
 import { 
   Zap, ArrowLeft, Copy, Check, ShoppingBag, 
   Sparkles, Image, MessageSquare, Play, 
-  Download, Share2, Heart, ShieldCheck 
+  Download, Share2, Heart, ShieldCheck,
+  ChevronLeft, ChevronRight 
 } from 'lucide-react';
 import './PromptDetailPage.css';
 
@@ -19,6 +20,20 @@ export default function PromptDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [imageRatio, setImageRatio] = useState(null); // null = not yet detected
+
+  const handlePrevImage = (e) => {
+    e.preventDefault();
+    if (!template.samples || template.samples.length <= 1) return;
+    setActiveImage(prev => (prev === 0 ? template.samples.length - 1 : prev - 1));
+    setImageRatio(null);
+  };
+
+  const handleNextImage = (e) => {
+    e.preventDefault();
+    if (!template.samples || template.samples.length <= 1) return;
+    setActiveImage(prev => (prev === template.samples.length - 1 ? 0 : prev + 1));
+    setImageRatio(null);
+  };
 
   const handleImageLoad = (e) => {
     const { naturalWidth, naturalHeight } = e.target;
@@ -124,6 +139,18 @@ export default function PromptDetailPage() {
                       onLoad={handleImageLoad}
                     />
                   )}
+
+                  {template.samples && template.samples.length > 1 && (
+                    <>
+                      <button className="visual-nav-btn visual-nav-btn--left" onClick={handlePrevImage} aria-label="Previous image">
+                        <ChevronLeft size={24} />
+                      </button>
+                      <button className="visual-nav-btn visual-nav-btn--right" onClick={handleNextImage} aria-label="Next image">
+                        <ChevronRight size={24} />
+                      </button>
+                    </>
+                  )}
+
                   <div className="visual-badge">
                     {(template.video || template.generateType === 'video') ? <Play size={16} fill="white" /> : <Image size={16} fill="white" />}
                     {(template.video || template.generateType === 'video') ? 'Video Prompt' : 'Image Prompt'}
