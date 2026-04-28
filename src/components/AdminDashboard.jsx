@@ -8,6 +8,23 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedPrompt, setSelectedPrompt] = useState(null);
+  const [copyStatus, setCopyStatus] = useState(false);
+  const [fullScreenMedia, setFullScreenMedia] = useState(null);
+  const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
+
+  const openLightbox = (media, index) => {
+    setFullScreenMedia(media);
+    setCurrentMediaIndex(index);
+  };
+
+  const navigateLightbox = (direction) => {
+    if (!selectedPrompt?.samples) return;
+    let nextIndex = currentMediaIndex + direction;
+    if (nextIndex < 0) nextIndex = selectedPrompt.samples.length - 1;
+    if (nextIndex >= selectedPrompt.samples.length) nextIndex = 0;
+    setCurrentMediaIndex(nextIndex);
+    setFullScreenMedia(selectedPrompt.samples[nextIndex].output);
+  };
 
   const fetchStats = async () => {
     try {
@@ -93,6 +110,12 @@ const AdminDashboard = () => {
     } catch (err) {
       console.error('Ban error:', err);
     }
+  };
+  
+  const handleCopy = (text) => {
+    navigator.clipboard.writeText(text);
+    setCopyStatus(true);
+    setTimeout(() => setCopyStatus(false), 2000);
   };
 
   const renderOverview = () => (
@@ -295,7 +318,12 @@ const AdminDashboard = () => {
 
               <div className="detail-section">
                 <h4>Prompt Template</h4>
-                <pre className="code-block">{selectedPrompt.template}</pre>
+                <div className="prompt-template-wrapper">
+                  <button className={`copy-btn-floating ${copyStatus ? 'success' : ''}`} onClick={() => handleCopy(selectedPrompt.template)}>
+                    {copyStatus ? '✓ Copied' : 'Copy Template'}
+                  </button>
+                  <pre className="code-block">{selectedPrompt.template}</pre>
+                </div>
               </div>
 
               {selectedPrompt.instructions && (
@@ -318,13 +346,13 @@ const AdminDashboard = () => {
                   {selectedPrompt.samples?.map((s, i) => (
                     <div key={i} className="admin-sample-card">
                       <h5>Sample #{i + 1}</h5>
-                      <div className="sample-media">
+                      <div className="sample-media" onClick={() => openLightbox(s.output, i)} title="Click to view full screen">
                         {selectedPrompt.generateType === 'text' ? (
                           <div className="text-sample">{s.output}</div>
                         ) : selectedPrompt.generateType === 'video' ? (
-                          <video src={s.output} controls style={{ width: '100%' }} />
+                          <video src={s.output} muted style={{ width: '100%', cursor: 'zoom-in' }} />
                         ) : (
-                          <img src={s.output} alt={`Sample ${i+1}`} style={{ width: '100%' }} />
+                          <img src={s.output} alt={`Sample ${i+1}`} style={{ width: '100%', cursor: 'zoom-in' }} />
                         )}
                       </div>
                       <div className="sample-input">
@@ -346,6 +374,24 @@ const AdminDashboard = () => {
         </div>
       )}
 
+      {fullScreenMedia && (
+        <div className="lightbox-overlay" style={{ zIndex: 9999999 }} onClick={() => setFullScreenMedia(null)}>
+          <button className="nav-btn prev" onClick={(e) => { e.stopPropagation(); navigateLightbox(-1); }}>&lsaquo;</button>
+          
+          <div className="lightbox-content" onClick={e => e.stopPropagation()}>
+            <button className="close-lightbox" onClick={() => setFullScreenMedia(null)}>&times;</button>
+            {fullScreenMedia.includes('video') || fullScreenMedia.includes('.mp4') ? (
+              <video src={fullScreenMedia} controls autoPlay />
+            ) : (
+              <img src={fullScreenMedia} alt="Full screen preview" />
+            )}
+            <div className="lightbox-caption">Sample #{currentMediaIndex + 1} of {selectedPrompt?.samples?.length}</div>
+          </div>
+
+          <button className="nav-btn next" onClick={(e) => { e.stopPropagation(); navigateLightbox(1); }}>&rsaquo;</button>
+        </div>
+      )}
+      
       <div className="admin-content">
         {loading && activeTab !== 'overview' ? (
           <div className="admin-loader">Loading control data...</div>

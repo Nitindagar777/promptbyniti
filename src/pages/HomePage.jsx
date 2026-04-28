@@ -5,13 +5,35 @@ import { generatePrompt } from '../data/promptEngine';
 import PromptOutput from '../components/PromptOutput';
 import { ArrowRight, Sparkles, Zap, Image, Layers, Heart, Wand2, Rocket, Star, Palette, MessageSquare, ShieldCheck, Zap as ZapIcon, ShoppingBag, Coins, DollarSign } from 'lucide-react';
 import { promptTemplates } from '../data/promptData';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './HomePage.css';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8844/api';
 
 export default function HomePage() {
   const { state, canGenerate, useCredit, addPrompt } = useApp();
   const [demoInput, setDemoInput] = useState('');
   const [demoResult, setDemoResult] = useState(null);
+  const [prompts, setPrompts] = useState(promptTemplates.slice(0, 8));
+
+  useEffect(() => {
+    fetchPrompts();
+  }, []);
+
+  const fetchPrompts = async () => {
+    try {
+      const res = await fetch(`${API_URL}/prompts`);
+      const data = await res.json();
+      if (data.success && data.prompts.length > 0) {
+        // Only update if we have live data, otherwise stick with static
+        const allPrompts = [...data.prompts, ...promptTemplates];
+        setPrompts(allPrompts.slice(0, 8));
+      }
+    } catch (err) {
+      console.error('Failed to fetch home prompts:', err);
+      // Fallback is already set in useState
+    }
+  };
 
   const handleDemoGenerate = () => {
     if (!demoInput.trim() || state.credits < 5) return;
@@ -123,29 +145,29 @@ export default function HomePage() {
           </div>
           
           <div className="p-market-grid">
-            {promptTemplates.slice(0, 8).map((tmpl, i) => (
+            {prompts.map((tmpl, i) => (
               <Link
-                key={tmpl.id}
-                to={`/prompt/${tmpl.id}`}
+                key={tmpl.id || tmpl._id}
+                to={`/prompt/${tmpl.id || tmpl._id}`}
                 className="template-card card reveal"
-                id={`template-${tmpl.id}`}
+                id={`template-${tmpl.id || tmpl._id}`}
                 style={{ animationDelay: `${i * 0.05}s`, textDecoration: 'none' }}
               >
-                {tmpl.thumbnail || tmpl.video ? (
+                {tmpl.thumbnail || tmpl.video || (tmpl.samples && tmpl.samples[0]?.output) ? (
                   <div className="template-card__visual">
-                    {tmpl.video ? (
-                      <video src={tmpl.video} autoPlay muted loop className="template-card__media template-card__media-main" />
+                    {tmpl.video || (tmpl.samples && tmpl.samples[0]?.output?.includes('mp4')) ? (
+                      <video src={tmpl.video || tmpl.samples[0].output} autoPlay muted loop className="template-card__media template-card__media-main" />
                     ) : (
                       <>
-                        <img src={tmpl.thumbnail} alt={tmpl.title} className="template-card__media template-card__media-main" />
+                        <img src={tmpl.thumbnail || tmpl.samples?.[0]?.output} alt={tmpl.title || tmpl.name} className="template-card__media template-card__media-main" />
                         {tmpl.samples && tmpl.samples.length >= 3 && (
                           <div className="template-card__gallery">
                             <div className="template-card__gallery-main">
-                              <img src={tmpl.samples[0]} alt={`${tmpl.title} sample 1`} />
+                              <img src={tmpl.samples[0]?.output || tmpl.samples[0]} alt={`${tmpl.title || tmpl.name} sample 1`} />
                             </div>
                             <div className="template-card__gallery-side">
-                              <img src={tmpl.samples[1]} alt={`${tmpl.title} sample 2`} />
-                              <img src={tmpl.samples[2]} alt={`${tmpl.title} sample 3`} />
+                              <img src={tmpl.samples[1]?.output || tmpl.samples[1]} alt={`${tmpl.title || tmpl.name} sample 2`} />
+                              <img src={tmpl.samples[2]?.output || tmpl.samples[2]} alt={`${tmpl.title || tmpl.name} sample 3`} />
                             </div>
                           </div>
                         )}
@@ -155,15 +177,15 @@ export default function HomePage() {
                     {/* Model Overlay (Top) */}
                     <div className="template-card__overlay template-card__overlay--top">
                       <span className="template-card__model-tag">
-                        {tmpl.category === 'anime' ? 'Niji v6' : 'Flux.1'}
+                        {tmpl.category === 'anime' || tmpl.model?.includes('niji') ? 'Niji v6' : tmpl.model || 'Flux.1'}
                       </span>
                     </div>
                     
                     {/* Name & Token Overlay (Bottom) */}
                     <div className="template-card__overlay template-card__overlay--bottom">
-                      <h3 className="template-card__title-overlay">{tmpl.title}</h3>
+                      <h3 className="template-card__title-overlay">{tmpl.title || tmpl.name}</h3>
                       <div className="template-card__token-badge">
-                        <ZapIcon size={10} fill="currentColor" /> 5
+                        <ZapIcon size={10} fill="currentColor" /> {tmpl.priceTokens || tmpl.tokens || 5}
                       </div>
                     </div>
                   </div>
@@ -172,17 +194,17 @@ export default function HomePage() {
                     {/* Model Overlay (Top) */}
                     <div className="template-card__overlay template-card__overlay--top">
                       <span className="template-card__model-tag template-card__model-tag--text">
-                        {tmpl.category === 'chat' ? 'GPT-4o' : 'Claude 3.5'}
+                        {tmpl.category === 'chat' || tmpl.generateType === 'text' ? 'GPT-4o' : tmpl.model || 'Claude 3.5'}
                       </span>
                     </div>
 
                     {/* Centered Name */}
-                    <h3 className="template-card__title-center">{tmpl.title}</h3>
+                    <h3 className="template-card__title-center">{tmpl.title || tmpl.name}</h3>
 
                     {/* Token Overlay (Bottom Right) */}
                     <div className="template-card__overlay template-card__overlay--bottom template-card__overlay--right">
                       <div className="template-card__token-badge template-card__token-badge--text">
-                        <ZapIcon size={10} fill="currentColor" /> 5 Tokens
+                        <ZapIcon size={10} fill="currentColor" /> {tmpl.priceTokens || tmpl.tokens || 5} Tokens
                       </div>
                     </div>
                   </div>

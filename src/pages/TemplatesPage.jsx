@@ -11,8 +11,8 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8844/api';
 export default function TemplatesPage() {
   const { isPremium } = useApp();
   const [selectedCat, setSelectedCat] = useState('all');
-  const [prompts, setPrompts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [prompts, setPrompts] = useState(staticTemplates);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchPrompts();
@@ -22,16 +22,12 @@ export default function TemplatesPage() {
     try {
       const res = await fetch(`${API_URL}/prompts`);
       const data = await res.json();
-      if (data.success) {
-        // Merge static templates with dynamic ones from backend
-        // In production, we might want to only show backend ones
-        setPrompts([...staticTemplates, ...data.prompts]);
-      } else {
-        setPrompts(staticTemplates);
+      if (data.success && data.prompts.length > 0) {
+        // Dynamic prompts from DB at the TOP, then static ones
+        setPrompts([...data.prompts, ...staticTemplates]);
       }
     } catch (err) {
       console.error('Failed to fetch prompts:', err);
-      setPrompts(staticTemplates);
     } finally {
       setLoading(false);
     }
