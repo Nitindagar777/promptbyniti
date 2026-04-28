@@ -40,12 +40,12 @@ function App() {
         <main className="main-content">
           <Routes>
             <Route path="/" element={<HomePage />} />
-            <Route path="/generate" element={<GeneratePage />} />
+            <Route path="/generate" element={<ProtectedRoute><GeneratePage /></ProtectedRoute>} />
             <Route path="/templates" element={<TemplatesPage />} />
-            <Route path="/library" element={<LibraryPage />} />
-            <Route path="/pricing" element={<PricingPage />} />
+            <Route path="/library" element={<ProtectedRoute><LibraryPage /></ProtectedRoute>} />
+            <Route path="/pricing" element={<ProtectedRoute><PricingPage /></ProtectedRoute>} />
             <Route path="/prompt/:id" element={<PromptDetailPage />} />
-            <Route path="/sell" element={<SellPage />} />
+            <Route path="/sell" element={<ProtectedRoute><SellPage /></ProtectedRoute>} />
             <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
             <Route path="/login" element={<GuestRoute><AuthPage initialMode="login" /></GuestRoute>} />

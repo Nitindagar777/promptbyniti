@@ -296,16 +296,31 @@ export default function SellPage() {
           <div className="keyword-modal card" onClick={e => e.stopPropagation()}>
             <div className="modal-header"><h3><Plus size={24} className="text-cyan" /> Select Keywords</h3><button className="modal-close" onClick={() => setShowKeywordModal(false)}>×</button></div>
 
-            <div className="custom-keyword-row mb-4">
-              <input
-                type="text"
-                className="input input-sm"
-                placeholder="Search or add custom keyword..."
-                value={customKeyword}
-                onChange={e => setCustomKeyword(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
+            <div className="modal-content-scroll">
+              <div className="custom-keyword-row mb-4">
+                <input
+                  type="text"
+                  className="input input-sm"
+                  placeholder="Search or add custom keyword..."
+                  value={customKeyword}
+                  onChange={e => setCustomKeyword(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      if (customKeyword.trim()) {
+                        const current = formData.keywords || [];
+                        if (!current.includes(customKeyword.trim())) {
+                          setFormData({ ...formData, keywords: [...current, customKeyword.trim()] });
+                        }
+                        setCustomKeyword('');
+                      }
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => {
                     if (customKeyword.trim()) {
                       const current = formData.keywords || [];
                       if (!current.includes(customKeyword.trim())) {
@@ -313,42 +328,30 @@ export default function SellPage() {
                       }
                       setCustomKeyword('');
                     }
-                  }
-                }}
-              />
-              <button
-                type="button"
-                className="btn btn-secondary btn-sm"
-                onClick={() => {
-                  if (customKeyword.trim()) {
-                    const current = formData.keywords || [];
-                    if (!current.includes(customKeyword.trim())) {
-                      setFormData({ ...formData, keywords: [...current, customKeyword.trim()] });
-                    }
-                    setCustomKeyword('');
-                  }
-                }}
-              >
-                Add
-              </button>
-            </div>
+                  }}
+                >
+                  Add
+                </button>
+              </div>
 
-            <p className="text-muted mb-4">
-              {customKeyword ? `Matching keywords (${ALL_KEYWORDS.filter(k => k.toLowerCase().includes(customKeyword.toLowerCase())).length}):` : 'Or select from our categories:'}
-            </p>
-            <div className="modal-keywords-grid">
-              {ALL_KEYWORDS
-                .filter(kw => kw.toLowerCase().includes(customKeyword.toLowerCase()))
-                .map(kw => (
-                  <button key={kw} type="button" className={`keyword-tag ${formData.keywords?.includes(kw) ? 'active' : ''}`} onClick={() => {
-                    const current = formData.keywords || [];
-                    if (current.includes(kw)) setFormData({ ...formData, keywords: current.filter(k => k !== kw) });
-                    else setFormData({ ...formData, keywords: [...current, kw] });
-                  }}>{kw}</button>
-                ))}
-              {customKeyword && ALL_KEYWORDS.filter(k => k.toLowerCase().includes(customKeyword.toLowerCase())).length === 0 && (
-                <p className="text-sm text-muted w-full text-center py-4">No matching categories found. Click "Add" to create this as a custom keyword!</p>
-              )}
+              <p className="text-muted mb-4">
+                {customKeyword ? `Matching keywords (${ALL_KEYWORDS.filter(k => k.toLowerCase().includes(customKeyword.toLowerCase())).length}):` : 'Or select from our categories:'}
+              </p>
+              
+              <div className="modal-keywords-grid">
+                {ALL_KEYWORDS
+                  .filter(kw => kw.toLowerCase().includes(customKeyword.toLowerCase()))
+                  .map(kw => (
+                    <button key={kw} type="button" className={`keyword-tag ${formData.keywords?.includes(kw) ? 'active' : ''}`} onClick={() => {
+                      const current = formData.keywords || [];
+                      if (current.includes(kw)) setFormData({ ...formData, keywords: current.filter(k => k !== kw) });
+                      else setFormData({ ...formData, keywords: [...current, kw] });
+                    }}>{kw}</button>
+                  ))}
+                {customKeyword && ALL_KEYWORDS.filter(k => k.toLowerCase().includes(customKeyword.toLowerCase())).length === 0 && (
+                  <p className="text-sm text-muted w-full text-center py-4">No matching categories found. Click "Add" to create this as a custom keyword!</p>
+                )}
+              </div>
             </div>
             <div className="modal-footer mt-lg">
               <div className="selection-status"><span className={formData.keywords?.length >= 4 ? 'text-green' : 'text-orange'}>{formData.keywords?.length || 0} selected</span>{formData.keywords?.length < 4 && <span className="text-xs ml-2">(Need {4 - formData.keywords.length} more)</span>}</div>

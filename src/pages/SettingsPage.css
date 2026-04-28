@@ -86,7 +86,6 @@
 .settings-tab:hover {
   background: rgba(255, 255, 255, 0.05);
   color: var(--text-primary);
-  transform: translateX(4px);
 }
 
 .settings-tab--active {
@@ -115,7 +114,7 @@
 }
 
 .settings-section:hover {
-  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .settings-section-title {
