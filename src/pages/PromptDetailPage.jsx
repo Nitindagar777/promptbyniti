@@ -96,7 +96,11 @@ export default function PromptDetailPage() {
           {/* LEFT COLUMN: Visual Media OR Text Focus */}
           <div className="p-detail__media-section">
             {isVisual ? (
-              <div className="visual-display card">
+              <div className={`visual-display card ${
+                (template.title || template.name || '').toLowerCase().includes('portrait') || 
+                (template.keywords || []).some(k => k.toLowerCase().includes('portrait')) 
+                ? 'aspect-9-16' : 'aspect-1-1'
+              }`}>
                 <div className="visual-main">
                   {template.video || template.generateType === 'video' ? (
                     <video src={template.video || (template.samples?.[activeImage]?.output || template.samples?.[activeImage])} autoPlay muted loop controls />
@@ -118,15 +122,18 @@ export default function PromptDetailPage() {
                 
                 {template.samples && template.samples.length > 1 && (
                   <div className="visual-thumbs">
-                    {template.samples.map((img, idx) => (
-                      <div 
-                        key={idx} 
-                        className={`visual-thumb ${activeImage === idx ? 'visual-thumb--active' : ''}`}
-                        onClick={() => setActiveImage(idx)}
-                      >
-                        <img src={img} alt={`Sample ${idx + 1}`} />
-                      </div>
-                    ))}
+                    {template.samples.map((sample, idx) => {
+                      const thumbSrc = sample.output || sample;
+                      return (
+                        <div 
+                          key={idx} 
+                          className={`visual-thumb ${activeImage === idx ? 'visual-thumb--active' : ''}`}
+                          onClick={() => setActiveImage(idx)}
+                        >
+                          <img src={thumbSrc} alt={`Sample ${idx + 1}`} />
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>

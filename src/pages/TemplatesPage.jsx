@@ -82,21 +82,21 @@ export default function TemplatesPage() {
                   id={`template-${tmpl.id || tmpl._id}`}
                   style={{ animationDelay: `${i * 0.05}s`, textDecoration: 'none' }}
                 >
-                  {tmpl.thumbnail || tmpl.video ? (
+                  {tmpl.thumbnail || tmpl.video || (tmpl.samples && (tmpl.samples[0]?.output || tmpl.samples[0])) ? (
                     <div className="template-card__visual">
-                      {tmpl.video ? (
-                        <video src={tmpl.video} autoPlay muted loop className="template-card__media template-card__media-main" />
+                      {tmpl.video || (tmpl.samples && (tmpl.samples[0]?.output || tmpl.samples[0])?.toString().includes('mp4')) ? (
+                        <video src={tmpl.video || (tmpl.samples[0]?.output || tmpl.samples[0])} autoPlay muted loop className="template-card__media template-card__media-main" />
                       ) : (
                         <>
-                          <img src={tmpl.thumbnail} alt={tmpl.title} className="template-card__media template-card__media-main" />
+                          <img src={tmpl.thumbnail || (tmpl.samples?.[0]?.output || tmpl.samples?.[0])} alt={tmpl.title || tmpl.name} className="template-card__media template-card__media-main" />
                           {tmpl.samples && tmpl.samples.length >= 3 && (
                             <div className="template-card__gallery">
                               <div className="template-card__gallery-main">
-                                <img src={tmpl.samples[0]} alt={`${tmpl.title} sample 1`} />
+                                <img src={tmpl.samples[0]?.output || tmpl.samples[0]} alt="sample 1" />
                               </div>
                               <div className="template-card__gallery-side">
-                                <img src={tmpl.samples[1]} alt={`${tmpl.title} sample 2`} />
-                                <img src={tmpl.samples[2]} alt={`${tmpl.title} sample 3`} />
+                                <img src={tmpl.samples[1]?.output || tmpl.samples[1]} alt="sample 2" />
+                                <img src={tmpl.samples[2]?.output || tmpl.samples[2]} alt="sample 3" />
                               </div>
                             </div>
                           )}

@@ -63,18 +63,26 @@
 
 .visual-main {
   position: relative;
-  aspect-ratio: 4/5;
   background: #000;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.aspect-9-16 .visual-main {
+  aspect-ratio: 9/16;
+}
+
+.aspect-1-1 .visual-main {
+  aspect-ratio: 1/1;
 }
 
 .visual-main img, 
 .visual-main video {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain; /* Show original without cropping */
 }
 
 .visual-badge {
@@ -96,20 +104,22 @@
 .visual-thumbs {
   display: flex;
   gap: 12px;
-  padding: 16px;
-  background: var(--bg-secondary);
+  padding: 20px;
+  background: #111;
   overflow-x: auto;
+  border-top: 1px solid var(--border-color);
 }
 
 .visual-thumb {
-  width: 80px;
-  height: 80px;
+  width: 90px;
+  height: 90px;
   border-radius: var(--radius-sm);
   overflow: hidden;
   cursor: pointer;
   border: 2px solid transparent;
   transition: var(--transition);
   flex-shrink: 0;
+  background: #222;
 }
 
 .visual-thumb img {
@@ -120,6 +130,7 @@
 
 .visual-thumb--active {
   border-color: var(--color-orange);
+  box-shadow: 0 0 15px rgba(255, 122, 0, 0.3);
 }
 
 .text-display {
