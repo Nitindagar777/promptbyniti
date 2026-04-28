@@ -291,12 +291,17 @@ export default function PromptDetailPage() {
             {/* Left: Reviews */}
             <div className="p-detail__reviews">
               <div className="reviews-header">
-                <div className="reviews-summary-new">
-                  <span className="reviews-count-big">603</span>
-                  <span className="reviews-label-main">Creator Reviews</span>
-                  <div className="reviews-rating-pill">
-                    <Star size={14} fill="currentColor" />
-                    <span>4.9</span>
+                <div className="reviews-summary-premium">
+                  <div className="reviews-stat-stack">
+                    <h2 className="reviews-number-gradient">603</h2>
+                    <span className="reviews-label-sub">Creator Reviews</span>
+                  </div>
+                  <div className="reviews-rating-badge">
+                    <div className="rating-pill-inner">
+                      <Star size={14} fill="currentColor" />
+                      <span>4.9</span>
+                    </div>
+                    <span className="rating-desc">Community Score</span>
                   </div>
                 </div>
               </div>
@@ -309,7 +314,8 @@ export default function PromptDetailPage() {
                     text: "A very well-written prompt! The variations are endless, and the portraits emanate a rich, atmospheric quality. Bravo!",
                     rating: 5,
                     color: "var(--color-cyan)",
-                    tag: "Top Buyer"
+                    tag: "Top Buyer",
+                    reply: "Thanks for the nice review! Glad you like the atmospheric style."
                   },
                   {
                     author: "creative_mind",
@@ -335,27 +341,50 @@ export default function PromptDetailPage() {
                     color: "var(--color-blue)",
                     tag: "Pro User"
                   }
-                ].slice(0, reviewsLimit).map((rev, idx) => (
-                  <div key={idx} className="review-card-premium review-card-premium--glowing">
-                    <div className="review-accent-line" style={{ background: rev.color }}></div>
-                    <div className="review-card-premium__header">
-                      <div className="review-user-info">
-                        <div className="user-initial-new" style={{ boxShadow: `0 0 15px ${rev.color}44`, background: rev.color }}>{rev.author[0].toUpperCase()}</div>
-                        <div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <span className="review-author-name">@{rev.author}</span>
-                            <span className="review-verified-badge"><ShieldCheck size={10} /> {rev.tag}</span>
+                ].slice(0, reviewsLimit).map((rev, idx) => {
+                  const isCreator = state.user?._id === (template?.userId || template?.user?._id);
+                  return (
+                    <div key={idx} className="review-container">
+                      <div className="review-card-premium review-card-premium--glowing">
+                        <div className="review-accent-line" style={{ background: rev.color }}></div>
+                        <div className="review-card-premium__header">
+                          <div className="review-user-info">
+                            <div className="user-initial-new" style={{ boxShadow: `0 0 15px ${rev.color}44`, background: rev.color }}>{rev.author[0].toUpperCase()}</div>
+                            <div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <span className="review-author-name">@{rev.author}</span>
+                              </div>
+                              <span className="review-date-new">{rev.date}</span>
+                            </div>
                           </div>
-                          <span className="review-date-new">{rev.date}</span>
+                          <div className="review-stars-new">
+                            {[...Array(rev.rating)].map((_, i) => <Star key={i} size={10} fill="currentColor" />)}
+                          </div>
                         </div>
+                        <p className="review-body-text">"{rev.text}"</p>
+                        
+                        {isCreator && !rev.reply && (
+                          <div className="review-actions-creator">
+                            <button className="btn-text-only" style={{ fontSize: '0.8rem', color: 'var(--color-cyan)', marginTop: '10px' }}>
+                              <MessageSquare size={14} /> Reply to review
+                            </button>
+                          </div>
+                        )}
                       </div>
-                      <div className="review-stars-new">
-                        {[...Array(rev.rating)].map((_, i) => <Star key={i} size={10} fill="currentColor" />)}
-                      </div>
+
+                      {rev.reply && (
+                        <div className="creator-response-box">
+                          <div className="response-header">
+                            <div className="response-arrow"></div>
+                            <span className="response-label">Response from creator to <span className="text-cyan">@{rev.author}</span></span>
+                            <span className="response-date">• {rev.date}</span>
+                          </div>
+                          <p className="response-text">{rev.reply}</p>
+                        </div>
+                      )}
                     </div>
-                    <p className="review-body-text">"{rev.text}"</p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
