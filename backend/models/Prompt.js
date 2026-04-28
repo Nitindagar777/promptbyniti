@@ -7,6 +7,7 @@ const promptSchema = new mongoose.Schema({
   model: { type: String, required: true },
   tokens: { type: Number, default: 5 },
   template: { type: String, required: true },
+  instructions: { type: String },
   keywords: [{ type: String }],
   samples: [
     {

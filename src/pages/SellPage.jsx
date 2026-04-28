@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { aiModels } from '../data/promptData';
 import {
@@ -11,6 +12,7 @@ import './SellPage.css';
 
 export default function SellPage() {
   const { state } = useApp();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -18,6 +20,7 @@ export default function SellPage() {
     model: '',
     tokens: '5',
     template: '',
+    instructions: '',
     keywords: [],
   });
 
@@ -112,7 +115,7 @@ export default function SellPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${localStorage.getItem('promptbyniti_token')}`
         },
         body: JSON.stringify(payload)
       });
@@ -145,7 +148,7 @@ export default function SellPage() {
           </p>
           <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
             <button className="btn btn-primary" onClick={() => setSubmitted(false)}>List Another</button>
-            <button className="btn btn-secondary" onClick={() => window.location.href = '/'}>Go Home</button>
+            <button className="btn btn-secondary" onClick={() => navigate('/')}>Go Home</button>
           </div>
         </div>
       </div>
@@ -217,6 +220,11 @@ export default function SellPage() {
                 <label>Prompt Template</label>
                 <textarea required className="textarea" style={{ minHeight: '120px', fontFamily: 'monospace' }} placeholder="A portrait of [subject] in [style] with [lighting]..." value={formData.template} onChange={e => setFormData({ ...formData, template: e.target.value })}></textarea>
                 <span className="input-hint"><Info size={14} /> Use <strong>[square brackets]</strong> for variables.</span>
+              </div>
+              <div className="form-group">
+                <label>Prompt Instructions</label>
+                <textarea required className="textarea" style={{ minHeight: '100px' }} placeholder="e.g. For best results, use aspect ratio 16:9 and set stylize to 250..." value={formData.instructions} onChange={e => setFormData({ ...formData, instructions: e.target.value })}></textarea>
+                <span className="input-hint"><Info size={14} /> Tips for the buyer on how to use this prompt.</span>
               </div>
               <div className="form-group mt-md">
                 <label>Keywords (Select at least 4)</label>

@@ -142,16 +142,21 @@ export function AppProvider({ children }) {
         const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8844/api'}/auth/me`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
-        const data = await res.json();
-        
-        if (!data.success) {
-          // Token invalid or user banned
-          localStorage.removeItem(TOKEN_KEY);
-          dispatch({ type: actions.LOGOUT });
-          if (data.message && data.message.toLowerCase().includes('banned')) {
-            setShowBanModal(true);
+        if (!res.ok) {
+          if (res.status === 401 || res.status === 403) {
+            const data = await res.json();
+            // Token invalid or user banned
+            localStorage.removeItem(TOKEN_KEY);
+            dispatch({ type: actions.LOGOUT });
+            if (data.message && data.message.toLowerCase().includes('banned')) {
+              setShowBanModal(true);
+            }
           }
-        } else {
+          return;
+        }
+
+        const data = await res.json();
+        if (data.success) {
           // Optionally update user data
           dispatch({ type: actions.LOGIN, payload: data.user });
         }
