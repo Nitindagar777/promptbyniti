@@ -151,7 +151,7 @@ export default function HomePage() {
               const s1 = tmpl.samples?.[1]?.output || tmpl.samples?.[1];
               const s2 = tmpl.samples?.[2]?.output || tmpl.samples?.[2];
               const coverSrc = tmpl.thumbnail || s0;
-              const isTextOnly = !coverSrc && !tmpl.video && tmpl.generateType === 'text';
+              const isTextOnly = !coverSrc && !tmpl.video;
 
               return (
                 <Link
