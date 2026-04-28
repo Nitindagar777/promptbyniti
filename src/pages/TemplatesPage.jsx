@@ -1,7 +1,7 @@
 /* TemplatesPage — Prompt templates gallery */
 import { Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { promptTemplates as staticTemplates, categories } from '../data/promptData';
+import { categories } from '../data/promptData';
 import { Crown, Lock, ArrowRight, Sparkles, Filter, Zap, Loader2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import './TemplatesPage.css';
@@ -11,8 +11,8 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8844/api';
 export default function TemplatesPage() {
   const { isPremium } = useApp();
   const [selectedCat, setSelectedCat] = useState('all');
-  const [prompts, setPrompts] = useState(staticTemplates);
-  const [loading, setLoading] = useState(false);
+  const [prompts, setPrompts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchPrompts();
@@ -22,9 +22,8 @@ export default function TemplatesPage() {
     try {
       const res = await fetch(`${API_URL}/prompts`);
       const data = await res.json();
-      if (data.success && data.prompts.length > 0) {
-        // Dynamic prompts from DB at the TOP, then static ones
-        setPrompts([...data.prompts, ...staticTemplates]);
+      if (data.success) {
+        setPrompts(data.prompts);
       }
     } catch (err) {
       console.error('Failed to fetch prompts:', err);
@@ -33,10 +32,9 @@ export default function TemplatesPage() {
     }
   };
 
-  const filteredTemplates =
-    selectedCat === 'all'
-      ? prompts
-      : prompts.filter(t => t.category === selectedCat);
+  const filteredTemplates = selectedCat === 'all' 
+    ? prompts 
+    : prompts.filter(t => (t.category || '').toLowerCase() === selectedCat.toLowerCase());
 
   const templateCategories = ['all', ...categories.filter(c => c.id !== 'default' && c.id !== 'none').map(c => c.id)];
 

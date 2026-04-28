@@ -4,7 +4,6 @@ import { useApp } from '../context/AppContext';
 import { generatePrompt } from '../data/promptEngine';
 import PromptOutput from '../components/PromptOutput';
 import { ArrowRight, Sparkles, Zap, Image, Layers, Heart, Wand2, Rocket, Star, Palette, MessageSquare, ShieldCheck, Zap as ZapIcon, ShoppingBag, Coins, DollarSign } from 'lucide-react';
-import { promptTemplates } from '../data/promptData';
 import { useState, useEffect } from 'react';
 import './HomePage.css';
 
@@ -14,7 +13,8 @@ export default function HomePage() {
   const { state, canGenerate, useCredit, addPrompt } = useApp();
   const [demoInput, setDemoInput] = useState('');
   const [demoResult, setDemoResult] = useState(null);
-  const [prompts, setPrompts] = useState(promptTemplates.slice(0, 8));
+  const [prompts, setPrompts] = useState([]);
+  const [loadingPrompts, setLoadingPrompts] = useState(true);
 
   useEffect(() => {
     fetchPrompts();
@@ -24,14 +24,13 @@ export default function HomePage() {
     try {
       const res = await fetch(`${API_URL}/prompts`);
       const data = await res.json();
-      if (data.success && data.prompts.length > 0) {
-        // Only update if we have live data, otherwise stick with static
-        const allPrompts = [...data.prompts, ...promptTemplates];
-        setPrompts(allPrompts.slice(0, 8));
+      if (data.success) {
+        setPrompts(data.prompts.slice(0, 8));
       }
     } catch (err) {
       console.error('Failed to fetch home prompts:', err);
-      // Fallback is already set in useState
+    } finally {
+      setLoadingPrompts(false);
     }
   };
 
@@ -145,7 +144,13 @@ export default function HomePage() {
           </div>
           
           <div className="p-market-grid">
-            {prompts.map((tmpl, i) => {
+            {loadingPrompts ? (
+              // Skeleton loaders
+              [...Array(4)].map((_, i) => (
+                <div key={i} className="template-card card skeleton" style={{ height: '350px', background: 'rgba(255,255,255,0.02)' }}></div>
+              ))
+            ) : prompts.length > 0 ? (
+              prompts.map((tmpl, i) => {
               // Mirror the exact same logic as PromptDetailPage
               const s0 = tmpl.samples?.[0]?.output || tmpl.samples?.[0];
               const s1 = tmpl.samples?.[1]?.output || tmpl.samples?.[1];
@@ -218,8 +223,17 @@ export default function HomePage() {
                       </div>
                     </div>
                   )}
-              </Link>
-            )})}
+                </Link>
+              );
+            })
+          ) : (
+              <div className="p-market-empty reveal" style={{ gridColumn: '1/-1', textAlign: 'center', padding: 'var(--space-2xl) 0' }}>
+                <ShoppingBag size={48} className="text-muted mb-4 mx-auto" />
+                <h3>No Prompts Found</h3>
+                <p>Be the first to list a prompt in our store!</p>
+                <Link to="/sell" className="btn btn-primary mt-4">Start Selling</Link>
+              </div>
+            )}
           </div>
         </div>
       </section>

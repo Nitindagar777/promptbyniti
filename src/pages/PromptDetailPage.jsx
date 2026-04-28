@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { promptTemplates, aiModels } from '../data/promptData';
+import { aiModels } from '../data/promptData';
 import { 
   Zap, ArrowLeft, Copy, Check, ShoppingBag, 
   Sparkles, Image, MessageSquare, Play, 
@@ -49,13 +49,7 @@ export default function PromptDetailPage() {
       setLoading(true);
       setError(null);
       
-      // 1. Try static templates first
-      const found = promptTemplates.find(t => t.id === id);
-      if (found) {
-        setTemplate(found);
-        setLoading(false);
-      } else {
-        // 2. Try fetching from Database
+      // Try fetching from Database
         try {
           const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8844/api';
           const res = await fetch(`${API_URL}/prompts/${id}`);
@@ -71,7 +65,6 @@ export default function PromptDetailPage() {
         } finally {
           setLoading(false);
         }
-      }
     };
 
     fetchTemplate();
@@ -266,7 +259,7 @@ export default function PromptDetailPage() {
             More like <span className="text-orange">this</span>
           </h2>
           <div className="related-grid">
-            {[...promptTemplates, ...state.prompts]
+            {state.prompts
               .filter(t => (t.category || t.keywords?.[0]) === category && (t.id || t._id) !== (template.id || template._id))
               .slice(0, 4)
               .map(t => (
