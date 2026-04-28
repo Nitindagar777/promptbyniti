@@ -20,6 +20,8 @@ export default function PromptDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [imageRatio, setImageRatio] = useState(null); // null = not yet detected
+  const [reviewsLimit, setReviewsLimit] = useState(2);
+  const [relatedLimit, setRelatedLimit] = useState(3);
 
   const handlePrevImage = (e) => {
     e.preventDefault();
@@ -306,27 +308,49 @@ export default function PromptDetailPage() {
                     date: "21 Apr",
                     text: "A very well-written prompt! The variations are endless, and the portraits emanate a rich, atmospheric quality. Bravo!",
                     rating: 5,
-                    color: "var(--color-cyan)"
+                    color: "var(--color-cyan)",
+                    tag: "Top Buyer"
                   },
                   {
                     author: "creative_mind",
                     date: "18 Apr",
                     text: "That vintage prompt is absolutely brilliant. The AI doesn't lie—this one was fantastic for my project!",
                     rating: 5,
-                    color: "var(--color-orange)"
+                    color: "var(--color-orange)",
+                    tag: "Verified"
+                  },
+                  {
+                    author: "pixel_artist",
+                    date: "15 Apr",
+                    text: "Exceeded my expectations. The lighting details in the generated output are exactly what I needed for my portfolio.",
+                    rating: 5,
+                    color: "var(--color-purple)",
+                    tag: "Verified"
+                  },
+                  {
+                    author: "neo_designer",
+                    date: "10 Apr",
+                    text: "Amazing value. These prompts are highly optimized and save me hours of trial and error. Highly recommend!",
+                    rating: 5,
+                    color: "var(--color-blue)",
+                    tag: "Pro User"
                   }
-                ].map((rev, idx) => (
-                  <div key={idx} className="review-card-premium">
+                ].slice(0, reviewsLimit).map((rev, idx) => (
+                  <div key={idx} className="review-card-premium review-card-premium--glowing">
+                    <div className="review-accent-line" style={{ background: rev.color }}></div>
                     <div className="review-card-premium__header">
                       <div className="review-user-info">
-                        <div className="user-initial" style={{ background: rev.color }}>{rev.author[0].toUpperCase()}</div>
+                        <div className="user-initial-new" style={{ boxShadow: `0 0 15px ${rev.color}44`, background: rev.color }}>{rev.author[0].toUpperCase()}</div>
                         <div>
-                          <span className="review-author-name">@{rev.author}</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span className="review-author-name">@{rev.author}</span>
+                            <span className="review-verified-badge"><ShieldCheck size={10} /> {rev.tag}</span>
+                          </div>
                           <span className="review-date-new">{rev.date}</span>
                         </div>
                       </div>
                       <div className="review-stars-new">
-                        {[...Array(rev.rating)].map((_, i) => <Star key={i} size={12} fill="currentColor" />)}
+                        {[...Array(rev.rating)].map((_, i) => <Star key={i} size={10} fill="currentColor" />)}
                       </div>
                     </div>
                     <p className="review-body-text">"{rev.text}"</p>
@@ -343,7 +367,7 @@ export default function PromptDetailPage() {
               <div className="related-grid-vertical">
                 {state.prompts
                   .filter(t => (t.category || t.keywords?.[0]) === category && (t.id || t._id) !== (template.id || template._id))
-                  .slice(0, 3)
+                  .slice(0, relatedLimit)
                   .map(t => (
                     <Link key={t.id || t._id} to={`/prompt/${t.id || t._id}`} className="related-card-small card" style={{ textDecoration: 'none' }}>
                       <div className="related-card-small__media">
@@ -361,6 +385,19 @@ export default function PromptDetailPage() {
               </div>
             </div>
           </div>
+
+          {/* Unified View More Button */}
+          {(reviewsLimit < 4 || relatedLimit < 6) && (
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '50px' }}>
+              <button 
+                className="btn btn-secondary btn-xl" 
+                onClick={() => { setReviewsLimit(6); setRelatedLimit(6); }}
+                style={{ minWidth: '240px' }}
+              >
+                View More Reviews & Prompts <ChevronRight size={20} />
+              </button>
+            </div>
+          )}
         </section>
       </div>
     </div>
