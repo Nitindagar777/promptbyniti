@@ -6,9 +6,11 @@ const promptSchema = new mongoose.Schema({
   generateType: { type: String, enum: ['image', 'video', 'text'], required: true },
   model: { type: String, required: true },
   tokens: { type: Number, default: 5 },
+  priceTokens: { type: Number, default: 5 },
   template: { type: String, required: true },
   instructions: { type: String },
   keywords: [{ type: String }],
+  thumbnail: { type: String }, // first sample image (base64 or URL)
   samples: [
     {
       input: { type: String },

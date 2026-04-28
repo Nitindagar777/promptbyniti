@@ -106,8 +106,11 @@ export default function SellPage() {
     setLoading(true);
 
     try {
+      const firstSampleImage = samples.find(s => s.output)?.output || null;
       const payload = {
         ...formData,
+        thumbnail: firstSampleImage,
+        priceTokens: parseInt(formData.tokens) || 5,
         samples: samples.map(s => ({ input: s.input, output: s.output }))
       };
 
