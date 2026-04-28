@@ -18,6 +18,16 @@ export default function PromptDetailPage() {
   const [activeImage, setActiveImage] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [imageRatio, setImageRatio] = useState(null); // null = not yet detected
+
+  const handleImageLoad = (e) => {
+    const { naturalWidth, naturalHeight } = e.target;
+    if (naturalHeight > naturalWidth * 1.2) {
+      setImageRatio('9/16');
+    } else {
+      setImageRatio('1/1');
+    }
+  };
 
   useEffect(() => {
     const fetchTemplate = async () => {
@@ -96,22 +106,22 @@ export default function PromptDetailPage() {
           {/* LEFT COLUMN: Visual Media OR Text Focus */}
           <div className="p-detail__media-section">
             {isVisual ? (
-              <div className={`visual-display card ${
-                (template.title || template.name || '').toLowerCase().includes('portrait') || 
-                (template.keywords || []).some(k => k.toLowerCase().includes('portrait')) 
-                ? 'aspect-9-16' : 'aspect-1-1'
-              }`}>
-                <div className="visual-main">
+              <div className="visual-display card">
+                <div
+                  className="visual-main"
+                  style={{ aspectRatio: imageRatio || '1/1' }}
+                >
                   {template.video || template.generateType === 'video' ? (
                     <video src={template.video || (template.samples?.[activeImage]?.output || template.samples?.[activeImage])} autoPlay muted loop controls />
                   ) : (
-                    <img 
+                    <img
                       src={
-                        template.samples 
-                          ? (template.samples[activeImage]?.output || template.samples[activeImage]) 
+                        template.samples
+                          ? (template.samples[activeImage]?.output || template.samples[activeImage])
                           : template.thumbnail
-                      } 
-                      alt={template.title || template.name} 
+                      }
+                      alt={template.title || template.name}
+                      onLoad={handleImageLoad}
                     />
                   )}
                   <div className="visual-badge">
@@ -128,7 +138,7 @@ export default function PromptDetailPage() {
                         <div 
                           key={idx} 
                           className={`visual-thumb ${activeImage === idx ? 'visual-thumb--active' : ''}`}
-                          onClick={() => setActiveImage(idx)}
+                          onClick={() => { setActiveImage(idx); setImageRatio(null); }}
                         >
                           <img src={thumbSrc} alt={`Sample ${idx + 1}`} />
                         </div>
