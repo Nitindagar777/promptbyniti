@@ -6,7 +6,7 @@ import {
   DollarSign, TrendingUp, BarChart3, Wallet, Plus,
   Eye, ShoppingCart, Clock, Activity, ArrowUpRight,
   Filter, MoreVertical, Edit3, ChevronRight, Layout,
-  ArrowLeft, X
+  ArrowLeft, X, Search
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import './DashboardPage.css';
@@ -17,6 +17,9 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState('overview');
   const [copied, setCopied] = useState(null);
   const [showActivityModal, setShowActivityModal] = useState(false);
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [analyticsFilter, setAnalyticsFilter] = useState('daily');
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalEarnings: 0,
@@ -97,6 +100,18 @@ export default function DashboardPage() {
     fetchStats();
   }, []);
 
+  const getChartData = () => {
+    if (stats[analyticsFilter]) {
+      const { labels, values } = stats[analyticsFilter];
+      return labels.map((l, i) => ({ 
+        label: l, 
+        value: values[i],
+        percentage: Math.max(10, (values[i] / Math.max(...values, 1)) * 100) 
+      }));
+    }
+    return [];
+  };
+
   if (loading) {
     return (
       <div className="dash-loading-v2">
@@ -157,10 +172,10 @@ export default function DashboardPage() {
               {/* Stats Grid */}
               <div className="stats-grid-premium">
                 <div className="stat-card-new theme-green">
-                  <div className="stat-icon-circle green-bg"><DollarSign size={24} /></div>
+                  <div className="stat-icon-circle green-bg"><Zap size={24} /></div>
                   <div className="stat-data">
                     <span className="stat-label">Total Earnings</span>
-                    <h2 className="stat-value">${stats.totalEarnings.toLocaleString()}</h2>
+                    <h2 className="stat-value">{stats.totalEarnings} <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>Tokens</span></h2>
                     <span className="stat-trend trend-up"><ArrowUpRight size={14} /> +{stats.earningGrowth || 0}%</span>
                   </div>
                 </div>
@@ -232,8 +247,8 @@ export default function DashboardPage() {
                       <div className="grid-line"></div>
                       <div className="grid-line"></div>
                       <div className="fake-bar-chart">
-                        {(stats.dailyViews || [10, 10, 10, 10, 10, 10, 10]).map((h, i) => (
-                          <div key={i} className="bar-wrapper">
+                        {(stats.performancePercentages || [10, 15, 25, 20, 35, 30, 45]).map((h, i) => (
+                          <div key={i} className="bar-wrapper" title={`${stats.performanceViews?.[i] || 0} Views`}>
                             <div className="bar-fill" style={{ height: `${h}%`, transitionDelay: `${i * 0.1}s` }}></div>
                           </div>
                         ))}
@@ -252,8 +267,28 @@ export default function DashboardPage() {
             <div className="dash-prompts animate-fade-in">
               <div className="section-header-row mb-lg">
                 <h2>My Uploaded Prompts</h2>
-                <div className="filter-actions">
-                  <button className="btn btn-secondary btn-sm"><Filter size={14} /> Filter</button>
+                <div className="filter-actions-premium">
+                  <div className="dash-search-box">
+                    <Search size={16} />
+                    <input 
+                      type="text" 
+                      placeholder="Search prompts..." 
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </div>
+                  <div className="dash-filter-select">
+                    <Filter size={16} />
+                    <select 
+                      value={filterStatus}
+                      onChange={(e) => setFilterStatus(e.target.value)}
+                    >
+                      <option value="all">All Status</option>
+                      <option value="approved">Approved</option>
+                      <option value="pending">Pending</option>
+                      <option value="rejected">Rejected</option>
+                    </select>
+                  </div>
                 </div>
               </div>
               <div className="prompts-table-wrapper card">
@@ -269,42 +304,65 @@ export default function DashboardPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {stats.prompts.map(p => (
-                      <tr key={p._id}>
-                        <td>
-                          <div className="table-prompt-info" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '12px', textAlign: 'left' }}>
-                            <img 
-                              src={p.thumbnail || (p.samples && p.samples.length > 0 ? (p.samples[0].output || p.samples[0]) : 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100&auto=format&fit=crop&q=60')} 
-                              alt={p.name}
-                              style={{ width: '45px', height: '45px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }}
-                            />
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                              <span className="prompt-title-small" style={{ fontWeight: 'bold' }}>{p.name}</span>
-                              <span className="prompt-date-small" style={{ fontSize: '0.8rem', color: 'var(--color-muted)' }}>Added: {new Date(p.createdAt).toLocaleDateString()}</span>
-                            </div>
-                          </div>
-                        </td>
-                        <td>
-                          <span className={`status-pill status-${p.status}`}>
-                            {p.status}
-                          </span>
-                        </td>
-                        <td><div className="table-stat-box"><Eye size={14} /> {p.views || 0}</div></td>
-                        <td><div className="table-stat-box"><ShoppingCart size={14} /> 0</div></td>
-                        <td>
-                          <span className="table-price-tag" style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--color-orange)', fontWeight: 'bold' }}>
-                            <Zap size={14} fill="currentColor" /> 5 Tokens
-                          </span>
-                        </td>
-                        <td>
-                          <div className="table-actions" style={{ display: 'flex', gap: '12px', alignItems: 'center', justifyContent: 'center' }}>
-                            <Link to={`/prompt/${p._id}`} title="View Prompt" style={{ color: 'var(--color-cyan)', display: 'flex', alignItems: 'center' }}><Eye size={18} /></Link>
-                            <button onClick={() => navigate(`/sell?edit=${p._id}`)} title="Edit Prompt" style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', transition: 'transform 0.2s' }} onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'} onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}><Edit3 size={18} /></button>
-                            <button onClick={() => handleDelete(p._id)} title="Delete Prompt" style={{ background: 'transparent', border: 'none', color: '#ff4d4d', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', transition: 'transform 0.2s' }} onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'} onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}><Trash2 size={18} /></button>
+                    {stats.prompts
+                      .filter(p => {
+                        const matchesStatus = filterStatus === 'all' || p.status?.toLowerCase() === filterStatus.toLowerCase();
+                        const matchesSearch = (p.name || '').toLowerCase().includes(searchQuery.toLowerCase());
+                        return matchesStatus && matchesSearch;
+                      }).length > 0 ? (
+                      stats.prompts
+                        .filter(p => {
+                          const matchesStatus = filterStatus === 'all' || p.status?.toLowerCase() === filterStatus.toLowerCase();
+                          const matchesSearch = (p.name || '').toLowerCase().includes(searchQuery.toLowerCase());
+                          return matchesStatus && matchesSearch;
+                        })
+                        .map(p => (
+                          <tr key={p._id}>
+                            <td>
+                              <div className="table-prompt-info" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '12px', textAlign: 'left' }}>
+                                <img 
+                                  src={p.thumbnail || (p.samples && p.samples.length > 0 ? (p.samples[0].output || p.samples[0]) : 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100&auto=format&fit=crop&q=60')} 
+                                  alt={p.name}
+                                  style={{ width: '45px', height: '45px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }}
+                                />
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                                  <span className="prompt-title-small" style={{ fontWeight: 'bold' }}>{p.name}</span>
+                                  <span className="prompt-date-small" style={{ fontSize: '0.8rem', color: 'var(--color-muted)' }}>Added: {new Date(p.createdAt).toLocaleDateString()}</span>
+                                </div>
+                              </div>
+                            </td>
+                            <td>
+                              <span className={`status-pill status-${p.status}`}>
+                                {p.status}
+                              </span>
+                            </td>
+                            <td><div className="table-stat-box"><Eye size={14} /> {p.views || 0}</div></td>
+                            <td><div className="table-stat-box"><ShoppingCart size={14} /> 0</div></td>
+                            <td>
+                              <span className="table-price-tag" style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--color-orange)', fontWeight: 'bold' }}>
+                                <Zap size={14} fill="currentColor" /> 5 Tokens
+                              </span>
+                            </td>
+                            <td>
+                              <div className="table-actions" style={{ display: 'flex', gap: '12px', alignItems: 'center', justifyContent: 'center' }}>
+                                <Link to={`/prompt/${p._id}`} title="View Prompt" style={{ color: 'var(--color-cyan)', display: 'flex', alignItems: 'center' }}><Eye size={18} /></Link>
+                                <button onClick={() => navigate(`/sell?edit=${p._id}`)} title="Edit Prompt" style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', transition: 'transform 0.2s' }} onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'} onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}><Edit3 size={18} /></button>
+                                <button onClick={() => handleDelete(p._id)} title="Delete Prompt" style={{ background: 'transparent', border: 'none', color: '#ff4d4d', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', transition: 'transform 0.2s' }} onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'} onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}><Trash2 size={18} /></button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                    ) : (
+                      <tr>
+                        <td colSpan="6" style={{ textAlign: 'center', padding: '60px 0' }}>
+                          <div className="empty-prompts-state">
+                            <Layout size={48} style={{ opacity: 0.2, marginBottom: '16px' }} />
+                            <h3 style={{ color: 'var(--text-muted)' }}>No prompts found</h3>
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Try adjusting your search or filters.</p>
                           </div>
                         </td>
                       </tr>
-                    ))}
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -316,37 +374,84 @@ export default function DashboardPage() {
               <div className="analytics-header mb-lg">
                 <h2>Marketplace Analytics</h2>
                 <div className="date-selector">
-                  <button className="btn-pill active">Daily</button>
-                  <button className="btn-pill">Weekly</button>
-                  <button className="btn-pill">Monthly</button>
+                  <button className={`btn-pill ${analyticsFilter === 'daily' ? 'active' : ''}`} onClick={() => setAnalyticsFilter('daily')}>Daily</button>
+                  <button className={`btn-pill ${analyticsFilter === 'weekly' ? 'active' : ''}`} onClick={() => setAnalyticsFilter('weekly')}>Weekly</button>
+                  <button className={`btn-pill ${analyticsFilter === 'monthly' ? 'active' : ''}`} onClick={() => setAnalyticsFilter('monthly')}>Monthly</button>
                 </div>
               </div>
               <div className="analytics-grid">
                 <div className="card analytics-main-chart">
-                  <h3>Revenue Growth (USD)</h3>
-                  <div className="chart-area-placeholder">
-                    <div className="wave-chart">
-                      <svg viewBox="0 0 100 20" preserveAspectRatio="none">
-                        <path d="M0,20 L0,10 Q25,18 50,10 T100,5 L100,20 Z" fill="url(#grad)" />
-                        <defs>
-                          <linearGradient id="grad" x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" style={{ stopColor: 'var(--color-cyan)', stopOpacity: 0.3 }} />
-                            <stop offset="100%" style={{ stopColor: 'var(--color-cyan)', stopOpacity: 0 }} />
-                          </linearGradient>
-                        </defs>
-                      </svg>
-                    </div>
+                  <h3>
+                    {analyticsFilter === 'daily' ? 'Revenue Growth (Tokens)' : analyticsFilter === 'weekly' ? 'Weekly Token Earnings' : 'Monthly Performance (Tokens)'}
+                  </h3>
+                  <div className="chart-area-premium">
+                    {getChartData().some(item => item.value > 0) ? (
+                      getChartData().map((item, i) => (
+                        <div key={i} className="chart-bar-container">
+                          <div 
+                            className="chart-bar" 
+                            style={{ height: `${item.percentage}%`, transitionDelay: `${i * 0.05}s` }}
+                            data-value={`${item.value} Tokens`}
+                          ></div>
+                          <span className="chart-label">{item.label}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="empty-chart-state" style={{ 
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        gap: '12px',
+                        textAlign: 'center',
+                        padding: '20px'
+                      }}>
+                        <TrendingUp size={48} style={{ opacity: 0.1, marginBottom: '8px' }} />
+                        <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem', fontFamily: 'var(--font-display)', margin: 0 }}>No sales yet</p>
+                        <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)', opacity: 0.6, maxWidth: '280px' }}>Your token revenue data will appear here once your prompts are purchased.</span>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="card best-sellers-card">
                   <h3>Best Selling Prompts</h3>
                   <div className="mini-list">
-                    {myPrompts.slice(0, 3).map(p => (
-                      <div key={p.id} className="mini-list-item">
-                        <span>{p.title}</span>
-                        <span className="text-cyan font-bold">{p.sales} Sold</span>
+                    {stats.prompts.length > 0 ? (
+                      [...stats.prompts]
+                        .sort((a, b) => (b.views || 0) - (a.views || 0))
+                        .slice(0, 5)
+                        .map(p => (
+                        <Link 
+                          key={p._id} 
+                          to={`/prompt/${p._id}`} 
+                          className="mini-list-item"
+                          style={{ textDecoration: 'none', transition: 'transform 0.2s ease, background 0.2s ease', cursor: 'pointer' }}
+                          onMouseOver={(e) => {
+                            e.currentTarget.style.transform = 'translateX(5px)';
+                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                          }}
+                          onMouseOut={(e) => {
+                            e.currentTarget.style.transform = 'translateX(0)';
+                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)';
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <img src={p.thumbnail || (p.samples?.[0]?.output || p.samples?.[0])} alt="" style={{ width: '32px', height: '32px', borderRadius: '6px', objectFit: 'cover' }} />
+                            <span style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-primary)' }}>{p.name}</span>
+                          </div>
+                          <span className="text-cyan font-bold">{p.sales || 0} Sold</span>
+                        </Link>
+                      ))
+                    ) : (
+                      <div className="empty-mini-list" style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>
+                        No prompts yet
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
               </div>
