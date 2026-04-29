@@ -98,12 +98,56 @@
 .settings-tab--active .icon-profile { color: var(--color-orange); }
 .settings-tab--active .icon-security { color: var(--color-purple); }
 .settings-tab--active .icon-billing { color: var(--color-green); }
+.settings-tab--active .icon-dashboards { color: var(--color-cyan); }
+.settings-tab--active .icon-admin { color: #f472b6; }
 
 .settings-content {
   display: flex;
   flex-direction: column;
   gap: var(--space-lg);
 }
+
+/* Dashboards Section Styles */
+.dashboards-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-md);
+  margin-top: var(--space-md);
+}
+
+.dashboard-option-card {
+  padding: var(--space-lg);
+  background: rgba(30, 41, 59, 0.4);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-sm);
+}
+
+.dashboard-option-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--color-cyan);
+  background: rgba(30, 41, 59, 0.8);
+}
+
+.option-icon-box {
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-xs);
+  font-size: 1.5rem;
+}
+
+.seller-bg { background: rgba(249, 115, 22, 0.1); color: var(--color-orange); }
+.buyer-bg { background: rgba(16, 185, 129, 0.1); color: var(--color-green); }
 
 .settings-section {
   padding: var(--space-lg);
@@ -457,4 +501,103 @@
 @keyframes modalScaleUp {
   from { transform: scale(0.9); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
+}
+
+/* Dashboards Section Styles */
+.dashboards-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--space-lg);
+  margin-top: var(--space-lg);
+}
+
+.dashboard-option-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-xl);
+  padding: var(--space-xl);
+  display: flex;
+  gap: var(--space-lg);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.dashboard-option-card:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(6, 182, 212, 0.3);
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.option-icon-box {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.seller-bg {
+  background: rgba(6, 182, 212, 0.1);
+  color: var(--color-cyan);
+}
+
+.buyer-bg {
+  background: rgba(249, 115, 22, 0.1);
+  color: var(--color-orange);
+}
+
+.dashboard-option-card:hover .option-icon-box {
+  transform: scale(1.1);
+  box-shadow: 0 0 20px currentColor;
+}
+
+.option-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: left;
+}
+
+.option-info h4 {
+  font-size: 1.3rem;
+  font-family: var(--font-display);
+  margin-bottom: 6px;
+  color: var(--text-primary);
+}
+
+.option-info p {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+.option-link {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-cyan);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dashboard-option-card:nth-child(2) .option-link {
+  color: var(--color-orange);
+}
+
+@media (max-width: 640px) {
+  .dashboard-option-card {
+    flex-direction: column;
+    text-align: center;
+    align-items: center;
+    padding: var(--space-lg);
+  }
+  .option-info {
+    text-align: center;
+  }
 }

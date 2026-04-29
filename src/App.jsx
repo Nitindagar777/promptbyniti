@@ -20,14 +20,33 @@ import './App.css';
 
 /* Route guard: requires login */
 function ProtectedRoute({ children }) {
-  const { state } = useApp();
+  const { state, authLoading } = useApp();
+  
+  if (authLoading) {
+    return (
+      <div className="auth-loading-screen">
+        <div className="loader-premium"></div>
+        <p>Verifying Session...</p>
+      </div>
+    );
+  }
+
   if (!state?.user) return <Navigate to="/login" replace />;
   return children;
 }
 
 /* Route guard: only for guests (not logged in) */
 function GuestRoute({ children }) {
-  const { state } = useApp();
+  const { state, authLoading } = useApp();
+
+  if (authLoading) {
+    return (
+      <div className="auth-loading-screen">
+        <div className="loader-premium"></div>
+      </div>
+    );
+  }
+
   if (state?.user) return <Navigate to="/" replace />;
   return children;
 }

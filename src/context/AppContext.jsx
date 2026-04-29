@@ -126,6 +126,7 @@ function appReducer(state, action) {
 export function AppProvider({ children }) {
   const [state, dispatch] = useReducer(appReducer, null, loadState);
   const [showBanModal, setShowBanModal] = useState(false);
+  const [authLoading, setAuthLoading] = useState(!!localStorage.getItem(TOKEN_KEY));
 
   /* Persist to localStorage */
   useEffect(() => {
@@ -136,32 +137,43 @@ export function AppProvider({ children }) {
   useEffect(() => {
     const validateSession = async () => {
       const token = localStorage.getItem(TOKEN_KEY);
-      if (!token || !state.user) return;
+      if (!token) {
+        setAuthLoading(false);
+        return;
+      }
 
+      console.log('🔄 Validating session with token:', 'Exists');
       try {
         const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8844/api'}/auth/me`, {
-          headers: { 'Authorization': `Bearer ${token}` }
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Cache-Control': 'no-cache'
+          }
         });
         if (!res.ok) {
+          console.error('❌ Session validation failed:', res.status, res.statusText);
           if (res.status === 401 || res.status === 403) {
             const data = await res.json();
-            // Token invalid or user banned
+            console.warn('⚠️ Session invalid, logging out:', data.message);
             localStorage.removeItem(TOKEN_KEY);
             dispatch({ type: actions.LOGOUT });
             if (data.message && data.message.toLowerCase().includes('banned')) {
               setShowBanModal(true);
             }
           }
+          setAuthLoading(false);
           return;
         }
 
         const data = await res.json();
         if (data.success) {
-          // Optionally update user data
+          console.log('✅ Session verified successfully');
           dispatch({ type: actions.LOGIN, payload: data.user });
         }
       } catch (err) {
         console.error('Session validation error:', err);
+      } finally {
+        setAuthLoading(false);
       }
     };
 
@@ -187,6 +199,7 @@ export function AppProvider({ children }) {
     },
     canGenerate: state.plan === 'unlimited' || state.credits > 0,
     isPremium: state.plan !== 'free',
+    authLoading
   };
 
   return (

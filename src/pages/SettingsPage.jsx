@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { Shield, CreditCard, User, Moon, Lock, LogOut, Camera, Check, AlertCircle, Loader2 } from 'lucide-react';
+import { Shield, CreditCard, User, Moon, Lock, LogOut, Camera, Check, AlertCircle, Loader2, LayoutGrid, ShoppingBag, TrendingUp } from 'lucide-react';
 import AdminDashboard from '../components/AdminDashboard';
 import './SettingsPage.css';
 
@@ -99,7 +99,21 @@ export default function SettingsPage() {
     }
   };
 
-  const [activeTab, setActiveTab] = useState('profile');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'profile');
+
+  // Sync activeTab with URL
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setSearchParams({ tab });
+  };
+
+  useEffect(() => {
+    const tabFromUrl = searchParams.get('tab');
+    if (tabFromUrl && tabFromUrl !== activeTab) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [searchParams]);
   const [securityStep, setSecurityStep] = useState('start'); // start | otp | password
   const [securityOtp, setSecurityOtp] = useState('');
   const [securityNewPassword, setSecurityNewPassword] = useState('');
@@ -219,24 +233,31 @@ export default function SettingsPage() {
           <div className="settings-sidebar">
             <button 
               className={`settings-tab ${activeTab === 'profile' ? 'settings-tab--active' : ''}`}
-              onClick={() => setActiveTab('profile')}
+              onClick={() => handleTabChange('profile')}
             >
               <User size={20} className="icon-profile" />
               <span>Edit Profile</span>
             </button>
             <button 
               className={`settings-tab ${activeTab === 'security' ? 'settings-tab--active' : ''}`}
-              onClick={() => setActiveTab('security')}
+              onClick={() => handleTabChange('security')}
             >
               <Shield size={20} className="icon-security" />
               <span>Account Security</span>
             </button>
             <button 
               className={`settings-tab ${activeTab === 'subscription' ? 'settings-tab--active' : ''}`}
-              onClick={() => setActiveTab('subscription')}
+              onClick={() => handleTabChange('subscription')}
             >
               <CreditCard size={20} className="icon-billing" />
               <span>Subscription</span>
+            </button>
+            <button 
+              className={`settings-tab ${activeTab === 'dashboards' ? 'settings-tab--active' : ''}`}
+              onClick={() => handleTabChange('dashboards')}
+            >
+              <LayoutGrid size={20} className="icon-dashboards" />
+              <span>Dashboards</span>
             </button>
             {isAdminEmail && (
               <button 
@@ -245,7 +266,7 @@ export default function SettingsPage() {
                   if (!isAdminAuth) {
                     setShowAdminModal(true);
                   } else {
-                    setActiveTab('admin');
+                    handleTabChange('admin');
                   }
                 }}
               >
@@ -462,6 +483,40 @@ export default function SettingsPage() {
                     </div>
                   )}
                 </form>
+              </section>
+            )}
+
+            {activeTab === 'dashboards' && (
+              <section className="settings-section card">
+                <h3 className="settings-section-title">
+                  <LayoutGrid size={22} className="text-cyan" /> 
+                  <span className="text-cyan">Account Dashboards</span>
+                </h3>
+                <p className="text-muted mb-6">Switch between your selling performance and your personal acquisition hub.</p>
+                
+                <div className="dashboards-selector-grid">
+                  <div className="dashboard-option-card" onClick={() => navigate('/dashboard')}>
+                    <div className="option-icon-box seller-bg">
+                      <TrendingUp size={32} />
+                    </div>
+                    <div className="option-info">
+                      <h4>Seller Dashboard</h4>
+                      <p>Track earnings, manage products, and view sales analytics.</p>
+                      <span className="option-link">Access Marketplace Stats →</span>
+                    </div>
+                  </div>
+
+                  <div className="dashboard-option-card" onClick={() => navigate('/library')}>
+                    <div className="option-icon-box buyer-bg">
+                      <ShoppingBag size={32} />
+                    </div>
+                    <div className="option-info">
+                      <h4>Buyer Dashboard</h4>
+                      <p>View purchased prompts, manage favorites, and track history.</p>
+                      <span className="option-link">Access My Library →</span>
+                    </div>
+                  </div>
+                </div>
               </section>
             )}
 

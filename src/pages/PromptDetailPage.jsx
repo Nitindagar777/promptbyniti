@@ -354,7 +354,23 @@ export default function PromptDetailPage() {
 
               <div className="reviews-list">
                 {reviews.slice(0, reviewsLimit).map((rev, idx) => {
-                  const isCreator = state.user && state.user._id && (state.user._id === (template?.userId || template?.user?._id));
+                  // Robust ID comparison - FOUND 'seller' in database model
+                  const rawCreatorId = template?.seller || template?.userId || template?.user?._id || template?.user || template?.creator;
+                  const creatorId = rawCreatorId?.toString();
+                  const currentUserId = state.user?._id?.toString() || state.user?.id?.toString();
+                  
+                  const isCreator = currentUserId && creatorId && (currentUserId === creatorId);
+
+                  // Debug log to help you fix this in the console
+                  if (idx === 0) {
+                    console.log('🧐 ID CHECK:', { 
+                      currentUserId, 
+                      creatorId, 
+                      match: isCreator,
+                      rawTemplate: template 
+                    });
+                  }
+
                   return (
                     <div key={idx} className="review-container">
                       <div className="review-card-premium review-card-premium--glowing">
