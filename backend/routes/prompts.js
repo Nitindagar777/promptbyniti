@@ -17,6 +17,12 @@ const auth = async (req, res, next) => {
     if (!user) return res.status(401).json({ success: false, message: 'User not found' });
     if (user.isBanned) return res.status(403).json({ success: false, message: 'Your account has been banned.' });
     
+    // Auto-verify if they have a valid token but flag is missing
+    if (!user.isVerified) {
+      user.isVerified = true;
+      await user.save();
+    }
+
     req.userId = decoded.id;
     next();
   } catch (err) {
@@ -59,7 +65,7 @@ router.get('/:id', async (req, res) => {
       req.params.id, 
       { $inc: { views: 1 } }, 
       { returnDocument: 'after' }
-    ).populate('seller', 'name');
+    ).populate('seller', 'name avatar');
     
     if (!prompt) {
       console.log('Prompt NOT found for ID:', req.params.id);

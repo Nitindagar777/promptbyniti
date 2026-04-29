@@ -299,8 +299,8 @@ router.get('/me', async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.id);
 
-    if (!user || !user.isVerified) {
-      return res.status(401).json({ success: false, message: 'Not authenticated or verified' });
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'User not found' });
     }
 
     if (user.isBanned) {

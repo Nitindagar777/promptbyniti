@@ -268,6 +268,35 @@ export default function PromptDetailPage() {
             </div>
 
             <div className="p-detail__stats card">
+              <div className="stat-item" style={{ 
+                gridColumn: '1 / -1', 
+                paddingBottom: '20px', 
+                borderBottom: '1px solid rgba(255,255,255,0.05)', 
+                marginBottom: '10px',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}>
+                <span className="stat-value" style={{ display: 'flex', alignItems: 'center', gap: '15px', marginTop: 0 }}>
+                  {(() => {
+                    const currentUserId = state.user?._id?.toString() || state.user?.id?.toString();
+                    const sellerId = template.seller?._id?.toString() || template.seller?.id?.toString() || template.seller?.toString();
+                    const isCreator = currentUserId && sellerId && (currentUserId === sellerId);
+                    const avatarUrl = template.seller?.avatar || (isCreator ? state.user?.avatar : null) || `https://ui-avatars.com/api/?name=${template.seller?.name || 'C'}&background=random`;
+                    
+                    return (
+                      <>
+                        <img 
+                          src={avatarUrl} 
+                          alt="Creator Avatar" 
+                          style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--color-cyan)', boxShadow: '0 0 15px rgba(0, 255, 255, 0.3)' }} 
+                        />
+                        <span style={{ fontSize: '1.25rem', color: 'white', fontWeight: 'bold' }}>{template.seller?.name || 'Unknown Creator'}</span>
+                      </>
+                    );
+                  })()}
+                </span>
+              </div>
               <div className="stat-item">
                 <span className="stat-label">Model</span>
                 <span className="stat-value">{model.label}</span>
