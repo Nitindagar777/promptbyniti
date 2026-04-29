@@ -1,9 +1,9 @@
 /* DashboardPage — User control center */
 import { useApp } from '../context/AppContext';
 import { Link } from 'react-router-dom';
-import { 
-  User, Zap, Crown, Settings, Trash2, Copy, Check, 
-  DollarSign, TrendingUp, BarChart3, Wallet, Plus, 
+import {
+  User, Zap, Crown, Settings, Trash2, Copy, Check,
+  DollarSign, TrendingUp, BarChart3, Wallet, Plus,
   Eye, ShoppingCart, Clock, Activity, ArrowUpRight,
   Filter, MoreVertical, Edit3, ChevronRight, Layout,
   ArrowLeft
@@ -52,14 +52,15 @@ export default function DashboardPage() {
             </div>
             <div className="dash-user-info">
               <h1>{state.user?.name || 'Creator'}</h1>
+              <p className="dash-user-email">{state.user?.email}</p>
             </div>
           </div>
           <div className="dash-header-actions">
             <Link to="/sell" className="btn btn-primary btn-glow">
               <Plus size={18} /> Add New Prompt
             </Link>
-            <button onClick={() => navigate(-1)} className="btn btn-secondary btn-icon-only" title="Go Back">
-              <ArrowLeft size={20} />
+            <button onClick={() => navigate(-1)} className="btn btn-secondary btn-back-premium" title="Go Back">
+              <ArrowLeft size={18} /> <span>Back</span>
             </button>
           </div>
         </header>
@@ -86,7 +87,7 @@ export default function DashboardPage() {
             <div className="dash-overview animate-fade-in">
               {/* Stats Grid */}
               <div className="stats-grid-premium">
-                <div className="stat-card-new">
+                <div className="stat-card-new theme-green">
                   <div className="stat-icon-circle green-bg"><DollarSign size={24} /></div>
                   <div className="stat-data">
                     <span className="stat-label">Total Earnings</span>
@@ -94,7 +95,7 @@ export default function DashboardPage() {
                     <span className="stat-trend trend-up"><ArrowUpRight size={14} /> +12.5%</span>
                   </div>
                 </div>
-                <div className="stat-card-new">
+                <div className="stat-card-new theme-cyan">
                   <div className="stat-icon-circle cyan-bg"><ShoppingCart size={24} /></div>
                   <div className="stat-data">
                     <span className="stat-label">Total Sales</span>
@@ -102,15 +103,15 @@ export default function DashboardPage() {
                     <span className="stat-trend trend-up"><ArrowUpRight size={14} /> +8.2%</span>
                   </div>
                 </div>
-                <div className="stat-card-new">
+                <div className="stat-card-new theme-orange">
                   <div className="stat-icon-circle orange-bg"><Layout size={24} /></div>
                   <div className="stat-data">
                     <span className="stat-label">Active Prompts</span>
                     <h2 className="stat-value">{sellerStats.activePrompts}</h2>
-                    <span className="stat-trend">Standard Quality</span>
+                    <span className="stat-subtext">Standard Quality</span>
                   </div>
                 </div>
-                <div className="stat-card-new">
+                <div className="stat-card-new theme-purple">
                   <div className="stat-icon-circle purple-bg"><TrendingUp size={24} /></div>
                   <div className="stat-data">
                     <span className="stat-label">Conv. Rate</span>
