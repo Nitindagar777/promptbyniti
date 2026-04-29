@@ -14,9 +14,15 @@ import './DashboardPage.css';
 export default function DashboardPage() {
   const { state, isPremium } = useApp();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState(localStorage.getItem('seller_dashboard_tab') || 'overview');
+
+  useEffect(() => {
+    localStorage.setItem('seller_dashboard_tab', activeTab);
+  }, [activeTab]);
   const [copied, setCopied] = useState(null);
   const [showActivityModal, setShowActivityModal] = useState(false);
+  const [showPayoutSettings, setShowPayoutSettings] = useState(false);
+  const [showPayoutHistory, setShowPayoutHistory] = useState(false);
   const [filterStatus, setFilterStatus] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [analyticsFilter, setAnalyticsFilter] = useState('daily');
@@ -461,39 +467,54 @@ export default function DashboardPage() {
           {activeTab === 'wallet' && (
             <div className="dash-wallet animate-fade-in">
               <div className="wallet-grid">
-                <div className="card wallet-main-card">
+                <div className="card wallet-main-card-premium">
+                  <div className="wallet-card-overlay"></div>
                   <div className="wallet-header-top">
-                    <Wallet size={32} className="text-cyan" />
+                    <div className="wallet-icon-box">
+                      <Wallet size={24} />
+                    </div>
                     <span>Niti Secure Wallet</span>
                   </div>
                   <div className="balance-display">
-                    <span className="balance-label">Available Balance</span>
-                    <h2 className="balance-value">$845.20</h2>
+                    <span className="balance-label">Current Earnings</span>
+                    <h2 className="balance-value">
+                      <Zap size={48} className="text-orange" fill="var(--color-orange)" style={{ marginRight: '15px' }} />
+                      {stats.totalEarnings || 0}
+                      <span className="balance-unit">Tokens</span>
+                    </h2>
+                    <p className="balance-approx">≈ ${( (stats.totalEarnings || 0) * 0.1 ).toFixed(2)} USD</p>
                   </div>
                   <div className="wallet-actions">
-                    <button className="btn btn-primary w-full">Withdraw Funds</button>
-                    <button className="btn btn-secondary w-full">Payout Settings</button>
+                    <button className="btn-withdraw-premium w-full" onClick={() => setShowPayoutHistory(true)}>Withdraw Funds</button>
+                    <button className="btn-text-only w-full" onClick={() => setShowPayoutSettings(true)} style={{ marginTop: '10px', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Payout Settings</button>
                   </div>
                 </div>
                 <div className="card payout-history-card">
-                  <h3>Recent Payouts</h3>
+                  <div className="payout-card-header">
+                    <h3>Recent Payouts</h3>
+                    <button className="btn-text-only" onClick={() => setShowPayoutHistory(true)} style={{ color: 'white', opacity: 1, fontWeight: '600' }}>View All</button>
+                  </div>
                   <div className="history-list">
-                    <div className="history-item">
-                      <div className="h-info">
-                        <Check size={14} className="text-green" />
-                        <span>Withdrawal to PayPal</span>
-                        <span className="h-date">22 Apr 2026</span>
+                    {[
+                      { method: 'PayPal', date: '22 Apr 2026', amount: 450, status: 'completed' },
+                      { method: 'Bank Transfer', date: '10 Apr 2026', amount: 320, status: 'completed' }
+                    ].map((p, i) => (
+                      <div key={i} className="history-item-premium">
+                        <div className="h-left">
+                          <div className={`h-icon-circle ${p.status}`}>
+                            <ArrowUpRight size={16} />
+                          </div>
+                          <div className="h-details">
+                            <span className="h-method">Withdrawal to {p.method}</span>
+                            <span className="h-date">{p.date}</span>
+                          </div>
+                        </div>
+                        <div className="h-right">
+                          <span className="h-amount-negative">-${p.amount.toFixed(2)}</span>
+                          <span className="h-status-badge">Completed</span>
+                        </div>
                       </div>
-                      <span className="h-amount">-$450.00</span>
-                    </div>
-                    <div className="history-item">
-                      <div className="h-info">
-                        <Check size={14} className="text-green" />
-                        <span>Withdrawal to Bank</span>
-                        <span className="h-date">10 Apr 2026</span>
-                      </div>
-                      <span className="h-amount">-$320.00</span>
-                    </div>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -517,14 +538,127 @@ export default function DashboardPage() {
             </div>
             <div className="modal-body scroll-area">
               <div className="activity-list">
-                {[...stats.recentActivity, ...stats.recentActivity, ...stats.recentActivity].map((item, idx) => (
-                  <div key={`${item.id}-${idx}`} className="activity-item">
-                    <div className="activity-user-av">{item.user[0].toUpperCase()}</div>
-                    <div className="activity-content">
-                      <p><strong>@{item.user}</strong> purchased <span>{item.prompt}</span></p>
-                      <span className="activity-time">{item.time}</span>
+                {[...stats.recentActivity].length > 0 ? (
+                   [...stats.recentActivity, ...stats.recentActivity].map((item, idx) => (
+                    <div key={`${item.id}-${idx}`} className="activity-item">
+                      <div className="activity-user-av">{item.user[0].toUpperCase()}</div>
+                      <div className="activity-content">
+                        <p><strong>@{item.user}</strong> purchased <span>{item.prompt}</span></p>
+                        <span className="activity-time">{item.time}</span>
+                      </div>
+                      <div className="activity-price text-green">+${item.price}</div>
                     </div>
-                    <div className="activity-price text-green">+${item.price}</div>
+                  ))
+                ) : (
+                  <div style={{ textAlign: 'center', padding: '40px', opacity: 0.5 }}>
+                    No activity recorded yet.
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Payout Settings Modal */}
+      {showPayoutSettings && (
+        <div className="modal-overlay" onClick={() => setShowPayoutSettings(false)}>
+          <div className="activity-modal card animate-modal-up" style={{ maxWidth: '500px' }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <div className="header-with-icon">
+                <Settings size={24} className="text-cyan" />
+                <h2>Payout Settings</h2>
+              </div>
+              <button className="btn-close-modal" onClick={() => setShowPayoutSettings(false)}>
+                <X size={24} />
+              </button>
+            </div>
+            <div className="modal-body">
+              <p className="text-muted mb-lg">Select your preferred method to receive earnings.</p>
+              
+              <div className="settings-form" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div className="form-group-premium">
+                  <label>PayPal Email</label>
+                  <input type="email" className="form-control" placeholder="your@email.com" defaultValue={state.user?.email} />
+                </div>
+                
+                <div className="form-group-premium">
+                  <label>UPI ID (Optional)</label>
+                  <input type="text" className="form-control" placeholder="username@upi" />
+                </div>
+
+                <div className="form-group-premium">
+                  <label>Bank Account Number</label>
+                  <input type="text" className="form-control" placeholder="XXXX XXXX XXXX XXXX" />
+                </div>
+
+                <button className="btn btn-primary btn-xl w-full" style={{ marginTop: '10px' }} onClick={() => {
+                  alert('Payout settings updated successfully!');
+                  setShowPayoutSettings(false);
+                }}>
+                  Save Changes
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Payout History Modal */}
+      {showPayoutHistory && (
+        <div className="modal-overlay" onClick={() => setShowPayoutHistory(false)}>
+          <div className="activity-modal card animate-modal-up" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <div className="header-with-icon">
+                <Activity size={24} className="text-cyan" />
+                <h2>Payout History & Withdraw</h2>
+              </div>
+              <button className="btn-close-modal" onClick={() => setShowPayoutHistory(false)}>
+                <X size={24} />
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="withdraw-summary-premium" style={{ 
+                background: 'rgba(0, 255, 255, 0.03)', 
+                padding: '20px', 
+                borderRadius: '16px', 
+                marginBottom: '30px',
+                border: '1px solid rgba(0, 255, 255, 0.1)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}>
+                <div>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Available for Withdrawal</span>
+                  <h3 style={{ fontSize: '1.5rem', marginTop: '5px' }}>{stats.totalEarnings || 0} Tokens</h3>
+                </div>
+                <button className="btn btn-primary" disabled={!stats.totalEarnings} onClick={() => alert('Withdrawal request submitted! It will be processed within 2-3 business days.')}>
+                  Submit Request
+                </button>
+              </div>
+
+              <h3 style={{ marginBottom: '20px', fontFamily: 'var(--font-display)' }}>Transaction Logs</h3>
+              <div className="history-list scroll-area" style={{ maxHeight: '400px' }}>
+                {[
+                  { method: 'PayPal', date: '22 Apr 2026', amount: 450, status: 'completed' },
+                  { method: 'Bank Transfer', date: '10 Apr 2026', amount: 320, status: 'completed' },
+                  { method: 'UPI', date: '05 Apr 2026', amount: 150, status: 'completed' },
+                  { method: 'PayPal', date: '28 Mar 2026', amount: 500, status: 'completed' }
+                ].map((p, i) => (
+                  <div key={i} className="history-item-premium">
+                    <div className="h-left">
+                      <div className={`h-icon-circle ${p.status}`}>
+                        <ArrowUpRight size={16} />
+                      </div>
+                      <div className="h-details">
+                        <span className="h-method">Withdrawal to {p.method}</span>
+                        <span className="h-date">{p.date}</span>
+                      </div>
+                    </div>
+                    <div className="h-right">
+                      <span className="h-amount-negative">-${p.amount.toFixed(2)}</span>
+                      <span className="h-status-badge">Completed</span>
+                    </div>
                   </div>
                 ))}
               </div>
