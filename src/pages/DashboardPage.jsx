@@ -30,6 +30,40 @@ export default function DashboardPage() {
     recentActivity: []
   });
 
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this prompt? This action cannot be undone.')) return;
+    
+    try {
+      const token = localStorage.getItem('promptbyniti_token');
+      const API_BASE = import.meta.env.VITE_API_URL || 
+        (window.location.hostname.includes('oopsverse.cloud') 
+          ? 'https://oopsverse.cloud/api' 
+          : 'http://localhost:8844/api');
+          
+      const res = await fetch(`${API_BASE}/prompts/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      const data = await res.json();
+      if (data.success) {
+        // Remove from UI
+        setStats(prev => ({
+          ...prev,
+          prompts: prev.prompts.filter(p => p._id !== id),
+          activePrompts: prev.activePrompts - 1
+        }));
+      } else {
+        alert(data.message || 'Failed to delete prompt');
+      }
+    } catch (err) {
+      console.error('Delete error:', err);
+      alert('Network error. Please try again.');
+    }
+  };
+
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -238,9 +272,16 @@ export default function DashboardPage() {
                     {stats.prompts.map(p => (
                       <tr key={p._id}>
                         <td>
-                          <div className="table-prompt-info">
-                            <span className="prompt-title-small">{p.name}</span>
-                            <span className="prompt-date-small">Added: {new Date(p.createdAt).toLocaleDateString()}</span>
+                          <div className="table-prompt-info" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '12px', textAlign: 'left' }}>
+                            <img 
+                              src={p.thumbnail || (p.samples && p.samples.length > 0 ? (p.samples[0].output || p.samples[0]) : 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100&auto=format&fit=crop&q=60')} 
+                              alt={p.name}
+                              style={{ width: '45px', height: '45px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }}
+                            />
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                              <span className="prompt-title-small" style={{ fontWeight: 'bold' }}>{p.name}</span>
+                              <span className="prompt-date-small" style={{ fontSize: '0.8rem', color: 'var(--color-muted)' }}>Added: {new Date(p.createdAt).toLocaleDateString()}</span>
+                            </div>
                           </div>
                         </td>
                         <td>
@@ -250,11 +291,16 @@ export default function DashboardPage() {
                         </td>
                         <td><div className="table-stat-box"><Eye size={14} /> {p.views || 0}</div></td>
                         <td><div className="table-stat-box"><ShoppingCart size={14} /> 0</div></td>
-                        <td><span className="table-price-tag">${p.price}</span></td>
                         <td>
-                          <div className="table-actions">
-                            <button className="btn-icon-sm" title="Edit"><Edit3 size={16} /></button>
-                            <button className="btn-icon-sm text-danger" title="Delete"><Trash2 size={16} /></button>
+                          <span className="table-price-tag" style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--color-orange)', fontWeight: 'bold' }}>
+                            <Zap size={14} fill="currentColor" /> 5 Tokens
+                          </span>
+                        </td>
+                        <td>
+                          <div className="table-actions" style={{ display: 'flex', gap: '12px', alignItems: 'center', justifyContent: 'center' }}>
+                            <Link to={`/prompt/${p._id}`} title="View Prompt" style={{ color: 'var(--color-cyan)', display: 'flex', alignItems: 'center' }}><Eye size={18} /></Link>
+                            <button onClick={() => navigate(`/sell?edit=${p._id}`)} title="Edit Prompt" style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', transition: 'transform 0.2s' }} onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'} onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}><Edit3 size={18} /></button>
+                            <button onClick={() => handleDelete(p._id)} title="Delete Prompt" style={{ background: 'transparent', border: 'none', color: '#ff4d4d', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', transition: 'transform 0.2s' }} onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'} onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}><Trash2 size={18} /></button>
                           </div>
                         </td>
                       </tr>

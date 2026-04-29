@@ -80,4 +80,43 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// PUT Update Prompt (Requires Auth & Ownership)
+router.put('/:id', auth, async (req, res) => {
+  try {
+    const prompt = await Prompt.findById(req.params.id);
+    if (!prompt) return res.status(404).json({ success: false, message: 'Prompt not found' });
+    
+    // Check ownership
+    if (prompt.seller.toString() !== req.userId && prompt.seller.toString() !== req.userId.toString()) {
+      return res.status(403).json({ success: false, message: 'Unauthorized: You do not own this prompt' });
+    }
+
+    // Update fields and force status back to pending for admin review
+    const updatedData = { ...req.body, status: 'pending' };
+    const updatedPrompt = await Prompt.findByIdAndUpdate(req.params.id, updatedData, { new: true });
+    
+    res.json({ success: true, prompt: updatedPrompt, message: 'Prompt updated and sent for admin review' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// DELETE Prompt (Requires Auth & Ownership)
+router.delete('/:id', auth, async (req, res) => {
+  try {
+    const prompt = await Prompt.findById(req.params.id);
+    if (!prompt) return res.status(404).json({ success: false, message: 'Prompt not found' });
+    
+    // Check ownership
+    if (prompt.seller.toString() !== req.userId && prompt.seller.toString() !== req.userId.toString()) {
+      return res.status(403).json({ success: false, message: 'Unauthorized: You do not own this prompt' });
+    }
+
+    await Prompt.findByIdAndDelete(req.params.id);
+    res.json({ success: true, message: 'Prompt deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 module.exports = router;

@@ -6,7 +6,7 @@ import {
   ShoppingBag, Zap, Image, Video,
   Upload, CheckCircle, AlertCircle, Info,
   Wand2, ShieldCheck, DollarSign, Type,
-  Plus, Trash2, ChevronRight, Sparkles
+  Plus, Trash2, ChevronRight, Sparkles, ArrowLeft
 } from 'lucide-react';
 import './SellPage.css';
 
@@ -58,6 +58,43 @@ export default function SellPage() {
 
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editId, setEditId] = useState(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('edit');
+    if (id) {
+      setIsEditMode(true);
+      setEditId(id);
+      fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8844/api'}/prompts/${id}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.prompt) {
+            const p = data.prompt;
+            setFormData({
+              name: p.name || '',
+              description: p.description || '',
+              generateType: p.generateType || 'image',
+              model: p.model || '',
+              tokens: p.priceTokens ? p.priceTokens.toString() : '5',
+              template: p.template || '',
+              instructions: p.instructions || '',
+              keywords: p.keywords || [],
+            });
+            if (p.samples && p.samples.length > 0) {
+              const loadedSamples = [
+                { id: 1, input: p.samples[0]?.input || '', output: p.samples[0]?.output || null },
+                { id: 2, input: p.samples[1]?.input || '', output: p.samples[1]?.output || null },
+                { id: 3, input: p.samples[2]?.input || '', output: p.samples[2]?.output || null }
+              ];
+              setSamples(loadedSamples);
+            }
+          }
+        })
+        .catch(err => console.error("Error loading prompt for edit:", err));
+    }
+  }, []);
 
   // Filter models based on generate type
   const filteredModels = aiModels.filter(m => {
@@ -114,8 +151,12 @@ export default function SellPage() {
         samples: samples.map(s => ({ input: s.input, output: s.output }))
       };
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8844/api'}/prompts`, {
-        method: 'POST',
+      const url = isEditMode 
+        ? `${import.meta.env.VITE_API_URL || 'http://localhost:8844/api'}/prompts/${editId}`
+        : `${import.meta.env.VITE_API_URL || 'http://localhost:8844/api'}/prompts`;
+
+      const response = await fetch(url, {
+        method: isEditMode ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('promptbyniti_token')}`
@@ -147,7 +188,7 @@ export default function SellPage() {
           </div>
           <h1 className="h-display" style={{ marginTop: '24px' }}>Submission <span className="text-green">Received!</span></h1>
           <p className="text-secondary" style={{ maxWidth: '600px', margin: '16px auto var(--space-xl)' }}>
-            Your prompt package "{formData.name}" is now being reviewed by our quality team. You will be notified once it goes live in the Store.
+            Your prompt package "{formData.name}" is now being reviewed by our quality team. You will be notified once it is approved and live in the Store.
           </p>
           <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
             <button className="btn btn-primary" onClick={() => setSubmitted(false)}>List Another</button>
@@ -160,9 +201,22 @@ export default function SellPage() {
 
   return (
     <div className="sell-page container">
-      <div className="sell-page__header reveal">
-        <h1 className="h-display">Sell Your <span className="text-orange">AI Excellence</span></h1>
-        <p className="section-desc">Create a listing with 3 samples to prove your prompt's power and start earning tokens.</p>
+      <div className="sell-page__header reveal" style={{ position: 'relative' }}>
+        {isEditMode && (
+          <button 
+            onClick={() => navigate('/dashboard')} 
+            className="btn btn-secondary btn-sm" 
+            style={{ position: 'absolute', left: '0', top: '5px', display: 'flex', alignItems: 'center', gap: '8px', zIndex: 10 }}
+          >
+            <ArrowLeft size={16} /> Back
+          </button>
+        )}
+        <h1 className="h-display">{isEditMode ? 'Edit Your' : 'Sell Your'} <span className="text-orange">AI Excellence</span></h1>
+        <p className="section-desc">
+          {isEditMode 
+            ? "Update your prompt details. Note: Editing will send it back to pending for admin review." 
+            : "Create a listing with 3 samples to prove your prompt's power and start earning tokens."}
+        </p>
       </div>
       <form className="sell-form-v2" onSubmit={handleSubmit}>
         <div className="sell-page__grid">
@@ -291,7 +345,7 @@ export default function SellPage() {
         </div>
         <div className="sell-footer mt-2xl">
           <div className="security-note"><ShieldCheck size={18} className="text-green" /><span>Verified Listing - 70% Creator Royalty</span></div>
-          <button type="submit" className="btn btn-primary btn-xl" disabled={loading} style={{ minWidth: '300px' }}>{loading ? 'Submitting...' : 'Publish to Store'} <ChevronRight size={20} /></button>
+          <button type="submit" className="btn btn-primary btn-xl" disabled={loading} style={{ minWidth: '300px' }}>{loading ? 'Submitting...' : (isEditMode ? 'Save & Request Review' : 'Publish to Store')} <ChevronRight size={20} /></button>
         </div>
       </form>
       {showKeywordModal && (

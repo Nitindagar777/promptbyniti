@@ -215,7 +215,19 @@ const AdminDashboard = () => {
             <tbody>
               {filteredData.map(prompt => (
                 <tr key={prompt._id}>
-                  <td>{prompt.name}</td>
+                  <td>
+                    <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '12px', textAlign: 'left' }}>
+                      <img 
+                        src={prompt.thumbnail || (prompt.samples && prompt.samples.length > 0 ? (prompt.samples[0].output || prompt.samples[0]) : 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100&auto=format&fit=crop&q=60')} 
+                        alt={prompt.name}
+                        style={{ width: '45px', height: '45px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }}
+                      />
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                        <span style={{ fontWeight: 'bold' }}>{prompt.name}</span>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary, #9ca3af)' }}>{new Date(prompt.createdAt).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  </td>
                   <td>{prompt.seller?.name || 'Unknown'}</td>
                   <td>{prompt.tokens || 5} Tokens</td>
                   <td>
