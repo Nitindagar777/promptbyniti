@@ -159,27 +159,46 @@ router.post('/withdraw', auth, async (req, res) => {
   }
 });
 
+// GET: Fetch Saved Payment Method
+router.get('/payment-method', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.userId);
+    res.json({ success: true, paymentMethod: user.paymentMethod || null });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // POST: Save Payment Method
 router.post('/payment-method', auth, async (req, res) => {
   try {
     const { type, upiId, bankName, accountHolder, accountNumber, ifscCode, paypalEmail, swiftCode, note } = req.body;
     
-    const user = await User.findByIdAndUpdate(req.userId, {
-      paymentMethod: {
-        type,
-        upiId: upiId || '',
-        bankName: bankName || '',
-        accountHolder: accountHolder || '',
-        accountNumber: accountNumber || '',
-        ifscCode: ifscCode || '',
-        paypalEmail: paypalEmail || '',
-        swiftCode: swiftCode || '',
-        note: note || ''
-      }
-    }, { new: true });
+    console.log(`Explicitly setting payment method for user ${req.userId}:`, type);
 
-    res.json({ success: true, message: 'Payment method saved successfully' });
+    const user = await User.findByIdAndUpdate(
+      req.userId,
+      {
+        $set: {
+          'paymentMethod.type': type,
+          'paymentMethod.upiId': upiId || '',
+          'paymentMethod.bankName': bankName || '',
+          'paymentMethod.accountHolder': accountHolder || '',
+          'paymentMethod.accountNumber': accountNumber || '',
+          'paymentMethod.ifscCode': ifscCode || '',
+          'paymentMethod.paypalEmail': paypalEmail || '',
+          'paymentMethod.swiftCode': swiftCode || '',
+          'paymentMethod.note': note || ''
+        }
+      },
+      { new: true, runValidators: true }
+    );
+
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+    res.json({ success: true, message: 'Payment method saved successfully', paymentMethod: user.paymentMethod });
   } catch (err) {
+    console.error('Save payment method error:', err);
     res.status(500).json({ success: false, message: err.message });
   }
 });

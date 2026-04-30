@@ -27,10 +27,59 @@ export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [analyticsFilter, setAnalyticsFilter] = useState('daily');
   const [payoutTab, setPayoutTab] = useState('UPI');
-  const [withdrawAmount, setWithdrawAmount] = useState(0); // Track which withdrawal option was selected
-  const [payoutFormFilled, setPayoutFormFilled] = useState(false); // Track if payout form has required data
+  const [withdrawAmount, setWithdrawAmount] = useState(0);
+  const [payoutFormFilled, setPayoutFormFilled] = useState(false);
+  const [savedPaymentMethod, setSavedPaymentMethod] = useState(null);
+  const [isEditingPayout, setIsEditingPayout] = useState(false);
+  const [payoutData, setPayoutData] = useState({
+    upiId: '',
+    bankName: '',
+    accountHolder: '',
+    accountNumber: '',
+    ifscCode: '',
+    paypalEmail: '',
+    swiftCode: '',
+    note: ''
+  });
   // Wallet balance: subtract 1 free signup token (not withdrawable)
   const walletTokens = Math.max(0, (state.user?.credits || 0) - 1);
+  const [toast, setToast] = useState(null); // { message, type: 'success' | 'error' }
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
+  };
+  const fetchPaymentMethod = async () => {
+    try {
+      const token = localStorage.getItem('promptbyniti_token');
+                      const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8844/api';
+      const res = await fetch(`${API_BASE}/seller/payment-method`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.success && data.paymentMethod && data.paymentMethod.type) {
+        setSavedPaymentMethod(data.paymentMethod);
+        setPayoutTab(data.paymentMethod.type);
+        setPayoutFormFilled(true);
+        setPayoutData({
+          upiId: data.paymentMethod.upiId || '',
+          bankName: data.paymentMethod.bankName || '',
+          accountHolder: data.paymentMethod.accountHolder || '',
+          accountNumber: data.paymentMethod.accountNumber || '',
+          ifscCode: data.paymentMethod.ifscCode || '',
+          paypalEmail: data.paymentMethod.paypalEmail || '',
+          swiftCode: data.paymentMethod.swiftCode || '',
+          note: data.paymentMethod.note || ''
+        });
+        setIsEditingPayout(false);
+      } else {
+        setSavedPaymentMethod(null);
+        setIsEditingPayout(true);
+      }
+    } catch { 
+      setSavedPaymentMethod(null); 
+      setIsEditingPayout(true); 
+    }
+  };
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalEarnings: 0,
@@ -72,11 +121,11 @@ export default function DashboardPage() {
           activePrompts: prev.activePrompts - 1
         }));
       } else {
-        alert(data.message || 'Failed to delete prompt');
+        showToast(data.message || 'Failed to delete prompt', 'error');
       }
     } catch (err) {
       console.error('Delete error:', err);
-      alert('Network error. Please try again.');
+      showToast('Network error. Please try again.', 'error');
     }
   };
 
@@ -99,16 +148,16 @@ export default function DashboardPage() {
       
       const data = await res.json();
       if (data.success) {
-        alert('Withdrawal request submitted! It will be processed within 2-3 business days.');
+        showToast('✅ Withdrawal request submitted! It will be processed within 2-3 business days.', 'success');
         setShowPayoutHistory(false);
         // Refresh stats to show the new pending payout
         window.location.reload();
       } else {
-        alert(data.message || 'Failed to submit withdrawal request');
+        showToast(data.message || 'Failed to submit withdrawal request', 'error');
       }
     } catch (err) {
       console.error('Withdrawal error:', err);
-      alert('Network error. Please try again.');
+      showToast('Network error. Please try again.', 'error');
     }
   };
 
@@ -143,6 +192,7 @@ export default function DashboardPage() {
       }
     };
     fetchStats();
+    fetchPaymentMethod();
   }, []);
 
   const getChartData = () => {
@@ -168,6 +218,31 @@ export default function DashboardPage() {
 
   return (
     <div className="dashboard-page" id="seller-dashboard">
+      {/* Toast Notification */}
+      {toast && (
+        <div style={{
+          position: 'fixed', top: '24px', right: '24px', zIndex: 99999,
+          background: toast.type === 'success' 
+            ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.95), rgba(6, 182, 212, 0.95))' 
+            : 'linear-gradient(135deg, rgba(239, 68, 68, 0.95), rgba(220, 38, 38, 0.95))',
+          color: '#fff', padding: '16px 24px', borderRadius: '14px',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.1)',
+          backdropFilter: 'blur(16px)',
+          display: 'flex', alignItems: 'center', gap: '12px',
+          fontFamily: "'Chewy', cursive", fontSize: '0.95rem', letterSpacing: '0.3px',
+          animation: 'slideInToast 0.4s cubic-bezier(0.22, 1, 0.36, 1)',
+          maxWidth: '420px', cursor: 'pointer'
+        }} onClick={() => setToast(null)}>
+          <span style={{ fontSize: '1.3rem' }}>{toast.type === 'success' ? '✅' : '⚠️'}</span>
+          <span>{toast.message}</span>
+        </div>
+      )}
+      <style>{`
+        @keyframes slideInToast {
+          from { transform: translateX(120%); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
+      `}</style>
       <div className="container">
         {/* Dashboard Header */}
         <header className="dash-header">
@@ -531,7 +606,7 @@ export default function DashboardPage() {
                     <button className="btn-withdraw-premium w-full" onClick={() => setShowPayoutHistory(true)}>Withdraw Funds</button>
                     <button 
                       className="btn-text-only" 
-                      onClick={() => setShowPayoutSettings(true)} 
+                      onClick={() => { fetchPaymentMethod(); setIsEditingPayout(false); setShowPayoutSettings(true); }} 
                       style={{ 
                         marginTop: '10px', 
                         color: 'var(--color-cyan)', 
@@ -635,7 +710,6 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Payout Settings Modal (Withdrawal Methods) */}
       {showPayoutSettings && (
         <div className="modal-overlay" onClick={() => { setShowPayoutSettings(false); setWithdrawAmount(0); }}>
           <div className="activity-modal card animate-modal-up payout-method-modal" onClick={e => e.stopPropagation()}>
@@ -661,7 +735,7 @@ export default function DashboardPage() {
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center'
                 }}>
                   <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Withdrawal Amount</span>
-                  <span style={{ fontWeight: 'bold', color: 'var(--color-green, #22c55e)', fontSize: '1.1rem' }}>
+                  <span style={{ fontWeight: 'bold', color: 'var(--color-green, #22c55e)', fontSize: '1.1rem', display: 'flex', alignItems: 'center' }}>
                     <Zap size={16} fill="var(--color-orange)" className="text-orange" style={{ marginRight: '4px' }} />
                     {withdrawAmount} Tokens → ${withdrawAmount === 70 ? '29.00' : '10.00'}
                   </span>
@@ -669,157 +743,247 @@ export default function DashboardPage() {
               )}
 
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '16px' }}>
-                {withdrawAmount > 0 ? 'Fill your payment details below, then click Next to submit your withdrawal request.' : 'Add your payment method for future withdrawals.'}
+                {withdrawAmount > 0 ? 'Confirm your payment details below, then click Next to submit.' : 'Manage your payout method.'}
               </p>
 
-              {/* Tab Navigation */}
-              <div className="payout-tabs-container">
-                <div className="payout-tabs">
-                  {['UPI', 'BANK', 'INTL'].map(tab => (
-                    <button 
-                      key={tab} 
-                      className={`payout-tab ${payoutTab === tab ? 'active' : ''}`}
-                      onClick={() => { setPayoutTab(tab); setPayoutFormFilled(false); }}
-                    >
-                      {tab}
+              {/* SAVED DATA VIEW — show when saved & not editing */}
+              {savedPaymentMethod && !isEditingPayout ? (
+                <div className="animate-fade-in">
+                  <div style={{
+                    background: 'rgba(16, 185, 129, 0.06)', border: '1px solid rgba(16, 185, 129, 0.25)',
+                    borderRadius: '16px', padding: '24px', position: 'relative'
+                  }}>
+                    {/* Checkmark badge */}
+                    <div style={{
+                      position: 'absolute', top: '-12px', right: '16px',
+                      background: 'linear-gradient(135deg, #10b981, #06b6d4)', borderRadius: '20px',
+                      padding: '4px 14px', display: 'flex', alignItems: 'center', gap: '6px',
+                      fontSize: '0.8rem', fontWeight: 'bold', color: '#fff', boxShadow: '0 4px 12px rgba(16,185,129,0.3)'
+                    }}>
+                      <Check size={14} /> Verified
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '18px' }}>
+                      <span style={{
+                        background: 'rgba(6, 182, 212, 0.15)', padding: '8px 16px', borderRadius: '8px',
+                        fontWeight: 'bold', color: 'var(--color-cyan)', fontSize: '0.9rem'
+                      }}>{savedPaymentMethod.type}</span>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Active Payment Method</span>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      {savedPaymentMethod.type === 'UPI' && savedPaymentMethod.upiId && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px' }}>
+                          <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>UPI ID</span>
+                          <span style={{ fontWeight: 'bold', color: '#fff' }}>
+                            {savedPaymentMethod.upiId.split('@')[0].slice(0, 3)}xxxxxx@{savedPaymentMethod.upiId.split('@')[1] || 'upi'}
+                          </span>
+                        </div>
+                      )}
+                      {savedPaymentMethod.type === 'BANK' && (
+                        <>
+                          {savedPaymentMethod.bankName && <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px' }}><span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Bank</span><span style={{ fontWeight: 'bold', color: '#fff' }}>{savedPaymentMethod.bankName}</span></div>}
+                          {savedPaymentMethod.accountHolder && <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px' }}><span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Name</span><span style={{ fontWeight: 'bold', color: '#fff' }}>{savedPaymentMethod.accountHolder}</span></div>}
+                          {savedPaymentMethod.accountNumber && <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px' }}><span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Account</span><span style={{ fontWeight: 'bold', color: '#fff' }}>{'x'.repeat(savedPaymentMethod.accountNumber.length - 4)}{savedPaymentMethod.accountNumber.slice(-4)}</span></div>}
+                          {savedPaymentMethod.ifscCode && <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px' }}><span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>IFSC</span><span style={{ fontWeight: 'bold', color: '#fff' }}>{savedPaymentMethod.ifscCode.slice(0, 4)}xxxxxx</span></div>}
+                        </>
+                      )}
+                      {savedPaymentMethod.type === 'INTL' && (
+                        <>
+                          {savedPaymentMethod.paypalEmail && <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px' }}><span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>PayPal</span><span style={{ fontWeight: 'bold', color: '#fff' }}>{savedPaymentMethod.paypalEmail.split('@')[0].slice(0, 3)}xxxxxx@{savedPaymentMethod.paypalEmail.split('@')[1] || 'paypal.com'}</span></div>}
+                          {savedPaymentMethod.swiftCode && <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px' }}><span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>SWIFT</span><span style={{ fontWeight: 'bold', color: '#fff' }}>{savedPaymentMethod.swiftCode.slice(0, 2)}xxxxxx</span></div>}
+                        </>
+                      )}
+                      {savedPaymentMethod.note && (
+                        <div style={{ padding: '10px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px' }}>
+                          <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Note: </span>
+                          <span style={{ color: '#fff', fontStyle: 'italic' }}>{savedPaymentMethod.note}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <button onClick={() => {
+                      setIsEditingPayout(true);
+                      setPayoutFormFilled(true); 
+                    }} style={{
+                      marginTop: '18px', background: 'rgba(6, 182, 212, 0.1)', border: '1px solid rgba(6, 182, 212, 0.3)',
+                      color: 'var(--color-cyan)', padding: '10px 20px', borderRadius: '10px', cursor: 'pointer',
+                      fontFamily: "'Chewy', cursive", fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px',
+                      transition: 'all 0.2s ease', width: '100%', justifyContent: 'center'
+                    }}>
+                      <Edit3 size={16} /> Change Payment Method
                     </button>
-                  ))}
+                  </div>
                 </div>
-              </div>
-
-              <div className="payout-form-content" onChange={() => {
-                // Check if required fields are filled
-                const modal = document.querySelector('.payout-method-modal');
-                if (!modal) return;
-                const inputs = modal.querySelectorAll('input');
-                let hasFilled = false;
-                inputs.forEach(input => {
-                  if (input.value.trim().length > 0) hasFilled = true;
-                });
-                setPayoutFormFilled(hasFilled);
-              }}>
-                {payoutTab === 'UPI' && (
-                  <div className="animate-fade-in">
-                    <div className="form-group-payout">
-                      <label>UPI ID *</label>
-                      <div className="input-with-icon">
-                        <div className="input-icon-left"><Activity size={18} /></div>
-                        <input type="text" placeholder="e.g. 9876543210@upi" />
-                      </div>
-                      <span className="input-hint">Supports: @upi, @okaxis, @ybl, @paytm, @sbi, @hdfcbank</span>
-                    </div>
-                    
-                    <div className="form-group-payout">
-                      <label>UPI QR CODE</label>
-                      <div className="qr-upload-area">
-                        <ArrowUpRight size={24} />
-                        <span>Upload QR Image</span>
-                      </div>
-                    </div>
-
-                    <div className="form-group-payout">
-                      <label>NOTE FOR ADMIN</label>
-                      <textarea placeholder="Any additional information..."></textarea>
+              ) : (
+                /* EDIT FORM */
+                <>
+                  <div className="payout-tabs-container">
+                    <div className="payout-tabs">
+                      {['UPI', 'BANK', 'INTL'].map(tab => (
+                        <button 
+                          key={tab} 
+                          className={`payout-tab ${payoutTab === tab ? 'active' : ''}`}
+                          onClick={() => { setPayoutTab(tab); }}
+                        >
+                          {tab}
+                        </button>
+                      ))}
                     </div>
                   </div>
-                )}
 
-                {payoutTab === 'BANK' && (
-                  <div className="animate-fade-in">
-                    <div className="form-grid-payout">
-                      <div className="form-group-payout">
-                        <label>BANK NAME</label>
-                        <input type="text" placeholder="e.g. HDFC Bank" />
+                  <div className="payout-form-content">
+                    {payoutTab === 'UPI' && (
+                      <div className="animate-fade-in">
+                        <div className="form-group-payout">
+                          <label>UPI ID *</label>
+                          <div className="input-with-icon">
+                            <div className="input-icon-left"><Activity size={18} /></div>
+                            <input 
+                              type="text" 
+                              placeholder="e.g. 9876543210@upi" 
+                              value={payoutData.upiId} 
+                              onChange={(e) => {
+                                setPayoutData({...payoutData, upiId: e.target.value});
+                                setPayoutFormFilled(e.target.value.trim().length > 0);
+                              }}
+                            />
+                          </div>
+                          <span className="input-hint">Supports: @upi, @okaxis, @ybl, @paytm, @sbi, @hdfcbank</span>
+                        </div>
+                        <div className="form-group-payout">
+                          <label>UPI QR CODE</label>
+                          <div className="qr-upload-area">
+                            <ArrowUpRight size={24} />
+                            <span>Upload QR Image</span>
+                          </div>
+                        </div>
+                        <div className="form-group-payout">
+                          <label>NOTE FOR ADMIN</label>
+                          <textarea 
+                            placeholder="Any additional information..." 
+                            value={payoutData.note}
+                            onChange={(e) => setPayoutData({...payoutData, note: e.target.value})}
+                          ></textarea>
+                        </div>
                       </div>
-                      <div className="form-group-payout">
-                        <label>ACCOUNT HOLDER NAME</label>
-                        <input type="text" placeholder="Full name as per records" />
-                      </div>
-                      <div className="form-group-payout">
-                        <label>ACCOUNT NUMBER</label>
-                        <input type="text" placeholder="Bank account number" />
-                      </div>
-                      <div className="form-group-payout">
-                        <label>IFSC CODE</label>
-                        <input type="text" placeholder="e.g. SBIN0001234" />
-                      </div>
-                    </div>
-                    <div className="form-group-payout" style={{ marginTop: '15px' }}>
-                      <label>NOTE FOR ADMIN</label>
-                      <textarea placeholder="Any additional information..."></textarea>
-                    </div>
-                  </div>
-                )}
+                    )}
 
-                {payoutTab === 'INTL' && (
-                  <div className="animate-fade-in">
-                    <div className="form-group-payout">
-                      <label>PAYPAL EMAIL</label>
-                      <input type="email" placeholder="your@paypal.com" />
-                    </div>
-                    <div className="form-group-payout">
-                      <label>SWIFT/BIC CODE (FOR WIRE)</label>
-                      <input type="text" placeholder="Optional" />
-                    </div>
-                    <div className="form-group-payout">
-                      <label>NOTE FOR ADMIN</label>
-                      <textarea placeholder="Any additional information..."></textarea>
-                    </div>
+                    {payoutTab === 'BANK' && (
+                      <div className="animate-fade-in">
+                        <div className="form-grid-payout">
+                          <div className="form-group-payout">
+                            <label>BANK NAME</label>
+                            <input 
+                              type="text" 
+                              placeholder="e.g. HDFC Bank" 
+                              value={payoutData.bankName}
+                              onChange={(e) => setPayoutData({...payoutData, bankName: e.target.value})}
+                            />
+                          </div>
+                          <div className="form-group-payout">
+                            <label>ACCOUNT HOLDER NAME</label>
+                            <input 
+                              type="text" 
+                              placeholder="Full name" 
+                              value={payoutData.accountHolder}
+                              onChange={(e) => setPayoutData({...payoutData, accountHolder: e.target.value})}
+                            />
+                          </div>
+                          <div className="form-group-payout">
+                            <label>ACCOUNT NUMBER</label>
+                            <input 
+                              type="text" 
+                              placeholder="Number" 
+                              value={payoutData.accountNumber}
+                              onChange={(e) => {
+                                setPayoutData({...payoutData, accountNumber: e.target.value});
+                                setPayoutFormFilled(e.target.value.trim().length > 0);
+                              }}
+                            />
+                          </div>
+                          <div className="form-group-payout">
+                            <label>IFSC CODE</label>
+                            <input 
+                              type="text" 
+                              placeholder="e.g. SBIN0001234" 
+                              value={payoutData.ifscCode}
+                              onChange={(e) => setPayoutData({...payoutData, ifscCode: e.target.value})}
+                            />
+                          </div>
+                        </div>
+                        <div className="form-group-payout" style={{ marginTop: '15px' }}>
+                          <label>NOTE FOR ADMIN</label>
+                          <textarea 
+                            placeholder="Any additional information..." 
+                            value={payoutData.note}
+                            onChange={(e) => setPayoutData({...payoutData, note: e.target.value})}
+                          ></textarea>
+                        </div>
+                      </div>
+                    )}
+
+                    {payoutTab === 'INTL' && (
+                      <div className="animate-fade-in">
+                        <div className="form-group-payout">
+                          <label>PAYPAL EMAIL</label>
+                          <input 
+                            type="email" 
+                            placeholder="your@paypal.com" 
+                            value={payoutData.paypalEmail}
+                            onChange={(e) => {
+                              setPayoutData({...payoutData, paypalEmail: e.target.value});
+                              setPayoutFormFilled(e.target.value.trim().length > 0);
+                            }}
+                          />
+                        </div>
+                        <div className="form-group-payout">
+                          <label>SWIFT/BIC CODE (FOR WIRE)</label>
+                          <input 
+                            type="text" 
+                            placeholder="Optional" 
+                            value={payoutData.swiftCode}
+                            onChange={(e) => setPayoutData({...payoutData, swiftCode: e.target.value})}
+                          />
+                        </div>
+                        <div className="form-group-payout">
+                          <label>NOTE FOR ADMIN</label>
+                          <textarea 
+                            placeholder="Any additional information..." 
+                            value={payoutData.note}
+                            onChange={(e) => setPayoutData({...payoutData, note: e.target.value})}
+                          ></textarea>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                </>
+              )}
 
               <div className="payout-modal-footer">
                 <button className="btn-payout-cancel" onClick={() => { setShowPayoutSettings(false); setWithdrawAmount(0); }}>Cancel</button>
                 
-                {/* Save Method button (when not in withdrawal flow) */}
                 {withdrawAmount === 0 && (
                   <button className="btn-payout-save" style={{ opacity: payoutFormFilled ? 1 : 0.4, pointerEvents: payoutFormFilled ? 'auto' : 'none' }} onClick={async () => {
                     try {
                       const token = localStorage.getItem('promptbyniti_token');
-                      const API_BASE = import.meta.env.VITE_API_URL || 
-                        (window.location.hostname.includes('oopsverse.cloud') 
-                          ? 'https://oopsverse.cloud/api' 
-                          : 'http://localhost:8844/api');
-
-                      const modal = document.querySelector('.payout-method-modal');
-                      const inputs = modal.querySelectorAll('input, textarea');
-                      const values = {};
-                      inputs.forEach(input => {
-                        values[input.placeholder] = input.value;
-                      });
-
-                      const body = {
-                        type: payoutTab,
-                        upiId: values['e.g. 9876543210@upi'] || '',
-                        bankName: values['e.g. HDFC Bank'] || '',
-                        accountHolder: values['Full name as per records'] || '',
-                        accountNumber: values['Bank account number'] || '',
-                        ifscCode: values['e.g. SBIN0001234'] || '',
-                        paypalEmail: values['your@paypal.com'] || '',
-                        swiftCode: values['Optional'] || '',
-                        note: values['Any additional information...'] || ''
-                      };
-
+                      const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8844/api';
                       const res = await fetch(`${API_BASE}/seller/payment-method`, {
                         method: 'POST',
-                        headers: {
-                          'Content-Type': 'application/json',
-                          'Authorization': `Bearer ${token}`
-                        },
-                        body: JSON.stringify(body)
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ ...payoutData, type: payoutTab })
                       });
-                      
                       const data = await res.json();
                       if (data.success) {
-                        alert('Payment method saved successfully!');
+                        showToast('✅ Payment method saved successfully!', 'success');
+                        fetchPaymentMethod(); 
                         setShowPayoutSettings(false);
                       } else {
-                        alert(data.message || 'Failed to save payment method');
+                        showToast(data.message || 'Failed to save payment method', 'error');
                       }
                     } catch (err) {
                       console.error('Save payment method error:', err);
-                      alert('Network error. Please try again.');
+                      showToast('Network error. Please try again.', 'error');
                     }
                   }}>
                     <Check size={20} />
@@ -827,57 +991,30 @@ export default function DashboardPage() {
                   </button>
                 )}
 
-                {/* Next button (only in withdrawal flow, visible when form is filled) */}
-                {withdrawAmount > 0 && payoutFormFilled && (
+                {withdrawAmount > 0 && (payoutFormFilled || (savedPaymentMethod && !isEditingPayout)) && (
                   <button className="btn-payout-save" style={{ background: 'var(--color-green, #22c55e)', gap: '8px' }} onClick={async () => {
                     try {
                       const token = localStorage.getItem('promptbyniti_token');
-                      const API_BASE = import.meta.env.VITE_API_URL || 
-                        (window.location.hostname.includes('oopsverse.cloud') 
-                          ? 'https://oopsverse.cloud/api' 
-                          : 'http://localhost:8844/api');
-
-                      // Step 1: Save payment method
-                      const modal = document.querySelector('.payout-method-modal');
-                      const inputs = modal.querySelectorAll('input, textarea');
-                      const values = {};
-                      inputs.forEach(input => {
-                        values[input.placeholder] = input.value;
-                      });
-
-                      const pmBody = {
-                        type: payoutTab,
-                        upiId: values['e.g. 9876543210@upi'] || '',
-                        bankName: values['e.g. HDFC Bank'] || '',
-                        accountHolder: values['Full name as per records'] || '',
-                        accountNumber: values['Bank account number'] || '',
-                        ifscCode: values['e.g. SBIN0001234'] || '',
-                        paypalEmail: values['your@paypal.com'] || '',
-                        swiftCode: values['Optional'] || '',
-                        note: values['Any additional information...'] || ''
-                      };
-
-                      await fetch(`${API_BASE}/seller/payment-method`, {
-                        method: 'POST',
-                        headers: {
-                          'Content-Type': 'application/json',
-                          'Authorization': `Bearer ${token}`
-                        },
-                        body: JSON.stringify(pmBody)
-                      });
-
-                      // Step 2: Submit withdrawal request
-                      const methodName = payoutTab === 'UPI' ? 'UPI' : payoutTab === 'BANK' ? 'Bank Transfer' : 'PayPal';
+                      const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8844/api';
+                      if (isEditingPayout) {
+                        await fetch(`${API_BASE}/seller/payment-method`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                          body: JSON.stringify({ ...payoutData, type: payoutTab })
+                        });
+                      }
+                      const currentType = isEditingPayout ? payoutTab : savedPaymentMethod.type;
+                      const methodName = currentType === 'UPI' ? 'UPI' : currentType === 'BANK' ? 'Bank Transfer' : 'PayPal';
                       const detailStr = `Withdraw ${withdrawAmount} tokens for $${withdrawAmount === 70 ? '29' : '10'} via ${methodName}`;
-                      
                       await handleWithdraw(withdrawAmount, methodName, detailStr);
-                      
                       setWithdrawAmount(0);
                       setPayoutFormFilled(false);
                       setShowPayoutSettings(false);
+                      setIsEditingPayout(false);
+                      fetchPaymentMethod(); 
                     } catch (err) {
                       console.error('Withdrawal flow error:', err);
-                      alert('Network error. Please try again.');
+                      showToast('Network error. Please try again.', 'error');
                     }
                   }}>
                     <span>Next — Submit Withdrawal</span>
@@ -943,7 +1080,7 @@ export default function DashboardPage() {
                   <button 
                     className="btn btn-primary" 
                     disabled={walletTokens < 20}
-                    onClick={() => { setWithdrawAmount(20); setShowPayoutHistory(false); setShowPayoutSettings(true); setPayoutFormFilled(false); }}
+                    onClick={() => { setWithdrawAmount(20); setShowPayoutHistory(false); fetchPaymentMethod(); setIsEditingPayout(false); setShowPayoutSettings(true); }}
                     style={{ minWidth: '120px' }}
                   >
                     Withdraw
@@ -972,7 +1109,7 @@ export default function DashboardPage() {
                   <button 
                     className="btn btn-primary" 
                     disabled={walletTokens < 70}
-                    onClick={() => { setWithdrawAmount(70); setShowPayoutHistory(false); setShowPayoutSettings(true); setPayoutFormFilled(false); }}
+                    onClick={() => { setWithdrawAmount(70); setShowPayoutHistory(false); fetchPaymentMethod(); setIsEditingPayout(false); setShowPayoutSettings(true); }}
                     style={{ minWidth: '120px' }}
                   >
                     Withdraw
