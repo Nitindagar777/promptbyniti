@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { DollarSign, Zap } from 'lucide-react';
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {
@@ -12,6 +13,7 @@ const AdminDashboard = () => {
   const [fullScreenMedia, setFullScreenMedia] = useState(null);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const [rejectionModal, setRejectionModal] = useState({ show: false, id: null, reason: "" });
+  const [payModal, setPayModal] = useState(null); // stores the withdrawal object being paid
 
   const openLightbox = (media, index) => {
     setFullScreenMedia(media);
@@ -383,7 +385,7 @@ const AdminDashboard = () => {
                   <td className="actions">
                     {w.status === 'pending' && (
                       <div className="actions-flex">
-                        <button className="approve-btn" onClick={() => handleWithdrawalStatus(w._id, 'completed')}>Approve & Pay</button>
+                        <button className="approve-btn" onClick={() => setPayModal({ ...w, paymentInfo })}>Approve & Pay</button>
                         <button className="reject-btn" onClick={() => handleWithdrawalStatus(w._id, 'rejected')}>Reject</button>
                       </div>
                     )}
@@ -423,6 +425,67 @@ const AdminDashboard = () => {
           </button>
         </div>
       </div>
+
+      {/* Payment Verification Modal */}
+      {payModal && (
+        <div className="admin-modal-overlay" style={{ zIndex: 10001 }}>
+          <div className="admin-modal" style={{ maxWidth: '500px' }}>
+            <div className="modal-header">
+              <h2 style={{ color: 'var(--color-green)' }}>Verify & Pay</h2>
+              <button className="close-modal" onClick={() => setPayModal(null)}>&times;</button>
+            </div>
+            <div className="modal-body" style={{ textAlign: 'center' }}>
+              <div style={{ 
+                background: 'rgba(34, 197, 94, 0.1)', width: '60px', height: '60px', 
+                borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                margin: '0 auto 20px', color: '#22c55e'
+              }}>
+                <DollarSign size={32} />
+              </div>
+              
+              <h3 style={{ fontSize: '1.4rem', marginBottom: '5px' }}>{payModal.amount} Tokens</h3>
+              <p style={{ color: 'var(--text-secondary)', marginBottom: '25px' }}>Total Payout: <strong>${(payModal.amount === 70 ? 29 : payModal.amount === 20 ? 10 : payModal.amount * 0.5).toFixed(2)}</strong></p>
+
+              <div style={{ 
+                background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.1)',
+                padding: '20px', borderRadius: '16px', textAlign: 'left', marginBottom: '25px'
+              }}>
+                <div style={{ marginBottom: '15px' }}>
+                  <strong style={{ color: 'var(--color-cyan)', fontSize: '0.75rem', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>User Details</strong>
+                  <p style={{ fontSize: '1rem', fontWeight: 'normal', color: 'white', fontFamily: 'sans-serif' }}>{payModal.userId?.name || 'User'}</p>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontFamily: 'sans-serif' }}>{payModal.userId?.email || ''}</p>
+                </div>
+                
+                <div>
+                  <strong style={{ color: 'var(--color-cyan)', fontSize: '0.75rem', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Payment Method ({payModal.method})</strong>
+                  <p style={{ fontSize: '1.05rem', color: 'white', wordBreak: 'break-word', fontWeight: 'normal', fontFamily: 'sans-serif', lineHeight: '1.5' }}>{payModal.paymentInfo}</p>
+                  {payModal.details?.note && <p style={{ marginTop: '10px', fontStyle: 'italic', color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem', fontFamily: 'sans-serif' }}>Note: {payModal.details.note}</p>}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '15px' }}>
+                <button 
+                  className="approve-btn" 
+                  style={{ flex: 2, padding: '15px', fontSize: '1.1rem' }}
+                  onClick={() => {
+                    handleWithdrawalStatus(payModal._id, 'completed');
+                    setPayModal(null);
+                  }}
+                >
+                  Done & Mark Paid
+                </button>
+                <button 
+                  className="approve-btn" 
+                  style={{ flex: 1, padding: '15px', background: 'rgba(255,255,255,0.1)', color: 'white' }}
+                  onClick={() => setPayModal(null)}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Rejection Reason Modal */}
       {rejectionModal.show && (

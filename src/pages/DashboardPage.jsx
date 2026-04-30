@@ -23,7 +23,7 @@ export default function DashboardPage() {
   const [showActivityModal, setShowActivityModal] = useState(false);
   const [showPayoutSettings, setShowPayoutSettings] = useState(false);
   const [showPayoutHistory, setShowPayoutHistory] = useState(false);
-  const [expandedRejection, setExpandedRejection] = useState(null); // ID of the rejection to show
+  const [rejectionModalData, setRejectionModalData] = useState(null); // { id, reason, amount, method }
   const [filterStatus, setFilterStatus] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [analyticsFilter, setAnalyticsFilter] = useState('daily');
@@ -337,7 +337,7 @@ export default function DashboardPage() {
                     <button className="btn-view-all" onClick={() => setShowActivityModal(true)}>View All</button>
                   </div>
                   <div className="activity-list">
-                    {stats.recentActivity.length > 0 ? (
+                    {stats.recentActivity && stats.recentActivity.length > 0 ? (
                       stats.recentActivity.map(item => (
                         <div key={item.id} className="activity-item">
                           <div className="activity-user-av">{item.user[0].toUpperCase()}</div>
@@ -629,7 +629,7 @@ export default function DashboardPage() {
                     <h3>Recent Payouts</h3>
                     <button className="btn-text-only" onClick={() => setShowPayoutHistory(true)} style={{ color: 'white', opacity: 1, fontWeight: '600' }}>View All</button>
                   </div>
-                  <div className="history-list">
+                  <div className="history-list scroll-area" style={{ maxHeight: '335px', overflowY: 'auto' }}>
                     {stats.recentPayouts && stats.recentPayouts.length > 0 ? (
                       stats.recentPayouts.map((p, i) => (
                         <div key={p._id || i} className="history-item-premium">
@@ -644,38 +644,34 @@ export default function DashboardPage() {
                           </div>
                           <div className="h-right">
                             <span className="h-amount-negative">-${p.amount === 70 ? '29.00' : p.amount === 20 ? '10.00' : (p.amount * 0.5).toFixed(2)}</span>
-                            <span className="h-status-badge" style={{
-                              background: p.status === 'completed' ? 'rgba(34, 197, 94, 0.1)' : p.status === 'rejected' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(234, 179, 8, 0.1)',
-                              color: p.status === 'completed' ? 'var(--color-green)' : p.status === 'rejected' ? '#ef4444' : 'var(--color-orange)',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '6px'
-                            }}>
+                            <span 
+                              className="h-status-badge" 
+                              onClick={() => p.status === 'rejected' && p.rejectionReason && setRejectionModalData({ id: p._id, reason: p.rejectionReason, amount: p.amount, method: p.method })}
+                              style={{
+                                background: p.status === 'completed' ? 'rgba(34, 197, 94, 0.1)' : p.status === 'rejected' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(234, 179, 8, 0.1)',
+                                color: p.status === 'completed' ? 'var(--color-green)' : p.status === 'rejected' ? '#ef4444' : 'var(--color-orange)',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                cursor: p.status === 'rejected' && p.rejectionReason ? 'pointer' : 'default',
+                                transition: 'transform 0.2s ease'
+                              }}
+                              onMouseOver={(e) => p.status === 'rejected' && (e.currentTarget.style.transform = 'scale(1.05)')}
+                              onMouseOut={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+                            >
                               {p.status}
                               {p.status === 'rejected' && p.rejectionReason && (
                                 <span 
-                                  onClick={() => setExpandedRejection(expandedRejection === p._id ? null : p._id)}
                                   style={{ 
                                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                                     width: '16px', height: '16px', background: '#ef4444', color: 'white',
-                                    borderRadius: '50%', fontSize: '10px', cursor: 'pointer', fontWeight: 'bold'
+                                    borderRadius: '50%', fontSize: '10px', fontWeight: 'bold'
                                   }}
-                                  title="Click to view reason"
                                 >
                                   !
                                 </span>
                               )}
                             </span>
-                            {expandedRejection === p._id && p.rejectionReason && (
-                              <div style={{ 
-                                position: 'absolute', right: '0', top: '100%', zIndex: 10,
-                                background: '#1a1f2e', border: '1px solid #ef4444', padding: '10px',
-                                borderRadius: '8px', fontSize: '0.75rem', color: 'white', width: '200px',
-                                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)', marginTop: '5px'
-                              }}>
-                                <strong>Reason:</strong> {p.rejectionReason}
-                              </div>
-                            )}
                           </div>
                         </div>
                       ))
@@ -1167,38 +1163,34 @@ export default function DashboardPage() {
                       </div>
                       <div className="h-right">
                         <span className="h-amount-negative">-${p.amount === 70 ? '29.00' : p.amount === 20 ? '10.00' : (p.amount * 0.5).toFixed(2)}</span>
-                        <span className="h-status-badge" style={{
-                          background: p.status === 'completed' ? 'rgba(34, 197, 94, 0.1)' : p.status === 'rejected' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(234, 179, 8, 0.1)',
-                          color: p.status === 'completed' ? 'var(--color-green)' : p.status === 'rejected' ? '#ef4444' : 'var(--color-orange)',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '6px'
-                        }}>
+                        <span 
+                          className="h-status-badge" 
+                          onClick={() => p.status === 'rejected' && p.rejectionReason && setRejectionModalData({ id: p._id, reason: p.rejectionReason, amount: p.amount, method: p.method })}
+                          style={{
+                            background: p.status === 'completed' ? 'rgba(34, 197, 94, 0.1)' : p.status === 'rejected' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(234, 179, 8, 0.1)',
+                            color: p.status === 'completed' ? 'var(--color-green)' : p.status === 'rejected' ? '#ef4444' : 'var(--color-orange)',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            cursor: p.status === 'rejected' && p.rejectionReason ? 'pointer' : 'default',
+                            transition: 'transform 0.2s ease'
+                          }}
+                          onMouseOver={(e) => p.status === 'rejected' && (e.currentTarget.style.transform = 'scale(1.05)')}
+                          onMouseOut={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+                        >
                           {p.status}
                           {p.status === 'rejected' && p.rejectionReason && (
                             <span 
-                              onClick={() => setExpandedRejection(expandedRejection === p._id ? null : p._id)}
                               style={{ 
                                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                                 width: '16px', height: '16px', background: '#ef4444', color: 'white',
-                                borderRadius: '50%', fontSize: '10px', cursor: 'pointer', fontWeight: 'bold'
+                                borderRadius: '50%', fontSize: '10px', fontWeight: 'bold'
                               }}
-                              title="Click to view reason"
                             >
                               !
                             </span>
                           )}
                         </span>
-                        {expandedRejection === p._id && p.rejectionReason && (
-                          <div style={{ 
-                            position: 'absolute', right: '0', top: '100%', zIndex: 10,
-                            background: '#1a1f2e', border: '1px solid #ef4444', padding: '10px',
-                            borderRadius: '8px', fontSize: '0.75rem', color: 'white', width: '200px',
-                            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)', marginTop: '5px'
-                          }}>
-                            <strong>Reason:</strong> {p.rejectionReason}
-                          </div>
-                        )}
                       </div>
                     </div>
                   ))
@@ -1208,6 +1200,45 @@ export default function DashboardPage() {
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Central Rejection Reason Modal */}
+      {rejectionModalData && (
+        <div className="modal-overlay-premium" style={{ zIndex: 100000 }}>
+          <div className="modal-card-premium" style={{ maxWidth: '400px', padding: '30px' }}>
+            <button className="modal-close-premium" onClick={() => setRejectionModalData(null)}>
+              <X size={20} />
+            </button>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ 
+                width: '60px', height: '60px', background: 'rgba(239, 68, 68, 0.1)', 
+                borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                margin: '0 auto 20px', color: '#ef4444'
+              }}>
+                <Zap size={30} fill="#ef4444" />
+              </div>
+              <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: '10px', color: '#ef4444' }}>Payout Rejected</h2>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '20px' }}>
+                Your withdrawal of <strong>{rejectionModalData.amount} Tokens</strong> via <strong>{rejectionModalData.method}</strong> was declined.
+              </p>
+              
+              <div style={{ 
+                background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(239, 68, 68, 0.2)',
+                padding: '15px', borderRadius: '12px', textAlign: 'left'
+              }}>
+                <strong style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>Admin Message:</strong>
+                <p style={{ fontSize: '0.95rem', lineHeight: '1.5', color: 'white' }}>{rejectionModalData.reason}</p>
+              </div>
+
+              <button 
+                className="btn btn-primary w-full" 
+                style={{ marginTop: '25px', background: '#ef4444', borderColor: '#ef4444' }}
+                onClick={() => setRejectionModalData(null)}
+              >
+                Understood
+              </button>
             </div>
           </div>
         </div>

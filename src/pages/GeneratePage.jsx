@@ -109,7 +109,8 @@ export default function GeneratePage() {
     setTimeout(() => {
       const promptResult = generatePrompt(form);
       setResult(promptResult);
-      useCredit();
+      const templateId = searchParams.get('template');
+      useCredit(1, templateId);
       addPrompt(promptResult);
       setIsGenerating(false);
     }, 800);

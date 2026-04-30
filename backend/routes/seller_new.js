@@ -43,96 +43,43 @@ router.get('/stats', auth, async (req, res) => {
     const sellerIdObj = new mongoose.Types.ObjectId(req.userId);
     const prompts = await Prompt.find({ seller: sellerIdObj });
     
+    // REAL DATA CALCULATIONS
     const totalViews = prompts.reduce((sum, p) => sum + (p.views || 0), 0);
-    const approvedCount = prompts.filter(p => p.status === 'approved').length;
-    const pendingCount = prompts.filter(p => p.status === 'pending').length;
-    const rejectedCount = prompts.filter(p => p.status === 'rejected').length;
-
-    // For "Real Data": 
-    // We'll calculate revenue based on a simulated sales model for now 
-    // (since actual prompt-to-prompt transactions aren't in a separate model yet)
-    // but we'll base it on the User's creation date as requested.
+    const totalSales = prompts.reduce((sum, p) => sum + (p.sales || 0), 0);
+    const totalEarnings = user.walletTokens || 0;
     
-    const accountCreated = new Date(user.createdAt || Date.now() - (7 * 24 * 60 * 60 * 1000));
-    const now = new Date();
-    const daysSinceCreated = Math.max(1, Math.ceil((now - accountCreated) / (24 * 60 * 60 * 1000)));
-
-    // Generate Daily Labels & Values (Last 7 days or since creation)
-    let dailyLabels = [];
-    let dailyTokens = [];
-    let dailyViewsArray = [];
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      dailyLabels.push(d.toLocaleDateString('en-US', { weekday: 'short' }));
-      
-      // Calculate daily views (simulated but linked to total real views)
-      const baseViewDay = totalViews / daysSinceCreated;
-      const dayViews = Math.floor(baseViewDay * (0.6 + Math.random() * 0.8));
-      dailyViewsArray.push(dayViews);
-      
-      // Sales logic (10% of views)
-      const daySales = Math.floor(dayViews * 0.1);
-      dailyTokens.push(daySales * 5); 
-    }
-
-    // Weekly Labels & Values (Last 4 weeks)
-    let weeklyLabels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
-    let weeklyTokens = dailyTokens.slice(0, 4).map(v => v * 7); 
-
-    // Monthly Labels (Last 6 months)
-    let monthlyLabels = [];
-    let monthlyTokens = [];
-    for (let i = 5; i >= 0; i--) {
-        const d = new Date();
-        d.setMonth(d.getMonth() - i);
-        monthlyLabels.push(d.toLocaleDateString('en-US', { month: 'short' }));
-        monthlyTokens.push(Math.floor(totalViews * 0.05) * 5);
-    }
-
-    const totalEarnings = dailyTokens.reduce((a, b) => a + b, 0) + (totalViews * 0.5);
-
-    // Max view for percentage scaling
-    const maxDayViews = Math.max(...dailyViewsArray, 1);
-    const viewPercentages = dailyViewsArray.map(v => Math.max(5, (v / maxDayViews) * 100));
-
-    // Calculate total tokens withdrawn (completed withdrawals)
+    // Calculate total tokens withdrawn
     const completedWithdrawals = await Withdrawal.find({ sellerId: sellerIdObj, status: 'completed' });
     const totalWithdrawn = completedWithdrawals.reduce((sum, w) => sum + (w.amount || 0), 0);
+
+    // Performance Data (Last 7 days sales)
+    const dailyTokens = [0, 0, 0, 0, 0, 0, 0]; 
+    // In a real scenario, we'd query a 'Sales' model, but here we'll distribute totalSales for the chart
+    for (let i = 0; i < 7; i++) {
+        dailyTokens[i] = Math.floor(totalSales / 7);
+    }
 
     res.json({
       success: true,
       stats: {
-        totalEarnings: Math.floor(totalEarnings),
-        walletBalance: user.credits || 0,  // Real token balance from database
-        totalSales: Math.floor(totalViews * 0.15),
-        activePrompts: prompts.length,
-        approvedPrompts: approvedCount,
-        pendingPrompts: pendingCount,
-        rejectedPrompts: rejectedCount,
+        totalEarnings: totalEarnings,
+        totalSales: totalSales,
         totalViews: totalViews,
-        totalWithdrawn,
-        conversionRate: '15%',
-        viewGrowth: 12,
-        performanceGrowth: 8,
-        
-        // Time series data
-        daily: { labels: dailyLabels, values: dailyTokens },
-        weekly: { labels: weeklyLabels, values: weeklyTokens },
-        monthly: { labels: monthlyLabels, values: monthlyTokens },
-        
-        // Performance Hub data (Views)
-        performanceViews: dailyViewsArray,
-        performancePercentages: viewPercentages,
-        
+        activePrompts: prompts.length,
+        conversionRate: totalViews > 0 ? ((totalSales / totalViews) * 100).toFixed(1) + '%' : '0%',
         prompts: prompts.sort((a, b) => b.createdAt - a.createdAt),
+        recentActivity: [],
         recentPayouts: (await Withdrawal.find({ sellerId: sellerIdObj }).sort({ createdAt: -1 }).limit(10)).map(w => {
           const doc = w.toObject();
           if (doc.status === 'rejected' && !doc.rejectionReason) {
             doc.rejectionReason = "Please contact support for more details regarding this rejection.";
           }
           return doc;
-        })
+        }),
+        dailyEarnings: dailyTokens.map(s => s * 5), // Tokens earned
+        performanceGrowth: 0,
+        earningGrowth: 0,
+        salesGrowth: 0
       }
     });
   } catch (err) {
@@ -145,9 +92,13 @@ router.get('/stats', auth, async (req, res) => {
 router.post('/withdraw', auth, async (req, res) => {
   try {
     const { amount, method, details } = req.body;
-    
     if (!amount || !method || !details) {
       return res.status(400).json({ success: false, message: 'Missing withdrawal details' });
+    }
+
+    const user = await User.findById(req.userId);
+    if (user.walletTokens < amount) {
+      return res.status(400).json({ success: false, message: `Insufficient balance. You only have ${user.walletTokens} tokens.` });
     }
 
     const withdrawal = new Withdrawal({
@@ -156,6 +107,10 @@ router.post('/withdraw', auth, async (req, res) => {
       method,
       details
     });
+
+    // Deduct from wallet immediately to prevent double-withdraw
+    user.walletTokens -= amount;
+    await user.save();
 
     await withdrawal.save();
     res.json({ success: true, message: 'Withdrawal request submitted successfully' });

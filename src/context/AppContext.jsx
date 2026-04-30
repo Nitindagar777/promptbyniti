@@ -184,7 +184,7 @@ export function AppProvider({ children }) {
     state,
     dispatch,
     /* Convenience helpers */
-    useCredit: async (amount = 1) => {
+    useCredit: async (amount = 1, templateId = null) => {
       dispatch({ type: actions.USE_CREDIT, payload: amount });
       
       const token = localStorage.getItem(TOKEN_KEY);
@@ -196,7 +196,7 @@ export function AppProvider({ children }) {
               'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ amount })
+            body: JSON.stringify({ amount, templateId })
           });
         } catch (err) {
           console.error('Failed to sync credits:', err);

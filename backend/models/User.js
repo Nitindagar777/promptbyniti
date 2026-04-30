@@ -41,6 +41,10 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 5 // Starter Plan: 5 Tokens
   },
+  walletTokens: {
+    type: Number,
+    default: 0 // Earned tokens available for withdrawal
+  },
   plan: {
     type: String,
     enum: ['free', 'pro', 'unlimited'],

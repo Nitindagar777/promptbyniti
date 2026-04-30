@@ -279,13 +279,33 @@ router.post('/use-credits', async (req, res) => {
     if (!authHeader) return res.status(401).json({ success: false, message: 'Not authenticated' });
     const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const { amount } = req.body;
+    const { amount, templateId } = req.body;
+    const Prompt = require('../models/Prompt'); // Import Prompt model
 
     const user = await User.findById(decoded.id);
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
     user.credits = Math.max(0, (user.credits || 0) - (amount || 1));
     await user.save();
+
+    // If a template was used, reward the seller
+    if (templateId) {
+      try {
+        const prompt = await Prompt.findById(templateId);
+        if (prompt && prompt.seller) {
+          // Increment prompt sales
+          prompt.sales = (prompt.sales || 0) + 1;
+          await prompt.save();
+
+          // Increment seller's wallet (Earn 5 tokens per use)
+          await User.findByIdAndUpdate(prompt.seller, {
+            $inc: { walletTokens: 5 }
+          });
+        }
+      } catch (err) {
+        console.error('Error rewarding seller:', err);
+      }
+    }
 
     res.json({ success: true, credits: user.credits });
   } catch (err) {

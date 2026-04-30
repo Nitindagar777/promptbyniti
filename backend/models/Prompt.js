@@ -21,6 +21,7 @@ const promptSchema = new mongoose.Schema({
   status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
   price: { type: Number, default: 0 },
   views: { type: Number, default: 0 },
+  sales: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now }
 });
 
