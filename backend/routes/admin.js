@@ -144,17 +144,32 @@ router.patch('/withdrawals/:id', isAdmin, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid status' });
     }
 
-    const withdrawal = await Withdrawal.findByIdAndUpdate(
-      req.params.id, 
-      { status }, 
-      { new: true }
-    ).populate('sellerId', 'name email avatar paymentMethod');
-
+    const withdrawal = await Withdrawal.findById(req.params.id);
     if (!withdrawal) {
       return res.status(404).json({ success: false, message: 'Withdrawal not found' });
     }
 
-    res.json({ success: true, withdrawal });
+    // Only deduct if we are changing status to 'completed' AND it wasn't already completed
+    if (status === 'completed' && withdrawal.status !== 'completed') {
+      const seller = await User.findById(withdrawal.sellerId);
+      if (seller) {
+        // Log the deduction for safety
+        console.log(`Deducting ${withdrawal.amount} tokens from user ${seller.email}`);
+        seller.credits = (seller.credits || 0) - withdrawal.amount;
+        await seller.save();
+      }
+    }
+
+    withdrawal.status = status;
+    if (status === 'rejected' && req.body.rejectionReason) {
+      withdrawal.rejectionReason = req.body.rejectionReason;
+    }
+    await withdrawal.save();
+    
+    // Refresh to get populated data
+    const updatedWithdrawal = await Withdrawal.findById(withdrawal._id).populate('sellerId', 'name email avatar paymentMethod');
+
+    res.json({ success: true, withdrawal: updatedWithdrawal });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

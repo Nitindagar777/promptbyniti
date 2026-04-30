@@ -180,7 +180,7 @@ router.post('/payment-method', auth, async (req, res) => {
       req.userId,
       {
         $set: {
-          'paymentMethod.type': type,
+          'paymentMethod.method': type,
           'paymentMethod.upiId': upiId || '',
           'paymentMethod.bankName': bankName || '',
           'paymentMethod.accountHolder': accountHolder || '',

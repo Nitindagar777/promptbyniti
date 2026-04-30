@@ -39,7 +39,7 @@ const userSchema = new mongoose.Schema({
   },
   credits: {
     type: Number,
-    default: 1 // Starter Plan: 1 Token
+    default: 5 // Starter Plan: 5 Tokens
   },
   plan: {
     type: String,
@@ -63,7 +63,7 @@ const userSchema = new mongoose.Schema({
     default: false
   },
   paymentMethod: {
-    type: {
+    method: {
       type: String,
       enum: ['UPI', 'BANK', 'INTL'],
       default: null

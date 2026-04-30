@@ -56,8 +56,8 @@ function appReducer(state, action) {
 
     case actions.USE_CREDIT:
       if (state.plan === 'unlimited') return state;
-      const amount = action.payload || 1;
-      return { ...state, credits: Math.max(0, state.credits - amount) };
+      const deductionAmount = action.payload || 1;
+      return { ...state, credits: Math.max(0, state.credits - deductionAmount) };
 
     case actions.ADD_PROMPT:
       return {
@@ -184,7 +184,25 @@ export function AppProvider({ children }) {
     state,
     dispatch,
     /* Convenience helpers */
-    useCredit: (amount = 1) => dispatch({ type: actions.USE_CREDIT, payload: amount }),
+    useCredit: async (amount = 1) => {
+      dispatch({ type: actions.USE_CREDIT, payload: amount });
+      
+      const token = localStorage.getItem(TOKEN_KEY);
+      if (token) {
+        try {
+          await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8844/api'}/auth/use-credits`, {
+            method: 'POST',
+            headers: { 
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ amount })
+          });
+        } catch (err) {
+          console.error('Failed to sync credits:', err);
+        }
+      }
+    },
     addPrompt: (prompt) => dispatch({ type: actions.ADD_PROMPT, payload: prompt }),
     deletePrompt: (id) => dispatch({ type: actions.DELETE_PROMPT, payload: id }),
     toggleFavorite: (id) => dispatch({ type: actions.TOGGLE_FAVORITE, payload: id }),

@@ -1,5 +1,7 @@
 .admin-dashboard {
-  padding: 20px;
+  padding: 15px;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .admin-header {
@@ -21,15 +23,22 @@
 
 .admin-tabs {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   background: rgba(255, 255, 255, 0.05);
   padding: 5px;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow-x: auto;
+  max-width: 100%;
+  scrollbar-width: none; /* Hide scrollbar for Chrome/Firefox */
+}
+
+.admin-tabs::-webkit-scrollbar {
+  display: none; /* Hide scrollbar for Safari */
 }
 
 .admin-tabs button {
-  padding: 8px 20px;
+  padding: 8px 15px;
   border-radius: 8px;
   border: none;
   background: transparent;
@@ -37,9 +46,10 @@
   cursor: pointer;
   font-family: var(--font-display);
   font-weight: normal;
-  font-size: 1.1rem;
-  letter-spacing: 1px;
+  font-size: 1rem;
+  letter-spacing: 0.5px;
   transition: all 0.3s ease;
+  white-space: nowrap; /* Prevent text wrapping inside buttons */
 }
 
 .admin-tabs button.active {
@@ -99,6 +109,7 @@
 
 .admin-table {
   width: 100%;
+  min-width: 900px; /* Ensure table doesn't squish too much */
   border-collapse: collapse;
   text-align: left;
 }
@@ -107,15 +118,17 @@
 .admin-table td {
   padding: 15px 20px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  vertical-align: middle;
 }
 
 .admin-table th {
   color: var(--color-cyan);
   font-family: var(--font-display);
   font-weight: normal;
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   text-transform: uppercase;
-  letter-spacing: 2px;
+  letter-spacing: 1px;
+  white-space: nowrap;
 }
 
 .admin-table tr:last-child td {
@@ -143,8 +156,21 @@
 }
 
 .actions {
+  vertical-align: middle;
+}
+
+.actions-flex {
   display: flex;
   gap: 10px;
+  align-items: center;
+}
+
+.status-text {
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px; /* Match button height */
 }
 
 .approve-btn, .reject-btn {

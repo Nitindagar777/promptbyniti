@@ -5,12 +5,13 @@ const cloudinary = require('cloudinary').v2;
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 8844;
+// FORCE PORT 8845 to bypass the ghost server on 8844
+const PORT = 8845; 
 
 // Middleware
 app.use(cors({
   origin: [
-    process.env.CLIENT_URL || 'http://localhost:7744',
+    'http://localhost:7744',
     'http://localhost:5173',
     'http://localhost:3000',
     'http://127.0.0.1:5173',
@@ -31,7 +32,6 @@ const connectDB = async () => {
     console.log('🍃 MongoDB connected successfully');
   } catch (err) {
     console.error('❌ MongoDB connection error:', err.message);
-    // Don't exit process in development if DB is not critical for startup
   }
 };
 
@@ -42,25 +42,14 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// Verify Cloudinary connection
-const verifyCloudinary = async () => {
-  try {
-    const result = await cloudinary.api.ping();
-    if (result.status === 'ok') {
-      console.log('☁️  Cloudinary connected successfully');
-    }
-  } catch (err) {
-    console.error('❌ Cloudinary configuration error:', err.message);
-  }
-};
-
 // Routes
 const authRoutes = require('./routes/auth');
 const paymentRoutes = require('./routes/payment');
 const adminRoutes = require('./routes/admin');
 const promptRoutes = require('./routes/prompts');
-const sellerRoutes = require('./routes/seller');
+const sellerRoutes = require('./routes/seller_new');
 
+// Mount Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/admin', adminRoutes);
@@ -79,10 +68,9 @@ app.get('/', (req, res) => {
 // Start Server
 const start = async () => {
   await connectDB();
-  await verifyCloudinary();
-  
   app.listen(PORT, () => {
     console.log(`🚀 Backend server is running on port ${PORT}`);
+    console.log(`✅ Payment Method route is active at: http://localhost:${PORT}/api/seller/payment-method`);
   });
 };
 

@@ -23,6 +23,7 @@ export default function DashboardPage() {
   const [showActivityModal, setShowActivityModal] = useState(false);
   const [showPayoutSettings, setShowPayoutSettings] = useState(false);
   const [showPayoutHistory, setShowPayoutHistory] = useState(false);
+  const [expandedRejection, setExpandedRejection] = useState(null); // ID of the rejection to show
   const [filterStatus, setFilterStatus] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [analyticsFilter, setAnalyticsFilter] = useState('daily');
@@ -51,14 +52,14 @@ export default function DashboardPage() {
   const fetchPaymentMethod = async () => {
     try {
       const token = localStorage.getItem('promptbyniti_token');
-                      const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8844/api';
+      const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8844/api';
       const res = await fetch(`${API_BASE}/seller/payment-method`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
-      if (data.success && data.paymentMethod && data.paymentMethod.type) {
+      if (data.success && data.paymentMethod && data.paymentMethod.method) {
         setSavedPaymentMethod(data.paymentMethod);
-        setPayoutTab(data.paymentMethod.type);
+        setPayoutTab(data.paymentMethod.method);
         setPayoutFormFilled(true);
         setPayoutData({
           upiId: data.paymentMethod.upiId || '',
@@ -75,9 +76,9 @@ export default function DashboardPage() {
         setSavedPaymentMethod(null);
         setIsEditingPayout(true);
       }
-    } catch { 
-      setSavedPaymentMethod(null); 
-      setIsEditingPayout(true); 
+    } catch {
+      setSavedPaymentMethod(null);
+      setIsEditingPayout(true);
     }
   };
   const [loading, setLoading] = useState(true);
@@ -97,21 +98,21 @@ export default function DashboardPage() {
 
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this prompt? This action cannot be undone.')) return;
-    
+
     try {
       const token = localStorage.getItem('promptbyniti_token');
-      const API_BASE = import.meta.env.VITE_API_URL || 
-        (window.location.hostname.includes('oopsverse.cloud') 
-          ? 'https://oopsverse.cloud/api' 
+      const API_BASE = import.meta.env.VITE_API_URL ||
+        (window.location.hostname.includes('oopsverse.cloud')
+          ? 'https://oopsverse.cloud/api'
           : 'http://localhost:8844/api');
-          
+
       const res = await fetch(`${API_BASE}/prompts/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-      
+
       const data = await res.json();
       if (data.success) {
         // Remove from UI
@@ -132,11 +133,11 @@ export default function DashboardPage() {
   const handleWithdraw = async (amount, method, details) => {
     try {
       const token = localStorage.getItem('promptbyniti_token');
-      const API_BASE = import.meta.env.VITE_API_URL || 
-        (window.location.hostname.includes('oopsverse.cloud') 
-          ? 'https://oopsverse.cloud/api' 
+      const API_BASE = import.meta.env.VITE_API_URL ||
+        (window.location.hostname.includes('oopsverse.cloud')
+          ? 'https://oopsverse.cloud/api'
           : 'http://localhost:8844/api');
-          
+
       const res = await fetch(`${API_BASE}/seller/withdraw`, {
         method: 'POST',
         headers: {
@@ -145,7 +146,7 @@ export default function DashboardPage() {
         },
         body: JSON.stringify({ amount, method, details })
       });
-      
+
       const data = await res.json();
       if (data.success) {
         showToast('✅ Withdrawal request submitted! It will be processed within 2-3 business days.', 'success');
@@ -165,14 +166,14 @@ export default function DashboardPage() {
     const fetchStats = async () => {
       try {
         const token = localStorage.getItem('promptbyniti_token');
-        const API_BASE = import.meta.env.VITE_API_URL || 
-          (window.location.hostname.includes('oopsverse.cloud') 
-            ? 'https://oopsverse.cloud/api' 
+        const API_BASE = import.meta.env.VITE_API_URL ||
+          (window.location.hostname.includes('oopsverse.cloud')
+            ? 'https://oopsverse.cloud/api'
             : 'http://localhost:8844/api');
-            
+
         console.log(`--- Dashboard Debug ---`);
         console.log(`Connecting to: ${API_BASE}/seller/stats`);
-        
+
         const res = await fetch(`${API_BASE}/seller/stats`, {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -180,7 +181,7 @@ export default function DashboardPage() {
         });
         const data = await res.json();
         console.log(`Server Response:`, data);
-        
+
         if (data.success) {
           setStats(data.stats);
           console.log(`Successfully loaded ${data.stats?.prompts?.length || 0} prompts.`);
@@ -198,10 +199,10 @@ export default function DashboardPage() {
   const getChartData = () => {
     if (stats[analyticsFilter]) {
       const { labels, values } = stats[analyticsFilter];
-      return labels.map((l, i) => ({ 
-        label: l, 
+      return labels.map((l, i) => ({
+        label: l,
         value: values[i],
-        percentage: Math.max(10, (values[i] / Math.max(...values, 1)) * 100) 
+        percentage: Math.max(10, (values[i] / Math.max(...values, 1)) * 100)
       }));
     }
     return [];
@@ -222,8 +223,8 @@ export default function DashboardPage() {
       {toast && (
         <div style={{
           position: 'fixed', top: '24px', right: '24px', zIndex: 99999,
-          background: toast.type === 'success' 
-            ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.95), rgba(6, 182, 212, 0.95))' 
+          background: toast.type === 'success'
+            ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.95), rgba(6, 182, 212, 0.95))'
             : 'linear-gradient(135deg, rgba(239, 68, 68, 0.95), rgba(220, 38, 38, 0.95))',
           color: '#fff', padding: '16px 24px', borderRadius: '14px',
           boxShadow: '0 8px 32px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.1)',
@@ -390,16 +391,16 @@ export default function DashboardPage() {
                 <div className="filter-actions-premium">
                   <div className="dash-search-box">
                     <Search size={16} />
-                    <input 
-                      type="text" 
-                      placeholder="Search prompts..." 
+                    <input
+                      type="text"
+                      placeholder="Search prompts..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
                   </div>
                   <div className="dash-filter-select">
                     <Filter size={16} />
-                    <select 
+                    <select
                       value={filterStatus}
                       onChange={(e) => setFilterStatus(e.target.value)}
                     >
@@ -440,8 +441,8 @@ export default function DashboardPage() {
                           <tr key={p._id}>
                             <td>
                               <div className="table-prompt-info" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '12px', textAlign: 'left' }}>
-                                <img 
-                                  src={p.thumbnail || (p.samples && p.samples.length > 0 ? (p.samples[0].output || p.samples[0]) : 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100&auto=format&fit=crop&q=60')} 
+                                <img
+                                  src={p.thumbnail || (p.samples && p.samples.length > 0 ? (p.samples[0].output || p.samples[0]) : 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100&auto=format&fit=crop&q=60')}
                                   alt={p.name}
                                   style={{ width: '45px', height: '45px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }}
                                 />
@@ -508,8 +509,8 @@ export default function DashboardPage() {
                     {getChartData().some(item => item.value > 0) ? (
                       getChartData().map((item, i) => (
                         <div key={i} className="chart-bar-container">
-                          <div 
-                            className="chart-bar" 
+                          <div
+                            className="chart-bar"
                             style={{ height: `${item.percentage}%`, transitionDelay: `${i * 0.05}s` }}
                             data-value={`${item.value} Tokens`}
                           ></div>
@@ -517,15 +518,15 @@ export default function DashboardPage() {
                         </div>
                       ))
                     ) : (
-                      <div className="empty-chart-state" style={{ 
+                      <div className="empty-chart-state" style={{
                         position: 'absolute',
                         top: 0,
                         left: 0,
                         right: 0,
                         bottom: 0,
-                        display: 'flex', 
-                        flexDirection: 'column', 
-                        alignItems: 'center', 
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
                         justifyContent: 'center',
                         gap: '12px',
                         textAlign: 'center',
@@ -546,27 +547,27 @@ export default function DashboardPage() {
                         .sort((a, b) => (b.views || 0) - (a.views || 0))
                         .slice(0, 5)
                         .map(p => (
-                        <Link 
-                          key={p._id} 
-                          to={`/prompt/${p._id}`} 
-                          className="mini-list-item"
-                          style={{ textDecoration: 'none', transition: 'transform 0.2s ease, background 0.2s ease', cursor: 'pointer' }}
-                          onMouseOver={(e) => {
-                            e.currentTarget.style.transform = 'translateX(5px)';
-                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                          }}
-                          onMouseOut={(e) => {
-                            e.currentTarget.style.transform = 'translateX(0)';
-                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)';
-                          }}
-                        >
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <img src={p.thumbnail || (p.samples?.[0]?.output || p.samples?.[0])} alt="" style={{ width: '32px', height: '32px', borderRadius: '6px', objectFit: 'cover' }} />
-                            <span style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-primary)' }}>{p.name}</span>
-                          </div>
-                          <span className="text-cyan font-bold">{p.sales || 0} Sold</span>
-                        </Link>
-                      ))
+                          <Link
+                            key={p._id}
+                            to={`/prompt/${p._id}`}
+                            className="mini-list-item"
+                            style={{ textDecoration: 'none', transition: 'transform 0.2s ease, background 0.2s ease', cursor: 'pointer' }}
+                            onMouseOver={(e) => {
+                              e.currentTarget.style.transform = 'translateX(5px)';
+                              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                            }}
+                            onMouseOut={(e) => {
+                              e.currentTarget.style.transform = 'translateX(0)';
+                              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)';
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                              <img src={p.thumbnail || (p.samples?.[0]?.output || p.samples?.[0])} alt="" style={{ width: '32px', height: '32px', borderRadius: '6px', objectFit: 'cover' }} />
+                              <span style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-primary)' }}>{p.name}</span>
+                            </div>
+                            <span className="text-cyan font-bold">{p.sales || 0} Sold</span>
+                          </Link>
+                        ))
                     ) : (
                       <div className="empty-mini-list" style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>
                         No prompts yet
@@ -598,19 +599,19 @@ export default function DashboardPage() {
                     </h2>
                     <p className="balance-approx">
                       {walletTokens >= 70 ? '≈ $29.00 USD (70 tokens)' :
-                       walletTokens >= 20 ? '≈ $10.00 USD (20 tokens)' :
-                       'Min. 20 tokens to withdraw'}
+                        walletTokens >= 20 ? '≈ $10.00 USD (20 tokens)' :
+                          'Min. 20 tokens to withdraw'}
                     </p>
                   </div>
                   <div className="wallet-actions">
                     <button className="btn-withdraw-premium w-full" onClick={() => setShowPayoutHistory(true)}>Withdraw Funds</button>
-                    <button 
-                      className="btn-text-only" 
-                      onClick={() => { fetchPaymentMethod(); setIsEditingPayout(false); setShowPayoutSettings(true); }} 
-                      style={{ 
-                        marginTop: '10px', 
-                        color: 'var(--color-cyan)', 
-                        fontSize: '0.9rem', 
+                    <button
+                      className="btn-text-only"
+                      onClick={() => { fetchPaymentMethod(); setIsEditingPayout(false); setShowPayoutSettings(true); }}
+                      style={{
+                        marginTop: '10px',
+                        color: 'var(--color-cyan)',
+                        fontSize: '0.9rem',
                         textAlign: 'center',
                         fontWeight: '600',
                         opacity: 0.8,
@@ -643,18 +644,46 @@ export default function DashboardPage() {
                           </div>
                           <div className="h-right">
                             <span className="h-amount-negative">-${p.amount === 70 ? '29.00' : p.amount === 20 ? '10.00' : (p.amount * 0.5).toFixed(2)}</span>
-                            <span className="h-status-badge" style={{ 
-                              background: p.status === 'completed' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(234, 179, 8, 0.1)',
-                              color: p.status === 'completed' ? 'var(--color-green)' : 'var(--color-orange)'
-                            }}>{p.status}</span>
+                            <span className="h-status-badge" style={{
+                              background: p.status === 'completed' ? 'rgba(34, 197, 94, 0.1)' : p.status === 'rejected' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(234, 179, 8, 0.1)',
+                              color: p.status === 'completed' ? 'var(--color-green)' : p.status === 'rejected' ? '#ef4444' : 'var(--color-orange)',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px'
+                            }}>
+                              {p.status}
+                              {p.status === 'rejected' && p.rejectionReason && (
+                                <span 
+                                  onClick={() => setExpandedRejection(expandedRejection === p._id ? null : p._id)}
+                                  style={{ 
+                                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                    width: '16px', height: '16px', background: '#ef4444', color: 'white',
+                                    borderRadius: '50%', fontSize: '10px', cursor: 'pointer', fontWeight: 'bold'
+                                  }}
+                                  title="Click to view reason"
+                                >
+                                  !
+                                </span>
+                              )}
+                            </span>
+                            {expandedRejection === p._id && p.rejectionReason && (
+                              <div style={{ 
+                                position: 'absolute', right: '0', top: '100%', zIndex: 10,
+                                background: '#1a1f2e', border: '1px solid #ef4444', padding: '10px',
+                                borderRadius: '8px', fontSize: '0.75rem', color: 'white', width: '200px',
+                                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)', marginTop: '5px'
+                              }}>
+                                <strong>Reason:</strong> {p.rejectionReason}
+                              </div>
+                            )}
                           </div>
                         </div>
                       ))
                     ) : (
-                      <div style={{ 
-                        display: 'flex', 
+                      <div style={{
+                        display: 'flex',
                         flexDirection: 'column',
-                        alignItems: 'center', 
+                        alignItems: 'center',
                         justifyContent: 'center',
                         minHeight: '200px',
                         width: '100%',
@@ -689,7 +718,7 @@ export default function DashboardPage() {
             <div className="modal-body scroll-area">
               <div className="activity-list">
                 {[...stats.recentActivity].length > 0 ? (
-                   [...stats.recentActivity, ...stats.recentActivity].map((item, idx) => (
+                  [...stats.recentActivity, ...stats.recentActivity].map((item, idx) => (
                     <div key={`${item.id}-${idx}`} className="activity-item">
                       <div className="activity-user-av">{item.user[0].toUpperCase()}</div>
                       <div className="activity-content">
@@ -724,12 +753,12 @@ export default function DashboardPage() {
                 <X size={24} />
               </button>
             </div>
-            
+
             <div className="modal-body">
               {/* Withdrawal info banner */}
               {withdrawAmount > 0 && (
-                <div style={{ 
-                  background: 'rgba(6, 182, 212, 0.08)', 
+                <div style={{
+                  background: 'rgba(6, 182, 212, 0.08)',
                   border: '1px solid rgba(6, 182, 212, 0.2)',
                   borderRadius: '12px', padding: '14px 18px', marginBottom: '20px',
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center'
@@ -767,12 +796,12 @@ export default function DashboardPage() {
                       <span style={{
                         background: 'rgba(6, 182, 212, 0.15)', padding: '8px 16px', borderRadius: '8px',
                         fontWeight: 'bold', color: 'var(--color-cyan)', fontSize: '0.9rem'
-                      }}>{savedPaymentMethod.type}</span>
+                      }}>{savedPaymentMethod.method}</span>
                       <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Active Payment Method</span>
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                      {savedPaymentMethod.type === 'UPI' && savedPaymentMethod.upiId && (
+                      {savedPaymentMethod.method === 'UPI' && savedPaymentMethod.upiId && (
                         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px' }}>
                           <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>UPI ID</span>
                           <span style={{ fontWeight: 'bold', color: '#fff' }}>
@@ -780,7 +809,7 @@ export default function DashboardPage() {
                           </span>
                         </div>
                       )}
-                      {savedPaymentMethod.type === 'BANK' && (
+                      {savedPaymentMethod.method === 'BANK' && (
                         <>
                           {savedPaymentMethod.bankName && <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px' }}><span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Bank</span><span style={{ fontWeight: 'bold', color: '#fff' }}>{savedPaymentMethod.bankName}</span></div>}
                           {savedPaymentMethod.accountHolder && <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px' }}><span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Name</span><span style={{ fontWeight: 'bold', color: '#fff' }}>{savedPaymentMethod.accountHolder}</span></div>}
@@ -788,7 +817,7 @@ export default function DashboardPage() {
                           {savedPaymentMethod.ifscCode && <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px' }}><span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>IFSC</span><span style={{ fontWeight: 'bold', color: '#fff' }}>{savedPaymentMethod.ifscCode.slice(0, 4)}xxxxxx</span></div>}
                         </>
                       )}
-                      {savedPaymentMethod.type === 'INTL' && (
+                      {savedPaymentMethod.method === 'INTL' && (
                         <>
                           {savedPaymentMethod.paypalEmail && <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px' }}><span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>PayPal</span><span style={{ fontWeight: 'bold', color: '#fff' }}>{savedPaymentMethod.paypalEmail.split('@')[0].slice(0, 3)}xxxxxx@{savedPaymentMethod.paypalEmail.split('@')[1] || 'paypal.com'}</span></div>}
                           {savedPaymentMethod.swiftCode && <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px' }}><span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>SWIFT</span><span style={{ fontWeight: 'bold', color: '#fff' }}>{savedPaymentMethod.swiftCode.slice(0, 2)}xxxxxx</span></div>}
@@ -804,7 +833,7 @@ export default function DashboardPage() {
 
                     <button onClick={() => {
                       setIsEditingPayout(true);
-                      setPayoutFormFilled(true); 
+                      setPayoutFormFilled(true);
                     }} style={{
                       marginTop: '18px', background: 'rgba(6, 182, 212, 0.1)', border: '1px solid rgba(6, 182, 212, 0.3)',
                       color: 'var(--color-cyan)', padding: '10px 20px', borderRadius: '10px', cursor: 'pointer',
@@ -821,8 +850,8 @@ export default function DashboardPage() {
                   <div className="payout-tabs-container">
                     <div className="payout-tabs">
                       {['UPI', 'BANK', 'INTL'].map(tab => (
-                        <button 
-                          key={tab} 
+                        <button
+                          key={tab}
                           className={`payout-tab ${payoutTab === tab ? 'active' : ''}`}
                           onClick={() => { setPayoutTab(tab); }}
                         >
@@ -839,12 +868,12 @@ export default function DashboardPage() {
                           <label>UPI ID *</label>
                           <div className="input-with-icon">
                             <div className="input-icon-left"><Activity size={18} /></div>
-                            <input 
-                              type="text" 
-                              placeholder="e.g. 9876543210@upi" 
-                              value={payoutData.upiId} 
+                            <input
+                              type="text"
+                              placeholder="e.g. 9876543210@upi"
+                              value={payoutData.upiId}
                               onChange={(e) => {
-                                setPayoutData({...payoutData, upiId: e.target.value});
+                                setPayoutData({ ...payoutData, upiId: e.target.value });
                                 setPayoutFormFilled(e.target.value.trim().length > 0);
                               }}
                             />
@@ -860,10 +889,10 @@ export default function DashboardPage() {
                         </div>
                         <div className="form-group-payout">
                           <label>NOTE FOR ADMIN</label>
-                          <textarea 
-                            placeholder="Any additional information..." 
+                          <textarea
+                            placeholder="Any additional information..."
                             value={payoutData.note}
-                            onChange={(e) => setPayoutData({...payoutData, note: e.target.value})}
+                            onChange={(e) => setPayoutData({ ...payoutData, note: e.target.value })}
                           ></textarea>
                         </div>
                       </div>
@@ -874,50 +903,50 @@ export default function DashboardPage() {
                         <div className="form-grid-payout">
                           <div className="form-group-payout">
                             <label>BANK NAME</label>
-                            <input 
-                              type="text" 
-                              placeholder="e.g. HDFC Bank" 
+                            <input
+                              type="text"
+                              placeholder="e.g. HDFC Bank"
                               value={payoutData.bankName}
-                              onChange={(e) => setPayoutData({...payoutData, bankName: e.target.value})}
+                              onChange={(e) => setPayoutData({ ...payoutData, bankName: e.target.value })}
                             />
                           </div>
                           <div className="form-group-payout">
                             <label>ACCOUNT HOLDER NAME</label>
-                            <input 
-                              type="text" 
-                              placeholder="Full name" 
+                            <input
+                              type="text"
+                              placeholder="Full name"
                               value={payoutData.accountHolder}
-                              onChange={(e) => setPayoutData({...payoutData, accountHolder: e.target.value})}
+                              onChange={(e) => setPayoutData({ ...payoutData, accountHolder: e.target.value })}
                             />
                           </div>
                           <div className="form-group-payout">
                             <label>ACCOUNT NUMBER</label>
-                            <input 
-                              type="text" 
-                              placeholder="Number" 
+                            <input
+                              type="text"
+                              placeholder="Number"
                               value={payoutData.accountNumber}
                               onChange={(e) => {
-                                setPayoutData({...payoutData, accountNumber: e.target.value});
+                                setPayoutData({ ...payoutData, accountNumber: e.target.value });
                                 setPayoutFormFilled(e.target.value.trim().length > 0);
                               }}
                             />
                           </div>
                           <div className="form-group-payout">
                             <label>IFSC CODE</label>
-                            <input 
-                              type="text" 
-                              placeholder="e.g. SBIN0001234" 
+                            <input
+                              type="text"
+                              placeholder="e.g. SBIN0001234"
                               value={payoutData.ifscCode}
-                              onChange={(e) => setPayoutData({...payoutData, ifscCode: e.target.value})}
+                              onChange={(e) => setPayoutData({ ...payoutData, ifscCode: e.target.value })}
                             />
                           </div>
                         </div>
                         <div className="form-group-payout" style={{ marginTop: '15px' }}>
                           <label>NOTE FOR ADMIN</label>
-                          <textarea 
-                            placeholder="Any additional information..." 
+                          <textarea
+                            placeholder="Any additional information..."
                             value={payoutData.note}
-                            onChange={(e) => setPayoutData({...payoutData, note: e.target.value})}
+                            onChange={(e) => setPayoutData({ ...payoutData, note: e.target.value })}
                           ></textarea>
                         </div>
                       </div>
@@ -927,31 +956,31 @@ export default function DashboardPage() {
                       <div className="animate-fade-in">
                         <div className="form-group-payout">
                           <label>PAYPAL EMAIL</label>
-                          <input 
-                            type="email" 
-                            placeholder="your@paypal.com" 
+                          <input
+                            type="email"
+                            placeholder="your@paypal.com"
                             value={payoutData.paypalEmail}
                             onChange={(e) => {
-                              setPayoutData({...payoutData, paypalEmail: e.target.value});
+                              setPayoutData({ ...payoutData, paypalEmail: e.target.value });
                               setPayoutFormFilled(e.target.value.trim().length > 0);
                             }}
                           />
                         </div>
                         <div className="form-group-payout">
                           <label>SWIFT/BIC CODE (FOR WIRE)</label>
-                          <input 
-                            type="text" 
-                            placeholder="Optional" 
+                          <input
+                            type="text"
+                            placeholder="Optional"
                             value={payoutData.swiftCode}
-                            onChange={(e) => setPayoutData({...payoutData, swiftCode: e.target.value})}
+                            onChange={(e) => setPayoutData({ ...payoutData, swiftCode: e.target.value })}
                           />
                         </div>
                         <div className="form-group-payout">
                           <label>NOTE FOR ADMIN</label>
-                          <textarea 
-                            placeholder="Any additional information..." 
+                          <textarea
+                            placeholder="Any additional information..."
                             value={payoutData.note}
-                            onChange={(e) => setPayoutData({...payoutData, note: e.target.value})}
+                            onChange={(e) => setPayoutData({ ...payoutData, note: e.target.value })}
                           ></textarea>
                         </div>
                       </div>
@@ -962,7 +991,7 @@ export default function DashboardPage() {
 
               <div className="payout-modal-footer">
                 <button className="btn-payout-cancel" onClick={() => { setShowPayoutSettings(false); setWithdrawAmount(0); }}>Cancel</button>
-                
+
                 {withdrawAmount === 0 && (
                   <button className="btn-payout-save" style={{ opacity: payoutFormFilled ? 1 : 0.4, pointerEvents: payoutFormFilled ? 'auto' : 'none' }} onClick={async () => {
                     try {
@@ -976,7 +1005,7 @@ export default function DashboardPage() {
                       const data = await res.json();
                       if (data.success) {
                         showToast('✅ Payment method saved successfully!', 'success');
-                        fetchPaymentMethod(); 
+                        fetchPaymentMethod();
                         setShowPayoutSettings(false);
                       } else {
                         showToast(data.message || 'Failed to save payment method', 'error');
@@ -1003,7 +1032,7 @@ export default function DashboardPage() {
                           body: JSON.stringify({ ...payoutData, type: payoutTab })
                         });
                       }
-                      const currentType = isEditingPayout ? payoutTab : savedPaymentMethod.type;
+                      const currentType = isEditingPayout ? payoutTab : savedPaymentMethod.method;
                       const methodName = currentType === 'UPI' ? 'UPI' : currentType === 'BANK' ? 'Bank Transfer' : 'PayPal';
                       const detailStr = `Withdraw ${withdrawAmount} tokens for $${withdrawAmount === 70 ? '29' : '10'} via ${methodName}`;
                       await handleWithdraw(withdrawAmount, methodName, detailStr);
@@ -1011,7 +1040,7 @@ export default function DashboardPage() {
                       setPayoutFormFilled(false);
                       setShowPayoutSettings(false);
                       setIsEditingPayout(false);
-                      fetchPaymentMethod(); 
+                      fetchPaymentMethod();
                     } catch (err) {
                       console.error('Withdrawal flow error:', err);
                       showToast('Network error. Please try again.', 'error');
@@ -1041,10 +1070,10 @@ export default function DashboardPage() {
               </button>
             </div>
             <div className="modal-body">
-              <div style={{ 
-                background: 'rgba(0, 255, 255, 0.03)', 
-                padding: '20px', 
-                borderRadius: '16px', 
+              <div style={{
+                background: 'rgba(0, 255, 255, 0.03)',
+                padding: '20px',
+                borderRadius: '16px',
                 marginBottom: '30px',
                 border: '1px solid rgba(0, 255, 255, 0.1)',
                 textAlign: 'center'
@@ -1059,9 +1088,9 @@ export default function DashboardPage() {
               <h3 style={{ marginBottom: '20px', fontFamily: 'var(--font-display)' }}>Choose Withdrawal Option</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginBottom: '30px' }}>
                 {/* Option 1: 20 tokens → $10 */}
-                <div 
-                  className="withdraw-option-card" 
-                  style={{ 
+                <div
+                  className="withdraw-option-card"
+                  style={{
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                     padding: '20px', borderRadius: '16px',
                     background: walletTokens >= 20 ? 'rgba(6, 182, 212, 0.05)' : 'rgba(255, 255, 255, 0.02)',
@@ -1077,8 +1106,8 @@ export default function DashboardPage() {
                     </h4>
                     <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Standard withdrawal</span>
                   </div>
-                  <button 
-                    className="btn btn-primary" 
+                  <button
+                    className="btn btn-primary"
                     disabled={walletTokens < 20}
                     onClick={() => { setWithdrawAmount(20); setShowPayoutHistory(false); fetchPaymentMethod(); setIsEditingPayout(false); setShowPayoutSettings(true); }}
                     style={{ minWidth: '120px' }}
@@ -1088,9 +1117,9 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Option 2: 70 tokens → $29 */}
-                <div 
-                  className="withdraw-option-card" 
-                  style={{ 
+                <div
+                  className="withdraw-option-card"
+                  style={{
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                     padding: '20px', borderRadius: '16px',
                     background: walletTokens >= 70 ? 'rgba(168, 85, 247, 0.05)' : 'rgba(255, 255, 255, 0.02)',
@@ -1106,8 +1135,8 @@ export default function DashboardPage() {
                     </h4>
                     <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Premium withdrawal</span>
                   </div>
-                  <button 
-                    className="btn btn-primary" 
+                  <button
+                    className="btn btn-primary"
                     disabled={walletTokens < 70}
                     onClick={() => { setWithdrawAmount(70); setShowPayoutHistory(false); fetchPaymentMethod(); setIsEditingPayout(false); setShowPayoutSettings(true); }}
                     style={{ minWidth: '120px' }}
@@ -1129,14 +1158,47 @@ export default function DashboardPage() {
                         <div className="h-details">
                           <span className="h-method">Withdrawal to {p.method}</span>
                           <span className="h-date">{new Date(p.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                          {p.status === 'rejected' && p.rejectionReason && (
+                            <div style={{ fontSize: '0.75rem', color: '#ef4444', marginTop: '4px', fontStyle: 'italic' }}>
+                              Reason: {p.rejectionReason}
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div className="h-right">
                         <span className="h-amount-negative">-${p.amount === 70 ? '29.00' : p.amount === 20 ? '10.00' : (p.amount * 0.5).toFixed(2)}</span>
-                        <span className="h-status-badge" style={{ 
-                          background: p.status === 'completed' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(234, 179, 8, 0.1)',
-                          color: p.status === 'completed' ? 'var(--color-green)' : 'var(--color-orange)'
-                        }}>{p.status}</span>
+                        <span className="h-status-badge" style={{
+                          background: p.status === 'completed' ? 'rgba(34, 197, 94, 0.1)' : p.status === 'rejected' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(234, 179, 8, 0.1)',
+                          color: p.status === 'completed' ? 'var(--color-green)' : p.status === 'rejected' ? '#ef4444' : 'var(--color-orange)',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px'
+                        }}>
+                          {p.status}
+                          {p.status === 'rejected' && p.rejectionReason && (
+                            <span 
+                              onClick={() => setExpandedRejection(expandedRejection === p._id ? null : p._id)}
+                              style={{ 
+                                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                width: '16px', height: '16px', background: '#ef4444', color: 'white',
+                                borderRadius: '50%', fontSize: '10px', cursor: 'pointer', fontWeight: 'bold'
+                              }}
+                              title="Click to view reason"
+                            >
+                              !
+                            </span>
+                          )}
+                        </span>
+                        {expandedRejection === p._id && p.rejectionReason && (
+                          <div style={{ 
+                            position: 'absolute', right: '0', top: '100%', zIndex: 10,
+                            background: '#1a1f2e', border: '1px solid #ef4444', padding: '10px',
+                            borderRadius: '8px', fontSize: '0.75rem', color: 'white', width: '200px',
+                            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)', marginTop: '5px'
+                          }}>
+                            <strong>Reason:</strong> {p.rejectionReason}
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))

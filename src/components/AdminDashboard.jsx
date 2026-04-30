@@ -11,6 +11,7 @@ const AdminDashboard = () => {
   const [copyStatus, setCopyStatus] = useState(false);
   const [fullScreenMedia, setFullScreenMedia] = useState(null);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
+  const [rejectionModal, setRejectionModal] = useState({ show: false, id: null, reason: "" });
 
   const openLightbox = (media, index) => {
     setFullScreenMedia(media);
@@ -116,19 +117,25 @@ const AdminDashboard = () => {
     setTimeout(() => setCopyStatus(false), 2000);
   };
 
-  const handleWithdrawalStatus = async (id, status) => {
+  const handleWithdrawalStatus = async (id, status, reason = "") => {
+    if (status === 'rejected' && !reason) {
+      setRejectionModal({ show: true, id, reason: "" });
+      return;
+    }
+
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8844/api'}/admin/withdrawals/${id}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8845/api'}/admin/withdrawals/${id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('promptbyniti_token')}`
         },
-        body: JSON.stringify({ status })
+        body: JSON.stringify({ status, rejectionReason: reason })
       });
       const json = await response.json();
       if (json.success) {
-        setData(data.map(item => item._id === id ? { ...item, status } : item));
+        setData(data.map(item => item._id === id ? { ...item, status, rejectionReason: reason } : item));
+        setRejectionModal({ show: false, id: null, reason: "" });
         fetchStats();
       }
     } catch (err) {
@@ -338,9 +345,10 @@ const AdminDashboard = () => {
               
               let paymentInfo = 'Not set';
               if (pm) {
-                if (pm.type === 'UPI' && pm.upiId) paymentInfo = `UPI: ${pm.upiId}`;
-                else if (pm.type === 'BANK' && pm.accountNumber) paymentInfo = `Bank: ${pm.bankName || 'N/A'} | Acc: ${pm.accountNumber} | IFSC: ${pm.ifscCode || 'N/A'} | Name: ${pm.accountHolder || 'N/A'}`;
-                else if (pm.type === 'INTL' && pm.paypalEmail) paymentInfo = `PayPal: ${pm.paypalEmail}${pm.swiftCode ? ' | SWIFT: ' + pm.swiftCode : ''}`;
+                const methodType = pm.method || pm.type;
+                if (methodType === 'UPI' && pm.upiId) paymentInfo = `UPI: ${pm.upiId}`;
+                else if (methodType === 'BANK' && pm.accountNumber) paymentInfo = `Bank: ${pm.bankName || 'N/A'} | Acc: ${pm.accountNumber} | IFSC: ${pm.ifscCode || 'N/A'} | Name: ${pm.accountHolder || 'N/A'}`;
+                else if (methodType === 'INTL' && pm.paypalEmail) paymentInfo = `PayPal: ${pm.paypalEmail}${pm.swiftCode ? ' | SWIFT: ' + pm.swiftCode : ''}`;
                 else if (pm.upiId) paymentInfo = `UPI: ${pm.upiId}`;
                 else if (pm.paypalEmail) paymentInfo = `PayPal: ${pm.paypalEmail}`;
                 else if (pm.accountNumber) paymentInfo = `Bank: ${pm.accountNumber}`;
@@ -361,9 +369,9 @@ const AdminDashboard = () => {
                   <td style={{ color: 'var(--color-green, #22c55e)', fontWeight: 'bold' }}>{payoutUSD}</td>
                   <td>{w.method}</td>
                   <td>
-                    <div style={{ maxWidth: '250px', fontSize: '0.8rem', wordBreak: 'break-all', color: 'var(--color-cyan, #06b6d4)' }}>
+                    <div style={{ maxWidth: '300px', fontSize: '0.85rem', wordBreak: 'break-word', color: 'var(--color-cyan, #06b6d4)', lineHeight: '1.4' }}>
                       {paymentInfo}
-                      {pm?.note && <div style={{ marginTop: '4px', color: 'var(--text-secondary, #9ca3af)', fontStyle: 'italic' }}>Note: {pm.note}</div>}
+                      {pm?.note && <div style={{ marginTop: '6px', color: 'rgba(255,255,255,0.4)', fontStyle: 'italic', fontSize: '0.75rem' }}>Note: {pm.note}</div>}
                     </div>
                   </td>
                   <td style={{ fontSize: '0.85rem' }}>{new Date(w.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
@@ -374,16 +382,16 @@ const AdminDashboard = () => {
                   </td>
                   <td className="actions">
                     {w.status === 'pending' && (
-                      <>
+                      <div className="actions-flex">
                         <button className="approve-btn" onClick={() => handleWithdrawalStatus(w._id, 'completed')}>Approve & Pay</button>
                         <button className="reject-btn" onClick={() => handleWithdrawalStatus(w._id, 'rejected')}>Reject</button>
-                      </>
+                      </div>
                     )}
                     {w.status === 'completed' && (
-                      <span style={{ color: 'var(--color-green, #22c55e)', fontSize: '0.85rem', fontWeight: '600' }}>✓ Paid</span>
+                      <span className="status-text" style={{ color: 'var(--color-green, #22c55e)', fontSize: '0.85rem', fontWeight: '600' }}>✓ Paid</span>
                     )}
                     {w.status === 'rejected' && (
-                      <span style={{ color: 'var(--color-red, #ef4444)', fontSize: '0.85rem', fontWeight: '600' }}>✗ Rejected</span>
+                      <span className="status-text" style={{ color: 'var(--color-red, #ef4444)', fontSize: '0.85rem', fontWeight: '600' }}>✗ Rejected</span>
                     )}
                   </td>
                 </tr>
@@ -415,6 +423,49 @@ const AdminDashboard = () => {
           </button>
         </div>
       </div>
+
+      {/* Rejection Reason Modal */}
+      {rejectionModal.show && (
+        <div className="admin-modal-overlay" style={{ zIndex: 10000 }}>
+          <div className="admin-modal" style={{ maxWidth: '450px' }}>
+            <div className="modal-header">
+              <h2>Withdrawal Rejection</h2>
+              <button className="close-modal" onClick={() => setRejectionModal({ show: false, id: null, reason: "" })}>&times;</button>
+            </div>
+            <div className="modal-body">
+              <p style={{ marginBottom: '15px', color: 'var(--text-secondary)' }}>Please provide a reason for rejecting this withdrawal. This will be visible to the user.</p>
+              <textarea 
+                className="admin-textarea"
+                style={{ 
+                  width: '100%', minHeight: '120px', padding: '12px', borderRadius: '8px',
+                  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                  color: 'white', fontFamily: 'inherit', marginBottom: '20px', outline: 'none'
+                }}
+                placeholder="e.g., Invalid UPI ID, Suspicious activity, etc."
+                value={rejectionModal.reason}
+                onChange={(e) => setRejectionModal({ ...rejectionModal, reason: e.target.value })}
+              />
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button 
+                  className="reject-btn" 
+                  style={{ flex: 1, padding: '12px' }}
+                  onClick={() => handleWithdrawalStatus(rejectionModal.id, 'rejected', rejectionModal.reason)}
+                  disabled={!rejectionModal.reason.trim()}
+                >
+                  Confirm Rejection
+                </button>
+                <button 
+                  className="approve-btn" 
+                  style={{ flex: 1, padding: '12px', background: 'rgba(255,255,255,0.1)' }}
+                  onClick={() => setRejectionModal({ show: false, id: null, reason: "" })}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {selectedPrompt && (
         <div className="admin-modal-overlay" onClick={() => setSelectedPrompt(null)}>

@@ -68,56 +68,30 @@ const generateToken = (userId) => {
 router.post('/register', async (req, res) => {
   try {
     const { name, email, password } = req.body;
-    console.log('Register attempt:', email);
-
     if (!name || !email || !password) {
       return res.status(400).json({ success: false, message: 'All fields are required' });
     }
-
-    // Check if user already exists
     let user = await User.findOne({ email });
     if (user && user.isVerified) {
-      console.log('User already verified:', email);
       return res.status(400).json({ success: false, message: 'Email already registered' });
     }
-
-    // Generate 4-digit OTP
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
-    const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
-
+    const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
     if (user) {
-      console.log('Updating unverified user:', email);
       user.name = name;
       user.password = password;
       user.otp = otp;
       user.otpExpires = otpExpires;
       await user.save();
     } else {
-      console.log('Creating new unverified user:', email);
       user = await User.create({
-        name,
-        email,
-        password,
-        provider: 'local',
-        otp,
-        otpExpires,
-        isVerified: false
+        name, email, password, provider: 'local', otp, otpExpires, isVerified: false
       });
     }
-
-    // Send Email
-    console.log('Sending OTP to:', email);
     await sendOTPEmail(email, otp);
-    console.log('OTP sent successfully');
-
     res.json({ success: true, message: 'Verification code sent to your email', step: 'verify' });
   } catch (err) {
-    console.error('Register error:', err);
-    if (err.name === 'ValidationError') {
-      const messages = Object.values(err.errors).map(e => e.message);
-      return res.status(400).json({ success: false, message: messages[0] });
-    }
-    res.status(500).json({ success: false, message: 'Could not send verification email. Please check your email address.' });
+    res.status(500).json({ success: false, message: 'Could not send verification email.' });
   }
 });
 
@@ -127,43 +101,25 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
-
     if (!email || !password) {
       return res.status(400).json({ success: false, message: 'Email and password are required' });
     }
-
     const user = await User.findOne({ email }).select('+password');
-    if (!user) {
-      return res.status(401).json({ success: false, message: 'Invalid email or password' });
-    }
-
+    if (!user) return res.status(401).json({ success: false, message: 'Invalid email or password' });
     if (user.provider === 'google' && !user.password) {
       return res.status(400).json({ success: false, message: 'Please use Google Sign-in' });
     }
-
-    if (user.isBanned) {
-      return res.status(403).json({ success: false, message: 'Your account has been banned.' });
-    }
-
+    if (user.isBanned) return res.status(403).json({ success: false, message: 'Your account has been banned.' });
     const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-      return res.status(401).json({ success: false, message: 'Invalid email or password' });
-    }
-
-    // Generate OTP
+    if (!isMatch) return res.status(401).json({ success: false, message: 'Invalid email or password' });
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
-
     user.otp = otp;
     user.otpExpires = otpExpires;
     await user.save();
-
-    // Send Email
     await sendOTPEmail(email, otp);
-
     res.json({ success: true, message: 'Verification code sent to your email', step: 'verify' });
   } catch (err) {
-    console.error('Login error:', err.message);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
@@ -174,33 +130,16 @@ router.post('/login', async (req, res) => {
 router.post('/verify-otp', async (req, res) => {
   try {
     const { email, otp } = req.body;
-    console.log('Verify OTP attempt:', email, otp);
-
-    if (!email || !otp) {
-      return res.status(400).json({ success: false, message: 'Email and OTP are required' });
-    }
-
     const user = await User.findOne({ email });
-    if (!user) {
-      console.log('User not found for verification:', email);
-      return res.status(404).json({ success: false, message: 'User not found' });
-    }
-
-    // Check OTP
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
     if (user.otp !== otp || user.otpExpires < Date.now()) {
-      console.log('Invalid or expired OTP for:', email);
-      return res.status(400).json({ success: false, message: 'Invalid or expired verification code' });
+      return res.status(400).json({ success: false, message: 'Invalid or expired code' });
     }
-
-    // Clear OTP and verify
     user.otp = null;
     user.otpExpires = null;
     user.isVerified = true;
     await user.save();
-    console.log('User verified successfully:', email);
-
     const token = generateToken(user._id);
-
     res.json({
       success: true,
       token,
@@ -214,7 +153,6 @@ router.post('/verify-otp', async (req, res) => {
       }
     });
   } catch (err) {
-    console.error('Verify OTP error:', err.message);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
@@ -225,48 +163,29 @@ router.post('/verify-otp', async (req, res) => {
 router.post('/google', async (req, res) => {
   try {
     const { credential } = req.body;
-
-    if (!credential) {
-      return res.status(400).json({ success: false, message: 'Google credential is required' });
-    }
-
     const ticket = await googleClient.verifyIdToken({
       idToken: credential,
       audience: process.env.GOOGLE_CLIENT_ID
     });
-
     const payload = ticket.getPayload();
     const { sub: googleId, email, name, picture } = payload;
-
     let user = await User.findOne({ $or: [{ googleId }, { email }] });
-
     if (user) {
-      if (user.isBanned) {
-        return res.status(403).json({ success: false, message: 'Your account has been banned.' });
-      }
-
+      if (user.isBanned) return res.status(403).json({ success: false, message: 'Your account has been banned.' });
       if (!user.googleId) {
         user.googleId = googleId;
         user.provider = 'google';
         if (picture) user.avatar = picture;
-        user.isVerified = true; // Google users are pre-verified
+        user.isVerified = true;
         await user.save();
       }
     } else {
       user = await User.create({
-        name,
-        email,
-        googleId,
-        avatar: picture || '',
-        provider: 'google',
-        credits: 1,
-        plan: 'free',
-        isVerified: true
+        name, email, googleId, avatar: picture || '', provider: 'google',
+        credits: 5, plan: 'free', isVerified: true
       });
     }
-
     const token = generateToken(user._id);
-
     res.json({
       success: true,
       token,
@@ -280,7 +199,6 @@ router.post('/google', async (req, res) => {
       }
     });
   } catch (err) {
-    console.error('Google auth error:', err.message);
     res.status(401).json({ success: false, message: 'Google authentication failed' });
   }
 });
@@ -291,22 +209,12 @@ router.post('/google', async (req, res) => {
 router.get('/me', async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ success: false, message: 'Not authenticated' });
-    }
-
+    if (!authHeader) return res.status(401).json({ success: false, message: 'Not authenticated' });
     const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.id);
-
-    if (!user) {
-      return res.status(401).json({ success: false, message: 'User not found' });
-    }
-
-    if (user.isBanned) {
-      return res.status(403).json({ success: false, message: 'Your account has been banned. Please contact support.' });
-    }
-
+    if (!user) return res.status(401).json({ success: false, message: 'User not found' });
+    if (user.isBanned) return res.status(403).json({ success: false, message: 'Your account has been banned.' });
     res.json({
       success: true,
       user: {
@@ -329,36 +237,21 @@ router.get('/me', async (req, res) => {
 router.put('/profile', async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ success: false, message: 'Not authenticated' });
-    }
-
+    if (!authHeader) return res.status(401).json({ success: false, message: 'Not authenticated' });
     const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const { name, bio, avatar } = req.body;
-
     const user = await User.findById(decoded.id);
-    if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
-    }
-
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
     if (name) user.name = name;
     if (bio !== undefined) user.bio = bio;
-    
     if (avatar && avatar.startsWith('data:image')) {
-      console.log('Uploading new avatar to Cloudinary...');
       const uploadRes = await cloudinary.uploader.upload(avatar, {
-        folder: 'niti_avatars',
-        width: 300,
-        height: 300,
-        crop: 'fill'
+        folder: 'niti_avatars', width: 300, height: 300, crop: 'fill'
       });
       user.avatar = uploadRes.secure_url;
-      console.log('Avatar uploaded successfully:', user.avatar);
     }
-
     await user.save();
-
     res.json({
       success: true,
       message: 'Profile updated successfully',
@@ -373,92 +266,85 @@ router.put('/profile', async (req, res) => {
       }
     });
   } catch (err) {
-    console.error('Update profile error:', err.message);
     res.status(401).json({ success: false, message: 'Session expired or invalid' });
   }
 });
 
 // ============================================
-// POST /api/auth/forgot-password
+// POST /api/auth/use-credits — Deduct credits permanently
+// ============================================
+router.post('/use-credits', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ success: false, message: 'Not authenticated' });
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const { amount } = req.body;
+
+    const user = await User.findById(decoded.id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+    user.credits = Math.max(0, (user.credits || 0) - (amount || 1));
+    await user.save();
+
+    res.json({ success: true, credits: user.credits });
+  } catch (err) {
+    res.status(401).json({ success: false, message: 'Invalid session' });
+  }
+});
+
+// ============================================
+// POST /api/auth/forgot-password, verify-reset-otp, reset-password (Existing)
 // ============================================
 router.post('/forgot-password', async (req, res) => {
   try {
     const { email } = req.body;
-    if (!email) return res.status(400).json({ success: false, message: 'Email is required' });
-
     const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ success: false, message: 'User with this email not found' });
-
-    if (user.provider === 'google') {
-      return res.status(400).json({ success: false, message: 'This account uses Google login. Please sign in with Google.' });
-    }
-
-    // Generate OTP
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
-
     user.otp = otp;
     user.otpExpires = otpExpires;
     await user.save();
-
-    // Send Email
     await sendOTPEmail(email, otp);
-
     res.json({ success: true, message: 'Reset code sent to your email' });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
 
-// ============================================
-// POST /api/auth/verify-reset-otp
-// ============================================
 router.post('/verify-reset-otp', async (req, res) => {
   try {
     const { email, otp } = req.body;
     const user = await User.findOne({ email });
-
     if (!user || user.otp !== otp || user.otpExpires < Date.now()) {
       return res.status(400).json({ success: false, message: 'Invalid or expired code' });
     }
-
     res.json({ success: true, message: 'Code verified' });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
 
-// ============================================
-// POST /api/auth/reset-password
-// ============================================
 router.post('/reset-password', async (req, res) => {
   try {
     const { email, otp, password } = req.body;
     const user = await User.findOne({ email });
-
     if (!user || user.otp !== otp || user.otpExpires < Date.now()) {
-      return res.status(400).json({ success: false, message: 'Session expired. Please try again.' });
+      return res.status(400).json({ success: false, message: 'Session expired' });
     }
-
-    // Hash and save new password
-    user.password = password; // Mongoose middleware will hash it if defined
+    user.password = password;
     user.otp = null;
     user.otpExpires = null;
     await user.save();
-
     const token = generateToken(user._id);
-
     res.json({
       success: true,
       message: 'Password reset successfully',
       token,
       user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        avatar: user.avatar,
-        credits: user.credits,
-        plan: user.plan
+        id: user._id, name: user.name, email: user.email, avatar: user.avatar,
+        credits: user.credits, plan: user.plan
       }
     });
   } catch (err) {
