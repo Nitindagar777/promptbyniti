@@ -3,6 +3,7 @@ const router = express.Router();
 const User = require('../models/User');
 const Prompt = require('../models/Prompt');
 const Transaction = require('../models/Transaction');
+const Withdrawal = require('../models/Withdrawal');
 const jwt = require('jsonwebtoken');
 
 // Middleware to check if user is admin
@@ -36,6 +37,8 @@ router.get('/stats', isAdmin, async (req, res) => {
     const totalRevenue = completedTransactions.reduce((sum, tx) => sum + (tx.amount || 0), 0);
     const allTransactions = await Transaction.find();
 
+    const pendingWithdrawals = await Withdrawal.countDocuments({ status: 'pending' });
+
     res.json({
       success: true,
       stats: {
@@ -43,7 +46,8 @@ router.get('/stats', isAdmin, async (req, res) => {
         promptsCount,
         pendingPrompts,
         totalRevenue: totalRevenue, 
-        salesCount: completedTransactions.length
+        salesCount: completedTransactions.length,
+        pendingWithdrawals
       }
     });
   } catch (err) {
@@ -115,6 +119,42 @@ router.get('/transactions', isAdmin, async (req, res) => {
   try {
     const transactions = await Transaction.find().sort({ createdAt: -1 });
     res.json({ success: true, transactions });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// GET All Withdrawal Requests
+router.get('/withdrawals', isAdmin, async (req, res) => {
+  try {
+    const withdrawals = await Withdrawal.find()
+      .populate('sellerId', 'name email avatar paymentMethod')
+      .sort({ createdAt: -1 });
+    res.json({ success: true, withdrawals });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// UPDATE Withdrawal Status
+router.patch('/withdrawals/:id', isAdmin, async (req, res) => {
+  try {
+    const { status } = req.body;
+    if (!['pending', 'completed', 'rejected'].includes(status)) {
+      return res.status(400).json({ success: false, message: 'Invalid status' });
+    }
+
+    const withdrawal = await Withdrawal.findByIdAndUpdate(
+      req.params.id, 
+      { status }, 
+      { new: true }
+    ).populate('sellerId', 'name email avatar paymentMethod');
+
+    if (!withdrawal) {
+      return res.status(404).json({ success: false, message: 'Withdrawal not found' });
+    }
+
+    res.json({ success: true, withdrawal });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

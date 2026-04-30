@@ -837,7 +837,7 @@ export const pricingPlans = [
     period: 'forever',
     description: 'Try the platform with <span class="text-secondary">limited access</span>',
     features: [
-      '<span class="text-orange">1</span> Token on signup',
+      '<span class="text-orange">1</span> Complete Prompt Pack (1 Token)',
       'Public prompt library access',
       'Basic styles & moods',
       'Standard AI format',
@@ -854,7 +854,7 @@ export const pricingPlans = [
     period: 'one-time',
     description: 'Best for <span class="text-cyan">creators & freelancers</span>',
     features: [
-      '<span class="text-cyan">20</span> Tokens',
+      '<span class="text-cyan">20</span> Complete Prompt Packs (20 Tokens)',
       'Full pack: title, description, prompts, samples',
       '<span class="text-purple">Private</span> prompt mode',
       'All styles & moods unlocked',
@@ -873,7 +873,7 @@ export const pricingPlans = [
     period: 'one-time',
     description: 'For <span class="text-purple">power users & professionals</span>',
     features: [
-      '<span class="text-purple">70</span> Tokens',
+      '<span class="text-purple">70</span> Complete Prompt Packs (70 Tokens)',
       '<span class="text-cyan">Advanced</span> high-quality generation',
       'Character consistency support',
       '<span class="text-pink">Video + image</span> prompt support',

@@ -48,10 +48,8 @@ const AdminDashboard = () => {
       });
       const json = await response.json();
       if (json.success) {
-        // Ensure we handle both 'prompts' and other tab keys correctly
         const resultData = json[endpoint] || json.data || [];
         setData(resultData);
-        console.log(`Fetched ${tab} data:`, resultData);
       } else {
         setError(json.message);
       }
@@ -118,6 +116,26 @@ const AdminDashboard = () => {
     setTimeout(() => setCopyStatus(false), 2000);
   };
 
+  const handleWithdrawalStatus = async (id, status) => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8844/api'}/admin/withdrawals/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('promptbyniti_token')}`
+        },
+        body: JSON.stringify({ status })
+      });
+      const json = await response.json();
+      if (json.success) {
+        setData(data.map(item => item._id === id ? { ...item, status } : item));
+        fetchStats();
+      }
+    } catch (err) {
+      console.error('Withdrawal update error:', err);
+    }
+  };
+
   const renderOverview = () => (
     <div className="admin-overview">
       <div className="stats-grid">
@@ -140,6 +158,10 @@ const AdminDashboard = () => {
         <div className="stat-card">
           <h3>Total Sales</h3>
           <p className="stat-value">{stats?.salesCount || 0}</p>
+        </div>
+        <div className="stat-card highlight">
+          <h3>Pending Withdrawals</h3>
+          <p className="stat-value">{stats?.pendingWithdrawals || 0}</p>
         </div>
       </div>
     </div>
@@ -288,6 +310,91 @@ const AdminDashboard = () => {
     </div>
   );
 
+  const renderWithdrawals = () => (
+    <div className="admin-table-container">
+      {data.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-secondary)' }}>
+          No withdrawal requests found.
+        </div>
+      ) : (
+        <table className="admin-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Amount</th>
+              <th>Payout Value</th>
+              <th>Method</th>
+              <th>Payment Details</th>
+              <th>Date</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.map(w => {
+              const user = w.sellerId;
+              const pm = user?.paymentMethod;
+              const payoutUSD = w.amount === 70 ? '$29.00' : w.amount === 20 ? '$10.00' : `${w.amount} tokens`;
+              
+              let paymentInfo = 'Not set';
+              if (pm) {
+                if (pm.type === 'UPI' && pm.upiId) paymentInfo = `UPI: ${pm.upiId}`;
+                else if (pm.type === 'BANK' && pm.accountNumber) paymentInfo = `Bank: ${pm.bankName || 'N/A'} | Acc: ${pm.accountNumber} | IFSC: ${pm.ifscCode || 'N/A'} | Name: ${pm.accountHolder || 'N/A'}`;
+                else if (pm.type === 'INTL' && pm.paypalEmail) paymentInfo = `PayPal: ${pm.paypalEmail}${pm.swiftCode ? ' | SWIFT: ' + pm.swiftCode : ''}`;
+                else if (pm.upiId) paymentInfo = `UPI: ${pm.upiId}`;
+                else if (pm.paypalEmail) paymentInfo = `PayPal: ${pm.paypalEmail}`;
+                else if (pm.accountNumber) paymentInfo = `Bank: ${pm.accountNumber}`;
+              }
+
+              return (
+                <tr key={w._id}>
+                  <td>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      {user?.avatar && <img src={user.avatar} alt="" style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} />}
+                      <div style={{ textAlign: 'left' }}>
+                        <div style={{ fontWeight: 'bold' }}>{user?.name || 'Unknown'}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary, #9ca3af)' }}>{user?.email || ''}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td style={{ fontWeight: 'bold' }}>{w.amount} Tokens</td>
+                  <td style={{ color: 'var(--color-green, #22c55e)', fontWeight: 'bold' }}>{payoutUSD}</td>
+                  <td>{w.method}</td>
+                  <td>
+                    <div style={{ maxWidth: '250px', fontSize: '0.8rem', wordBreak: 'break-all', color: 'var(--color-cyan, #06b6d4)' }}>
+                      {paymentInfo}
+                      {pm?.note && <div style={{ marginTop: '4px', color: 'var(--text-secondary, #9ca3af)', fontStyle: 'italic' }}>Note: {pm.note}</div>}
+                    </div>
+                  </td>
+                  <td style={{ fontSize: '0.85rem' }}>{new Date(w.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                  <td>
+                    <span className={`status-badge ${w.status}`}>
+                      {w.status}
+                    </span>
+                  </td>
+                  <td className="actions">
+                    {w.status === 'pending' && (
+                      <>
+                        <button className="approve-btn" onClick={() => handleWithdrawalStatus(w._id, 'completed')}>Approve & Pay</button>
+                        <button className="reject-btn" onClick={() => handleWithdrawalStatus(w._id, 'rejected')}>Reject</button>
+                      </>
+                    )}
+                    {w.status === 'completed' && (
+                      <span style={{ color: 'var(--color-green, #22c55e)', fontSize: '0.85rem', fontWeight: '600' }}>✓ Paid</span>
+                    )}
+                    {w.status === 'rejected' && (
+                      <span style={{ color: 'var(--color-red, #ef4444)', fontSize: '0.85rem', fontWeight: '600' }}>✗ Rejected</span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
+
   return (
     <div className="admin-dashboard">
       <div className="admin-header">
@@ -300,6 +407,9 @@ const AdminDashboard = () => {
           </button>
           <button className={activeTab === 'prompts' ? 'active' : ''} onClick={() => setActiveTab('prompts')}>All Prompts</button>
           <button className={activeTab === 'transactions' ? 'active' : ''} onClick={() => setActiveTab('transactions')}>Transactions</button>
+          <button className={activeTab === 'withdrawals' ? 'active' : ''} onClick={() => setActiveTab('withdrawals')}>
+            Withdrawals {stats?.pendingWithdrawals > 0 && <span className="tab-badge">{stats.pendingWithdrawals}</span>}
+          </button>
           <button className="refresh-btn" onClick={() => { fetchStats(); if(activeTab !== 'overview') fetchData(activeTab); }} title="Refresh Data">
             <span style={{ fontSize: '1.2rem' }}>↻</span>
           </button>
@@ -416,6 +526,7 @@ const AdminDashboard = () => {
             {activeTab === 'verification' && renderPrompts(true)}
             {activeTab === 'prompts' && renderPrompts(false)}
             {activeTab === 'transactions' && renderTransactions()}
+            {activeTab === 'withdrawals' && renderWithdrawals()}
           </>
         )}
       </div>

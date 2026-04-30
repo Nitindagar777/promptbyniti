@@ -39,7 +39,7 @@ const userSchema = new mongoose.Schema({
   },
   credits: {
     type: Number,
-    default: 2 // Starter Plan: 2 Packs
+    default: 1 // Starter Plan: 1 Token
   },
   plan: {
     type: String,
@@ -61,6 +61,21 @@ const userSchema = new mongoose.Schema({
   isBanned: {
     type: Boolean,
     default: false
+  },
+  paymentMethod: {
+    type: {
+      type: String,
+      enum: ['UPI', 'BANK', 'INTL'],
+      default: null
+    },
+    upiId: { type: String, default: '' },
+    bankName: { type: String, default: '' },
+    accountHolder: { type: String, default: '' },
+    accountNumber: { type: String, default: '' },
+    ifscCode: { type: String, default: '' },
+    paypalEmail: { type: String, default: '' },
+    swiftCode: { type: String, default: '' },
+    note: { type: String, default: '' }
   }
 }, {
   timestamps: true

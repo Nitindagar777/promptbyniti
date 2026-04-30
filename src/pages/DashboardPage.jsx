@@ -27,9 +27,12 @@ export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [analyticsFilter, setAnalyticsFilter] = useState('daily');
   const [payoutTab, setPayoutTab] = useState('UPI');
+  // Wallet balance: subtract 1 free signup token (not withdrawable)
+  const walletTokens = Math.max(0, (state.user?.credits || 0) - 1);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalEarnings: 0,
+    walletBalance: 0,
     totalSales: 0,
     activePrompts: 0,
     pendingPrompts: 0,
@@ -513,12 +516,12 @@ export default function DashboardPage() {
                     <span className="balance-label">Current Earnings</span>
                     <h2 className="balance-value">
                       <Zap size={48} className="text-orange" fill="var(--color-orange)" style={{ marginRight: '15px' }} />
-                      {stats.totalEarnings || 0}
+                      {walletTokens}
                       <span className="balance-unit">Tokens</span>
                     </h2>
                     <p className="balance-approx">
-                      {(stats.totalEarnings || 0) >= 70 ? '≈ $29.00 USD (70 tokens)' :
-                       (stats.totalEarnings || 0) >= 20 ? '≈ $10.00 USD (20 tokens)' :
+                      {walletTokens >= 70 ? '≈ $29.00 USD (70 tokens)' :
+                       walletTokens >= 20 ? '≈ $10.00 USD (20 tokens)' :
                        'Min. 20 tokens to withdraw'}
                     </p>
                   </div>
@@ -736,9 +739,54 @@ export default function DashboardPage() {
 
               <div className="payout-modal-footer">
                 <button className="btn-payout-cancel" onClick={() => setShowPayoutSettings(false)}>Cancel</button>
-                <button className="btn-payout-save" onClick={() => {
-                  alert('Payout method saved successfully!');
-                  setShowPayoutSettings(false);
+                <button className="btn-payout-save" onClick={async () => {
+                  try {
+                    const token = localStorage.getItem('promptbyniti_token');
+                    const API_BASE = import.meta.env.VITE_API_URL || 
+                      (window.location.hostname.includes('oopsverse.cloud') 
+                        ? 'https://oopsverse.cloud/api' 
+                        : 'http://localhost:8844/api');
+
+                    // Collect form data from current tab
+                    const modal = document.querySelector('.payout-method-modal');
+                    const inputs = modal.querySelectorAll('input, textarea');
+                    const values = {};
+                    inputs.forEach(input => {
+                      values[input.placeholder] = input.value;
+                    });
+
+                    const body = {
+                      type: payoutTab,
+                      upiId: values['e.g. 9876543210@upi'] || '',
+                      bankName: values['e.g. HDFC Bank'] || '',
+                      accountHolder: values['Full name as per records'] || '',
+                      accountNumber: values['Bank account number'] || '',
+                      ifscCode: values['e.g. SBIN0001234'] || '',
+                      paypalEmail: values['your@paypal.com'] || '',
+                      swiftCode: values['Optional'] || '',
+                      note: values['Any additional information...'] || ''
+                    };
+
+                    const res = await fetch(`${API_BASE}/seller/payment-method`, {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                      },
+                      body: JSON.stringify(body)
+                    });
+                    
+                    const data = await res.json();
+                    if (data.success) {
+                      alert('Payment method saved successfully!');
+                      setShowPayoutSettings(false);
+                    } else {
+                      alert(data.message || 'Failed to save payment method');
+                    }
+                  } catch (err) {
+                    console.error('Save payment method error:', err);
+                    alert('Network error. Please try again.');
+                  }
                 }}>
                   <Check size={20} />
                   <span>Save Method</span>
@@ -774,7 +822,7 @@ export default function DashboardPage() {
                 <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Available for Withdrawal</span>
                 <h3 style={{ fontSize: '1.8rem', marginTop: '5px' }}>
                   <Zap size={24} className="text-orange" fill="var(--color-orange)" style={{ marginRight: '8px' }} />
-                  {stats.totalEarnings || 0} Tokens
+                  {walletTokens} Tokens
                 </h3>
               </div>
 
@@ -786,9 +834,9 @@ export default function DashboardPage() {
                   style={{ 
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                     padding: '20px', borderRadius: '16px',
-                    background: (stats.totalEarnings || 0) >= 20 ? 'rgba(6, 182, 212, 0.05)' : 'rgba(255, 255, 255, 0.02)',
-                    border: `1px solid ${(stats.totalEarnings || 0) >= 20 ? 'rgba(6, 182, 212, 0.2)' : 'rgba(255, 255, 255, 0.05)'}`,
-                    opacity: (stats.totalEarnings || 0) >= 20 ? 1 : 0.4,
+                    background: walletTokens >= 20 ? 'rgba(6, 182, 212, 0.05)' : 'rgba(255, 255, 255, 0.02)',
+                    border: `1px solid ${walletTokens >= 20 ? 'rgba(6, 182, 212, 0.2)' : 'rgba(255, 255, 255, 0.05)'}`,
+                    opacity: walletTokens >= 20 ? 1 : 0.4,
                     transition: 'all 0.2s ease'
                   }}
                 >
@@ -801,7 +849,7 @@ export default function DashboardPage() {
                   </div>
                   <button 
                     className="btn btn-primary" 
-                    disabled={(stats.totalEarnings || 0) < 20}
+                    disabled={walletTokens < 20}
                     onClick={() => handleWithdraw(20, 'PayPal', 'Withdraw 20 tokens for $10')}
                     style={{ minWidth: '120px' }}
                   >
@@ -815,9 +863,9 @@ export default function DashboardPage() {
                   style={{ 
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                     padding: '20px', borderRadius: '16px',
-                    background: (stats.totalEarnings || 0) >= 70 ? 'rgba(168, 85, 247, 0.05)' : 'rgba(255, 255, 255, 0.02)',
-                    border: `1px solid ${(stats.totalEarnings || 0) >= 70 ? 'rgba(168, 85, 247, 0.2)' : 'rgba(255, 255, 255, 0.05)'}`,
-                    opacity: (stats.totalEarnings || 0) >= 70 ? 1 : 0.4,
+                    background: walletTokens >= 70 ? 'rgba(168, 85, 247, 0.05)' : 'rgba(255, 255, 255, 0.02)',
+                    border: `1px solid ${walletTokens >= 70 ? 'rgba(168, 85, 247, 0.2)' : 'rgba(255, 255, 255, 0.05)'}`,
+                    opacity: walletTokens >= 70 ? 1 : 0.4,
                     transition: 'all 0.2s ease'
                   }}
                 >
@@ -830,7 +878,7 @@ export default function DashboardPage() {
                   </div>
                   <button 
                     className="btn btn-primary" 
-                    disabled={(stats.totalEarnings || 0) < 70}
+                    disabled={walletTokens < 70}
                     onClick={() => handleWithdraw(70, 'PayPal', 'Withdraw 70 tokens for $29')}
                     style={{ minWidth: '120px' }}
                   >

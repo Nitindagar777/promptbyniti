@@ -96,16 +96,22 @@ router.get('/stats', auth, async (req, res) => {
     const maxDayViews = Math.max(...dailyViewsArray, 1);
     const viewPercentages = dailyViewsArray.map(v => Math.max(5, (v / maxDayViews) * 100));
 
+    // Calculate total tokens withdrawn (completed withdrawals)
+    const completedWithdrawals = await Withdrawal.find({ sellerId: sellerIdObj, status: 'completed' });
+    const totalWithdrawn = completedWithdrawals.reduce((sum, w) => sum + (w.amount || 0), 0);
+
     res.json({
       success: true,
       stats: {
         totalEarnings: Math.floor(totalEarnings),
+        walletBalance: user.credits || 0,  // Real token balance from database
         totalSales: Math.floor(totalViews * 0.15),
         activePrompts: prompts.length,
         approvedPrompts: approvedCount,
         pendingPrompts: pendingCount,
         rejectedPrompts: rejectedCount,
         totalViews: totalViews,
+        totalWithdrawn,
         conversionRate: '15%',
         viewGrowth: 12,
         performanceGrowth: 8,
@@ -148,6 +154,31 @@ router.post('/withdraw', auth, async (req, res) => {
 
     await withdrawal.save();
     res.json({ success: true, message: 'Withdrawal request submitted successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// POST: Save Payment Method
+router.post('/payment-method', auth, async (req, res) => {
+  try {
+    const { type, upiId, bankName, accountHolder, accountNumber, ifscCode, paypalEmail, swiftCode, note } = req.body;
+    
+    const user = await User.findByIdAndUpdate(req.userId, {
+      paymentMethod: {
+        type,
+        upiId: upiId || '',
+        bankName: bankName || '',
+        accountHolder: accountHolder || '',
+        accountNumber: accountNumber || '',
+        ifscCode: ifscCode || '',
+        paypalEmail: paypalEmail || '',
+        swiftCode: swiftCode || '',
+        note: note || ''
+      }
+    }, { new: true });
+
+    res.json({ success: true, message: 'Payment method saved successfully' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
