@@ -26,6 +26,7 @@ export default function DashboardPage() {
   const [filterStatus, setFilterStatus] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [analyticsFilter, setAnalyticsFilter] = useState('daily');
+  const [payoutTab, setPayoutTab] = useState('UPI');
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalEarnings: 0,
@@ -36,7 +37,8 @@ export default function DashboardPage() {
     totalViews: 0,
     conversionRate: '0%',
     prompts: [],
-    recentActivity: []
+    recentActivity: [],
+    recentPayouts: []
   });
 
   const handleDelete = async (id) => {
@@ -69,6 +71,38 @@ export default function DashboardPage() {
       }
     } catch (err) {
       console.error('Delete error:', err);
+      alert('Network error. Please try again.');
+    }
+  };
+
+  const handleWithdraw = async (amount, method, details) => {
+    try {
+      const token = localStorage.getItem('promptbyniti_token');
+      const API_BASE = import.meta.env.VITE_API_URL || 
+        (window.location.hostname.includes('oopsverse.cloud') 
+          ? 'https://oopsverse.cloud/api' 
+          : 'http://localhost:8844/api');
+          
+      const res = await fetch(`${API_BASE}/seller/withdraw`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ amount, method, details })
+      });
+      
+      const data = await res.json();
+      if (data.success) {
+        alert('Withdrawal request submitted! It will be processed within 2-3 business days.');
+        setShowPayoutHistory(false);
+        // Refresh stats to show the new pending payout
+        window.location.reload();
+      } else {
+        alert(data.message || 'Failed to submit withdrawal request');
+      }
+    } catch (err) {
+      console.error('Withdrawal error:', err);
       alert('Network error. Please try again.');
     }
   };
@@ -486,7 +520,23 @@ export default function DashboardPage() {
                   </div>
                   <div className="wallet-actions">
                     <button className="btn-withdraw-premium w-full" onClick={() => setShowPayoutHistory(true)}>Withdraw Funds</button>
-                    <button className="btn-text-only" onClick={() => setShowPayoutSettings(true)} style={{ marginTop: '10px', color: 'var(--text-muted)', fontSize: '0.9rem', textAlign: 'center' }}>Payout Settings</button>
+                    <button 
+                      className="btn-text-only" 
+                      onClick={() => setShowPayoutSettings(true)} 
+                      style={{ 
+                        marginTop: '10px', 
+                        color: 'var(--color-cyan)', 
+                        fontSize: '0.9rem', 
+                        textAlign: 'center',
+                        fontWeight: '600',
+                        opacity: 0.8,
+                        transition: 'opacity 0.2s ease'
+                      }}
+                      onMouseOver={(e) => e.currentTarget.style.opacity = '1'}
+                      onMouseOut={(e) => e.currentTarget.style.opacity = '0.8'}
+                    >
+                      + Add Payment Method
+                    </button>
                   </div>
                 </div>
                 <div className="card payout-history-card">
@@ -495,26 +545,42 @@ export default function DashboardPage() {
                     <button className="btn-text-only" onClick={() => setShowPayoutHistory(true)} style={{ color: 'white', opacity: 1, fontWeight: '600' }}>View All</button>
                   </div>
                   <div className="history-list">
-                    {[
-                      { method: 'PayPal', date: '22 Apr 2026', amount: 450, status: 'completed' },
-                      { method: 'Bank Transfer', date: '10 Apr 2026', amount: 320, status: 'completed' }
-                    ].map((p, i) => (
-                      <div key={i} className="history-item-premium">
-                        <div className="h-left">
-                          <div className={`h-icon-circle ${p.status}`}>
-                            <ArrowUpRight size={16} />
+                    {stats.recentPayouts && stats.recentPayouts.length > 0 ? (
+                      stats.recentPayouts.map((p, i) => (
+                        <div key={p._id || i} className="history-item-premium">
+                          <div className="h-left">
+                            <div className={`h-icon-circle ${p.status}`}>
+                              <ArrowUpRight size={16} />
+                            </div>
+                            <div className="h-details">
+                              <span className="h-method">Withdrawal to {p.method}</span>
+                              <span className="h-date">{new Date(p.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                            </div>
                           </div>
-                          <div className="h-details">
-                            <span className="h-method">Withdrawal to {p.method}</span>
-                            <span className="h-date">{p.date}</span>
+                          <div className="h-right">
+                            <span className="h-amount-negative">-${(p.amount * 0.1).toFixed(2)}</span>
+                            <span className="h-status-badge" style={{ 
+                              background: p.status === 'completed' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(234, 179, 8, 0.1)',
+                              color: p.status === 'completed' ? 'var(--color-green)' : 'var(--color-orange)'
+                            }}>{p.status}</span>
                           </div>
                         </div>
-                        <div className="h-right">
-                          <span className="h-amount-negative">-${p.amount.toFixed(2)}</span>
-                          <span className="h-status-badge">Completed</span>
-                        </div>
+                      ))
+                    ) : (
+                      <div style={{ 
+                        display: 'flex', 
+                        flexDirection: 'column',
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        minHeight: '200px',
+                        width: '100%',
+                        opacity: 0.5,
+                        fontFamily: 'var(--font-display)',
+                        fontSize: '1.1rem'
+                      }}>
+                        No payouts yet.
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
               </div>
@@ -560,43 +626,118 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Payout Settings Modal */}
+      {/* Payout Settings Modal (Withdrawal Methods) */}
       {showPayoutSettings && (
         <div className="modal-overlay" onClick={() => setShowPayoutSettings(false)}>
-          <div className="activity-modal card animate-modal-up" style={{ maxWidth: '500px' }} onClick={e => e.stopPropagation()}>
+          <div className="activity-modal card animate-modal-up payout-method-modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <div className="header-with-icon">
-                <Settings size={24} className="text-cyan" />
-                <h2>Payout Settings</h2>
+                <div className="card-icon-small">
+                  <Layout size={20} />
+                </div>
+                <h2>Payout Method</h2>
               </div>
               <button className="btn-close-modal" onClick={() => setShowPayoutSettings(false)}>
                 <X size={24} />
               </button>
             </div>
+            
             <div className="modal-body">
-              <p className="text-muted mb-lg">Select your preferred method to receive earnings.</p>
-              
-              <div className="settings-form" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                <div className="form-group-premium">
-                  <label>PayPal Email</label>
-                  <input type="email" className="form-control" placeholder="your@email.com" defaultValue={state.user?.email} />
+              {/* Tab Navigation */}
+              <div className="payout-tabs-container">
+                <div className="payout-tabs">
+                  {['UPI', 'BANK', 'INTL'].map(tab => (
+                    <button 
+                      key={tab} 
+                      className={`payout-tab ${payoutTab === tab ? 'active' : ''}`}
+                      onClick={() => setPayoutTab(tab)}
+                    >
+                      {tab}
+                    </button>
+                  ))}
                 </div>
-                
-                <div className="form-group-premium">
-                  <label>UPI ID (Optional)</label>
-                  <input type="text" className="form-control" placeholder="username@upi" />
-                </div>
+              </div>
 
-                <div className="form-group-premium">
-                  <label>Bank Account Number</label>
-                  <input type="text" className="form-control" placeholder="XXXX XXXX XXXX XXXX" />
-                </div>
+              <div className="payout-form-content">
+                {payoutTab === 'UPI' && (
+                  <div className="animate-fade-in">
+                    <div className="form-group-payout">
+                      <label>UPI ID *</label>
+                      <div className="input-with-icon">
+                        <div className="input-icon-left"><Activity size={18} /></div>
+                        <input type="text" placeholder="e.g. 9876543210@upi" />
+                      </div>
+                      <span className="input-hint">Supports: @upi, @okaxis, @ybl, @paytm, @sbi, @hdfcbank</span>
+                    </div>
+                    
+                    <div className="form-group-payout">
+                      <label>UPI QR CODE *</label>
+                      <div className="qr-upload-area">
+                        <ArrowUpRight size={24} />
+                        <span>Upload QR Image</span>
+                      </div>
+                    </div>
 
-                <button className="btn btn-primary btn-xl w-full" style={{ marginTop: '10px' }} onClick={() => {
-                  alert('Payout settings updated successfully!');
+                    <div className="form-group-payout">
+                      <label>NOTE FOR ADMIN *</label>
+                      <textarea placeholder="Any additional information..."></textarea>
+                    </div>
+                  </div>
+                )}
+
+                {payoutTab === 'BANK' && (
+                  <div className="animate-fade-in">
+                    <div className="form-grid-payout">
+                      <div className="form-group-payout">
+                        <label>BANK NAME</label>
+                        <input type="text" placeholder="e.g. HDFC Bank" />
+                      </div>
+                      <div className="form-group-payout">
+                        <label>ACCOUNT HOLDER NAME</label>
+                        <input type="text" placeholder="Full name as per records" />
+                      </div>
+                      <div className="form-group-payout">
+                        <label>ACCOUNT NUMBER</label>
+                        <input type="text" placeholder="Bank account number" />
+                      </div>
+                      <div className="form-group-payout">
+                        <label>IFSC CODE</label>
+                        <input type="text" placeholder="e.g. SBIN0001234" />
+                      </div>
+                    </div>
+                    <div className="form-group-payout" style={{ marginTop: '15px' }}>
+                      <label>NOTE FOR ADMIN</label>
+                      <textarea placeholder="Any additional information..."></textarea>
+                    </div>
+                  </div>
+                )}
+
+                {payoutTab === 'INTL' && (
+                  <div className="animate-fade-in">
+                    <div className="form-group-payout">
+                      <label>PAYPAL EMAIL</label>
+                      <input type="email" placeholder="your@paypal.com" />
+                    </div>
+                    <div className="form-group-payout">
+                      <label>SWIFT/BIC CODE (FOR WIRE)</label>
+                      <input type="text" placeholder="Optional" />
+                    </div>
+                    <div className="form-group-payout">
+                      <label>NOTE FOR ADMIN</label>
+                      <textarea placeholder="Any additional information..."></textarea>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="payout-modal-footer">
+                <button className="btn-payout-cancel" onClick={() => setShowPayoutSettings(false)}>Cancel</button>
+                <button className="btn-payout-save" onClick={() => {
+                  alert('Payout method saved successfully!');
                   setShowPayoutSettings(false);
                 }}>
-                  Save Changes
+                  <Check size={20} />
+                  <span>Save Method</span>
                 </button>
               </div>
             </div>
@@ -632,35 +773,43 @@ export default function DashboardPage() {
                   <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Available for Withdrawal</span>
                   <h3 style={{ fontSize: '1.5rem', marginTop: '5px' }}>{stats.totalEarnings || 0} Tokens</h3>
                 </div>
-                <button className="btn btn-primary" disabled={!stats.totalEarnings} onClick={() => alert('Withdrawal request submitted! It will be processed within 2-3 business days.')}>
+                <button 
+                  className="btn btn-primary" 
+                  disabled={!stats.totalEarnings} 
+                  onClick={() => handleWithdraw(stats.totalEarnings, 'PayPal', 'Withdrawal request from dashboard')}
+                >
                   Submit Request
                 </button>
               </div>
 
               <h3 style={{ marginBottom: '20px', fontFamily: 'var(--font-display)' }}>Transaction Logs</h3>
               <div className="history-list scroll-area" style={{ maxHeight: '400px' }}>
-                {[
-                  { method: 'PayPal', date: '22 Apr 2026', amount: 450, status: 'completed' },
-                  { method: 'Bank Transfer', date: '10 Apr 2026', amount: 320, status: 'completed' },
-                  { method: 'UPI', date: '05 Apr 2026', amount: 150, status: 'completed' },
-                  { method: 'PayPal', date: '28 Mar 2026', amount: 500, status: 'completed' }
-                ].map((p, i) => (
-                  <div key={i} className="history-item-premium">
-                    <div className="h-left">
-                      <div className={`h-icon-circle ${p.status}`}>
-                        <ArrowUpRight size={16} />
+                {stats.recentPayouts && stats.recentPayouts.length > 0 ? (
+                  stats.recentPayouts.map((p, i) => (
+                    <div key={p._id || i} className="history-item-premium">
+                      <div className="h-left">
+                        <div className={`h-icon-circle ${p.status}`}>
+                          <ArrowUpRight size={16} />
+                        </div>
+                        <div className="h-details">
+                          <span className="h-method">Withdrawal to {p.method}</span>
+                          <span className="h-date">{new Date(p.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                        </div>
                       </div>
-                      <div className="h-details">
-                        <span className="h-method">Withdrawal to {p.method}</span>
-                        <span className="h-date">{p.date}</span>
+                      <div className="h-right">
+                        <span className="h-amount-negative">-${(p.amount * 0.1).toFixed(2)}</span>
+                        <span className="h-status-badge" style={{ 
+                          background: p.status === 'completed' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(234, 179, 8, 0.1)',
+                          color: p.status === 'completed' ? 'var(--color-green)' : 'var(--color-orange)'
+                        }}>{p.status}</span>
                       </div>
                     </div>
-                    <div className="h-right">
-                      <span className="h-amount-negative">-${p.amount.toFixed(2)}</span>
-                      <span className="h-status-badge">Completed</span>
-                    </div>
+                  ))
+                ) : (
+                  <div style={{ textAlign: 'center', padding: '40px', opacity: 0.5 }}>
+                    No payout history found.
                   </div>
-                ))}
+                )}
               </div>
             </div>
           </div>

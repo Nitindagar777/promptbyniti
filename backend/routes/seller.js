@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const Prompt = require('../models/Prompt');
 const User = require('../models/User');
 const Transaction = require('../models/Transaction');
+const Withdrawal = require('../models/Withdrawal');
 const jwt = require('jsonwebtoken');
 
 // Middleware: Auth Check
@@ -119,11 +120,35 @@ router.get('/stats', auth, async (req, res) => {
         performancePercentages: viewPercentages,
         
         prompts: prompts.sort((a, b) => b.createdAt - a.createdAt),
-        recentActivity: [] 
+        recentActivity: [],
+        recentPayouts: await Withdrawal.find({ sellerId: sellerIdObj }).sort({ createdAt: -1 }).limit(10)
       }
     });
   } catch (err) {
     console.error('Stats error:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// POST: Request Withdrawal
+router.post('/withdraw', auth, async (req, res) => {
+  try {
+    const { amount, method, details } = req.body;
+    
+    if (!amount || !method || !details) {
+      return res.status(400).json({ success: false, message: 'Missing withdrawal details' });
+    }
+
+    const withdrawal = new Withdrawal({
+      sellerId: req.userId,
+      amount,
+      method,
+      details
+    });
+
+    await withdrawal.save();
+    res.json({ success: true, message: 'Withdrawal request submitted successfully' });
+  } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 });
