@@ -486,7 +486,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="wallet-actions">
                     <button className="btn-withdraw-premium w-full" onClick={() => setShowPayoutHistory(true)}>Withdraw Funds</button>
-                    <button className="btn-text-only w-full" onClick={() => setShowPayoutSettings(true)} style={{ marginTop: '10px', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Payout Settings</button>
+                    <button className="btn-text-only" onClick={() => setShowPayoutSettings(true)} style={{ marginTop: '10px', color: 'var(--text-muted)', fontSize: '0.9rem', textAlign: 'center' }}>Payout Settings</button>
                   </div>
                 </div>
                 <div className="card payout-history-card">
