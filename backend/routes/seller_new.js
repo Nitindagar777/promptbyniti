@@ -126,8 +126,13 @@ router.get('/stats', auth, async (req, res) => {
         performancePercentages: viewPercentages,
         
         prompts: prompts.sort((a, b) => b.createdAt - a.createdAt),
-        recentActivity: [],
-        recentPayouts: await Withdrawal.find({ sellerId: sellerIdObj }).sort({ createdAt: -1 }).limit(10)
+        recentPayouts: (await Withdrawal.find({ sellerId: sellerIdObj }).sort({ createdAt: -1 }).limit(10)).map(w => {
+          const doc = w.toObject();
+          if (doc.status === 'rejected' && !doc.rejectionReason) {
+            doc.rejectionReason = "Please contact support for more details regarding this rejection.";
+          }
+          return doc;
+        })
       }
     });
   } catch (err) {
