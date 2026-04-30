@@ -516,7 +516,11 @@ export default function DashboardPage() {
                       {stats.totalEarnings || 0}
                       <span className="balance-unit">Tokens</span>
                     </h2>
-                    <p className="balance-approx">≈ ${( (stats.totalEarnings || 0) * 0.1 ).toFixed(2)} USD</p>
+                    <p className="balance-approx">
+                      {(stats.totalEarnings || 0) >= 70 ? '≈ $29.00 USD (70 tokens)' :
+                       (stats.totalEarnings || 0) >= 20 ? '≈ $10.00 USD (20 tokens)' :
+                       'Min. 20 tokens to withdraw'}
+                    </p>
                   </div>
                   <div className="wallet-actions">
                     <button className="btn-withdraw-premium w-full" onClick={() => setShowPayoutHistory(true)}>Withdraw Funds</button>
@@ -558,7 +562,7 @@ export default function DashboardPage() {
                             </div>
                           </div>
                           <div className="h-right">
-                            <span className="h-amount-negative">-${(p.amount * 0.1).toFixed(2)}</span>
+                            <span className="h-amount-negative">-${p.amount === 70 ? '29.00' : p.amount === 20 ? '10.00' : (p.amount * 0.5).toFixed(2)}</span>
                             <span className="h-status-badge" style={{ 
                               background: p.status === 'completed' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(234, 179, 8, 0.1)',
                               color: p.status === 'completed' ? 'var(--color-green)' : 'var(--color-orange)'
@@ -759,27 +763,80 @@ export default function DashboardPage() {
               </button>
             </div>
             <div className="modal-body">
-              <div className="withdraw-summary-premium" style={{ 
+              <div style={{ 
                 background: 'rgba(0, 255, 255, 0.03)', 
                 padding: '20px', 
                 borderRadius: '16px', 
                 marginBottom: '30px',
                 border: '1px solid rgba(0, 255, 255, 0.1)',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center'
+                textAlign: 'center'
               }}>
-                <div>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Available for Withdrawal</span>
-                  <h3 style={{ fontSize: '1.5rem', marginTop: '5px' }}>{stats.totalEarnings || 0} Tokens</h3>
-                </div>
-                <button 
-                  className="btn btn-primary" 
-                  disabled={!stats.totalEarnings} 
-                  onClick={() => handleWithdraw(stats.totalEarnings, 'PayPal', 'Withdrawal request from dashboard')}
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Available for Withdrawal</span>
+                <h3 style={{ fontSize: '1.8rem', marginTop: '5px' }}>
+                  <Zap size={24} className="text-orange" fill="var(--color-orange)" style={{ marginRight: '8px' }} />
+                  {stats.totalEarnings || 0} Tokens
+                </h3>
+              </div>
+
+              <h3 style={{ marginBottom: '20px', fontFamily: 'var(--font-display)' }}>Choose Withdrawal Option</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginBottom: '30px' }}>
+                {/* Option 1: 20 tokens → $10 */}
+                <div 
+                  className="withdraw-option-card" 
+                  style={{ 
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    padding: '20px', borderRadius: '16px',
+                    background: (stats.totalEarnings || 0) >= 20 ? 'rgba(6, 182, 212, 0.05)' : 'rgba(255, 255, 255, 0.02)',
+                    border: `1px solid ${(stats.totalEarnings || 0) >= 20 ? 'rgba(6, 182, 212, 0.2)' : 'rgba(255, 255, 255, 0.05)'}`,
+                    opacity: (stats.totalEarnings || 0) >= 20 ? 1 : 0.4,
+                    transition: 'all 0.2s ease'
+                  }}
                 >
-                  Submit Request
-                </button>
+                  <div>
+                    <h4 style={{ fontSize: '1.1rem', marginBottom: '4px' }}>
+                      <Zap size={18} className="text-orange" fill="var(--color-orange)" style={{ marginRight: '6px' }} />
+                      20 Tokens → $10.00
+                    </h4>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Standard withdrawal</span>
+                  </div>
+                  <button 
+                    className="btn btn-primary" 
+                    disabled={(stats.totalEarnings || 0) < 20}
+                    onClick={() => handleWithdraw(20, 'PayPal', 'Withdraw 20 tokens for $10')}
+                    style={{ minWidth: '120px' }}
+                  >
+                    Withdraw
+                  </button>
+                </div>
+
+                {/* Option 2: 70 tokens → $29 */}
+                <div 
+                  className="withdraw-option-card" 
+                  style={{ 
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    padding: '20px', borderRadius: '16px',
+                    background: (stats.totalEarnings || 0) >= 70 ? 'rgba(168, 85, 247, 0.05)' : 'rgba(255, 255, 255, 0.02)',
+                    border: `1px solid ${(stats.totalEarnings || 0) >= 70 ? 'rgba(168, 85, 247, 0.2)' : 'rgba(255, 255, 255, 0.05)'}`,
+                    opacity: (stats.totalEarnings || 0) >= 70 ? 1 : 0.4,
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  <div>
+                    <h4 style={{ fontSize: '1.1rem', marginBottom: '4px' }}>
+                      <Zap size={18} className="text-purple" fill="var(--color-purple)" style={{ marginRight: '6px' }} />
+                      70 Tokens → $29.00
+                    </h4>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Premium withdrawal</span>
+                  </div>
+                  <button 
+                    className="btn btn-primary" 
+                    disabled={(stats.totalEarnings || 0) < 70}
+                    onClick={() => handleWithdraw(70, 'PayPal', 'Withdraw 70 tokens for $29')}
+                    style={{ minWidth: '120px' }}
+                  >
+                    Withdraw
+                  </button>
+                </div>
               </div>
 
               <h3 style={{ marginBottom: '20px', fontFamily: 'var(--font-display)' }}>Transaction Logs</h3>
@@ -797,7 +854,7 @@ export default function DashboardPage() {
                         </div>
                       </div>
                       <div className="h-right">
-                        <span className="h-amount-negative">-${(p.amount * 0.1).toFixed(2)}</span>
+                        <span className="h-amount-negative">-${p.amount === 70 ? '29.00' : p.amount === 20 ? '10.00' : (p.amount * 0.5).toFixed(2)}</span>
                         <span className="h-status-badge" style={{ 
                           background: p.status === 'completed' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(234, 179, 8, 0.1)',
                           color: p.status === 'completed' ? 'var(--color-green)' : 'var(--color-orange)'

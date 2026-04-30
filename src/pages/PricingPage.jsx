@@ -125,7 +125,7 @@ export default function PricingPage() {
       <div className="container">
         {/* Header */}
         <div className="pricing-page__header">
-          <h1 className="section-title">Get More <span className="text-orange">Prompt Packs</span></h1>
+          <h1 className="section-title">Get More <span className="text-orange">Tokens</span></h1>
           <p className="section-desc">
             Unlock the full power of Prompt by Niti. Generate unlimited, private, and optimized prompts.
           </p>
@@ -154,7 +154,7 @@ export default function PricingPage() {
                 <span className="pricing-card__amount">{plan.price}</span>
               </div>
               <p className="pricing-card__credits">
-                <span className="text-orange">{plan.credits}</span> Prompt Packs
+                <span className="text-orange">{plan.credits}</span> Tokens
               </p>
               
               <ul className="pricing-card__features">
@@ -209,8 +209,8 @@ export default function PricingPage() {
           <div className="trust-badge">
             <Sparkles size={20} className="trust-badge__icon text-pink" />
             <div>
-              <h4 className="text-pink">70% Royalties</h4>
-              <p>Best for creators</p>
+              <h4 className="text-pink">80% Royalties</h4>
+              <p>20% platform fee</p>
             </div>
           </div>
           <div className="trust-badge">

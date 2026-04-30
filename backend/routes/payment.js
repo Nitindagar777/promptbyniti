@@ -20,9 +20,9 @@ const razorpay = new Razorpay({
 });
 
 const PLANS = {
-  free: { name: 'Starter', priceUSD: 0, priceINR: 0, credits: 2 },
-  pro: { name: 'Creator', priceUSD: 10, priceINR: 849, credits: 25 },
-  unlimited: { name: 'Studio', priceUSD: 29, priceINR: 2449, credits: 80 }
+  free: { name: 'Starter', priceUSD: 0, priceINR: 0, credits: 1 },
+  pro: { name: 'Creator', priceUSD: 10, priceINR: 849, credits: 20 },
+  unlimited: { name: 'Studio', priceUSD: 29, priceINR: 2449, credits: 70 }
 };
 
 // Middleware: Auth Check
