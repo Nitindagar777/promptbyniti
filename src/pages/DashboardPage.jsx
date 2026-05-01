@@ -406,17 +406,31 @@ export default function DashboardPage() {
                               </span>
                             </td>
                             <td><div className="table-stat-box"><Eye size={14} /> {p.views || 0}</div></td>
-                            <td><div className="table-stat-box"><ShoppingCart size={14} /> 0</div></td>
+                            <td><div className="table-stat-box"><ShoppingCart size={14} /> {p.sales || 0}</div></td>
                             <td>
                               <span className="table-price-tag" style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--color-orange)', fontWeight: 'bold' }}>
-                                <Zap size={14} fill="currentColor" /> 5 Tokens
+                                <Zap size={14} fill="currentColor" /> {p.priceTokens || p.tokens || 5} Tokens
                               </span>
                             </td>
                             <td>
                               <div className="table-actions" style={{ display: 'flex', gap: '12px', alignItems: 'center', justifyContent: 'center' }}>
                                 <Link to={`/prompt/${p._id}`} title="View Prompt" style={{ color: 'var(--color-cyan)', display: 'flex', alignItems: 'center' }}><Eye size={18} /></Link>
-                                <button onClick={() => navigate(`/sell?edit=${p._id}`)} title="Edit Prompt" style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', transition: 'transform 0.2s' }} onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'} onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}><Edit3 size={18} /></button>
-                                <button onClick={() => handleDelete(p._id)} title="Delete Prompt" style={{ background: 'transparent', border: 'none', color: '#ff4d4d', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', transition: 'transform 0.2s' }} onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'} onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}><Trash2 size={18} /></button>
+                                
+                                {p.sales > 0 ? (
+                                  <>
+                                    <div title="Locked: Sold prompts cannot be edited" style={{ opacity: 0.3, cursor: 'not-allowed', display: 'flex', alignItems: 'center' }}>
+                                      <Edit3 size={18} color="white" />
+                                    </div>
+                                    <div title="Locked: Sold prompts cannot be deleted" style={{ opacity: 0.3, cursor: 'not-allowed', display: 'flex', alignItems: 'center' }}>
+                                      <Trash2 size={18} color="#ff4d4d" />
+                                    </div>
+                                  </>
+                                ) : (
+                                  <>
+                                    <button onClick={() => navigate(`/sell?edit=${p._id}`)} title="Edit Prompt" style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', transition: 'transform 0.2s' }} onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'} onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}><Edit3 size={18} /></button>
+                                    <button onClick={() => handleDelete(p._id)} title="Delete Prompt" style={{ background: 'transparent', border: 'none', color: '#ff4d4d', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', transition: 'transform 0.2s' }} onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'} onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}><Trash2 size={18} /></button>
+                                  </>
+                                )}
                               </div>
                             </td>
                           </tr>

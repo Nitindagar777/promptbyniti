@@ -117,6 +117,14 @@ router.put('/:id', auth, async (req, res) => {
       return res.status(403).json({ success: false, message: 'Unauthorized: You do not own this prompt' });
     }
 
+    // BLOCK EDIT IF SOLD
+    if (prompt.sales > 0) {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Forbidden: This prompt has already been purchased by users and cannot be edited to maintain content consistency.' 
+      });
+    }
+
     // Update fields and force status back to pending for admin review
     const updatedData = { ...req.body, status: 'pending' };
     const updatedPrompt = await Prompt.findByIdAndUpdate(req.params.id, updatedData, { new: true });
@@ -136,6 +144,14 @@ router.delete('/:id', auth, async (req, res) => {
     // Check ownership
     if (prompt.seller.toString() !== req.userId && prompt.seller.toString() !== req.userId.toString()) {
       return res.status(403).json({ success: false, message: 'Unauthorized: You do not own this prompt' });
+    }
+
+    // BLOCK DELETE IF SOLD
+    if (prompt.sales > 0) {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Forbidden: This prompt has already been purchased by users and cannot be deleted to preserve their lifetime access.' 
+      });
     }
 
     await Prompt.findByIdAndDelete(req.params.id);

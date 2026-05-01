@@ -330,13 +330,29 @@ export default function PromptDetailPage() {
                     <div className="price-label">Per Generation</div>
                   </div>
 
-                  <Link 
-                    to={isPremium ? '/pricing' : `/generate?template=${template.id || template._id}`} 
+                  <button 
+                    onClick={async () => {
+                      if (state.credits < 5) {
+                        alert('Insufficient tokens! You need 5 tokens to use this prompt.');
+                        return;
+                      }
+                      
+                      const templateId = template.id || template._id;
+                      try {
+                        // Deduct credits and process split
+                        await useCredit(5, templateId);
+                        // Redirect to success page
+                        navigate(`/purchase-success/${templateId}`);
+                      } catch (err) {
+                        console.error('Purchase failed:', err);
+                        alert('Transaction failed. Please try again.');
+                      }
+                    }}
                     className="btn btn-primary btn-xl w-full"
-                    style={{ width: '100%' }}
+                    style={{ width: '100%', gap: '10px' }}
                   >
-                    {isPremium ? 'Upgrade to Unlock' : 'Use this Prompt'} <Sparkles size={20} />
-                  </Link>
+                    Use this Prompt <Sparkles size={20} />
+                  </button>
 
                   <div className="p-detail__secondary-actions">
                     <button className="btn btn-secondary btn-xl" onClick={handleShare} style={{ flex: 1, gap: '10px', height: '56px' }}>

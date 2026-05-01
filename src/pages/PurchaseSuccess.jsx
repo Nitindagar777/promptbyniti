@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { FiCheckCircle, FiCopy, FiArrowLeft, FiStar, FiClock, FiLock, FiUnlock } from 'react-icons/fi';
+import { 
+  CheckCircle, Copy, ArrowLeft, Star, Clock, 
+  Lock, Unlock, RefreshCw, Zap
+} from 'lucide-react';
 import './PurchaseSuccess.css';
 
 const PurchaseSuccess = () => {
@@ -55,7 +58,7 @@ const PurchaseSuccess = () => {
     <div className="success-error">
       <h2>Oops! Content not found.</h2>
       <button onClick={() => navigate('/buyer-dashboard')} className="btn-back">
-        <FiArrowLeft /> Back to Dashboard
+        <ArrowLeft /> Back to Dashboard
       </button>
     </div>
   );
@@ -65,7 +68,7 @@ const PurchaseSuccess = () => {
       <div className="container-small">
         <div className="success-header animate-fade-in">
           <div className="check-icon-wrapper">
-            <FiCheckCircle className="check-icon" />
+            <CheckCircle className="check-icon" />
           </div>
           <h1>Purchase Successful!</h1>
           <p>This prompt is now permanently saved to your library.</p>
@@ -74,17 +77,17 @@ const PurchaseSuccess = () => {
         <div className="unlocked-card card premium-card animate-slide-up">
           <div className="card-top-row">
             <div className="badge-unlocked">
-              <FiUnlock /> FULL ACCESS UNLOCKED
+              <Unlock size={14} /> FULL ACCESS UNLOCKED
             </div>
             <div className="prompt-meta-info">
-              <span><FiStar /> {prompt.category}</span>
-              <span><FiClock /> {new Date(prompt.createdAt).toLocaleDateString()}</span>
+              <span><Star size={14} /> {prompt.category}</span>
+              <span><Clock size={14} /> {new Date(prompt.createdAt).toLocaleDateString()}</span>
             </div>
           </div>
 
           <div className="unlocked-content">
             <div className="prompt-header-info">
-              <img src={prompt.image} alt={prompt.name} className="success-thumb" />
+              <img src={prompt.thumbnail || prompt.image} alt={prompt.name} className="success-thumb" />
               <div className="header-text">
                 <h2>{prompt.name}</h2>
                 <p className="success-desc">{prompt.description}</p>
@@ -96,12 +99,12 @@ const PurchaseSuccess = () => {
 
             <div className="secret-section">
               <div className="section-title">
-                <h3><FiLock /> The Secret Prompt</h3>
+                <h3><Lock size={18} /> The Secret Prompt</h3>
                 <button 
                   className={`btn-copy-small ${copied ? 'copied' : ''}`}
                   onClick={() => handleCopy(prompt.template)}
                 >
-                  {copied ? 'Copied!' : <><FiCopy /> Copy Prompt</>}
+                  {copied ? 'Copied!' : <><Copy size={16} /> Copy Prompt</>}
                 </button>
               </div>
               <div className="prompt-box-reveal">
