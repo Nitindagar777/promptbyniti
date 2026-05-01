@@ -5,6 +5,7 @@ import {
   CheckCircle, Copy, ArrowLeft, Star, Clock, 
   Lock, Unlock, RefreshCw, Zap, Download, Maximize2, Check
 } from 'lucide-react';
+import { aiModels } from '../data/promptData';
 import './PurchaseSuccess.css';
 
 const PurchaseSuccess = () => {
@@ -16,6 +17,8 @@ const PurchaseSuccess = () => {
   const [mainCopied, setMainCopied] = useState(false);
   const [copiedStates, setCopiedStates] = useState({});
   const [lightboxMedia, setLightboxMedia] = useState(null); // { url, type }
+
+  const modelLabel = prompt ? (aiModels.find(m => m.id === prompt.model)?.label || prompt.model) : '';
 
   const API_BASE = import.meta.env.VITE_API_URL || 
     (window.location.hostname.includes('oopsverse.cloud') 
@@ -90,7 +93,7 @@ const PurchaseSuccess = () => {
             </div>
             <div className="prompt-meta-info">
               <span><Zap size={14} /> {prompt.priceTokens || prompt.tokens || 5} Tokens</span>
-              <span><Star size={14} /> {prompt.model}</span>
+              <span><Star size={14} /> {modelLabel}</span>
               <span><Clock size={14} /> {new Date(prompt.createdAt).toLocaleDateString()}</span>
             </div>
           </div>
@@ -214,6 +217,7 @@ const PurchaseSuccess = () => {
             </button>
           </div>
         </div>
+      </div>
       {/* Lightbox Modal */}
       {lightboxMedia && (
         <div className="lightbox-overlay" onClick={() => setLightboxMedia(null)}>
