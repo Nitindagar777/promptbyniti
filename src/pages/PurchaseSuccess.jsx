@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { 
   CheckCircle, Copy, ArrowLeft, Star, Clock, 
-  Lock, Unlock, RefreshCw, Zap, Download, Maximize2
+  Lock, Unlock, RefreshCw, Zap, Download, Maximize2, Check
 } from 'lucide-react';
 import './PurchaseSuccess.css';
 
@@ -13,7 +13,9 @@ const PurchaseSuccess = () => {
   const navigate = useNavigate();
   const [prompt, setPrompt] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [copied, setCopied] = useState(false);
+  const [mainCopied, setMainCopied] = useState(false);
+  const [copiedStates, setCopiedStates] = useState({});
+  const [lightboxMedia, setLightboxMedia] = useState(null); // { url, type }
 
   const API_BASE = import.meta.env.VITE_API_URL || 
     (window.location.hostname.includes('oopsverse.cloud') 
@@ -41,10 +43,17 @@ const PurchaseSuccess = () => {
     }
   };
 
-  const handleCopy = (text) => {
+  const handleCopy = (text, key = 'main') => {
     navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    if (key === 'main') {
+      setMainCopied(true);
+      setTimeout(() => setMainCopied(false), 2000);
+    } else {
+      setCopiedStates(prev => ({ ...prev, [key]: true }));
+      setTimeout(() => {
+        setCopiedStates(prev => ({ ...prev, [key]: false }));
+      }, 2000);
+    }
   };
 
   if (loading) return (
@@ -102,10 +111,10 @@ const PurchaseSuccess = () => {
               <div className="section-title">
                 <h3><Lock size={18} /> The Secret Prompt</h3>
                 <button 
-                  className={`btn-copy-small ${copied ? 'copied' : ''}`}
-                  onClick={() => handleCopy(prompt.template)}
+                  className={`btn-copy-small ${mainCopied ? 'copied' : ''}`}
+                  onClick={() => handleCopy(prompt.template, 'main')}
                 >
-                  {copied ? 'Copied!' : <><Copy size={16} /> Copy Prompt</>}
+                  {mainCopied ? <><Check size={16} /> Copied!</> : <><Copy size={16} /> Copy Prompt</>}
                 </button>
               </div>
               <div className="prompt-box-reveal">
@@ -148,11 +157,11 @@ const PurchaseSuccess = () => {
                       <div className="sample-card-header">
                         <div className="sample-label">Sample #{idx + 1}</div>
                         <button 
-                          className="btn-icon-tiny" 
+                          className={`btn-icon-tiny ${copiedStates[`input-${idx}`] ? 'copied' : ''}`} 
                           title="Copy Input"
-                          onClick={() => handleCopy(sample.input)}
+                          onClick={() => handleCopy(sample.input, `input-${idx}`)}
                         >
-                          <Copy size={14} />
+                          {copiedStates[`input-${idx}`] ? <Check size={14} /> : <Copy size={14} />}
                         </button>
                       </div>
                       
@@ -165,22 +174,25 @@ const PurchaseSuccess = () => {
                           <div className="media-container-premium">
                             <video src={sample.output} className="sample-output-media" />
                             <div className="media-actions-overlay">
-                              <button onClick={() => window.open(sample.output, '_blank')} title="Full Screen"><Maximize2 size={16} /></button>
+                              <button onClick={() => setLightboxMedia({ url: sample.output, type: 'video' })} title="Full Screen"><Maximize2 size={16} /></button>
                               <a href={sample.output} download={`sample-${idx+1}.mp4`} title="Download"><Download size={16} /></a>
                             </div>
                           </div>
                         ) : prompt.generateType === 'text' ? (
                           <div className="sample-output-text-container">
                             <div className="sample-output-text">{sample.output}</div>
-                            <button className="btn-copy-text" onClick={() => handleCopy(sample.output)}>
-                              <Copy size={14} /> Copy Response
+                            <button 
+                              className={`btn-copy-text ${copiedStates[`output-${idx}`] ? 'copied' : ''}`} 
+                              onClick={() => handleCopy(sample.output, `output-${idx}`)}
+                            >
+                              {copiedStates[`output-${idx}`] ? <><Check size={14} /> Copied!</> : <><Copy size={14} /> Copy Response</>}
                             </button>
                           </div>
                         ) : (
                           <div className="media-container-premium">
                             <img src={sample.output} alt={`Sample ${idx + 1}`} className="sample-output-media" />
                             <div className="media-actions-overlay">
-                              <button onClick={() => window.open(sample.output, '_blank')} title="View Full Image"><Maximize2 size={16} /></button>
+                              <button onClick={() => setLightboxMedia({ url: sample.output, type: 'image' })} title="View Full Image"><Maximize2 size={16} /></button>
                               <a href={sample.output} download={`sample-${idx+1}.png`} title="Download"><Download size={16} /></a>
                             </div>
                           </div>
@@ -202,7 +214,19 @@ const PurchaseSuccess = () => {
             </button>
           </div>
         </div>
-      </div>
+      {/* Lightbox Modal */}
+      {lightboxMedia && (
+        <div className="lightbox-overlay" onClick={() => setLightboxMedia(null)}>
+          <div className="lightbox-content" onClick={e => e.stopPropagation()}>
+            <button className="lightbox-close" onClick={() => setLightboxMedia(null)}>&times;</button>
+            {lightboxMedia.type === 'video' ? (
+              <video src={lightboxMedia.url} controls autoPlay className="lightbox-media" />
+            ) : (
+              <img src={lightboxMedia.url} alt="Full view" className="lightbox-media" />
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
