@@ -79,9 +79,6 @@ const PurchaseSuccess = () => {
     <div className="purchase-success-page">
       <div className="container-small">
         <div className="success-header animate-fade-in">
-          <div className="check-icon-wrapper">
-            <CheckCircle className="check-icon" />
-          </div>
           <h1>Purchase Successful!</h1>
           <p>This prompt is now permanently saved to your library.</p>
         </div>

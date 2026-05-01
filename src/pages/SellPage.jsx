@@ -191,7 +191,7 @@ export default function SellPage() {
             Your prompt package "{formData.name}" is now being reviewed by our quality team. You will be notified once it is approved and live in the Store.
           </p>
           <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
-            <button className="btn btn-primary" onClick={() => setSubmitted(false)}>List Another</button>
+            <button className="btn btn-primary" onClick={() => window.location.href = '/sell'}>List Another</button>
             <button className="btn btn-secondary" onClick={() => navigate('/')}>Go Home</button>
           </div>
         </div>

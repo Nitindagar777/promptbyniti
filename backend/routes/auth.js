@@ -290,7 +290,31 @@ router.post('/use-credits', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Insufficient tokens' });
     }
 
-    user.credits -= totalAmount;
+    let finalPrice = totalAmount;
+    let sellerId = null;
+
+    // If a template was used, fetch its real price from DB for security
+    if (templateId) {
+      try {
+        const prompt = await Prompt.findById(templateId);
+        if (prompt) {
+          finalPrice = prompt.priceTokens || prompt.tokens || 5;
+          sellerId = prompt.seller;
+          
+          // Increment prompt sales
+          prompt.sales = (prompt.sales || 0) + 1;
+          await prompt.save();
+        }
+      } catch (err) {
+        console.error('Error fetching prompt for price:', err);
+      }
+    }
+
+    if (user.credits < finalPrice) {
+      return res.status(400).json({ success: false, message: 'Insufficient tokens' });
+    }
+
+    user.credits -= finalPrice;
     
     // Add to buyer's library if not already there
     if (templateId && !user.purchasedPrompts.includes(templateId)) {
@@ -298,23 +322,19 @@ router.post('/use-credits', async (req, res) => {
     }
     await user.save();
 
-    // If a template was used, handle 80/20 split
-    if (templateId) {
+    // Handle 80/20 split if there's a seller
+    if (sellerId) {
       try {
-        const prompt = await Prompt.findById(templateId);
-        if (prompt && prompt.seller) {
-          // Increment prompt sales
-          prompt.sales = (prompt.sales || 0) + 1;
-          await prompt.save();
-
-          // 80/20 Split Calculation
-          const sellerShare = Math.floor(totalAmount * 0.8);
-          
-          // Increment seller's wallet
-          await User.findByIdAndUpdate(prompt.seller, {
-            $inc: { walletTokens: sellerShare }
-          });
-        }
+        // 80/20 Split Calculation
+        const sellerShare = Math.floor(finalPrice * 0.8);
+        
+        // Increment seller's wallet and usable credits
+        await User.findByIdAndUpdate(sellerId, {
+          $inc: { 
+            walletTokens: sellerShare,
+            credits: sellerShare 
+          }
+        });
       } catch (err) {
         console.error('Error rewarding seller:', err);
       }
