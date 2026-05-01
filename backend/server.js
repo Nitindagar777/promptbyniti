@@ -47,14 +47,16 @@ const authRoutes = require('./routes/auth');
 const paymentRoutes = require('./routes/payment');
 const adminRoutes = require('./routes/admin');
 const promptRoutes = require('./routes/prompts');
-const sellerRoutes = require('./routes/seller_new');
+const sellerNewRoutes = require('./routes/seller_new');
+const buyerRoutes = require('./routes/buyer');
 
 // Mount Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/prompts', promptRoutes);
-app.use('/api/seller', sellerRoutes);
+app.use('/api/seller', sellerNewRoutes);
+app.use('/api/buyer', buyerRoutes);
 
 // Health check
 app.get('/', (req, res) => {

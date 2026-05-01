@@ -197,7 +197,7 @@ export default function DashboardPage() {
     return (
       <div className="dash-loading-v2">
         <div className="premium-loader"></div>
-        <p>Connecting to World X Data...</p>
+        <p>Connecting to Prompt by Niti...</p>
       </div>
     );
   }

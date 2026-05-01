@@ -285,10 +285,20 @@ router.post('/use-credits', async (req, res) => {
     const user = await User.findById(decoded.id);
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
-    user.credits = Math.max(0, (user.credits || 0) - (amount || 1));
+    const totalAmount = amount || 5;
+    if (user.credits < totalAmount) {
+      return res.status(400).json({ success: false, message: 'Insufficient tokens' });
+    }
+
+    user.credits -= totalAmount;
+    
+    // Add to buyer's library if not already there
+    if (templateId && !user.purchasedPrompts.includes(templateId)) {
+      user.purchasedPrompts.push(templateId);
+    }
     await user.save();
 
-    // If a template was used, reward the seller
+    // If a template was used, handle 80/20 split
     if (templateId) {
       try {
         const prompt = await Prompt.findById(templateId);
@@ -297,9 +307,12 @@ router.post('/use-credits', async (req, res) => {
           prompt.sales = (prompt.sales || 0) + 1;
           await prompt.save();
 
-          // Increment seller's wallet (Earn 5 tokens per use)
+          // 80/20 Split Calculation
+          const sellerShare = Math.floor(totalAmount * 0.8);
+          
+          // Increment seller's wallet
           await User.findByIdAndUpdate(prompt.seller, {
-            $inc: { walletTokens: 5 }
+            $inc: { walletTokens: sellerShare }
           });
         }
       } catch (err) {

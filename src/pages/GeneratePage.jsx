@@ -106,13 +106,20 @@ export default function GeneratePage() {
     setResult(null);
 
     // Simulate a brief processing feel
-    setTimeout(() => {
+    setTimeout(async () => {
+      const templateId = searchParams.get('template');
       const promptResult = generatePrompt(form);
       setResult(promptResult);
-      const templateId = searchParams.get('template');
-      useCredit(1, templateId);
+      
+      // If using a template, deduct 5 credits and redirect to success page
+      const cost = templateId ? 5 : 1;
+      await useCredit(cost, templateId);
       addPrompt(promptResult);
       setIsGenerating(false);
+
+      if (templateId) {
+        navigate(`/purchase-success/${templateId}`);
+      }
     }, 800);
   };
 

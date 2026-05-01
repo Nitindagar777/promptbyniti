@@ -15,6 +15,8 @@ import SettingsPage from './pages/SettingsPage';
 import AuthPage from './pages/AuthPage';
 import PromptDetailPage from './pages/PromptDetailPage';
 import SellPage from './pages/SellPage';
+import BuyerDashboard from './pages/BuyerDashboard';
+import PurchaseSuccess from './pages/PurchaseSuccess';
 
 import './App.css';
 
@@ -66,6 +68,8 @@ function App() {
             <Route path="/prompt/:id" element={<PromptDetailPage />} />
             <Route path="/sell" element={<ProtectedRoute><SellPage /></ProtectedRoute>} />
             <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+            <Route path="/buyer-dashboard" element={<ProtectedRoute><BuyerDashboard /></ProtectedRoute>} />
+            <Route path="/purchase-success/:id" element={<ProtectedRoute><PurchaseSuccess /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
             <Route path="/login" element={<GuestRoute><AuthPage initialMode="login" /></GuestRoute>} />
             <Route path="/signup" element={<GuestRoute><AuthPage initialMode="signup" /></GuestRoute>} />

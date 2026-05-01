@@ -80,7 +80,11 @@ const userSchema = new mongoose.Schema({
     paypalEmail: { type: String, default: '' },
     swiftCode: { type: String, default: '' },
     note: { type: String, default: '' }
-  }
+  },
+  purchasedPrompts: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Prompt'
+  }]
 }, {
   timestamps: true
 });

@@ -55,12 +55,23 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET Single Prompt (Public)
-router.get('/:id', async (req, res) => {
+// Middleware: Optional Auth Check (to reveal secret content for buyers)
+const optionalAuth = async (req, res, next) => {
   try {
-    console.log('--- View Tracking Debug ---');
-    console.log('Requested ID:', req.params.id);
-    
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return next();
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret');
+    req.userId = decoded.id;
+    next();
+  } catch (err) {
+    next();
+  }
+};
+
+// GET Single Prompt (Public, but hides secrets unless bought/owned)
+router.get('/:id', optionalAuth, async (req, res) => {
+  try {
     const prompt = await Prompt.findByIdAndUpdate(
       req.params.id, 
       { $inc: { views: 1 } }, 
@@ -68,12 +79,27 @@ router.get('/:id', async (req, res) => {
     ).populate('seller', 'name avatar');
     
     if (!prompt) {
-      console.log('Prompt NOT found for ID:', req.params.id);
       return res.status(404).json({ success: false, message: 'Prompt not found' });
     }
+
+    const promptObj = prompt.toObject();
     
-    console.log(`Prompt "${prompt.name}" view updated. New count: ${prompt.views}`);
-    res.json({ success: true, prompt });
+    // Authorization check: Is the user the seller or a buyer?
+    let isAuthorized = false;
+    if (req.userId) {
+      const user = await User.findById(req.userId);
+      const isSeller = prompt.seller?._id?.toString() === req.userId.toString();
+      const isBuyer = user?.purchasedPrompts?.some(pId => pId.toString() === req.params.id);
+      if (isSeller || isBuyer) isAuthorized = true;
+    }
+
+    // Hide secret fields if NOT authorized
+    if (!isAuthorized) {
+      delete promptObj.template;
+      delete promptObj.instructions;
+    }
+    
+    res.json({ success: true, prompt: promptObj });
   } catch (err) {
     console.error("Error fetching/updating prompt:", err);
     res.status(500).json({ success: false, message: err.message });

@@ -506,7 +506,7 @@ export default function SettingsPage() {
                     </div>
                   </div>
 
-                  <div className="dashboard-option-card" onClick={() => navigate('/library')}>
+                  <div className="dashboard-option-card" onClick={() => navigate('/buyer-dashboard')}>
                     <div className="option-icon-box buyer-bg">
                       <ShoppingBag size={32} />
                     </div>
