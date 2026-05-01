@@ -14,11 +14,8 @@ import './DashboardPage.css';
 export default function DashboardPage() {
   const { state, isPremium } = useApp();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState(localStorage.getItem('seller_dashboard_tab') || 'overview');
+  const [activeTab, setActiveTab] = useState('overview');
 
-  useEffect(() => {
-    localStorage.setItem('seller_dashboard_tab', activeTab);
-  }, [activeTab]);
   const [copied, setCopied] = useState(null);
   const [showActivityModal, setShowActivityModal] = useState(false);
   const [showPayoutSettings, setShowPayoutSettings] = useState(false);
@@ -26,7 +23,6 @@ export default function DashboardPage() {
   const [rejectionModalData, setRejectionModalData] = useState(null); // { id, reason, amount, method }
   const [filterStatus, setFilterStatus] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [analyticsFilter, setAnalyticsFilter] = useState('daily');
   const [payoutTab, setPayoutTab] = useState('UPI');
   const [withdrawAmount, setWithdrawAmount] = useState(0);
   const [payoutFormFilled, setPayoutFormFilled] = useState(false);
@@ -196,17 +192,6 @@ export default function DashboardPage() {
     fetchPaymentMethod();
   }, []);
 
-  const getChartData = () => {
-    if (stats[analyticsFilter]) {
-      const { labels, values } = stats[analyticsFilter];
-      return labels.map((l, i) => ({
-        label: l,
-        value: values[i],
-        percentage: Math.max(10, (values[i] / Math.max(...values, 1)) * 100)
-      }));
-    }
-    return [];
-  };
 
   if (loading) {
     return (
@@ -278,9 +263,6 @@ export default function DashboardPage() {
           <button className={`dash-nav-link ${activeTab === 'prompts' ? 'active' : ''}`} onClick={() => setActiveTab('prompts')}>
             <Layout size={18} /> My Prompts
           </button>
-          <button className={`dash-nav-link ${activeTab === 'analytics' ? 'active' : ''}`} onClick={() => setActiveTab('analytics')}>
-            <BarChart3 size={18} /> Analytics
-          </button>
           <button className={`dash-nav-link ${activeTab === 'wallet' ? 'active' : ''}`} onClick={() => setActiveTab('wallet')}>
             <Wallet size={18} /> Wallet
           </button>
@@ -291,13 +273,12 @@ export default function DashboardPage() {
           {activeTab === 'overview' && (
             <div className="dash-overview animate-fade-in">
               {/* Stats Grid */}
-              <div className="stats-grid-premium">
+              <div className="stats-grid-premium" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
                 <div className="stat-card-new theme-green">
                   <div className="stat-icon-circle green-bg"><Zap size={24} /></div>
                   <div className="stat-data">
                     <span className="stat-label">Total Earnings</span>
                     <h2 className="stat-value">{stats.totalEarnings} <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>Tokens</span></h2>
-                    <span className="stat-trend trend-up"><ArrowUpRight size={14} /> +{stats.earningGrowth || 0}%</span>
                   </div>
                 </div>
                 <div className="stat-card-new theme-cyan">
@@ -305,7 +286,6 @@ export default function DashboardPage() {
                   <div className="stat-data">
                     <span className="stat-label">Total Sales</span>
                     <h2 className="stat-value">{stats.totalSales}</h2>
-                    <span className="stat-trend trend-up"><ArrowUpRight size={14} /> +{stats.salesGrowth || 0}%</span>
                   </div>
                 </div>
                 <div className="stat-card-new theme-orange">
@@ -313,15 +293,6 @@ export default function DashboardPage() {
                   <div className="stat-data">
                     <span className="stat-label">My Prompts</span>
                     <h2 className="stat-value">{stats.activePrompts}</h2>
-                    <span className="stat-subtext">Total Uploads</span>
-                  </div>
-                </div>
-                <div className="stat-card-new theme-purple">
-                  <div className="stat-icon-circle purple-bg"><TrendingUp size={24} /></div>
-                  <div className="stat-data">
-                    <span className="stat-label">Conv. Rate</span>
-                    <h2 className="stat-value">{stats.conversionRate}</h2>
-                    <span className="stat-trend trend-up"><ArrowUpRight size={14} /> +{stats.convGrowth || 0}%</span>
                   </div>
                 </div>
               </div>
@@ -352,32 +323,9 @@ export default function DashboardPage() {
                       <div className="empty-activity">
                         <Clock size={32} />
                         <p>No activity yet</p>
-                        <span>Your recent sales and views will appear here</span>
+                        <span>Your recent sales will appear here</span>
                       </div>
                     )}
-                  </div>
-                </div>
-                <div className="mini-chart-section card premium-card">
-                  <div className="header-with-icon mb-lg">
-                    <TrendingUp size={20} className="text-orange" />
-                    <h3>Performance Hub</h3>
-                  </div>
-                  <div className="performance-container">
-                    <div className="performance-chart-grid">
-                      <div className="grid-line"></div>
-                      <div className="grid-line"></div>
-                      <div className="grid-line"></div>
-                      <div className="fake-bar-chart">
-                        {(stats.performancePercentages || [10, 15, 25, 20, 35, 30, 45]).map((h, i) => (
-                          <div key={i} className="bar-wrapper" title={`${stats.performanceViews?.[i] || 0} Views`}>
-                            <div className="bar-fill" style={{ height: `${h}%`, transitionDelay: `${i * 0.1}s` }}></div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="growth-insight-badge">
-                      <span className="insight-text">Weekly performance is up by <span className="text-orange">{stats.performanceGrowth || 0}%</span></span>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -486,95 +434,6 @@ export default function DashboardPage() {
                     )}
                   </tbody>
                 </table>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'analytics' && (
-            <div className="dash-analytics animate-fade-in">
-              <div className="analytics-header mb-lg">
-                <h2>Marketplace Analytics</h2>
-                <div className="date-selector">
-                  <button className={`btn-pill ${analyticsFilter === 'daily' ? 'active' : ''}`} onClick={() => setAnalyticsFilter('daily')}>Daily</button>
-                  <button className={`btn-pill ${analyticsFilter === 'weekly' ? 'active' : ''}`} onClick={() => setAnalyticsFilter('weekly')}>Weekly</button>
-                  <button className={`btn-pill ${analyticsFilter === 'monthly' ? 'active' : ''}`} onClick={() => setAnalyticsFilter('monthly')}>Monthly</button>
-                </div>
-              </div>
-              <div className="analytics-grid">
-                <div className="card analytics-main-chart">
-                  <h3>
-                    {analyticsFilter === 'daily' ? 'Revenue Growth (Tokens)' : analyticsFilter === 'weekly' ? 'Weekly Token Earnings' : 'Monthly Performance (Tokens)'}
-                  </h3>
-                  <div className="chart-area-premium">
-                    {getChartData().some(item => item.value > 0) ? (
-                      getChartData().map((item, i) => (
-                        <div key={i} className="chart-bar-container">
-                          <div
-                            className="chart-bar"
-                            style={{ height: `${item.percentage}%`, transitionDelay: `${i * 0.05}s` }}
-                            data-value={`${item.value} Tokens`}
-                          ></div>
-                          <span className="chart-label">{item.label}</span>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="empty-chart-state" style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '12px',
-                        textAlign: 'center',
-                        padding: '20px'
-                      }}>
-                        <TrendingUp size={48} style={{ opacity: 0.1, marginBottom: '8px' }} />
-                        <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem', fontFamily: 'var(--font-display)', margin: 0 }}>No sales yet</p>
-                        <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)', opacity: 0.6, maxWidth: '280px' }}>Your token revenue data will appear here once your prompts are purchased.</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="card best-sellers-card">
-                  <h3>Best Selling Prompts</h3>
-                  <div className="mini-list">
-                    {stats.prompts.length > 0 ? (
-                      [...stats.prompts]
-                        .sort((a, b) => (b.views || 0) - (a.views || 0))
-                        .slice(0, 5)
-                        .map(p => (
-                          <Link
-                            key={p._id}
-                            to={`/prompt/${p._id}`}
-                            className="mini-list-item"
-                            style={{ textDecoration: 'none', transition: 'transform 0.2s ease, background 0.2s ease', cursor: 'pointer' }}
-                            onMouseOver={(e) => {
-                              e.currentTarget.style.transform = 'translateX(5px)';
-                              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                            }}
-                            onMouseOut={(e) => {
-                              e.currentTarget.style.transform = 'translateX(0)';
-                              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)';
-                            }}
-                          >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                              <img src={p.thumbnail || (p.samples?.[0]?.output || p.samples?.[0])} alt="" style={{ width: '32px', height: '32px', borderRadius: '6px', objectFit: 'cover' }} />
-                              <span style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-primary)' }}>{p.name}</span>
-                            </div>
-                            <span className="text-cyan font-bold">{p.sales || 0} Sold</span>
-                          </Link>
-                        ))
-                    ) : (
-                      <div className="empty-mini-list" style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>
-                        No prompts yet
-                      </div>
-                    )}
-                  </div>
-                </div>
               </div>
             </div>
           )}

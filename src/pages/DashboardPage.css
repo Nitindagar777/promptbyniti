@@ -402,7 +402,7 @@
 /* Activity & Charts */
 .overview-row {
   display: grid;
-  grid-template-columns: 2fr 1.2fr;
+  grid-template-columns: 1fr;
   gap: var(--space-lg);
 }
 
