@@ -59,6 +59,35 @@
   opacity: 1;
 }
 
+.btn-icon-glass {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.btn-icon-glass:hover {
+  background: rgba(168, 85, 247, 0.5);
+  border-color: rgba(168, 85, 247, 0.7);
+  transform: scale(1.15) rotate(5deg);
+  box-shadow: 0 0 25px rgba(168, 85, 247, 0.5);
+  color: white;
+}
+
+.btn-icon-glass svg {
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+
 .purchase-details {
   padding: 20px;
 }

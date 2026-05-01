@@ -157,7 +157,7 @@ export default function BuyerDashboard() {
                   <div className="purchase-thumb">
                     <img src={prompt.thumbnail || prompt.samples?.[0]?.output} alt={prompt.name} />
                     <div className="purchase-overlay">
-                      <button className="btn-icon-glass" onClick={() => navigate(`/prompt/${prompt._id}`)}>
+                      <button className="btn-icon-glass" onClick={() => window.open(`/purchase-success/${prompt._id}`, '_blank')} title="View Secret Details">
                         <Eye size={20} />
                       </button>
                     </div>
@@ -174,7 +174,7 @@ export default function BuyerDashboard() {
                       </button>
                       <button 
                         className="btn-view-access" 
-                        onClick={() => navigate(`/purchase-success/${prompt._id}`)}
+                        onClick={() => window.open(`/purchase-success/${prompt._id}`, '_blank')}
                         style={{
                           width: '100%',
                           background: 'rgba(168, 85, 247, 0.1)',

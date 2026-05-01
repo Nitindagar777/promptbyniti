@@ -46,6 +46,7 @@ const actions = {
   RESET_CREDITS: 'RESET_CREDITS',
   LOGIN: 'LOGIN',
   LOGOUT: 'LOGOUT',
+  ADD_PURCHASE: 'ADD_PURCHASE',
 };
 
 /* Reducer */
@@ -58,6 +59,18 @@ function appReducer(state, action) {
       if (state.plan === 'unlimited') return state;
       const deductionAmount = action.payload || 1;
       return { ...state, credits: Math.max(0, state.credits - deductionAmount) };
+
+    case actions.ADD_PURCHASE:
+      if (!state.user) return state;
+      const currentPurchases = state.user.purchasedPrompts || [];
+      if (currentPurchases.includes(action.payload)) return state;
+      return {
+        ...state,
+        user: {
+          ...state.user,
+          purchasedPrompts: [...currentPurchases, action.payload]
+        }
+      };
 
     case actions.ADD_PROMPT:
       return {
@@ -186,6 +199,9 @@ export function AppProvider({ children }) {
     /* Convenience helpers */
     useCredit: async (amount = 1, templateId = null) => {
       dispatch({ type: actions.USE_CREDIT, payload: amount });
+      if (templateId) {
+        dispatch({ type: actions.ADD_PURCHASE, payload: templateId });
+      }
       
       const token = localStorage.getItem(TOKEN_KEY);
       if (token) {

@@ -99,7 +99,11 @@ router.get('/:id', optionalAuth, async (req, res) => {
       delete promptObj.instructions;
     }
     
-    res.json({ success: true, prompt: promptObj });
+    res.json({ 
+      success: true, 
+      prompt: promptObj, 
+      isPurchased: isAuthorized 
+    });
   } catch (err) {
     console.error("Error fetching/updating prompt:", err);
     res.status(500).json({ success: false, message: err.message });

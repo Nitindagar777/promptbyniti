@@ -24,6 +24,7 @@ export default function PromptDetailPage() {
   const [relatedLimit, setRelatedLimit] = useState(3);
   const [replyingToIdx, setReplyingToIdx] = useState(null);
   const [replyText, setReplyText] = useState('');
+  const [isPromptPurchased, setIsPromptPurchased] = useState(false);
   const [reviews, setReviews] = useState([
     {
       author: "obscura666veil",
@@ -121,6 +122,9 @@ export default function PromptDetailPage() {
           const data = await res.json();
           if (data.success) {
             setTemplate(data.prompt);
+            if (data.isPurchased) {
+              setIsPromptPurchased(true);
+            }
           } else {
             setError("Prompt not found");
           }
@@ -322,37 +326,84 @@ export default function PromptDetailPage() {
             <div className="p-detail__actions">
               {state.user ? (
                 <>
-                  <div className="p-detail__price-row">
-                    <div className="token-price">
-                      <Zap size={24} fill="var(--color-orange)" className="text-orange" />
-                      <span>5 Tokens</span>
-                    </div>
-                    <div className="price-label">Per Generation</div>
-                  </div>
+                  {(() => {
+                    const userPurchases = state.user?.purchasedPrompts || [];
+                    const currentId = template?._id?.toString() || id?.toString();
+                    const isPurchasedInState = userPurchases.some(p => {
+                      const pid = typeof p === 'object' ? p._id : p;
+                      return pid?.toString() === currentId;
+                    });
+                    const isOwner = state.user?.id?.toString() === template?.seller?._id?.toString() || 
+                                    state.user?.id?.toString() === template?.seller?.toString();
+                    
+                    if (isPurchasedInState || isOwner || isPromptPurchased) {
+                      return (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                          <button 
+                            className={`btn btn-primary btn-xl w-full ${copied ? 'copied' : ''}`}
+                            onClick={() => {
+                              navigator.clipboard.writeText(template.template);
+                              setCopied(true);
+                              setTimeout(() => setCopied(false), 2000);
+                            }}
+                            style={{ width: '100%', gap: '10px' }}
+                          >
+                            {copied ? <><Check size={20} /> Copied!</> : <><Copy size={20} /> Copy Secret Prompt</>}
+                          </button>
+                          
+                          <button 
+                            className="btn btn-secondary btn-xl w-full"
+                            onClick={() => window.open(`/purchase-success/${template._id}`, '_blank')}
+                            style={{ 
+                              width: '100%', 
+                              gap: '10px', 
+                              background: 'rgba(168, 85, 247, 0.1)',
+                              border: '1px solid rgba(168, 85, 247, 0.2)',
+                              color: 'var(--color-purple)'
+                            }}
+                          >
+                            <Eye size={20} /> View Full Instructions
+                          </button>
+                        </div>
+                      );
+                    }
 
-                  <button 
-                    onClick={async () => {
-                      if (state.credits < 5) {
-                        alert('Insufficient tokens! You need 5 tokens to use this prompt.');
-                        return;
-                      }
-                      
-                      const templateId = template.id || template._id;
-                      try {
-                        // Deduct credits and process split
-                        await useCredit(5, templateId);
-                        // Redirect to success page
-                        navigate(`/purchase-success/${templateId}`);
-                      } catch (err) {
-                        console.error('Purchase failed:', err);
-                        alert('Transaction failed. Please try again.');
-                      }
-                    }}
-                    className="btn btn-primary btn-xl w-full"
-                    style={{ width: '100%', gap: '10px' }}
-                  >
-                    Use this Prompt <Sparkles size={20} />
-                  </button>
+                    return (
+                      <>
+                        <div className="p-detail__price-row">
+                          <div className="token-price">
+                            <Zap size={24} fill="var(--color-orange)" className="text-orange" />
+                            <span>5 Tokens</span>
+                          </div>
+                          <div className="price-label">Per Generation</div>
+                        </div>
+
+                        <button 
+                          onClick={async () => {
+                            if (state.credits < 5) {
+                              alert('Insufficient tokens! You need 5 tokens to use this prompt.');
+                              return;
+                            }
+                            
+                            const templateId = template.id || template._id;
+                            try {
+                              // Deduct credits and process split
+                              await useCredit(5, templateId);
+                              // Redirect to success page in a new tab
+                              window.open(`/purchase-success/${templateId}`, '_blank');
+                            } catch (err) {
+                              console.error('Purchase failed:', err);
+                              alert('Transaction failed. Please try again.');
+                            }
+                          }}
+                          className="btn btn-primary btn-xl w-full"
+                          style={{ width: '100%', gap: '10px' }}
+                        >
+                          Use this Prompt <Sparkles size={20} />
+                        </button>
+                      </>
+                    );
+                  })()}
 
                   <div className="p-detail__secondary-actions">
                     <button className="btn btn-secondary btn-xl" onClick={handleShare} style={{ flex: 1, gap: '10px', height: '56px' }}>

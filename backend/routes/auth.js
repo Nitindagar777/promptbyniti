@@ -195,7 +195,8 @@ router.post('/google', async (req, res) => {
         email: user.email,
         avatar: user.avatar,
         credits: user.credits,
-        plan: user.plan
+        plan: user.plan,
+        purchasedPrompts: user.purchasedPrompts || []
       }
     });
   } catch (err) {
@@ -223,7 +224,8 @@ router.get('/me', async (req, res) => {
         email: user.email,
         avatar: user.avatar,
         credits: user.credits,
-        plan: user.plan
+        plan: user.plan,
+        purchasedPrompts: user.purchasedPrompts || []
       }
     });
   } catch (err) {
@@ -397,7 +399,8 @@ router.post('/reset-password', async (req, res) => {
       token,
       user: {
         id: user._id, name: user.name, email: user.email, avatar: user.avatar,
-        credits: user.credits, plan: user.plan
+        credits: user.credits, plan: user.plan,
+        purchasedPrompts: user.purchasedPrompts || []
       }
     });
   } catch (err) {
