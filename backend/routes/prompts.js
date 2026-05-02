@@ -90,7 +90,17 @@ router.get('/:id', optionalAuth, async (req, res) => {
       const user = await User.findById(req.userId);
       const isSeller = prompt.seller?._id?.toString() === req.userId.toString();
       const isBuyer = user?.purchasedPrompts?.some(pId => pId.toString() === req.params.id);
+      console.log('🔍 PURCHASE CHECK:', {
+        reqUserId: req.userId,
+        sellerId: prompt.seller?._id?.toString(),
+        isSeller,
+        isBuyer,
+        userPurchases: user?.purchasedPrompts?.map(p => p.toString()),
+        promptId: req.params.id
+      });
       if (isSeller || isBuyer) isAuthorized = true;
+    } else {
+      console.log('🔍 PURCHASE CHECK: No req.userId - user not authenticated');
     }
 
     // Hide secret fields if NOT authorized

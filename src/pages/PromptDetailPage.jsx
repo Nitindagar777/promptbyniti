@@ -118,7 +118,10 @@ export default function PromptDetailPage() {
       // Try fetching from Database
         try {
           const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8844/api';
-          const res = await fetch(`${API_URL}/prompts/${id}?t=${Date.now()}`);
+          const token = localStorage.getItem('promptbyniti_token');
+          const res = await fetch(`${API_URL}/prompts/${id}?t=${Date.now()}`, {
+            headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+          });
           const data = await res.json();
           if (data.success) {
             setTemplate(data.prompt);
@@ -338,7 +341,7 @@ export default function PromptDetailPage() {
                     
                     if (isPurchasedInState || isOwner || isPromptPurchased) {
                       return (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                           <button 
                             className={`btn btn-primary btn-xl w-full ${copied ? 'copied' : ''}`}
                             onClick={() => {
@@ -369,7 +372,7 @@ export default function PromptDetailPage() {
                     }
 
                     return (
-                      <>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         <div className="p-detail__price-row">
                           <div className="token-price">
                             <Zap size={24} fill="var(--color-orange)" className="text-orange" />
@@ -401,15 +404,15 @@ export default function PromptDetailPage() {
                         >
                           Use this Prompt <Sparkles size={20} />
                         </button>
-                      </>
+
+                        <div className="p-detail__secondary-actions">
+                          <button className="btn btn-secondary btn-xl" onClick={handleShare} style={{ width: '100%', gap: '10px', height: '56px' }}>
+                            <Share2 size={20} /> Share this Prompt
+                          </button>
+                        </div>
+                      </div>
                     );
                   })()}
-
-                  <div className="p-detail__secondary-actions">
-                    <button className="btn btn-secondary btn-xl" onClick={handleShare} style={{ flex: 1, gap: '10px', height: '56px' }}>
-                      <Share2 size={20} /> Share this Prompt
-                    </button>
-                  </div>
                 </>
               ) : (
                 <div className="p-detail__auth-gate">
