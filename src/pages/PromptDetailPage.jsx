@@ -226,13 +226,18 @@ export default function PromptDetailPage() {
                   <div className="visual-thumbs">
                     {template.samples.map((sample, idx) => {
                       const thumbSrc = sample.output || sample;
+                      const isVideo = thumbSrc?.toLowerCase().match(/\.(mp4|webm|ogg)$/) || template.generateType === 'video';
                       return (
                         <div 
                           key={idx} 
                           className={`visual-thumb ${activeImage === idx ? 'visual-thumb--active' : ''}`}
                           onClick={() => { setActiveImage(idx); setImageRatio(null); }}
                         >
-                          <img src={thumbSrc} alt={`Sample ${idx + 1}`} />
+                          {isVideo ? (
+                            <video src={thumbSrc} muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : (
+                            <img src={thumbSrc} alt={`Sample ${idx + 1}`} />
+                          )}
                         </div>
                       );
                     })}

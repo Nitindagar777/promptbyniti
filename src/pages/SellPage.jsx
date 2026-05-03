@@ -155,7 +155,7 @@ export default function SellPage() {
         samples: samples.map(s => ({ input: s.input, output: s.output }))
       };
 
-      const url = isEditMode 
+      const url = isEditMode
         ? `${import.meta.env.VITE_API_URL || 'http://localhost:8845/api'}/prompts/${editId}`
         : `${import.meta.env.VITE_API_URL || 'http://localhost:8845/api'}/prompts`;
 
@@ -207,9 +207,9 @@ export default function SellPage() {
     <div className="sell-page container">
       <div className="sell-page__header reveal" style={{ position: 'relative' }}>
         {isEditMode && (
-          <button 
-            onClick={() => navigate('/dashboard')} 
-            className="btn btn-secondary btn-sm" 
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="btn btn-secondary btn-sm"
             style={{ position: 'absolute', left: '0', top: '5px', display: 'flex', alignItems: 'center', gap: '8px', zIndex: 10 }}
           >
             <ArrowLeft size={16} /> Back
@@ -217,8 +217,8 @@ export default function SellPage() {
         )}
         <h1 className="h-display">{isEditMode ? 'Edit Your' : 'Sell Your'} <span className="text-orange">AI Excellence</span></h1>
         <p className="section-desc">
-          {isEditMode 
-            ? "Update your prompt details. Note: Editing will send it back to pending for admin review." 
+          {isEditMode
+            ? "Update your prompt details. Note: Editing will send it back to pending for admin review."
             : "Create a listing with 3 samples to prove your prompt's power and start earning tokens."}
         </p>
       </div>
@@ -262,12 +262,16 @@ export default function SellPage() {
                 <div className="form-group">
                   <label>Price (Tokens)</label>
                   <select className="input" value={formData.tokens} onChange={e => setFormData({ ...formData, tokens: e.target.value })}>
+                    <option value="1">1 Token</option>
+                    <option value="2">2 Tokens</option>
+                    <option value="3">3 Tokens</option>
                     <option value="5">5 Tokens</option>
+                    <option value="8">8 Tokens</option>
                     <option value="10">10 Tokens</option>
-                    <option value="25">25 Tokens</option>
-                    <option value="50">50 Tokens</option>
-                    <option value="75">75 Tokens</option>
-                    <option value="100">100 Tokens</option>
+                    <option value="12">12 Tokens</option>
+                    <option value="15">15 Tokens</option>
+                    <option value="18">18 Tokens</option>
+                    <option value="20">20 Tokens</option>
                   </select>
                 </div>
               </div>
@@ -348,7 +352,7 @@ export default function SellPage() {
           </div>
         </div>
         <div className="sell-footer mt-2xl">
-          <div className="security-note"><ShieldCheck size={18} className="text-green" /><span>Verified Listing - 70% Creator Royalty</span></div>
+          <div className="security-note"><ShieldCheck size={18} className="text-green" /><span>Verified Listing - 80% Creator Royalty</span></div>
           <button type="submit" className="btn btn-primary btn-xl" disabled={loading} style={{ minWidth: '300px' }}>{loading ? 'Submitting...' : (isEditMode ? 'Save & Request Review' : 'Publish to Store')} <ChevronRight size={20} /></button>
         </div>
       </form>
@@ -398,7 +402,7 @@ export default function SellPage() {
               <p className="text-muted mb-4">
                 {customKeyword ? `Matching keywords (${ALL_KEYWORDS.filter(k => k.toLowerCase().includes(customKeyword.toLowerCase())).length}):` : 'Or select from our categories:'}
               </p>
-              
+
               <div className="modal-keywords-grid">
                 {ALL_KEYWORDS
                   .filter(kw => kw.toLowerCase().includes(customKeyword.toLowerCase()))

@@ -169,8 +169,8 @@ export default function HomePage() {
                   {!isTextOnly ? (
                     <div className="template-card__visual">
                       {/* Main image — same as detail page */}
-                      {tmpl.video ? (
-                        <video src={tmpl.video} autoPlay muted loop className="template-card__media template-card__media-main" />
+                      {tmpl.video || coverSrc?.toLowerCase().match(/\.(mp4|webm|ogg)$/) || tmpl.generateType === 'video' ? (
+                        <video src={tmpl.video || coverSrc} autoPlay muted loop className="template-card__media template-card__media-main" />
                       ) : (
                         <img
                           src={coverSrc || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400'}
@@ -184,11 +184,23 @@ export default function HomePage() {
                       {s0 && s1 && s2 && (
                         <div className="template-card__gallery">
                           <div className="template-card__gallery-main">
-                            <img src={s0} alt="sample 1" />
+                            {s0.toLowerCase().match(/\.(mp4|webm|ogg)$/) || tmpl.generateType === 'video' ? (
+                              <video src={s0} autoPlay muted loop />
+                            ) : (
+                              <img src={s0} alt="sample 1" />
+                            )}
                           </div>
                           <div className="template-card__gallery-side">
-                            <img src={s1} alt="sample 2" />
-                            <img src={s2} alt="sample 3" />
+                            {s1.toLowerCase().match(/\.(mp4|webm|ogg)$/) || tmpl.generateType === 'video' ? (
+                              <video src={s1} autoPlay muted loop />
+                            ) : (
+                              <img src={s1} alt="sample 2" />
+                            )}
+                            {s2.toLowerCase().match(/\.(mp4|webm|ogg)$/) || tmpl.generateType === 'video' ? (
+                              <video src={s2} autoPlay muted loop />
+                            ) : (
+                              <img src={s2} alt="sample 3" />
+                            )}
                           </div>
                         </div>
                       )}

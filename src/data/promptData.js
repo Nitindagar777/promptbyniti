@@ -638,7 +638,7 @@ export const aiModels = [
   { id: 'nightcafe', label: 'NightCafe', icon: '🌃', type: 'image' },
   { id: 'starryai', label: 'StarryAI', icon: '🌌', type: 'image' },
   { id: 'imagineart', label: 'ImagineArt', icon: '💭', type: 'image' },
-  
+
   // --- VIDEO MODELS ---
   { id: 'sora', label: 'OpenAI Sora', icon: '🎥', type: 'video', premium: false },
   { id: 'kling-ai', label: 'KLING AI', icon: '🎬', type: 'video', premium: false },
@@ -650,7 +650,7 @@ export const aiModels = [
   { id: 'kaiber', label: 'Kaiber', icon: '🧬', type: 'video', premium: false },
   { id: 'veo', label: 'Google Veo', icon: '👁️', type: 'video', premium: false },
   { id: 'wan', label: 'Wan AI', icon: '☁️', type: 'video', premium: false },
-  
+
   // --- CHAT / LLM MODELS ---
   { id: 'chatgpt', label: 'ChatGPT / GPT-4', icon: '💬', type: 'chat' },
   { id: 'claude', label: 'Claude 3.5', icon: '📝', type: 'chat' },
