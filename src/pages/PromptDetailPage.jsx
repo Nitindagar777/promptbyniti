@@ -27,13 +27,46 @@ export default function PromptDetailPage() {
   const [isPromptPurchased, setIsPromptPurchased] = useState(false);
   const [reviews, setReviews] = useState([]);
 
-  const handleReplySubmit = (idx) => {
+  const API_BASE = import.meta.env.VITE_API_URL || 
+    (window.location.hostname.includes('oopsverse.cloud') 
+      ? 'https://oopsverse.cloud/api' 
+      : 'http://localhost:8845/api');
+
+  const handleReplySubmit = async (idx) => {
     if (!replyText.trim()) return;
-    const newReviews = [...reviews];
-    newReviews[idx].reply = replyText;
-    setReviews(newReviews);
-    setReplyingToIdx(null);
-    setReplyText('');
+    
+    const reviewId = reviews[idx]._id;
+    if (!reviewId) {
+      console.error('❌ Review ID missing for index:', idx, reviews[idx]);
+      return;
+    }
+
+    const url = `${API_BASE}/prompts/${id}/reviews/${reviewId}/reply`;
+    console.log('🚀 ATTEMPTING REPLY:', { url, reviewId, replyText });
+
+    try {
+      const token = localStorage.getItem('promptbyniti_token');
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify({ reply: replyText })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        // Update local state
+        const updatedReviews = [...reviews];
+        updatedReviews[idx].reply = replyText;
+        setReviews(updatedReviews);
+        setReplyingToIdx(null);
+        setReplyText('');
+      }
+    } catch (err) {
+      console.error('Reply submission error:', err);
+    }
   };
 
   const handlePrevImage = (e) => {
@@ -466,8 +499,8 @@ export default function PromptDetailPage() {
 
               <div className="reviews-list">
                 {reviews.slice(0, reviewsLimit).map((rev, idx) => {
-                  // Robust ID comparison - FOUND 'seller' in database model
-                  const rawCreatorId = template?.seller || template?.userId || template?.user?._id || template?.user || template?.creator;
+                  // Robust ID comparison for populated seller object
+                  const rawCreatorId = template?.seller?._id || template?.seller || template?.userId;
                   const creatorId = rawCreatorId?.toString();
                   const currentUserId = state.user?._id?.toString() || state.user?.id?.toString();
                   
@@ -531,28 +564,45 @@ export default function PromptDetailPage() {
                         )}
 
                         {replyingToIdx === idx && (
-                          <div className="reply-editor" style={{ marginTop: '15px' }}>
+                          <div className="reply-editor animate-slide-up" style={{ marginTop: '20px', padding: '20px', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                            <div style={{ marginBottom: '12px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                              Replying to <span className="text-cyan">@{rev.userName}</span>
+                            </div>
                             <textarea 
-                              className="form-control" 
-                              placeholder={`Reply to @${rev.author}...`}
+                              className="reply-textarea-premium" 
+                              placeholder="Write your response here..."
                               value={replyText}
                               onChange={(e) => setReplyText(e.target.value)}
-                              style={{ minHeight: '80px', fontSize: '0.9rem', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)' }}
+                              style={{ 
+                                width: '100%',
+                                minHeight: '120px', 
+                                padding: '15px',
+                                fontSize: '1rem', 
+                                background: 'rgba(0,0,0,0.3)', 
+                                border: '1px solid rgba(255,255,255,0.1)',
+                                borderRadius: '12px',
+                                color: 'white',
+                                fontFamily: 'inherit',
+                                resize: 'vertical',
+                                marginBottom: '15px',
+                                outline: 'none',
+                                transition: 'border-color 0.3s'
+                              }}
                             />
-                            <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                              <button className="btn btn-primary btn-sm" onClick={() => handleReplySubmit(idx)}>Post Reply</button>
-                              <button className="btn btn-secondary btn-sm" onClick={() => { setReplyingToIdx(null); setReplyText(''); }}>Cancel</button>
+                            <div style={{ display: 'flex', gap: '12px' }}>
+                              <button className="btn btn-primary btn-md" onClick={() => handleReplySubmit(idx)} style={{ borderRadius: '10px', padding: '10px 24px' }}>Post Reply</button>
+                              <button className="btn btn-secondary btn-md" onClick={() => { setReplyingToIdx(null); setReplyText(''); }} style={{ borderRadius: '10px', padding: '10px 24px' }}>Cancel</button>
                             </div>
                           </div>
                         )}
                       </div>
 
                       {rev.reply && (
-                        <div className="creator-response-box">
+                        <div className="creator-response-box animate-fade-in">
                           <div className="response-header">
                             <div className="response-arrow"></div>
-                            <span className="response-label">Response from creator to <span className="text-cyan">@{rev.author}</span></span>
-                            <span className="response-date">• {rev.date}</span>
+                            <span className="response-label">Response from creator to <span className="text-cyan">@{rev.userName}</span></span>
+                            <span className="response-date">• Verified Response</span>
                           </div>
                           <p className="response-text">{rev.reply}</p>
                         </div>
@@ -569,10 +619,22 @@ export default function PromptDetailPage() {
                 More like <span className="text-orange">this</span>
               </h2>
               <div className="related-grid-vertical">
-                {state.prompts
-                  .filter(t => (t.category || t.keywords?.[0]) === category && (t.id || t._id) !== (template.id || template._id))
-                  .slice(0, relatedLimit)
-                  .map(t => (
+                {(() => {
+                  let related = state.prompts.filter(t => {
+                    const isSelf = (t.id || t._id) === (template.id || template._id);
+                    if (isSelf) return false;
+                    
+                    const catMatch = t.category === template.category;
+                    const keywordMatch = t.keywords?.some(k => template.keywords?.includes(k));
+                    return catMatch || keywordMatch;
+                  });
+
+                  // Fallback: If no related found, just show any other prompts
+                  if (related.length === 0) {
+                    related = state.prompts.filter(t => (t.id || t._id) !== (template.id || template._id));
+                  }
+
+                  return related.slice(0, relatedLimit).map(t => (
                     <Link key={t.id || t._id} to={`/prompt/${t.id || t._id}`} className="related-card-small card" style={{ textDecoration: 'none' }}>
                       <div className="related-card-small__media">
                         <img 
@@ -585,20 +647,24 @@ export default function PromptDetailPage() {
                         <span className="text-muted" style={{fontSize: '0.8rem'}}>{t.model || 'Flux.1'}</span>
                       </div>
                     </Link>
-                  ))}
+                  ));
+                })()}
               </div>
             </div>
           </div>
 
           {/* Unified View More Button */}
-          {(reviewsLimit < 4 || relatedLimit < 6) && (
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '50px' }}>
+          {(reviews.length > reviewsLimit || state.prompts.length > relatedLimit + 1) && (
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '50px', marginBottom: '50px' }}>
               <button 
-                className="btn btn-secondary btn-xl" 
-                onClick={() => { setReviewsLimit(6); setRelatedLimit(6); }}
-                style={{ minWidth: '240px' }}
+                className="btn btn-secondary-outline btn-xl" 
+                onClick={() => { 
+                  if (reviews.length > reviewsLimit) setReviewsLimit(prev => prev + 4);
+                  if (state.prompts.length > relatedLimit + 1) setRelatedLimit(prev => prev + 3);
+                }}
+                style={{ minWidth: '280px', borderRadius: '15px', border: '1px solid rgba(255,255,255,0.1)' }}
               >
-                View More Reviews & Prompts <ChevronRight size={20} />
+                View More Content <ChevronRight size={18} style={{ marginLeft: '8px' }} />
               </button>
             </div>
           )}

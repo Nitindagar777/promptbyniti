@@ -221,4 +221,32 @@ router.post('/:id/reviews', auth, async (req, res) => {
   }
 });
 
+// POST Creator Reply to Review
+router.post('/:id/reviews/:reviewId/reply', auth, async (req, res) => {
+  try {
+    const { reply } = req.body;
+    const { id, reviewId } = req.params;
+    console.log('📬 CREATOR REPLY ATTEMPT:', { promptId: id, reviewId, userId: req.userId });
+
+    const prompt = await Prompt.findById(id);
+    if (!prompt) return res.status(404).json({ success: false, message: 'Prompt not found' });
+
+    // Check if the current user is the seller
+    if (prompt.seller.toString() !== req.userId.toString()) {
+      return res.status(403).json({ success: false, message: 'Only the creator can reply to reviews' });
+    }
+
+    // Find the specific review
+    const review = prompt.reviews.id(reviewId);
+    if (!review) return res.status(404).json({ success: false, message: 'Review not found' });
+
+    review.reply = reply;
+    await prompt.save();
+
+    res.json({ success: true, message: 'Reply posted successfully', prompt });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 module.exports = router;

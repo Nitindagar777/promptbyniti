@@ -68,6 +68,8 @@ const PurchaseSuccess = () => {
   const [submittingReview, setSubmittingReview] = useState(false);
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
   const [reviewError, setReviewError] = useState('');
+  const [alreadyReviewedBefore, setAlreadyReviewedBefore] = useState(false);
+  const [isSeller, setIsSeller] = useState(false);
 
   const modelLabel = prompt ? (aiModels.find(m => m.id === prompt.model)?.label || prompt.model) : '';
 
@@ -89,6 +91,14 @@ const PurchaseSuccess = () => {
       const data = await res.json();
       if (data.success) {
         setPrompt(data.prompt);
+        // Check if user already reviewed or is seller
+        const currentUserId = state.user?._id || state.user?.id;
+        const sellerMatch = data.prompt.seller?._id?.toString() === currentUserId?.toString() || 
+                           data.prompt.seller?.toString() === currentUserId?.toString();
+        const hasReviewed = data.prompt.reviews?.some(r => r.user?.toString() === currentUserId?.toString());
+        
+        setIsSeller(sellerMatch);
+        setAlreadyReviewedBefore(hasReviewed);
       }
     } catch (err) {
       console.error('Fetch error:', err);
@@ -303,9 +313,10 @@ const PurchaseSuccess = () => {
           </div>
         </div>
 
-        {/* Review Section */}
-        <div className="review-submission-section card animate-slide-up" style={{ animationDelay: '0.2s' }}>
-          <div className="review-section-header">
+        {/* Review Section - Only show if not seller and not already reviewed before this session */}
+        {!isSeller && !alreadyReviewedBefore && (
+          <div className="review-submission-section card animate-slide-up" style={{ animationDelay: '0.2s' }}>
+            <div className="review-section-header">
             <div className="review-icon-bg">
               <Star size={24} fill="var(--color-orange)" className="text-orange" />
             </div>
@@ -349,8 +360,9 @@ const PurchaseSuccess = () => {
               <h4>Thank you for your review!</h4>
               <p>Your feedback has been posted successfully.</p>
             </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
       {/* Lightbox Modal */}
       {lightboxMedia && (
