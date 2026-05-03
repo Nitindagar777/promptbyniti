@@ -175,4 +175,50 @@ router.delete('/:id', auth, async (req, res) => {
   }
 });
 
+// POST Submit Review (Requires Purchase)
+router.post('/:id/reviews', auth, async (req, res) => {
+  try {
+    const { rating, comment } = req.body;
+    const promptId = req.params.id;
+    const userId = req.userId;
+
+    // 1. Verify prompt exists
+    const prompt = await Prompt.findById(promptId);
+    if (!prompt) return res.status(404).json({ success: false, message: 'Prompt not found' });
+
+    // 2. Verify user has purchased it
+    const user = await User.findById(userId);
+    const hasPurchased = user.purchasedPrompts.some(p => p.toString() === promptId);
+    if (!hasPurchased) {
+      return res.status(403).json({ success: false, message: 'You must purchase this prompt before reviewing it.' });
+    }
+
+    // 3. Check if user already reviewed
+    const alreadyReviewed = prompt.reviews.find(r => r.user.toString() === userId.toString());
+    if (alreadyReviewed) {
+      return res.status(400).json({ success: false, message: 'You have already reviewed this prompt.' });
+    }
+
+    // 4. Add review
+    const newReview = {
+      user: userId,
+      userName: user.name,
+      userAvatar: user.avatar,
+      rating: Number(rating),
+      comment
+    };
+
+    prompt.reviews.push(newReview);
+    
+    // 5. Update stats
+    prompt.totalReviews = prompt.reviews.length;
+    prompt.averageRating = prompt.reviews.reduce((acc, item) => item.rating + acc, 0) / prompt.reviews.length;
+
+    await prompt.save();
+    res.json({ success: true, message: 'Review submitted successfully', prompt });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 module.exports = router;

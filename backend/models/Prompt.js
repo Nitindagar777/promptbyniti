@@ -23,6 +23,19 @@ const promptSchema = new mongoose.Schema({
   price: { type: Number, default: 0 },
   views: { type: Number, default: 0 },
   sales: { type: Number, default: 0 },
+  reviews: [
+    {
+      user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+      userName: { type: String, required: true },
+      userAvatar: { type: String },
+      rating: { type: Number, required: true, min: 0.5, max: 5 },
+      comment: { type: String, required: true },
+      reply: { type: String },
+      createdAt: { type: Date, default: Date.now }
+    }
+  ],
+  averageRating: { type: Number, default: 0 },
+  totalReviews: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now }
 });
 

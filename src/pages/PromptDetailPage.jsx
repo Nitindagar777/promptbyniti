@@ -25,41 +25,7 @@ export default function PromptDetailPage() {
   const [replyingToIdx, setReplyingToIdx] = useState(null);
   const [replyText, setReplyText] = useState('');
   const [isPromptPurchased, setIsPromptPurchased] = useState(false);
-  const [reviews, setReviews] = useState([
-    {
-      author: "obscura666veil",
-      date: "21 Apr",
-      text: "A very well-written prompt! The variations are endless, and the portraits emanate a rich, atmospheric quality. Bravo!",
-      rating: 5,
-      color: "var(--color-cyan)",
-      tag: "Top Buyer",
-      reply: "Thanks for the nice review! Glad you like the atmospheric style."
-    },
-    {
-      author: "creative_mind",
-      date: "18 Apr",
-      text: "That vintage prompt is absolutely brilliant. The AI doesn't lie—this one was fantastic for my project!",
-      rating: 5,
-      color: "var(--color-orange)",
-      tag: "Verified"
-    },
-    {
-      author: "pixel_artist",
-      date: "15 Apr",
-      text: "Exceeded my expectations. The lighting details in the generated output are exactly what I needed for my portfolio.",
-      rating: 5,
-      color: "var(--color-purple)",
-      tag: "Verified"
-    },
-    {
-      author: "neo_designer",
-      date: "10 Apr",
-      text: "Amazing value. These prompts are highly optimized and save me hours of trial and error. Highly recommend!",
-      rating: 5,
-      color: "var(--color-blue)",
-      tag: "Pro User"
-    }
-  ]);
+  const [reviews, setReviews] = useState([]);
 
   const handleReplySubmit = (idx) => {
     if (!replyText.trim()) return;
@@ -125,6 +91,7 @@ export default function PromptDetailPage() {
           const data = await res.json();
           if (data.success) {
             setTemplate(data.prompt);
+            setReviews(data.prompt.reviews || []);
             if (data.isPurchased) {
               setIsPromptPurchased(true);
             }
@@ -484,13 +451,13 @@ export default function PromptDetailPage() {
               <div className="reviews-header">
                 <div className="reviews-summary-premium">
                   <div className="reviews-stat-stack">
-                    <h2 className="reviews-number-gradient">603</h2>
+                    <h2 className="reviews-number-gradient">{template.totalReviews || 0}</h2>
                     <span className="reviews-label-sub">Creator Reviews</span>
                   </div>
                   <div className="reviews-rating-badge">
                     <div className="rating-pill-inner">
                       <Star size={14} fill="currentColor" />
-                      <span>4.9</span>
+                      <span>{(template.averageRating || 0).toFixed(1)}</span>
                     </div>
                     <span className="rating-desc">Community Score</span>
                   </div>
@@ -519,22 +486,41 @@ export default function PromptDetailPage() {
                   return (
                     <div key={idx} className="review-container">
                       <div className="review-card-premium review-card-premium--glowing">
-                        <div className="review-accent-line" style={{ background: rev.color }}></div>
+                        <div className="review-accent-line" style={{ background: 'var(--color-cyan)' }}></div>
                         <div className="review-card-premium__header">
                           <div className="review-user-info">
-                            <div className="user-initial-new" style={{ boxShadow: `0 0 15px ${rev.color}44`, background: rev.color }}>{rev.author[0].toUpperCase()}</div>
+                            <div className="user-initial-new" style={{ background: 'var(--color-cyan)', padding: 0, overflow: 'hidden' }}>
+                              {rev.userAvatar ? (
+                                <img src={rev.userAvatar} alt={rev.userName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              ) : (
+                                (rev.userName || 'U')[0].toUpperCase()
+                              )}
+                            </div>
                             <div>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <span className="review-author-name">@{rev.author}</span>
+                                <span className="review-author-name">@{rev.userName}</span>
                               </div>
-                              <span className="review-date-new">{rev.date}</span>
+                              <span className="review-date-new">{new Date(rev.createdAt).toLocaleDateString()}</span>
                             </div>
                           </div>
                           <div className="review-stars-new">
-                            {[...Array(rev.rating)].map((_, i) => <Star key={i} size={10} fill="currentColor" />)}
+                            {[...Array(5)].map((_, i) => (
+                              <Star 
+                                key={i} 
+                                size={12} 
+                                fill={rev.rating >= i + 1 ? "currentColor" : (rev.rating >= i + 0.5 ? "url(#half-grad-small)" : "none")}
+                                stroke="currentColor"
+                              />
+                            ))}
+                            <svg width="0" height="0" style={{ position: 'absolute' }}>
+                              <linearGradient id="half-grad-small">
+                                <stop offset="50%" stopColor="currentColor" />
+                                <stop offset="50%" stopColor="transparent" stopOpacity="1" />
+                              </linearGradient>
+                            </svg>
                           </div>
                         </div>
-                        <p className="review-body-text">"{rev.text}"</p>
+                        <p className="review-body-text">"{rev.comment}"</p>
                         
                         {isCreator && !rev.reply && replyingToIdx !== idx && (
                           <div className="review-actions-creator">

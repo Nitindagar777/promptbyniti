@@ -8,6 +8,50 @@ import {
 import { aiModels } from '../data/promptData';
 import './PurchaseSuccess.css';
 
+const StarRating = ({ value, onChange }) => {
+  const [hover, setHover] = useState(null);
+
+  return (
+    <div className="star-rating-input">
+      {[...Array(5)].map((_, i) => {
+        const starValue = i + 1;
+        const halfStarValue = i + 0.5;
+        return (
+          <div key={i} className="star-wrapper">
+            <div 
+              className="star-hitbox left"
+              onMouseEnter={() => setHover(halfStarValue)}
+              onMouseLeave={() => setHover(null)}
+              onClick={() => onChange(halfStarValue)}
+            />
+            <div 
+              className="star-hitbox right"
+              onMouseEnter={() => setHover(starValue)}
+              onMouseLeave={() => setHover(null)}
+              onClick={() => onChange(starValue)}
+            />
+            <Star 
+              size={36} 
+              className="star-icon-svg"
+              fill={ (hover || value) >= starValue ? "var(--color-orange, #f59e0b)" : ((hover || value) >= halfStarValue ? "url(#half-grad)" : "none")}
+              stroke={ (hover || value) >= halfStarValue ? "var(--color-orange, #f59e0b)" : "rgba(255,255,255,0.2)"}
+            />
+          </div>
+        );
+      })}
+      <svg width="0" height="0" style={{ position: 'absolute' }}>
+        <defs>
+          <linearGradient id="half-grad">
+            <stop offset="50%" stopColor="var(--color-orange, #f59e0b)" />
+            <stop offset="50%" stopColor="transparent" stopOpacity="1" />
+          </linearGradient>
+        </defs>
+      </svg>
+      {value > 0 && <span className="rating-display-val">{value.toFixed(1)}</span>}
+    </div>
+  );
+};
+
 const PurchaseSuccess = () => {
   const { id } = useParams();
   const { state } = useApp();
@@ -17,6 +61,13 @@ const PurchaseSuccess = () => {
   const [mainCopied, setMainCopied] = useState(false);
   const [copiedStates, setCopiedStates] = useState({});
   const [lightboxMedia, setLightboxMedia] = useState(null); // { url, type }
+  
+  // Review State
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [reviewSubmitted, setReviewSubmitted] = useState(false);
+  const [reviewError, setReviewError] = useState('');
 
   const modelLabel = prompt ? (aiModels.find(m => m.id === prompt.model)?.label || prompt.model) : '';
 
@@ -43,6 +94,43 @@ const PurchaseSuccess = () => {
       console.error('Fetch error:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const submitReview = async () => {
+    if (rating === 0) {
+      setReviewError('Please select a rating');
+      return;
+    }
+    if (!comment.trim()) {
+      setReviewError('Please leave a comment');
+      return;
+    }
+
+    setSubmittingReview(true);
+    setReviewError('');
+
+    try {
+      const token = localStorage.getItem('promptbyniti_token');
+      const res = await fetch(`${API_BASE}/prompts/${id}/reviews`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify({ rating, comment })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setReviewSubmitted(true);
+      } else {
+        setReviewError(data.message || 'Failed to submit review');
+      }
+    } catch (err) {
+      setReviewError('Network error. Please try again.');
+    } finally {
+      setSubmittingReview(false);
     }
   };
 
@@ -213,6 +301,55 @@ const PurchaseSuccess = () => {
               Use in Generator
             </button>
           </div>
+        </div>
+
+        {/* Review Section */}
+        <div className="review-submission-section card animate-slide-up" style={{ animationDelay: '0.2s' }}>
+          <div className="review-section-header">
+            <div className="review-icon-bg">
+              <Star size={24} fill="var(--color-orange)" className="text-orange" />
+            </div>
+            <div>
+              <h3>How was the prompt?</h3>
+              <p>Your feedback helps other creators and the seller.</p>
+            </div>
+          </div>
+
+          {!reviewSubmitted ? (
+            <div className="review-form">
+              <div className="rating-picker-row">
+                <label>Rating:</label>
+                <StarRating value={rating} onChange={setRating} />
+              </div>
+
+              <div className="comment-box-row">
+                <textarea 
+                  placeholder="Share your thoughts on this prompt... (e.g., How did it work? Any tips for others?)"
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  className="review-textarea"
+                />
+              </div>
+
+              {reviewError && <p className="review-error-msg">{reviewError}</p>}
+
+              <button 
+                className={`btn-submit-review ${submittingReview ? 'loading' : ''}`}
+                onClick={submitReview}
+                disabled={submittingReview}
+              >
+                {submittingReview ? <RefreshCw className="spin" size={18} /> : 'Post Review'}
+              </button>
+            </div>
+          ) : (
+            <div className="review-thanks animate-fade-in">
+              <div className="thanks-icon">
+                <CheckCircle size={40} className="text-green" />
+              </div>
+              <h4>Thank you for your review!</h4>
+              <p>Your feedback has been posted successfully.</p>
+            </div>
+          )}
         </div>
       </div>
       {/* Lightbox Modal */}
