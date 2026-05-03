@@ -21,6 +21,10 @@ export default function TemplatesPage() {
   useEffect(() => {
     if (location.state?.search) {
       setSearchTerm(location.state.search);
+      setSelectedCat('all'); // Reset category when searching via specific tag
+    } else if (location.state?.category) {
+      setSelectedCat(location.state.category);
+      setSearchTerm(''); // Clear search if we specifically landed on a category
     }
   }, [location.state]);
 
@@ -43,13 +47,30 @@ export default function TemplatesPage() {
   };
 
   const filteredTemplates = prompts.filter(t => {
-    const matchesCat = selectedCat === 'all' || (t.category || '').toLowerCase() === selectedCat.toLowerCase();
-    const searchLower = searchTerm.toLowerCase();
-    const matchesSearch = !searchTerm || 
+    const searchLower = searchTerm.toLowerCase().trim();
+    const catLower = selectedCat.toLowerCase();
+    
+    // Check category match (Primary category OR in keywords)
+    const matchesCat = selectedCat === 'all' || 
+      (t.category || '').toLowerCase() === catLower ||
+      (Array.isArray(t.keywords) && t.keywords.some(k => k && k.toLowerCase().replace(/ /g, '-') === catLower)) ||
+      (typeof t.keywords === 'string' && t.keywords.toLowerCase().replace(/ /g, '-').includes(catLower));
+
+    if (!searchLower) return matchesCat;
+
+    // Robust keyword check (handles both arrays and strings)
+    let keywordMatch = false;
+    if (Array.isArray(t.keywords)) {
+      keywordMatch = t.keywords.some(k => k && k.toLowerCase().includes(searchLower));
+    } else if (typeof t.keywords === 'string') {
+      keywordMatch = t.keywords.toLowerCase().includes(searchLower);
+    }
+
+    const matchesSearch = 
       (t.name || '').toLowerCase().includes(searchLower) ||
       (t.title || '').toLowerCase().includes(searchLower) ||
       (t.description || '').toLowerCase().includes(searchLower) ||
-      (t.keywords || []).some(k => k.toLowerCase().includes(searchLower));
+      keywordMatch;
     
     return matchesCat && matchesSearch;
   });

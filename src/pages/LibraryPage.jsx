@@ -41,9 +41,22 @@ export default function LibraryPage() {
   ];
 
   const filteredPrompts = publicPrompts.filter(p => {
-    const matchesSearch = p.mainPrompt.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCat = activeCat === 'all' || p.category === activeCat || (p.structured && p.structured.subject.includes(activeCat));
-    return matchesSearch && matchesCat;
+    const searchLower = searchTerm.toLowerCase().trim();
+    const catLower = activeCat.toLowerCase();
+
+    // Check category match
+    const matchesCat = activeCat === 'all' || 
+      (p.category || '').toLowerCase() === catLower ||
+      (p.structured && p.structured.subject && p.structured.subject.toLowerCase().includes(catLower));
+
+    if (!searchLower) return matchesCat;
+
+    const matchesSearch = 
+      (p.mainPrompt || '').toLowerCase().includes(searchLower) ||
+      (p.structured && p.structured.subject && p.structured.subject.toLowerCase().includes(searchLower)) ||
+      (p.structured && p.structured.style && p.structured.style.toLowerCase().includes(searchLower));
+
+    return matchesCat && matchesSearch;
   });
 
   return (
@@ -54,44 +67,40 @@ export default function LibraryPage() {
           <h1 className="section-title">
             <span className="text-purple">Free</span> Prompts
           </h1>
-          <p className="section-desc">
-            Discover prompts created by the community. Access world-class generation formulas for free.
-          </p>
-        </div>
+          <div className="library-page__header-row">
+            <p className="section-desc">
+              Discover prompts created by the community. Access world-class generation formulas for free.
+            </p>
 
-        {/* Search & Filter */}
-        <div className="library-page__controls">
-          <div className="library-page__search">
-            <Search size={18} className="library-page__search-icon" />
-            <input
-              type="text"
-              placeholder="Search prompts (e.g., cyberpunk, portrait, minimalist)..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="input library-page__search-input"
-            />
-          </div>
-
-          <div className="library-page__filters">
-            <Filter size={16} className="text-muted flex-shrink-0" />
-            <div className="library-page__filters-scroll">
-              <button
-                className={`gen-chip gen-chip--sm ${activeCat === 'all' ? 'gen-chip--active' : ''}`}
-                onClick={() => setActiveCat('all')}
-              >
-                All
-              </button>
-              {categories.map(cat => (
-                <button
-                  key={cat.id}
-                  className={`gen-chip gen-chip--sm ${activeCat === cat.id ? 'gen-chip--active' : ''}`}
-                  onClick={() => setActiveCat(cat.id)}
-                >
-                  {cat.label}
-                </button>
-              ))}
+            <div className="library-page__search-container">
+              <div className="compact-search-box">
+                <Search size={16} className="search-icon" />
+                <input
+                  type="text"
+                  placeholder="Search prompts..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                {searchTerm && (
+                  <button onClick={() => setSearchTerm('')} className="clear-search">×</button>
+                )}
+              </div>
             </div>
           </div>
+        </div>
+
+        {/* Category Filters */}
+        <div className="library-page__filters" id="library-filters">
+          <Filter size={16} className="library-page__filter-icon" />
+          {categories.map(cat => (
+            <button
+              key={cat.id}
+              className={`gen-chip gen-chip--sm ${activeCat === cat.id ? 'gen-chip--active' : ''}`}
+              onClick={() => setActiveCat(cat.id)}
+            >
+              {cat.label}
+            </button>
+          ))}
         </div>
 
         {/* Results */}

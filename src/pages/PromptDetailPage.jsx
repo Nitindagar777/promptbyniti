@@ -267,16 +267,29 @@ export default function PromptDetailPage() {
               
               {template.keywords && template.keywords.length > 0 && (
                 <div className="p-detail__keywords">
-                  {template.keywords.map((kw, i) => (
-                    <span 
-                      key={i} 
-                      className="p-detail__keyword-tag" 
-                      onClick={() => navigate('/templates', { state: { search: kw } })}
-                      style={{ cursor: 'pointer' }}
-                    >
-                      #{kw}
-                    </span>
-                  ))}
+                  {template.keywords.map((kw, i) => {
+                    const normalized = kw.toLowerCase().trim().replace(/ /g, '-');
+                    // List of valid category IDs to check against
+                    const validCatIds = ['portrait', 'group', 'expression', 'lifestyle', 'ai-influencer', 'baby', 'old-age', 'character', 'sci-fi-char', 'fantasy-char', 'horror-char', 'cosplay', 'headshot', 'selfie', 'fashion', 'streetwear', 'luxury-fashion', 'beauty', 'hairstyle', 'makeup', 'outfit-design', 'product', 'e-commerce', 'advertisement', 'branding', 'marketing', 'social-media', 'thumbnail', 'app-ui', 'website-ui', 'poster', 'book-cover', 'movie-poster', 'landscape', 'sunset', 'sunrise', 'cityscape', 'urban', 'night-city', 'space', 'nature', 'forest', 'tropical', 'desert', 'mountains', 'ocean', 'snow', 'volcano', 'architecture', 'interior-design', 'exterior-design', 'building-concept', 'historical', 'futuristic-arch', 'food', 'fast-food', 'dessert', 'drinks', 'coffee-art', 'fine-dining', 'tattoo', 'illustration', 'digital-art', 'painting', 'line-art', 'sketch', '3d-render', 'isometric', 'abstract', 'colorful', 'geometric', 'surreal', 'psychedelic', 'minimalist'];
+                    const isCategory = validCatIds.includes(normalized);
+
+                    return (
+                      <span 
+                        key={i} 
+                        className="p-detail__keyword-tag" 
+                        onClick={() => {
+                          if (isCategory) {
+                            navigate('/templates', { state: { category: normalized } });
+                          } else {
+                            navigate('/templates', { state: { search: kw } });
+                          }
+                        }}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        #{kw}
+                      </span>
+                    );
+                  })}
                 </div>
               )}
             </div>
