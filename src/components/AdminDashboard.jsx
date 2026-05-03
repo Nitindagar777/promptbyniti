@@ -12,7 +12,8 @@ const AdminDashboard = () => {
   const [copyStatus, setCopyStatus] = useState(false);
   const [fullScreenMedia, setFullScreenMedia] = useState(null);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
-  const [rejectionModal, setRejectionModal] = useState({ show: false, id: null, reason: "" });
+  const [rejectionModal, setRejectionModal] = useState({ show: false, id: null, reason: "", type: null });
+  const [deleteConfirmModal, setDeleteConfirmModal] = useState({ show: false, id: null });
   const [payModal, setPayModal] = useState(null); // stores the withdrawal object being paid
 
   const openLightbox = (media, index) => {
@@ -31,7 +32,7 @@ const AdminDashboard = () => {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8844/api'}/admin/stats`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8845/api'}/admin/stats`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('promptbyniti_token')}` }
       });
       const json = await response.json();
@@ -46,7 +47,7 @@ const AdminDashboard = () => {
     setError(null);
     try {
       const endpoint = tab === 'verification' ? 'prompts' : tab;
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8844/api'}/admin/${endpoint}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8845/api'}/admin/${endpoint}`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('promptbyniti_token')}` }
       });
       const json = await response.json();
@@ -71,19 +72,25 @@ const AdminDashboard = () => {
     }
   }, [activeTab]);
 
-  const handleStatusUpdate = async (id, status) => {
+  const handleStatusUpdate = async (id, status, reason = "") => {
+    if (status === 'rejected' && !reason) {
+      setRejectionModal({ show: true, id, reason: "", type: 'prompt' });
+      return;
+    }
+
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8844/api'}/admin/prompts/${id}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8845/api'}/admin/prompts/${id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('promptbyniti_token')}`
         },
-        body: JSON.stringify({ status })
+        body: JSON.stringify({ status, rejectionReason: reason })
       });
       const json = await response.json();
       if (json.success) {
-        setData(data.map(item => item._id === id ? { ...item, status } : item));
+        setData(data.map(item => item._id === id ? { ...item, status, rejectionReason: reason } : item));
+        setRejectionModal({ show: false, id: null, reason: "", type: null });
         fetchStats();
       }
     } catch (err) {
@@ -91,10 +98,36 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleDeletePrompt = (id) => {
+    setDeleteConfirmModal({ show: true, id });
+  };
+
+  const executeDeletePrompt = async () => {
+    if (!deleteConfirmModal.id) return;
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8845/api'}/admin/prompts/${deleteConfirmModal.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('promptbyniti_token')}`
+        }
+      });
+      const json = await response.json();
+      if (json.success) {
+        setData(data.filter(item => item._id !== deleteConfirmModal.id));
+        setDeleteConfirmModal({ show: false, id: null });
+        fetchStats();
+      } else {
+        alert(json.message);
+      }
+    } catch (err) {
+      console.error('Delete error:', err);
+    }
+  };
+
   const handleUserBan = async (id, currentStatus) => {
     try {
       const isBanned = !currentStatus;
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8844/api'}/admin/users/${id}/ban`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8845/api'}/admin/users/${id}/ban`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -121,7 +154,7 @@ const AdminDashboard = () => {
 
   const handleWithdrawalStatus = async (id, status, reason = "") => {
     if (status === 'rejected' && !reason) {
-      setRejectionModal({ show: true, id, reason: "" });
+      setRejectionModal({ show: true, id, reason: "", type: 'withdrawal' });
       return;
     }
 
@@ -137,7 +170,7 @@ const AdminDashboard = () => {
       const json = await response.json();
       if (json.success) {
         setData(data.map(item => item._id === id ? { ...item, status, rejectionReason: reason } : item));
-        setRejectionModal({ show: false, id: null, reason: "" });
+        setRejectionModal({ show: false, id: null, reason: "", type: null });
         fetchStats();
       }
     } catch (err) {
@@ -239,8 +272,7 @@ const AdminDashboard = () => {
                 <th>Seller</th>
                 <th>Price</th>
                 <th>Status</th>
-                <th>Details</th>
-                {isVerification && <th>Actions</th>}
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -266,19 +298,16 @@ const AdminDashboard = () => {
                       {prompt.status}
                     </span>
                   </td>
-                  <td>
+                  <td className="actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                     <button className="view-btn" onClick={() => setSelectedPrompt(prompt)}>View Details</button>
+                    {prompt.status !== 'rejected' && (
+                      <button className="reject-btn" onClick={() => handleStatusUpdate(prompt._id, 'rejected')}>Reject</button>
+                    )}
+                    {prompt.status === 'pending' && (
+                      <button className="approve-btn" onClick={() => handleStatusUpdate(prompt._id, 'approved')}>Approve</button>
+                    )}
+                    <button className="delete-btn" style={{ background: '#ef4444', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer' }} onClick={() => handleDeletePrompt(prompt._id)}>Delete</button>
                   </td>
-                  {isVerification && (
-                    <td className="actions">
-                      {prompt.status === 'pending' && (
-                        <>
-                          <button className="approve-btn" onClick={() => handleStatusUpdate(prompt._id, 'approved')}>Approve</button>
-                          <button className="reject-btn" onClick={() => handleStatusUpdate(prompt._id, 'rejected')}>Reject</button>
-                        </>
-                      )}
-                    </td>
-                  )}
                 </tr>
               ))}
             </tbody>
@@ -492,11 +521,13 @@ const AdminDashboard = () => {
         <div className="admin-modal-overlay" style={{ zIndex: 10000 }}>
           <div className="admin-modal" style={{ maxWidth: '450px' }}>
             <div className="modal-header">
-              <h2>Withdrawal Rejection</h2>
-              <button className="close-modal" onClick={() => setRejectionModal({ show: false, id: null, reason: "" })}>&times;</button>
+              <h2>{rejectionModal.type === 'prompt' ? 'Reject Prompt' : 'Withdrawal Rejection'}</h2>
+              <button className="close-modal" onClick={() => setRejectionModal({ show: false, id: null, reason: "", type: null })}>&times;</button>
             </div>
             <div className="modal-body">
-              <p style={{ marginBottom: '15px', color: 'var(--text-secondary)' }}>Please provide a reason for rejecting this withdrawal. This will be visible to the user.</p>
+              <p style={{ marginBottom: '15px', color: 'var(--text-secondary)' }}>
+                Please provide a reason for rejecting this {rejectionModal.type === 'prompt' ? 'prompt' : 'withdrawal'}. This will be visible to the user.
+              </p>
               <textarea 
                 className="admin-textarea"
                 style={{ 
@@ -504,7 +535,7 @@ const AdminDashboard = () => {
                   background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
                   color: 'white', fontFamily: 'inherit', marginBottom: '20px', outline: 'none'
                 }}
-                placeholder="e.g., Invalid UPI ID, Suspicious activity, etc."
+                placeholder={rejectionModal.type === 'prompt' ? "e.g., Inappropriate content, unclear instructions..." : "e.g., Invalid UPI ID, Suspicious activity, etc."}
                 value={rejectionModal.reason}
                 onChange={(e) => setRejectionModal({ ...rejectionModal, reason: e.target.value })}
               />
@@ -512,7 +543,13 @@ const AdminDashboard = () => {
                 <button 
                   className="reject-btn" 
                   style={{ flex: 1, padding: '12px' }}
-                  onClick={() => handleWithdrawalStatus(rejectionModal.id, 'rejected', rejectionModal.reason)}
+                  onClick={() => {
+                    if (rejectionModal.type === 'prompt') {
+                      handleStatusUpdate(rejectionModal.id, 'rejected', rejectionModal.reason);
+                    } else {
+                      handleWithdrawalStatus(rejectionModal.id, 'rejected', rejectionModal.reason);
+                    }
+                  }}
                   disabled={!rejectionModal.reason.trim()}
                 >
                   Confirm Rejection
@@ -520,7 +557,7 @@ const AdminDashboard = () => {
                 <button 
                   className="approve-btn" 
                   style={{ flex: 1, padding: '12px', background: 'rgba(255,255,255,0.1)' }}
-                  onClick={() => setRejectionModal({ show: false, id: null, reason: "" })}
+                  onClick={() => setRejectionModal({ show: false, id: null, reason: "", type: null })}
                 >
                   Cancel
                 </button>
@@ -625,6 +662,34 @@ const AdminDashboard = () => {
           </div>
 
           <button className="nav-btn next" onClick={(e) => { e.stopPropagation(); navigateLightbox(1); }}>&rsaquo;</button>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmModal.show && (
+        <div className="admin-modal-overlay" style={{ zIndex: 100000 }}>
+          <div className="admin-modal" style={{ maxWidth: '400px', textAlign: 'center', background: 'var(--color-bg-secondary)', borderRadius: '16px', padding: '30px' }}>
+            <h2 style={{ color: '#ef4444', marginBottom: '15px' }}>Delete Prompt?</h2>
+            <p style={{ marginBottom: '25px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
+              Are you sure you want to completely delete this prompt from the platform? This action <strong>cannot be undone</strong>.
+            </p>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button 
+                className="delete-btn" 
+                style={{ flex: 1, padding: '12px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+                onClick={executeDeletePrompt}
+              >
+                Yes, Delete It
+              </button>
+              <button 
+                className="approve-btn" 
+                style={{ flex: 1, padding: '12px', background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+                onClick={() => setDeleteConfirmModal({ show: false, id: null })}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         </div>
       )}
       

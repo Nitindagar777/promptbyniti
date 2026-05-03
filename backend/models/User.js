@@ -39,7 +39,7 @@ const userSchema = new mongoose.Schema({
   },
   credits: {
     type: Number,
-    default: 5 // Starter Plan: 5 Tokens
+    default: 0 // No free tokens for new users
   },
   walletTokens: {
     type: Number,

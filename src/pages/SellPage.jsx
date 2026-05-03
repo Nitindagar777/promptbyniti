@@ -67,7 +67,11 @@ export default function SellPage() {
     if (id) {
       setIsEditMode(true);
       setEditId(id);
-      fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8844/api'}/prompts/${id}`)
+      fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8845/api'}/prompts/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('promptbyniti_token')}`
+        }
+      })
         .then(res => res.json())
         .then(data => {
           if (data.success && data.prompt) {

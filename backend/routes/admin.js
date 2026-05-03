@@ -35,7 +35,9 @@ router.get('/stats', isAdmin, async (req, res) => {
     const pendingPrompts = await Prompt.countDocuments({ status: 'pending' });
     const completedTransactions = await Transaction.find({ status: 'completed' });
     const totalRevenue = completedTransactions.reduce((sum, tx) => sum + (tx.amount || 0), 0);
-    const allTransactions = await Transaction.find();
+    
+    const allPrompts = await Prompt.find();
+    const platformPromptSales = allPrompts.reduce((sum, p) => sum + (p.sales || 0), 0);
 
     const pendingWithdrawals = await Withdrawal.countDocuments({ status: 'pending' });
 
@@ -46,7 +48,7 @@ router.get('/stats', isAdmin, async (req, res) => {
         promptsCount,
         pendingPrompts,
         totalRevenue: totalRevenue, 
-        salesCount: completedTransactions.length,
+        salesCount: platformPromptSales,
         pendingWithdrawals
       }
     });
@@ -102,13 +104,30 @@ router.get('/prompts', isAdmin, async (req, res) => {
 // UPDATE Prompt Status
 router.patch('/prompts/:id', isAdmin, async (req, res) => {
   try {
-    const { status } = req.body;
+    const { status, rejectionReason } = req.body;
     if (!['approved', 'rejected', 'pending'].includes(status)) {
       return res.status(400).json({ success: false, message: 'Invalid status' });
     }
 
-    const prompt = await Prompt.findByIdAndUpdate(req.params.id, { status }, { new: true });
+    const updateData = { status };
+    if (status === 'rejected' && rejectionReason) {
+      updateData.rejectionReason = rejectionReason;
+    }
+
+    const prompt = await Prompt.findByIdAndUpdate(req.params.id, updateData, { new: true });
     res.json({ success: true, prompt });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// DELETE Prompt
+router.delete('/prompts/:id', isAdmin, async (req, res) => {
+  try {
+    const prompt = await Prompt.findByIdAndDelete(req.params.id);
+    if (!prompt) return res.status(404).json({ success: false, message: 'Prompt not found' });
+    
+    res.json({ success: true, message: 'Prompt deleted successfully' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

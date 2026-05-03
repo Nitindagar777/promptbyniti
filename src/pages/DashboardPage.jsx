@@ -38,8 +38,8 @@ export default function DashboardPage() {
     swiftCode: '',
     note: ''
   });
-  // Wallet balance: subtract 1 free signup token (not withdrawable)
-  const walletTokens = Math.max(0, (state.user?.credits || 0) - 1);
+  // Wallet balance is exactly what's shown in the navbar
+  const walletTokens = state.user?.credits || 0;
   const [toast, setToast] = useState(null); // { message, type: 'success' | 'error' }
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
@@ -78,6 +78,7 @@ export default function DashboardPage() {
     }
   };
   const [loading, setLoading] = useState(true);
+  const [rejectionReasonModal, setRejectionReasonModal] = useState({ show: false, reason: "" });
   const [stats, setStats] = useState({
     totalEarnings: 0,
     walletBalance: 0,
@@ -310,13 +311,27 @@ export default function DashboardPage() {
                   <div className="activity-list">
                     {stats.recentActivity && stats.recentActivity.length > 0 ? (
                       stats.recentActivity.map(item => (
-                        <div key={item.id} className="activity-item">
-                          <div className="activity-user-av">{item.user[0].toUpperCase()}</div>
-                          <div className="activity-content">
-                            <p><strong>@{item.user}</strong> purchased <span>{item.prompt}</span></p>
-                            <span className="activity-time">{item.time}</span>
+                        <div key={item.id} className="activity-item" style={{ display: 'flex', alignItems: 'center', padding: '12px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                          <div className="activity-user-av" style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '15px', fontSize: '18px' }}>
+                            {item.type === 'sale' ? (item.user ? item.user[0].toUpperCase() : '👤') : item.type === 'withdrawal' ? '💰' : item.type === 'approved' ? '✅' : item.type === 'rejected' ? '❌' : '📤'}
                           </div>
-                          <div className="activity-price text-green">+${item.price}</div>
+                          <div className="activity-content" style={{ flex: 1 }}>
+                            {item.type === 'sale' ? (
+                              <p style={{ margin: 0, fontSize: '0.95rem' }}><strong>@{item.user}</strong> purchased <span style={{ color: 'var(--color-cyan)' }}>{item.prompt}</span></p>
+                            ) : item.type === 'withdrawal' ? (
+                              <p style={{ margin: 0, fontSize: '0.95rem' }}><strong>Withdrawal</strong> request for <span style={{ color: 'var(--color-orange)' }}>{item.price} Tokens</span> ({item.status})</p>
+                            ) : item.type === 'submitted' ? (
+                              <p style={{ margin: 0, fontSize: '0.95rem' }}>You submitted <span style={{ color: 'var(--color-cyan)' }}>{item.prompt}</span> for review</p>
+                            ) : item.type === 'approved' ? (
+                              <p style={{ margin: 0, fontSize: '0.95rem' }}>System <strong>approved</strong> your prompt <span style={{ color: 'var(--color-cyan)' }}>{item.prompt}</span></p>
+                            ) : item.type === 'rejected' ? (
+                              <p style={{ margin: 0, fontSize: '0.95rem' }}>System <strong>rejected</strong> your prompt <span style={{ color: 'var(--color-cyan)' }}>{item.prompt}</span></p>
+                            ) : null}
+                            <span className="activity-time" style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{item.time}</span>
+                          </div>
+                          <div className={`activity-price ${item.type === 'sale' ? 'text-green' : item.type === 'withdrawal' ? 'text-orange' : item.type === 'rejected' ? 'text-red' : item.type === 'approved' ? 'text-green' : ''}`} style={{ fontWeight: 'bold' }}>
+                            {item.type === 'sale' ? `+${item.price} Tokens` : item.type === 'withdrawal' ? `-${item.price} Tokens` : item.type.toUpperCase()}
+                          </div>
                         </div>
                       ))
                     ) : (
@@ -401,7 +416,16 @@ export default function DashboardPage() {
                               </div>
                             </td>
                             <td>
-                              <span className={`status-pill status-${p.status}`}>
+                              <span 
+                                className={`status-pill status-${p.status}`} 
+                                style={{ cursor: p.status === 'rejected' ? 'pointer' : 'default' }}
+                                onClick={() => {
+                                  if (p.status === 'rejected') {
+                                    setRejectionReasonModal({ show: true, reason: p.rejectionReason || "No specific reason provided." });
+                                  }
+                                }}
+                                title={p.status === 'rejected' ? "Click to see rejection reason" : ""}
+                              >
                                 {p.status}
                               </span>
                             </td>
@@ -464,7 +488,7 @@ export default function DashboardPage() {
                     <span>Niti Secure Wallet</span>
                   </div>
                   <div className="balance-display">
-                    <span className="balance-label">Current Earnings</span>
+                    <span className="balance-label">Available Balance</span>
                     <h2 className="balance-value">
                       <Zap size={48} className="text-orange" fill="var(--color-orange)" style={{ marginRight: '15px' }} />
                       {walletTokens}
@@ -1112,6 +1136,38 @@ export default function DashboardPage() {
               >
                 Understood
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Prompt Rejection Reason Modal */}
+      {rejectionReasonModal.show && (
+        <div className="admin-modal-overlay" style={{ zIndex: 10000, position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="admin-modal" style={{ maxWidth: '450px', background: 'var(--color-bg-secondary)', borderRadius: '16px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+            <div className="modal-header" style={{ display: 'flex', justifyContent: 'space-between', padding: '20px', borderBottom: '1px solid var(--border-color)' }}>
+              <h2 style={{ fontFamily: 'var(--font-display)', margin: 0 }}>Prompt Rejected</h2>
+              <button onClick={() => setRejectionReasonModal({ show: false, reason: "" })} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '24px', lineHeight: '1' }}>&times;</button>
+            </div>
+            <div className="modal-body" style={{ padding: '20px' }}>
+              <p style={{ marginBottom: '15px', color: 'var(--text-secondary)' }}>Your prompt was rejected for the following reason:</p>
+              <div 
+                style={{ 
+                  width: '100%', minHeight: '100px', padding: '15px', borderRadius: '8px',
+                  background: 'rgba(255, 77, 77, 0.1)', border: '1px solid rgba(255, 77, 77, 0.2)',
+                  color: '#ffdddd', fontFamily: 'inherit', marginBottom: '20px', lineHeight: '1.5'
+                }}
+              >
+                {rejectionReasonModal.reason}
+              </div>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button 
+                  className="btn btn-secondary w-full" 
+                  onClick={() => setRejectionReasonModal({ show: false, reason: "" })}
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>

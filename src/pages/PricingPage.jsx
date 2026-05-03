@@ -153,9 +153,15 @@ export default function PricingPage() {
                 <span className="pricing-card__currency">$</span>
                 <span className="pricing-card__amount">{plan.price}</span>
               </div>
-              <p className="pricing-card__credits">
-                <span className="text-orange">{plan.credits}</span> Complete Prompt Packs ({plan.credits} Tokens)
-              </p>
+              {plan.id === 'free' ? (
+                <p className="pricing-card__credits" style={{ fontWeight: 'bold' }}>
+                  <span className="text-orange">1</span> time free use of Generation
+                </p>
+              ) : (
+                <p className="pricing-card__credits">
+                  <span className="text-orange">{plan.credits}</span> Complete Prompt Packs ({plan.credits} Tokens)
+                </p>
+              )}
               
               <ul className="pricing-card__features">
                 {plan.features.map((feat, i) => (

@@ -837,7 +837,7 @@ export const pricingPlans = [
     period: 'forever',
     description: 'Try the platform with <span class="text-secondary">limited access</span>',
     features: [
-      '<span class="text-orange">1</span> Complete Prompt Pack (1 Token)',
+      '<span class="text-orange">1</span> time free use of generation',
       'Public prompt library access',
       'Basic styles & moods',
       'Standard AI format',

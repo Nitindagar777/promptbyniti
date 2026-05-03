@@ -46,11 +46,14 @@ router.get('/stats', auth, async (req, res) => {
     // REAL DATA CALCULATIONS
     const totalViews = prompts.reduce((sum, p) => sum + (p.views || 0), 0);
     const totalSales = prompts.reduce((sum, p) => sum + (p.sales || 0), 0);
-    const totalEarnings = user.walletTokens || 0;
     
     // Calculate total tokens withdrawn
     const completedWithdrawals = await Withdrawal.find({ sellerId: sellerIdObj, status: 'completed' });
     const totalWithdrawn = completedWithdrawals.reduce((sum, w) => sum + (w.amount || 0), 0);
+    
+    // Total Earnings should be 80% of sales. Assuming standard 5 tokens per sale, seller gets 4.
+    // Or we can just use totalSales * 4. This is more accurate for "Total Earnings" than just current wallet balance.
+    const totalEarnings = totalSales * 4; 
 
     // Performance Data (Last 7 days sales)
     const dailyTokens = [0, 0, 0, 0, 0, 0, 0]; 
@@ -59,16 +62,66 @@ router.get('/stats', auth, async (req, res) => {
         dailyTokens[i] = Math.floor(totalSales / 7);
     }
 
+    // Fetch Buyers for Recent Activity (Sales)
+    const promptIds = prompts.map(p => p._id);
+    const buyers = await User.find({ purchasedPrompts: { $in: promptIds } });
+    let recentActivity = [];
+    buyers.forEach(buyer => {
+      const boughtPrompts = prompts.filter(p => 
+        buyer.purchasedPrompts.some(bId => bId.toString() === p._id.toString())
+      );
+      boughtPrompts.forEach(p => {
+        recentActivity.push({
+          id: `sale-${buyer._id}-${p._id}`,
+          type: 'sale',
+          user: buyer.name || 'Anonymous',
+          prompt: p.name || p.title,
+          time: 'Recently',
+          price: Math.floor((p.priceTokens || p.tokens || 5) * 0.8),
+          timestamp: p.createdAt // fallback for sort if we don't have purchase time
+        });
+      });
+    });
+
+    // Add Prompt Statuses (Approved, Rejected, Submitted)
+    prompts.forEach(p => {
+      recentActivity.push({
+        id: `status-${p._id}`,
+        type: p.status === 'pending' ? 'submitted' : p.status, // approved, rejected, submitted
+        prompt: p.name || p.title,
+        time: new Date(p.createdAt).toLocaleDateString(),
+        timestamp: p.createdAt,
+        reason: p.rejectionReason
+      });
+    });
+
+    // Add Withdrawals
+    const allWithdrawals = await Withdrawal.find({ sellerId: sellerIdObj }).sort({ createdAt: -1 }).limit(10);
+    allWithdrawals.forEach(w => {
+      recentActivity.push({
+        id: `withdrawal-${w._id}`,
+        type: 'withdrawal',
+        status: w.status,
+        price: w.amount,
+        time: new Date(w.createdAt).toLocaleDateString(),
+        timestamp: w.createdAt
+      });
+    });
+
+    // Sort all by timestamp descending
+    recentActivity.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    recentActivity = recentActivity.slice(0, 15);
+
     res.json({
       success: true,
       stats: {
-        totalEarnings: totalEarnings,
+        totalEarnings: totalEarnings, // Fixed 80% logic
         totalSales: totalSales,
         totalViews: totalViews,
         activePrompts: prompts.length,
         conversionRate: totalViews > 0 ? ((totalSales / totalViews) * 100).toFixed(1) + '%' : '0%',
         prompts: prompts.sort((a, b) => b.createdAt - a.createdAt),
-        recentActivity: [],
+        recentActivity: recentActivity,
         recentPayouts: (await Withdrawal.find({ sellerId: sellerIdObj }).sort({ createdAt: -1 }).limit(10)).map(w => {
           const doc = w.toObject();
           if (doc.status === 'rejected' && !doc.rejectionReason) {
@@ -76,7 +129,7 @@ router.get('/stats', auth, async (req, res) => {
           }
           return doc;
         }),
-        dailyEarnings: dailyTokens.map(s => s * 5), // Tokens earned
+        dailyEarnings: dailyTokens.map(s => s * 4), // Tokens earned: 80% of 5 = 4
         performanceGrowth: 0,
         earningGrowth: 0,
         salesGrowth: 0
