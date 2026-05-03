@@ -139,10 +139,10 @@ export default function HomePage() {
           <div className="p-market-header reveal">
             <h2 className="h-display">Prompt <span className="text-pink">Store</span></h2>
             <Link to="/templates" className="btn btn-secondary">
-               See all Prompts <ShoppingBag size={18} style={{marginLeft: '8px'}}/>
+              See all Prompts <ShoppingBag size={18} style={{ marginLeft: '8px' }} />
             </Link>
           </div>
-          
+
           <div className="p-market-grid">
             {loadingPrompts ? (
               // Skeleton loaders
@@ -151,102 +151,102 @@ export default function HomePage() {
               ))
             ) : prompts.length > 0 ? (
               prompts.map((tmpl, i) => {
-              // Mirror the exact same logic as PromptDetailPage
-              const s0 = tmpl.samples?.[0]?.output || tmpl.samples?.[0];
-              const s1 = tmpl.samples?.[1]?.output || tmpl.samples?.[1];
-              const s2 = tmpl.samples?.[2]?.output || tmpl.samples?.[2];
-              const coverSrc = tmpl.thumbnail || s0;
-              const isTextOnly = !coverSrc && !tmpl.video;
+                // Mirror the exact same logic as PromptDetailPage
+                const s0 = tmpl.samples?.[0]?.output || tmpl.samples?.[0];
+                const s1 = tmpl.samples?.[1]?.output || tmpl.samples?.[1];
+                const s2 = tmpl.samples?.[2]?.output || tmpl.samples?.[2];
+                const coverSrc = tmpl.thumbnail || s0;
+                const isTextOnly = !coverSrc && !tmpl.video;
 
-              return (
-                <Link
-                  key={tmpl.id || tmpl._id}
-                  to={`/prompt/${tmpl.id || tmpl._id}`}
-                  className="template-card card reveal"
-                  id={`template-${tmpl.id || tmpl._id}`}
-                  style={{ animationDelay: `${i * 0.05}s`, textDecoration: 'none' }}
-                >
-                  {!isTextOnly ? (
-                    <div className="template-card__visual">
-                      {/* Main image — same as detail page */}
-                      {tmpl.video || coverSrc?.toLowerCase().match(/\.(mp4|webm|ogg)$/) || tmpl.generateType === 'video' ? (
-                        <video src={tmpl.video || coverSrc} autoPlay muted loop className="template-card__media template-card__media-main" />
-                      ) : (
-                        <img
-                          src={coverSrc || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400'}
-                          alt={tmpl.title || tmpl.name}
-                          className="template-card__media template-card__media-main"
-                          onError={e => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400'; }}
-                        />
-                      )}
+                return (
+                  <Link
+                    key={tmpl.id || tmpl._id}
+                    to={`/prompt/${tmpl.id || tmpl._id}`}
+                    className="template-card card reveal"
+                    id={`template-${tmpl.id || tmpl._id}`}
+                    style={{ animationDelay: `${i * 0.05}s`, textDecoration: 'none' }}
+                  >
+                    {!isTextOnly ? (
+                      <div className="template-card__visual">
+                        {/* Main image — same as detail page */}
+                        {tmpl.video || coverSrc?.toLowerCase().match(/\.(mp4|webm|ogg)$/) || tmpl.generateType === 'video' ? (
+                          <video src={tmpl.video || coverSrc} autoPlay muted loop className="template-card__media template-card__media-main" />
+                        ) : (
+                          <img
+                            src={coverSrc || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400'}
+                            alt={tmpl.title || tmpl.name}
+                            className="template-card__media template-card__media-main"
+                            onError={e => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400'; }}
+                          />
+                        )}
 
-                      {/* Hover gallery — all 3 samples, same as CSS expects */}
-                      {s0 && s1 && s2 && (
-                        <div className="template-card__gallery">
-                          <div className="template-card__gallery-main">
-                            {s0.toLowerCase().match(/\.(mp4|webm|ogg)$/) || tmpl.generateType === 'video' ? (
-                              <video src={s0} autoPlay muted loop />
-                            ) : (
-                              <img src={s0} alt="sample 1" />
-                            )}
+                        {/* Hover gallery — all 3 samples, same as CSS expects */}
+                        {s0 && s1 && s2 && (
+                          <div className="template-card__gallery">
+                            <div className="template-card__gallery-main">
+                              {s0.toLowerCase().match(/\.(mp4|webm|ogg)$/) || tmpl.generateType === 'video' ? (
+                                <video src={s0} autoPlay muted loop />
+                              ) : (
+                                <img src={s0} alt="sample 1" />
+                              )}
+                            </div>
+                            <div className="template-card__gallery-side">
+                              {s1.toLowerCase().match(/\.(mp4|webm|ogg)$/) || tmpl.generateType === 'video' ? (
+                                <video src={s1} autoPlay muted loop />
+                              ) : (
+                                <img src={s1} alt="sample 2" />
+                              )}
+                              {s2.toLowerCase().match(/\.(mp4|webm|ogg)$/) || tmpl.generateType === 'video' ? (
+                                <video src={s2} autoPlay muted loop />
+                              ) : (
+                                <img src={s2} alt="sample 3" />
+                              )}
+                            </div>
                           </div>
-                          <div className="template-card__gallery-side">
-                            {s1.toLowerCase().match(/\.(mp4|webm|ogg)$/) || tmpl.generateType === 'video' ? (
-                              <video src={s1} autoPlay muted loop />
-                            ) : (
-                              <img src={s1} alt="sample 2" />
-                            )}
-                            {s2.toLowerCase().match(/\.(mp4|webm|ogg)$/) || tmpl.generateType === 'video' ? (
-                              <video src={s2} autoPlay muted loop />
-                            ) : (
-                              <img src={s2} alt="sample 3" />
-                            )}
+                        )}
+
+                        {/* Model tag (top) */}
+                        <div className="template-card__overlay template-card__overlay--top">
+                          <span className="template-card__model-tag">
+                            {tmpl.model || (tmpl.category === 'anime' ? 'Niji v6' : 'Flux.1')}
+                          </span>
+                          <div className="template-card__view-badge">
+                            <Eye size={12} /> {tmpl.views || 0}
                           </div>
                         </div>
-                      )}
 
-                      {/* Model tag (top) */}
-                      <div className="template-card__overlay template-card__overlay--top">
-                        <span className="template-card__model-tag">
-                          {tmpl.model || (tmpl.category === 'anime' ? 'Niji v6' : 'Flux.1')}
-                        </span>
-                        <div className="template-card__view-badge">
-                          <Eye size={12} /> {tmpl.views || 0}
+                        {/* Title + tokens (bottom) */}
+                        <div className="template-card__overlay template-card__overlay--bottom">
+                          <div style={{ flex: 1 }}>
+                            <h3 className="template-card__title-overlay">{tmpl.title || tmpl.name}</h3>
+                          </div>
+                          <div className="template-card__token-badge">
+                            <ZapIcon size={12} fill="currentColor" /> {tmpl.priceTokens || tmpl.tokens || 5}
+                          </div>
                         </div>
                       </div>
-
-                      {/* Title + tokens (bottom) */}
-                      <div className="template-card__overlay template-card__overlay--bottom">
-                        <div style={{ flex: 1 }}>
-                          <h3 className="template-card__title-overlay">{tmpl.title || tmpl.name}</h3>
+                    ) : (
+                      <div className="template-card__content template-card__content--text">
+                        <div className="template-card__overlay template-card__overlay--top">
+                          <span className="template-card__model-tag template-card__model-tag--text">
+                            {tmpl.model || 'GPT-4o'}
+                          </span>
+                          <div className="template-card__view-badge">
+                            <Eye size={12} /> {tmpl.views || 0}
+                          </div>
                         </div>
-                        <div className="template-card__token-badge">
-                          <ZapIcon size={12} fill="currentColor" /> {tmpl.priceTokens || tmpl.tokens || 5}
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="template-card__content template-card__content--text">
-                      <div className="template-card__overlay template-card__overlay--top">
-                        <span className="template-card__model-tag template-card__model-tag--text">
-                          {tmpl.model || 'GPT-4o'}
-                        </span>
-                        <div className="template-card__view-badge">
-                          <Eye size={12} /> {tmpl.views || 0}
+                        <h3 className="template-card__title-center">{tmpl.title || tmpl.name}</h3>
+                        <div className="template-card__overlay template-card__overlay--bottom template-card__overlay--right">
+                          <div className="template-card__token-badge template-card__token-badge--text">
+                            <ZapIcon size={12} fill="currentColor" /> {tmpl.priceTokens || tmpl.tokens || 5} Tokens
+                          </div>
                         </div>
                       </div>
-                      <h3 className="template-card__title-center">{tmpl.title || tmpl.name}</h3>
-                      <div className="template-card__overlay template-card__overlay--bottom template-card__overlay--right">
-                        <div className="template-card__token-badge template-card__token-badge--text">
-                          <ZapIcon size={12} fill="currentColor" /> {tmpl.priceTokens || tmpl.tokens || 5} Tokens
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </Link>
-              );
-            })
-          ) : (
+                    )}
+                  </Link>
+                );
+              })
+            ) : (
               <div className="p-market-empty reveal" style={{ gridColumn: '1/-1', textAlign: 'center', padding: 'var(--space-2xl) 0' }}>
                 <ShoppingBag size={48} className="text-muted mb-4 mx-auto" />
                 <h3>No Prompts Found</h3>
@@ -288,7 +288,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-            <br /> <br /> <br />
+      <br /> <br /> <br />
       {/* 05. TESTIMONIAL / CTA */}
       <section className="p-cta container" style={{ paddingBottom: 'var(--space-2xl)' }}>
         <div className="p-cta__inner reveal">

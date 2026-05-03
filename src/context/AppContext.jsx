@@ -158,7 +158,7 @@ export function AppProvider({ children }) {
       console.log('🔄 Validating session with token:', 'Exists');
       try {
         const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8845/api'}/auth/me`, {
-          headers: { 
+          headers: {
             'Authorization': `Bearer ${token}`,
             'Cache-Control': 'no-cache'
           }
@@ -202,13 +202,13 @@ export function AppProvider({ children }) {
       if (templateId) {
         dispatch({ type: actions.ADD_PURCHASE, payload: templateId });
       }
-      
+
       const token = localStorage.getItem(TOKEN_KEY);
       if (token) {
         try {
           await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8845/api'}/auth/use-credits`, {
             method: 'POST',
-            headers: { 
+            headers: {
               'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json'
             },
@@ -256,16 +256,16 @@ export function AppProvider({ children }) {
               display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px'
             }}>
               <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
-                <path d="M12 9v4"/>
-                <path d="M12 17h.01"/>
+                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                <path d="M12 9v4" />
+                <path d="M12 17h.01" />
               </svg>
             </div>
             <h2 style={{ fontFamily: 'var(--font-display)', color: '#ef4444', fontSize: '2rem', marginBottom: '12px' }}>Account Suspended</h2>
             <p style={{ color: 'var(--text-secondary)', marginBottom: '24px', lineHeight: '1.6' }}>
               Your account has been banned due to a violation of our terms of service. You have been logged out.
             </p>
-            <button 
+            <button
               onClick={() => setShowBanModal(false)}
               style={{
                 background: '#ef4444', color: 'white', border: 'none', padding: '12px 32px',

@@ -49,9 +49,9 @@ export default function TemplatesPage() {
   const filteredTemplates = prompts.filter(t => {
     const searchLower = searchTerm.toLowerCase().trim();
     const catLower = selectedCat.toLowerCase();
-    
+
     // Check category match (Primary category OR in keywords)
-    const matchesCat = selectedCat === 'all' || 
+    const matchesCat = selectedCat === 'all' ||
       (t.category || '').toLowerCase() === catLower ||
       (Array.isArray(t.keywords) && t.keywords.some(k => k && k.toLowerCase().replace(/ /g, '-') === catLower)) ||
       (typeof t.keywords === 'string' && t.keywords.toLowerCase().replace(/ /g, '-').includes(catLower));
@@ -66,12 +66,12 @@ export default function TemplatesPage() {
       keywordMatch = t.keywords.toLowerCase().includes(searchLower);
     }
 
-    const matchesSearch = 
+    const matchesSearch =
       (t.name || '').toLowerCase().includes(searchLower) ||
       (t.title || '').toLowerCase().includes(searchLower) ||
       (t.description || '').toLowerCase().includes(searchLower) ||
       keywordMatch;
-    
+
     return matchesCat && matchesSearch;
   });
 
@@ -91,9 +91,9 @@ export default function TemplatesPage() {
             <div className="templates-page__search-container">
               <div className="compact-search-box">
                 <Search size={16} className="search-icon" />
-                <input 
-                  type="text" 
-                  placeholder="Search prompts..." 
+                <input
+                  type="text"
+                  placeholder="Search prompts..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -128,7 +128,7 @@ export default function TemplatesPage() {
         ) : (
           <div className="templates-page__grid">
             {filteredTemplates.length > 0 ? (
-            filteredTemplates.map((tmpl, i) => {
+              filteredTemplates.map((tmpl, i) => {
                 const s0 = tmpl.samples?.[0]?.output || tmpl.samples?.[0];
                 const s1 = tmpl.samples?.[1]?.output || tmpl.samples?.[1];
                 const s2 = tmpl.samples?.[2]?.output || tmpl.samples?.[2];

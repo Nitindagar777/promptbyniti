@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { aiModels } from '../data/promptData';
-import { 
-  Zap, ArrowLeft, Copy, Check, ShoppingBag, 
-  Sparkles, Image, MessageSquare, Play, 
+import {
+  Zap, ArrowLeft, Copy, Check, ShoppingBag,
+  Sparkles, Image, MessageSquare, Play,
   Download, Share2, Heart, ShieldCheck,
-  ChevronLeft, ChevronRight, Eye, ArrowRight, Star 
+  ChevronLeft, ChevronRight, Eye, ArrowRight, Star
 } from 'lucide-react';
 import './PromptDetailPage.css';
 
@@ -27,14 +27,14 @@ export default function PromptDetailPage() {
   const [isPromptPurchased, setIsPromptPurchased] = useState(false);
   const [reviews, setReviews] = useState([]);
 
-  const API_BASE = import.meta.env.VITE_API_URL || 
-    (window.location.hostname.includes('oopsverse.cloud') 
-      ? 'https://oopsverse.cloud/api' 
+  const API_BASE = import.meta.env.VITE_API_URL ||
+    (window.location.hostname.includes('oopsverse.cloud')
+      ? 'https://oopsverse.cloud/api'
       : 'http://localhost:8845/api');
 
   const handleReplySubmit = async (idx) => {
     if (!replyText.trim()) return;
-    
+
     const reviewId = reviews[idx]._id;
     if (!reviewId) {
       console.error('❌ Review ID missing for index:', idx, reviews[idx]);
@@ -48,9 +48,9 @@ export default function PromptDetailPage() {
       const token = localStorage.getItem('promptbyniti_token');
       const res = await fetch(url, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` 
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ reply: replyText })
       });
@@ -113,30 +113,30 @@ export default function PromptDetailPage() {
     const fetchTemplate = async () => {
       setLoading(true);
       setError(null);
-      
+
       // Try fetching from Database
-        try {
-          const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8845/api';
-          const token = localStorage.getItem('promptbyniti_token');
-          const res = await fetch(`${API_URL}/prompts/${id}?t=${Date.now()}`, {
-            headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-          });
-          const data = await res.json();
-          if (data.success) {
-            setTemplate(data.prompt);
-            setReviews(data.prompt.reviews || []);
-            if (data.isPurchased) {
-              setIsPromptPurchased(true);
-            }
-          } else {
-            setError("Prompt not found");
+      try {
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8845/api';
+        const token = localStorage.getItem('promptbyniti_token');
+        const res = await fetch(`${API_URL}/prompts/${id}?t=${Date.now()}`, {
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        });
+        const data = await res.json();
+        if (data.success) {
+          setTemplate(data.prompt);
+          setReviews(data.prompt.reviews || []);
+          if (data.isPurchased) {
+            setIsPromptPurchased(true);
           }
-        } catch (err) {
-          console.error("Fetch error:", err);
-          setError("Failed to load prompt details");
-        } finally {
-          setLoading(false);
+        } else {
+          setError("Prompt not found");
         }
+      } catch (err) {
+        console.error("Fetch error:", err);
+        setError("Failed to load prompt details");
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchTemplate();
@@ -192,7 +192,12 @@ export default function PromptDetailPage() {
                   style={{ aspectRatio: imageRatio || '1/1' }}
                 >
                   {template.video || template.generateType === 'video' ? (
-                    <video src={template.video || (template.samples?.[activeImage]?.output || template.samples?.[activeImage])} autoPlay muted loop controls />
+                    <video
+                      src={template.video || (template.samples?.[activeImage]?.output || template.samples?.[activeImage])}
+                      autoPlay muted loop controls
+                      controlsList="nodownload noplaybackrate"
+                      disablePictureInPicture
+                    />
                   ) : (
                     <img
                       src={
@@ -221,15 +226,15 @@ export default function PromptDetailPage() {
                     {(template.video || template.generateType === 'video') ? 'Video Prompt' : 'Image Prompt'}
                   </div>
                 </div>
-                
+
                 {template.samples && template.samples.length > 1 && (
                   <div className="visual-thumbs">
                     {template.samples.map((sample, idx) => {
                       const thumbSrc = sample.output || sample;
                       const isVideo = thumbSrc?.toLowerCase().match(/\.(mp4|webm|ogg)$/) || template.generateType === 'video';
                       return (
-                        <div 
-                          key={idx} 
+                        <div
+                          key={idx}
                           className={`visual-thumb ${activeImage === idx ? 'visual-thumb--active' : ''}`}
                           onClick={() => { setActiveImage(idx); setImageRatio(null); }}
                         >
@@ -269,7 +274,7 @@ export default function PromptDetailPage() {
               <span className="p-detail__category-tag">{category.replace('-', ' ')}</span>
               <h1 className="p-detail__title">{template.title || template.name}</h1>
               <p className="p-detail__desc">{template.description || "A professional high-end prompt optimized for creative production."}</p>
-              
+
               {template.keywords && template.keywords.length > 0 && (
                 <div className="p-detail__keywords">
                   {template.keywords.map((kw, i) => {
@@ -279,9 +284,9 @@ export default function PromptDetailPage() {
                     const isCategory = validCatIds.includes(normalized);
 
                     return (
-                      <span 
-                        key={i} 
-                        className="p-detail__keyword-tag" 
+                      <span
+                        key={i}
+                        className="p-detail__keyword-tag"
                         onClick={() => {
                           if (isCategory) {
                             navigate('/templates', { state: { category: normalized } });
@@ -300,10 +305,10 @@ export default function PromptDetailPage() {
             </div>
 
             <div className="p-detail__stats card">
-              <div className="stat-item" style={{ 
-                gridColumn: '1 / -1', 
-                paddingBottom: '20px', 
-                borderBottom: '1px solid rgba(255,255,255,0.05)', 
+              <div className="stat-item" style={{
+                gridColumn: '1 / -1',
+                paddingBottom: '20px',
+                borderBottom: '1px solid rgba(255,255,255,0.05)',
                 marginBottom: '10px',
                 display: 'flex',
                 justifyContent: 'center',
@@ -315,13 +320,13 @@ export default function PromptDetailPage() {
                     const sellerId = template.seller?._id?.toString() || template.seller?.id?.toString() || template.seller?.toString();
                     const isCreator = currentUserId && sellerId && (currentUserId === sellerId);
                     const avatarUrl = template.seller?.avatar || (isCreator ? state.user?.avatar : null) || `https://ui-avatars.com/api/?name=${template.seller?.name || 'C'}&background=random`;
-                    
+
                     return (
                       <>
-                        <img 
-                          src={avatarUrl} 
-                          alt="Creator Avatar" 
-                          style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--color-cyan)', boxShadow: '0 0 15px rgba(0, 255, 255, 0.3)' }} 
+                        <img
+                          src={avatarUrl}
+                          alt="Creator Avatar"
+                          style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--color-cyan)', boxShadow: '0 0 15px rgba(0, 255, 255, 0.3)' }}
                         />
                         <span style={{ fontSize: '1.25rem', color: 'white', fontWeight: 'bold' }}>{template.seller?.name || 'Unknown Creator'}</span>
                       </>
@@ -361,23 +366,23 @@ export default function PromptDetailPage() {
                       const pid = typeof p === 'object' ? p._id : p;
                       return pid?.toString() === currentId;
                     });
-                    const isOwner = (state.user?.id?.toString() === template?.seller?._id?.toString() || 
-                                     state.user?.id?.toString() === template?.seller?.toString() ||
-                                     state.user?._id?.toString() === template?.seller?._id?.toString() ||
-                                     state.user?._id?.toString() === template?.seller?.toString());
+                    const isOwner = (state.user?.id?.toString() === template?.seller?._id?.toString() ||
+                      state.user?.id?.toString() === template?.seller?.toString() ||
+                      state.user?._id?.toString() === template?.seller?._id?.toString() ||
+                      state.user?._id?.toString() === template?.seller?.toString());
 
                     if (isOwner) {
                       return (
-                        <div style={{ 
-                          padding: '24px', 
-                          background: 'rgba(6, 182, 212, 0.05)', 
-                          border: '1px dashed var(--color-cyan)', 
+                        <div style={{
+                          padding: '24px',
+                          background: 'rgba(6, 182, 212, 0.05)',
+                          border: '1px dashed var(--color-cyan)',
                           borderRadius: 'var(--radius-lg)',
                           textAlign: 'center'
                         }}>
-                          <p style={{ 
-                            fontFamily: 'var(--font-display)', 
-                            fontSize: '1.25rem', 
+                          <p style={{
+                            fontFamily: 'var(--font-display)',
+                            fontSize: '1.25rem',
                             color: 'var(--color-cyan)',
                             margin: 0
                           }}>
@@ -393,7 +398,7 @@ export default function PromptDetailPage() {
                     if (isPurchasedInState || isPromptPurchased) {
                       return (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                          <button 
+                          <button
                             className={`btn btn-primary btn-xl w-full ${copied ? 'copied' : ''}`}
                             onClick={() => {
                               navigator.clipboard.writeText(template.template || template.config?.description || '');
@@ -404,13 +409,13 @@ export default function PromptDetailPage() {
                           >
                             {copied ? <><Check size={20} /> Copied!</> : <><Copy size={20} /> Copy Secret Prompt</>}
                           </button>
-                          
-                          <button 
+
+                          <button
                             className="btn btn-secondary btn-xl w-full"
                             onClick={() => window.open(`/purchase-success/${template._id}`, '_blank')}
-                            style={{ 
-                              width: '100%', 
-                              gap: '10px', 
+                            style={{
+                              width: '100%',
+                              gap: '10px',
                               background: 'rgba(168, 85, 247, 0.1)',
                               border: '1px solid rgba(168, 85, 247, 0.2)',
                               color: 'var(--color-purple)'
@@ -432,13 +437,13 @@ export default function PromptDetailPage() {
                           <div className="price-label">Per Generation</div>
                         </div>
 
-                        <button 
+                        <button
                           onClick={async () => {
                             if (state.credits < 5) {
                               alert('Insufficient tokens! You need 5 tokens to use this prompt.');
                               return;
                             }
-                            
+
                             const templateId = template.id || template._id;
                             try {
                               // Deduct credits and process split
@@ -508,16 +513,16 @@ export default function PromptDetailPage() {
                   const rawCreatorId = template?.seller?._id || template?.seller || template?.userId;
                   const creatorId = rawCreatorId?.toString();
                   const currentUserId = state.user?._id?.toString() || state.user?.id?.toString();
-                  
+
                   const isCreator = currentUserId && creatorId && (currentUserId === creatorId);
 
                   // Debug log to help you fix this in the console
                   if (idx === 0) {
-                    console.log('🧐 ID CHECK:', { 
-                      currentUserId, 
-                      creatorId, 
+                    console.log('🧐 ID CHECK:', {
+                      currentUserId,
+                      creatorId,
                       match: isCreator,
-                      rawTemplate: template 
+                      rawTemplate: template
                     });
                   }
 
@@ -543,9 +548,9 @@ export default function PromptDetailPage() {
                           </div>
                           <div className="review-stars-new">
                             {[...Array(5)].map((_, i) => (
-                              <Star 
-                                key={i} 
-                                size={12} 
+                              <Star
+                                key={i}
+                                size={12}
                                 fill={rev.rating >= i + 1 ? "currentColor" : (rev.rating >= i + 0.5 ? "url(#half-grad-small)" : "none")}
                                 stroke="currentColor"
                               />
@@ -559,7 +564,7 @@ export default function PromptDetailPage() {
                           </div>
                         </div>
                         <p className="review-body-text">"{rev.comment}"</p>
-                        
+
                         {isCreator && !rev.reply && replyingToIdx !== idx && (
                           <div className="review-actions-creator">
                             <button className="btn-text-only" onClick={() => setReplyingToIdx(idx)} style={{ fontSize: '0.8rem', color: 'var(--color-cyan)', marginTop: '10px' }}>
@@ -573,17 +578,17 @@ export default function PromptDetailPage() {
                             <div style={{ marginBottom: '12px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
                               Replying to <span className="text-cyan">@{rev.userName}</span>
                             </div>
-                            <textarea 
-                              className="reply-textarea-premium" 
+                            <textarea
+                              className="reply-textarea-premium"
                               placeholder="Write your response here..."
                               value={replyText}
                               onChange={(e) => setReplyText(e.target.value)}
-                              style={{ 
+                              style={{
                                 width: '100%',
-                                minHeight: '120px', 
+                                minHeight: '120px',
                                 padding: '15px',
-                                fontSize: '1rem', 
-                                background: 'rgba(0,0,0,0.3)', 
+                                fontSize: '1rem',
+                                background: 'rgba(0,0,0,0.3)',
                                 border: '1px solid rgba(255,255,255,0.1)',
                                 borderRadius: '12px',
                                 color: 'white',
@@ -628,7 +633,7 @@ export default function PromptDetailPage() {
                   let related = state.prompts.filter(t => {
                     const isSelf = (t.id || t._id) === (template.id || template._id);
                     if (isSelf) return false;
-                    
+
                     const catMatch = t.category === template.category;
                     const keywordMatch = t.keywords?.some(k => template.keywords?.includes(k));
                     return catMatch || keywordMatch;
@@ -642,14 +647,14 @@ export default function PromptDetailPage() {
                   return related.slice(0, relatedLimit).map(t => (
                     <Link key={t.id || t._id} to={`/prompt/${t.id || t._id}`} className="related-card-small card" style={{ textDecoration: 'none' }}>
                       <div className="related-card-small__media">
-                        <img 
-                          src={t.thumbnail || (t.samples?.[0]?.output || t.samples?.[0]) || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop&q=60'} 
-                          alt={t.title || t.name} 
+                        <img
+                          src={t.thumbnail || (t.samples?.[0]?.output || t.samples?.[0]) || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop&q=60'}
+                          alt={t.title || t.name}
                         />
                       </div>
                       <div className="related-card-small__info">
                         <h4>{t.title || t.name}</h4>
-                        <span className="text-muted" style={{fontSize: '0.8rem'}}>{t.model || 'Flux.1'}</span>
+                        <span className="text-muted" style={{ fontSize: '0.8rem' }}>{t.model || 'Flux.1'}</span>
                       </div>
                     </Link>
                   ));
@@ -661,9 +666,9 @@ export default function PromptDetailPage() {
           {/* Unified View More Button */}
           {(reviews.length > reviewsLimit || state.prompts.length > relatedLimit + 1) && (
             <div style={{ display: 'flex', justifyContent: 'center', marginTop: '50px', marginBottom: '50px' }}>
-              <button 
-                className="btn btn-secondary-outline btn-xl" 
-                onClick={() => { 
+              <button
+                className="btn btn-secondary-outline btn-xl"
+                onClick={() => {
                   if (reviews.length > reviewsLimit) setReviewsLimit(prev => prev + 4);
                   if (state.prompts.length > relatedLimit + 1) setRelatedLimit(prev => prev + 3);
                 }}
