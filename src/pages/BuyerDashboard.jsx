@@ -98,7 +98,7 @@ export default function BuyerDashboard() {
             </div>
           </div>
           <div className="dash-header-actions">
-            <Link to="/library" className="btn btn-secondary btn-glow">
+            <Link to="/templates" className="btn btn-secondary btn-glow">
               <ShoppingBag size={18} /> Marketplace
             </Link>
             <button onClick={() => navigate(-1)} className="btn btn-back-premium">
@@ -203,7 +203,7 @@ export default function BuyerDashboard() {
                 <ShoppingBag size={48} />
                 <p>Your library is empty</p>
                 <span>Unlock your first pro prompt in the marketplace</span>
-                <Link to="/library" className="btn btn-primary mt-md">Explore Marketplace</Link>
+                <Link to="/templates" className="btn btn-primary mt-md">Explore Marketplace</Link>
               </div>
             )}
           </div>

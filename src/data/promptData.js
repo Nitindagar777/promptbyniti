@@ -833,11 +833,11 @@ export const pricingPlans = [
     id: 'free',
     name: 'Starter',
     price: 0,
-    credits: 1,
+    credits: 0,
     period: 'forever',
     description: 'Try the platform with <span class="text-secondary">limited access</span>',
     features: [
-      '<span class="text-orange">1</span> time free use of generation',
+      '<span class="text-orange">1</span> time free use of Generation',
       'Public prompt library access',
       'Basic styles & moods',
       'Standard AI format',

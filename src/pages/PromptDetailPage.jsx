@@ -268,7 +268,14 @@ export default function PromptDetailPage() {
               {template.keywords && template.keywords.length > 0 && (
                 <div className="p-detail__keywords">
                   {template.keywords.map((kw, i) => (
-                    <span key={i} className="p-detail__keyword-tag">#{kw}</span>
+                    <span 
+                      key={i} 
+                      className="p-detail__keyword-tag" 
+                      onClick={() => navigate('/templates', { state: { search: kw } })}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      #{kw}
+                    </span>
                   ))}
                 </div>
               )}

@@ -2,17 +2,27 @@
 import { Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { categories } from '../data/promptData';
-import { Crown, Lock, ArrowRight, Sparkles, Filter, Zap, Loader2, Eye } from 'lucide-react';
+import { Crown, Lock, ArrowRight, Sparkles, Filter, Zap, Loader2, Eye, Search } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import './TemplatesPage.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8844/api';
 
 export default function TemplatesPage() {
   const { isPremium } = useApp();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [selectedCat, setSelectedCat] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
   const [prompts, setPrompts] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (location.state?.search) {
+      setSearchTerm(location.state.search);
+    }
+  }, [location.state]);
 
   useEffect(() => {
     fetchPrompts();
@@ -32,9 +42,17 @@ export default function TemplatesPage() {
     }
   };
 
-  const filteredTemplates = selectedCat === 'all' 
-    ? prompts 
-    : prompts.filter(t => (t.category || '').toLowerCase() === selectedCat.toLowerCase());
+  const filteredTemplates = prompts.filter(t => {
+    const matchesCat = selectedCat === 'all' || (t.category || '').toLowerCase() === selectedCat.toLowerCase();
+    const searchLower = searchTerm.toLowerCase();
+    const matchesSearch = !searchTerm || 
+      (t.name || '').toLowerCase().includes(searchLower) ||
+      (t.title || '').toLowerCase().includes(searchLower) ||
+      (t.description || '').toLowerCase().includes(searchLower) ||
+      (t.keywords || []).some(k => k.toLowerCase().includes(searchLower));
+    
+    return matchesCat && matchesSearch;
+  });
 
   const templateCategories = ['all', ...categories.filter(c => c.id !== 'default' && c.id !== 'none').map(c => c.id)];
 
@@ -44,9 +62,26 @@ export default function TemplatesPage() {
         {/* Header */}
         <div className="templates-page__header">
           <h1 className="section-title">Prompt <span className="text-cyan">Store</span></h1>
-          <p className="section-desc">
-            Token-Powered Prompt Marketplace. Spend tokens to own the industry's most powerful, ready-to-generate prompt configurations.
-          </p>
+          <div className="templates-page__header-row">
+            <p className="section-desc">
+              Token-Powered Prompt Marketplace. Spend tokens to own the industry's most powerful, ready-to-generate prompt configurations.
+            </p>
+
+            <div className="templates-page__search-container">
+              <div className="compact-search-box">
+                <Search size={16} className="search-icon" />
+                <input 
+                  type="text" 
+                  placeholder="Search prompts..." 
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                {searchTerm && (
+                  <button onClick={() => setSearchTerm('')} className="clear-search">×</button>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Category Filters */}
