@@ -148,6 +148,7 @@ router.post('/verify-otp', async (req, res) => {
         name: user.name,
         email: user.email,
         avatar: user.avatar,
+        bio: user.bio || '',
         credits: user.credits,
         plan: user.plan
       }
@@ -194,6 +195,7 @@ router.post('/google', async (req, res) => {
         name: user.name,
         email: user.email,
         avatar: user.avatar,
+        bio: user.bio || '',
         credits: user.credits,
         plan: user.plan,
         purchasedPrompts: user.purchasedPrompts || []
@@ -223,6 +225,7 @@ router.get('/me', async (req, res) => {
         name: user.name,
         email: user.email,
         avatar: user.avatar,
+        bio: user.bio || '',
         credits: user.credits,
         plan: user.plan,
         purchasedPrompts: user.purchasedPrompts || []
@@ -262,7 +265,7 @@ router.put('/profile', async (req, res) => {
         name: user.name,
         email: user.email,
         avatar: user.avatar,
-        bio: user.bio,
+        bio: user.bio || '',
         credits: user.credits,
         plan: user.plan
       }
@@ -399,6 +402,7 @@ router.post('/reset-password', async (req, res) => {
       token,
       user: {
         id: user._id, name: user.name, email: user.email, avatar: user.avatar,
+        bio: user.bio || '',
         credits: user.credits, plan: user.plan,
         purchasedPrompts: user.purchasedPrompts || []
       }

@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import './TemplatesPage.css';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8844/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8845/api';
 
 export default function TemplatesPage() {
   const { isPremium } = useApp();

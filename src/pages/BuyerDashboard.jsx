@@ -33,7 +33,7 @@ export default function BuyerDashboard() {
         const API_BASE = import.meta.env.VITE_API_URL || 
           (window.location.hostname.includes('oopsverse.cloud') 
             ? 'https://oopsverse.cloud/api' 
-            : 'http://localhost:8844/api');
+            : 'http://localhost:8845/api');
 
         const res = await fetch(`${API_BASE}/buyer/stats`, {
           headers: { 'Authorization': `Bearer ${token}` }
@@ -92,7 +92,12 @@ export default function BuyerDashboard() {
             <div className="dash-user-info">
               <h1>{state.user?.name || 'Buyer Hub'}</h1>
               <p className="dash-user-email">{state.user?.email}</p>
-              <p className="dash-user-subtext" style={{ fontSize: '0.8rem', opacity: 0.6, marginTop: '4px' }}>
+              {state.user?.bio && state.user.bio.trim() !== '' && (
+                <p className="dash-user-bio">
+                  "{state.user.bio}"
+                </p>
+              )}
+              <p className="dash-user-subtext" style={{ fontSize: '0.8rem', opacity: 0.6, marginTop: '10px' }}>
                 Managing {stats.totalPurchased} Unlocked Prompts
               </p>
             </div>

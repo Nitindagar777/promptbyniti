@@ -117,7 +117,7 @@ export default function PromptDetailPage() {
       
       // Try fetching from Database
         try {
-          const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8844/api';
+          const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8845/api';
           const token = localStorage.getItem('promptbyniti_token');
           const res = await fetch(`${API_URL}/prompts/${id}?t=${Date.now()}`, {
             headers: token ? { 'Authorization': `Bearer ${token}` } : {}
@@ -356,16 +356,42 @@ export default function PromptDetailPage() {
                       const pid = typeof p === 'object' ? p._id : p;
                       return pid?.toString() === currentId;
                     });
-                    const isOwner = state.user?.id?.toString() === template?.seller?._id?.toString() || 
-                                    state.user?.id?.toString() === template?.seller?.toString();
-                    
-                    if (isPurchasedInState || isOwner || isPromptPurchased) {
+                    const isOwner = (state.user?.id?.toString() === template?.seller?._id?.toString() || 
+                                     state.user?.id?.toString() === template?.seller?.toString() ||
+                                     state.user?._id?.toString() === template?.seller?._id?.toString() ||
+                                     state.user?._id?.toString() === template?.seller?.toString());
+
+                    if (isOwner) {
+                      return (
+                        <div style={{ 
+                          padding: '24px', 
+                          background: 'rgba(6, 182, 212, 0.05)', 
+                          border: '1px dashed var(--color-cyan)', 
+                          borderRadius: 'var(--radius-lg)',
+                          textAlign: 'center'
+                        }}>
+                          <p style={{ 
+                            fontFamily: 'var(--font-display)', 
+                            fontSize: '1.25rem', 
+                            color: 'var(--color-cyan)',
+                            margin: 0
+                          }}>
+                            It is your prompt ✨
+                          </p>
+                          <p className="text-muted" style={{ fontSize: '0.85rem', marginTop: '8px' }}>
+                            As the creator, you can manage this from your dashboard.
+                          </p>
+                        </div>
+                      );
+                    }
+
+                    if (isPurchasedInState || isPromptPurchased) {
                       return (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                           <button 
                             className={`btn btn-primary btn-xl w-full ${copied ? 'copied' : ''}`}
                             onClick={() => {
-                              navigator.clipboard.writeText(template.template);
+                              navigator.clipboard.writeText(template.template || template.config?.description || '');
                               setCopied(true);
                               setTimeout(() => setCopied(false), 2000);
                             }}

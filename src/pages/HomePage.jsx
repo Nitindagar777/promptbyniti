@@ -7,7 +7,7 @@ import { ArrowRight, Sparkles, Zap, Image, Layers, Heart, Wand2, Rocket, Star, P
 import { useState, useEffect } from 'react';
 import './HomePage.css';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8844/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8845/api';
 
 export default function HomePage() {
   const { state, canGenerate, useCredit, addPrompt } = useApp();

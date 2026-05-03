@@ -6,7 +6,7 @@ import { pricingPlans } from '../data/promptData';
 import { Crown, Check, Star, Shield, Zap, Sparkles, Loader } from 'lucide-react';
 import './PricingPage.css';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8844/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8845/api';
 
 export default function PricingPage() {
   const { state, setPlan, login } = useApp();

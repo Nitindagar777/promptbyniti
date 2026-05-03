@@ -156,8 +156,8 @@ export default function SellPage() {
       };
 
       const url = isEditMode 
-        ? `${import.meta.env.VITE_API_URL || 'http://localhost:8844/api'}/prompts/${editId}`
-        : `${import.meta.env.VITE_API_URL || 'http://localhost:8844/api'}/prompts`;
+        ? `${import.meta.env.VITE_API_URL || 'http://localhost:8845/api'}/prompts/${editId}`
+        : `${import.meta.env.VITE_API_URL || 'http://localhost:8845/api'}/prompts`;
 
       const response = await fetch(url, {
         method: isEditMode ? 'PUT' : 'POST',

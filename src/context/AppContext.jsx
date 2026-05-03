@@ -157,7 +157,7 @@ export function AppProvider({ children }) {
 
       console.log('🔄 Validating session with token:', 'Exists');
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8844/api'}/auth/me`, {
+        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8845/api'}/auth/me`, {
           headers: { 
             'Authorization': `Bearer ${token}`,
             'Cache-Control': 'no-cache'
@@ -206,7 +206,7 @@ export function AppProvider({ children }) {
       const token = localStorage.getItem(TOKEN_KEY);
       if (token) {
         try {
-          await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8844/api'}/auth/use-credits`, {
+          await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8845/api'}/auth/use-credits`, {
             method: 'POST',
             headers: { 
               'Authorization': `Bearer ${token}`,
