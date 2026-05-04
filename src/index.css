@@ -400,6 +400,10 @@ p {
   bottom: 0;
 }
 
+.template-card__overlay--right {
+  justify-content: flex-end;
+}
+
 .template-card__title-overlay {
   font-size: 0.95rem;
   color: white;

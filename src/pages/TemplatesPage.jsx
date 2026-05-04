@@ -149,8 +149,8 @@ export default function TemplatesPage() {
                 const s0 = tmpl.samples?.[0]?.output || tmpl.samples?.[0];
                 const s1 = tmpl.samples?.[1]?.output || tmpl.samples?.[1];
                 const s2 = tmpl.samples?.[2]?.output || tmpl.samples?.[2];
-                const coverSrc = tmpl.thumbnail || s0;
-                const isTextOnly = !coverSrc && !tmpl.video;
+                const coverSrc = tmpl.thumbnail || (tmpl.generateType !== 'text' ? s0 : null);
+                const isTextOnly = tmpl.generateType === 'text' || (!coverSrc && !tmpl.video);
 
                 return (
                   <Link
@@ -211,7 +211,7 @@ export default function TemplatesPage() {
                         <h3 className="template-card__title-center">{tmpl.title || tmpl.name}</h3>
                         <div className="template-card__overlay template-card__overlay--bottom template-card__overlay--right">
                           <div className="template-card__token-badge template-card__token-badge--text">
-                            <Zap size={12} fill="currentColor" /> {tmpl.priceTokens || tmpl.tokens || 5} Tokens
+                            <Zap size={12} fill="currentColor" /> {tmpl.priceTokens || tmpl.tokens || 5}
                           </div>
                         </div>
                       </div>

@@ -161,7 +161,7 @@ export default function PromptDetailPage() {
     </div>
   );
 
-  const isVisual = template.thumbnail || template.video || template.samples || template.generateType !== 'text';
+  const isVisual = template.generateType !== 'text' && (template.thumbnail || template.video || template.samples);
   const modelId = template.config?.model || template.model;
   const model = aiModels.find(m => m.id === modelId) || aiModels[0];
   const isPremium = template.premium && !state.isPremium;
@@ -256,17 +256,38 @@ export default function PromptDetailPage() {
             ) : (
               <div className="text-display card">
                 <div className="text-header">
-                  <MessageSquare size={32} className="text-cyan" />
-                  <h2>Prompt Template</h2>
-                </div>
-                <div className="text-body">
-                  <p className="text-muted" style={{ marginBottom: '15px' }}>This is a specialized chat/text prompt designed for {model.label}.</p>
-                  <div className="prompt-preview-box">
-                    <pre>{template.config?.description}</pre>
+                  <div className="text-header-icon">
+                    <MessageSquare size={24} className="text-cyan" />
+                  </div>
+                  <div>
+                    <h2 className="text-header-title">Output Samples</h2>
+                    <p className="text-xs text-muted">Previewing {template.samples?.length || 0} real-world generations</p>
                   </div>
                 </div>
+                
+                <div className="text-samples-list">
+                  {template.samples && template.samples.slice(0, 3).map((sample, idx) => (
+                    <div key={idx} className="text-sample-card">
+                      <div className="text-sample-badge">Example {idx + 1}</div>
+                      {sample.input && (
+                        <div className="text-sample-input">
+                          <span className="label">Input:</span>
+                          <p>{sample.input}</p>
+                        </div>
+                      )}
+                      <div className="text-sample-output">
+                        <span className="label">AI Response:</span>
+                        <div className="output-bubble">
+                          {sample.output || (typeof sample === 'string' ? sample : '')}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
                 <div className="text-footer">
-                  <ShieldCheck size={16} /> Verified by Prompt by Niti
+                  <ShieldCheck size={16} className="text-green" /> 
+                  <span>Verified prompt results for {model.label}</span>
                 </div>
               </div>
             )}

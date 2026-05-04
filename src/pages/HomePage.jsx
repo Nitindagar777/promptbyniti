@@ -172,8 +172,8 @@ export default function HomePage() {
                 const s0 = tmpl.samples?.[0]?.output || tmpl.samples?.[0];
                 const s1 = tmpl.samples?.[1]?.output || tmpl.samples?.[1];
                 const s2 = tmpl.samples?.[2]?.output || tmpl.samples?.[2];
-                const coverSrc = tmpl.thumbnail || s0;
-                const isTextOnly = !coverSrc && !tmpl.video;
+                const coverSrc = tmpl.thumbnail || (tmpl.generateType !== 'text' ? s0 : null);
+                const isTextOnly = tmpl.generateType === 'text' || (!coverSrc && !tmpl.video);
 
                 return (
                   <Link
