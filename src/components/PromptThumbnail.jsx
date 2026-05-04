@@ -29,7 +29,9 @@ const PromptThumbnail = ({ src, alt, className, style, type, samples, objectFit 
           justifyContent: 'center', 
           overflow: 'hidden',
           position: 'relative',
-          padding: '15px'
+          padding: '15px',
+          userSelect: 'none',
+          pointerEvents: 'none' // Ensures clicks pass through to the parent overlay
         }}
       >
         {/* Sample Background Overlay - Moved to bottom and spread out */}
