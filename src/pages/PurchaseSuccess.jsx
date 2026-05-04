@@ -6,6 +6,7 @@ import {
   Lock, Unlock, RefreshCw, Zap, Download, Maximize2, Check
 } from 'lucide-react';
 import { aiModels } from '../data/promptData';
+import PromptThumbnail from '../components/PromptThumbnail';
 import './PurchaseSuccess.css';
 
 const StarRating = ({ value, onChange }) => {
@@ -195,7 +196,12 @@ const PurchaseSuccess = () => {
 
           <div className="unlocked-content">
             <div className="prompt-header-info">
-              <img src={prompt.thumbnail || prompt.image} alt={prompt.name} className="success-thumb" />
+              <PromptThumbnail 
+                src={prompt.thumbnail || prompt.video || (prompt.samples?.[0]?.output || prompt.samples?.[0])} 
+                alt={prompt.name} 
+                type={prompt.generateType}
+                className="success-thumb" 
+              />
               <div className="header-text">
                 <h2>{prompt.name}</h2>
                 <p className="success-desc">{prompt.description}</p>

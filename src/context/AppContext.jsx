@@ -12,13 +12,14 @@ const TOKEN_KEY = 'promptbyniti_token';
 /* Default state */
 const defaultState = {
   user: null,
-  credits: 2,
-  maxCredits: 2,
+  credits: 0,
+  maxCredits: 0,
   plan: 'free', // free | pro | unlimited
   prompts: [],
   favorites: [],
   isPrivateMode: false,
   darkMode: true,
+  scrollPositions: {}, // { '/path': scrollY }
 };
 
 /* Load persisted state */
@@ -47,6 +48,7 @@ const actions = {
   LOGIN: 'LOGIN',
   LOGOUT: 'LOGOUT',
   ADD_PURCHASE: 'ADD_PURCHASE',
+  SET_SCROLL: 'SET_SCROLL',
 };
 
 /* Reducer */
@@ -95,15 +97,15 @@ function appReducer(state, action) {
 
     case actions.SET_PLAN: {
       const planCredits = {
-        free: 2,
+        free: 0,
         pro: 25,
         unlimited: 80,
       };
       return {
         ...state,
         plan: action.payload,
-        credits: planCredits[action.payload] || 2,
-        maxCredits: planCredits[action.payload] || 2,
+        credits: planCredits[action.payload] || 0,
+        maxCredits: planCredits[action.payload] || 0,
         isPrivateMode: action.payload !== 'free',
       };
     }
@@ -112,8 +114,8 @@ function appReducer(state, action) {
       return { ...state, isPrivateMode: action.payload };
 
     case actions.RESET_CREDITS: {
-      const planCredits = { free: 2, pro: 25, unlimited: 80 };
-      return { ...state, credits: planCredits[state.plan] || 2 };
+      const planCredits = { free: 0, pro: 25, unlimited: 80 };
+      return { ...state, credits: planCredits[state.plan] || 0 };
     }
 
     case actions.LOGIN:
@@ -130,6 +132,15 @@ function appReducer(state, action) {
         prompts: state.prompts,
       };
 
+    case actions.SET_SCROLL:
+      return {
+        ...state,
+        scrollPositions: {
+          ...state.scrollPositions,
+          [action.payload.path]: action.payload.pos
+        }
+      };
+
     default:
       return state;
   }
@@ -140,6 +151,7 @@ export function AppProvider({ children }) {
   const [state, dispatch] = useReducer(appReducer, null, loadState);
   const [showBanModal, setShowBanModal] = useState(false);
   const [authLoading, setAuthLoading] = useState(!!localStorage.getItem(TOKEN_KEY));
+  const [cache, setCache] = useState({}); // Transient API cache
 
   /* Persist to localStorage */
   useEffect(() => {
@@ -233,7 +245,12 @@ export function AppProvider({ children }) {
     },
     canGenerate: state.plan === 'unlimited' || state.credits > 0,
     isPremium: state.plan !== 'free',
-    authLoading
+    authLoading,
+    /* Caching & Scroll helpers */
+    cache,
+    setCachedData: (key, data) => setCache(prev => ({ ...prev, [key]: data })),
+    setScroll: (path, pos) => dispatch({ type: actions.SET_SCROLL, payload: { path, pos } }),
+    getScroll: (path) => state.scrollPositions[path] || 0
   };
 
   return (

@@ -290,11 +290,10 @@ export default function SettingsPage() {
                   <div className="profile-upload-container">
                     <div className="profile-avatar-wrapper">
                       <div className="profile-avatar-preview">
-                        {(preview || formData.avatar) ? (
-                          <img src={preview || formData.avatar} alt="Avatar" />
-                        ) : (
-                          <User size={40} className="text-muted" />
-                        )}
+                        <img 
+                          src={preview || formData.avatar || 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=100&auto=format&fit=crop&q=60'} 
+                          alt="Avatar" 
+                        />
                       </div>
                       <button 
                         type="button"

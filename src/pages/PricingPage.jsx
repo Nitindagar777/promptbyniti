@@ -155,7 +155,7 @@ export default function PricingPage() {
               </div>
               {plan.id === 'free' ? (
                 <p className="pricing-card__credits" style={{ fontWeight: 'bold' }}>
-                  <span className="text-orange">1</span> time free use of Generation
+                  <span className="text-orange">0</span> tokens included
                 </p>
               ) : (
                 <p className="pricing-card__credits">

@@ -1,5 +1,6 @@
 /* LibraryPage — Public prompt library */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import PromptOutput from '../components/PromptOutput';
 import { Globe, Search, Filter, Sparkles } from 'lucide-react';
@@ -7,10 +8,22 @@ import { categories } from '../data/promptData';
 import './LibraryPage.css';
 
 export default function LibraryPage() {
-  const { state } = useApp();
+  const { state, setScroll, getScroll } = useApp();
+  const location = useLocation();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCat, setActiveCat] = useState('all');
   const [copiedId, setCopiedId] = useState(null);
+  
+  useEffect(() => {
+    const savedPos = getScroll(location.pathname);
+    if (savedPos) {
+      setTimeout(() => window.scrollTo(0, savedPos), 100);
+    }
+    
+    return () => {
+      setScroll(location.pathname, window.scrollY);
+    };
+  }, []);
 
   // Since we don't have a real backend, we'll use the user's public prompts and mock some data
   const mockPublicPrompts = [

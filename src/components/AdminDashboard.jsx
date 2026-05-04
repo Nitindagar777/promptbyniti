@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { DollarSign, Zap } from 'lucide-react';
+import PromptThumbnail from './PromptThumbnail';
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {
@@ -280,8 +281,8 @@ const AdminDashboard = () => {
                 <tr key={prompt._id}>
                   <td>
                     <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '12px', textAlign: 'left' }}>
-                      <img 
-                        src={prompt.thumbnail || (prompt.samples && prompt.samples.length > 0 ? (prompt.samples[0].output || prompt.samples[0]) : 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100&auto=format&fit=crop&q=60')} 
+                      <PromptThumbnail 
+                        src={prompt.thumbnail || (prompt.samples && prompt.samples.length > 0 ? (prompt.samples[0].output || prompt.samples[0]) : null)} 
                         alt={prompt.name}
                         style={{ width: '45px', height: '45px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }}
                       />

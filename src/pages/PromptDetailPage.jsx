@@ -8,7 +8,11 @@ import {
   Download, Share2, Heart, ShieldCheck,
   ChevronLeft, ChevronRight, Eye, ArrowRight, Star
 } from 'lucide-react';
+import PromptThumbnail from '../components/PromptThumbnail';
 import './PromptDetailPage.css';
+
+// Global cache to prevent reference errors if any old/experimental code is running
+const cachePromptDetail = {};
 
 export default function PromptDetailPage() {
   const { id } = useParams();
@@ -647,8 +651,8 @@ export default function PromptDetailPage() {
                   return related.slice(0, relatedLimit).map(t => (
                     <Link key={t.id || t._id} to={`/prompt/${t.id || t._id}`} className="related-card-small card" style={{ textDecoration: 'none' }}>
                       <div className="related-card-small__media">
-                        <img
-                          src={t.thumbnail || (t.samples?.[0]?.output || t.samples?.[0]) || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop&q=60'}
+                        <PromptThumbnail
+                          src={t.thumbnail || (t.samples?.[0]?.output || t.samples?.[0])}
                           alt={t.title || t.name}
                         />
                       </div>

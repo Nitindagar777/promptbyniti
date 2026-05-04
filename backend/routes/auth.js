@@ -182,8 +182,8 @@ router.post('/google', async (req, res) => {
       }
     } else {
       user = await User.create({
-        name, email, googleId, avatar: picture || '', provider: 'google',
-        credits: 5, plan: 'free', isVerified: true
+        name, email, googleId, avatar: picture || 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=100&auto=format&fit=crop&q=60', provider: 'google',
+        credits: 0, plan: 'free', isVerified: true
       });
     }
     const token = generateToken(user._id);

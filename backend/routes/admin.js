@@ -168,13 +168,12 @@ router.patch('/withdrawals/:id', isAdmin, async (req, res) => {
       return res.status(404).json({ success: false, message: 'Withdrawal not found' });
     }
 
-    // Only deduct if we are changing status to 'completed' AND it wasn't already completed
-    if (status === 'completed' && withdrawal.status !== 'completed') {
+    // If withdrawal is REJECTED, we must refund the tokens to their wallet
+    if (status === 'rejected' && withdrawal.status !== 'rejected') {
       const seller = await User.findById(withdrawal.sellerId);
       if (seller) {
-        // Log the deduction for safety
-        console.log(`Deducting ${withdrawal.amount} tokens from user ${seller.email}`);
-        seller.credits = (seller.credits || 0) - withdrawal.amount;
+        console.log(`Refunding ${withdrawal.amount} tokens to user ${seller.email} due to rejection`);
+        seller.walletTokens = (seller.walletTokens || 0) + withdrawal.amount;
         await seller.save();
       }
     }

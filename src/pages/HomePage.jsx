@@ -5,19 +5,34 @@ import { generatePrompt } from '../data/promptEngine';
 import PromptOutput from '../components/PromptOutput';
 import { ArrowRight, Sparkles, Zap, Image, Layers, Heart, Wand2, Rocket, Star, Palette, MessageSquare, ShieldCheck, Zap as ZapIcon, ShoppingBag, Coins, DollarSign, Eye } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import './HomePage.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8845/api';
 
 export default function HomePage() {
-  const { state, canGenerate, useCredit, addPrompt } = useApp();
+  const { state, canGenerate, useCredit, addPrompt, cache, setCachedData, setScroll, getScroll } = useApp();
+  const location = useLocation();
   const [demoInput, setDemoInput] = useState('');
   const [demoResult, setDemoResult] = useState(null);
   const [prompts, setPrompts] = useState([]);
   const [loadingPrompts, setLoadingPrompts] = useState(true);
 
   useEffect(() => {
-    fetchPrompts();
+    if (cache.homePrompts) {
+      setPrompts(cache.homePrompts);
+      setLoadingPrompts(false);
+      const savedPos = getScroll(location.pathname);
+      if (savedPos) {
+        setTimeout(() => window.scrollTo(0, savedPos), 100);
+      }
+    } else {
+      fetchPrompts();
+    }
+
+    return () => {
+      setScroll(location.pathname, window.scrollY);
+    };
   }, []);
 
   const fetchPrompts = async () => {
@@ -25,7 +40,9 @@ export default function HomePage() {
       const res = await fetch(`${API_URL}/prompts`);
       const data = await res.json();
       if (data.success) {
-        setPrompts(data.prompts.slice(0, 8));
+        const sliced = data.prompts.slice(0, 8);
+        setPrompts(sliced);
+        setCachedData('homePrompts', sliced);
       }
     } catch (err) {
       console.error('Failed to fetch home prompts:', err);

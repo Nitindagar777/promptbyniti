@@ -3,7 +3,7 @@
   padding-bottom: 80px;
   min-height: 100vh;
   background: radial-gradient(circle at 100% 0%, rgba(168, 85, 247, 0.05) 0%, transparent 50%),
-              radial-gradient(circle at 0% 100%, rgba(6, 182, 212, 0.05) 0%, transparent 50%);
+    radial-gradient(circle at 0% 100%, rgba(6, 182, 212, 0.05) 0%, transparent 50%);
 }
 
 .purchased-grid {
@@ -28,20 +28,23 @@
 }
 
 .purchase-thumb {
-  height: 200px;
+  width: 100%;
+  aspect-ratio: 1 / 1;
   position: relative;
   overflow: hidden;
 }
 
-.purchase-thumb img {
+.purchase-thumb img,
+.purchase-thumb video {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: inherit; /* Use the object-fit passed to PromptThumbnail */
   transition: transform 0.5s ease;
 }
 
-.purchase-card:hover .purchase-thumb img {
-  transform: scale(1.1);
+.purchase-card:hover .purchase-thumb img,
+.purchase-card:hover .purchase-thumb video {
+  transform: scale(1.05);
 }
 
 .purchase-overlay {
@@ -57,6 +60,27 @@
 
 .purchase-card:hover .purchase-overlay {
   opacity: 1;
+}
+
+.purchase-type-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  z-index: 5;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .btn-icon-glass {
@@ -85,7 +109,7 @@
 }
 
 .btn-icon-glass svg {
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
 .purchase-details {
@@ -189,8 +213,15 @@
 }
 
 @keyframes slideUp {
-  from { transform: translate(-50%, 20px); opacity: 0; }
-  to { transform: translate(-50%, 0); opacity: 1; }
+  from {
+    transform: translate(-50%, 20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
 }
 
 /* Shared Dashboard Styles */
@@ -295,9 +326,20 @@
   flex-shrink: 0;
 }
 
-.green-bg { background: rgba(16, 185, 129, 0.1); color: #10b981; }
-.cyan-bg { background: rgba(6, 182, 212, 0.1); color: #06b6d4; }
-.purple-bg { background: rgba(168, 85, 247, 0.1); color: #a855f7; }
+.green-bg {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.cyan-bg {
+  background: rgba(6, 182, 212, 0.1);
+  color: #06b6d4;
+}
+
+.purple-bg {
+  background: rgba(168, 85, 247, 0.1);
+  color: #a855f7;
+}
 
 .stat-data {
   display: flex;

@@ -9,6 +9,7 @@ import {
   ArrowLeft, X, Search
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import PromptThumbnail from '../components/PromptThumbnail';
 import './DashboardPage.css';
 
 export default function DashboardPage() {
@@ -235,11 +236,11 @@ export default function DashboardPage() {
         <header className="dash-header">
           <div className="dash-user-profile">
             <div className="dash-avatar-main">
-              {state.user?.avatar ? (
-                <img src={state.user.avatar} alt="Avatar" />
-              ) : (
-                <div className="avatar-placeholder">{state.user?.name?.[0] || 'U'}</div>
-              )}
+              <img 
+                src={state.user?.avatar || 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=100&auto=format&fit=crop&q=60'} 
+                alt="Avatar" 
+                onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=100&auto=format&fit=crop&q=60' }}
+              />
             </div>
             <div className="dash-user-info">
               <h1>{state.user?.name || 'Creator'}</h1>
@@ -409,9 +410,10 @@ export default function DashboardPage() {
                           <tr key={p._id}>
                             <td>
                               <div className="table-prompt-info" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '12px', textAlign: 'left' }}>
-                                <img
-                                  src={p.thumbnail || (p.samples && p.samples.length > 0 ? (p.samples[0].output || p.samples[0]) : 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100&auto=format&fit=crop&q=60')}
+                                <PromptThumbnail
+                                  src={p.thumbnail || p.video || (p.samples && p.samples.length > 0 ? (p.samples[0].output || p.samples[0]) : null)}
                                   alt={p.name}
+                                  type={p.generateType}
                                   style={{ width: '45px', height: '45px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }}
                                 />
                                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>

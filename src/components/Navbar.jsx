@@ -59,15 +59,12 @@ export default function Navbar() {
                 <span>{state?.credits ?? 0}</span>
               </div>
               <Link to="/settings" className="navbar__avatar" title="Settings">
-                {state.user?.avatar ? (
-                  <img 
-                    src={state.user.avatar} 
-                    alt="User" 
-                    className="navbar__avatar-img" 
-                  />
-                ) : (
-                  <User size={20} />
-                )}
+                <img 
+                  src={state.user?.avatar || 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=100&auto=format&fit=crop&q=60'} 
+                  alt="User" 
+                  className="navbar__avatar-img" 
+                  onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=100&auto=format&fit=crop&q=60' }}
+                />
               </Link>
             </>
           ) : (

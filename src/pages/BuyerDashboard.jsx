@@ -1,11 +1,12 @@
 import { useApp } from '../context/AppContext';
 import { useNavigate, Link } from 'react-router-dom';
-import { 
-  ShoppingBag, Zap, Clock, Search, Filter, 
+import {
+  ShoppingBag, Zap, Clock, Search, Filter,
   Copy, Eye, ChevronRight, Layout, ArrowLeft,
-  Sparkles, Download, Heart
+  Sparkles, Download, Heart, Play, Image
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import PromptThumbnail from '../components/PromptThumbnail';
 import './BuyerDashboard.css';
 
 export default function BuyerDashboard() {
@@ -30,9 +31,9 @@ export default function BuyerDashboard() {
     const fetchBuyerData = async () => {
       try {
         const token = localStorage.getItem('promptbyniti_token');
-        const API_BASE = import.meta.env.VITE_API_URL || 
-          (window.location.hostname.includes('oopsverse.cloud') 
-            ? 'https://oopsverse.cloud/api' 
+        const API_BASE = import.meta.env.VITE_API_URL ||
+          (window.location.hostname.includes('oopsverse.cloud')
+            ? 'https://oopsverse.cloud/api'
             : 'http://localhost:8845/api');
 
         const res = await fetch(`${API_BASE}/buyer/stats`, {
@@ -65,7 +66,7 @@ export default function BuyerDashboard() {
     );
   }
 
-  const filteredLibrary = stats.library.filter(p => 
+  const filteredLibrary = stats.library.filter(p =>
     p.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -83,11 +84,11 @@ export default function BuyerDashboard() {
         <header className="dash-header">
           <div className="dash-user-profile">
             <div className="dash-avatar-main">
-              {state.user?.avatar ? (
-                <img src={state.user.avatar} alt="Avatar" />
-              ) : (
-                <div className="avatar-placeholder">{state.user?.name?.[0] || 'U'}</div>
-              )}
+              <img
+                src={state.user?.avatar || 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=100&auto=format&fit=crop&q=60'}
+                alt="Avatar"
+                onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=100&auto=format&fit=crop&q=60' }}
+              />
             </div>
             <div className="dash-user-info">
               <h1>{state.user?.name || 'Buyer Hub'}</h1>
@@ -132,7 +133,7 @@ export default function BuyerDashboard() {
             <div className="stat-icon-circle cyan-bg"><Clock size={24} /></div>
             <div className="stat-data">
               <span className="stat-label">Available Balance</span>
-              <h2 className="stat-value">{state.user?.credits || 0} <span style={{fontSize: '0.8rem', opacity: 0.6}}>Tokens</span></h2>
+              <h2 className="stat-value">{state.user?.credits || 0} <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>Tokens</span></h2>
             </div>
           </div>
         </div>
@@ -146,9 +147,9 @@ export default function BuyerDashboard() {
             </div>
             <div className="dash-search-box">
               <Search size={16} />
-              <input 
-                type="text" 
-                placeholder="Search your library..." 
+              <input
+                type="text"
+                placeholder="Search your library..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -160,7 +161,14 @@ export default function BuyerDashboard() {
               filteredLibrary.map(prompt => (
                 <div key={prompt._id} className="purchase-card animate-fade-in">
                   <div className="purchase-thumb">
-                    <img src={prompt.thumbnail || prompt.samples?.[0]?.output} alt={prompt.name} />
+                    <PromptThumbnail
+                      src={prompt.thumbnail || prompt.video || (prompt.samples?.[0]?.output || prompt.samples?.[0])}
+                      alt={prompt.name}
+                      type={prompt.generateType}
+                    />
+                    <div className="purchase-type-badge">
+                      {prompt.generateType === 'video' ? <><Play size={12} fill="currentColor" /> Video</> : <><Image size={12} /> Image</>}
+                    </div>
                     <div className="purchase-overlay">
                       <button className="btn-icon-glass" onClick={() => window.open(`/purchase-success/${prompt._id}`, '_blank')} title="View Secret Details">
                         <Eye size={20} />
@@ -177,8 +185,8 @@ export default function BuyerDashboard() {
                       <button className="btn-copy-prompt" onClick={() => handleCopy(prompt.template)}>
                         <Copy size={16} /> Copy Secret Prompt
                       </button>
-                      <button 
-                        className="btn-view-access" 
+                      <button
+                        className="btn-view-access"
                         onClick={() => window.open(`/purchase-success/${prompt._id}`, '_blank')}
                         style={{
                           width: '100%',

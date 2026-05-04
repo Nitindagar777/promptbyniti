@@ -5,12 +5,13 @@ import { categories } from '../data/promptData';
 import { Crown, Lock, ArrowRight, Sparkles, Filter, Zap, Loader2, Eye, Search } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import PromptThumbnail from '../components/PromptThumbnail';
 import './TemplatesPage.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8845/api';
 
 export default function TemplatesPage() {
-  const { isPremium } = useApp();
+  const { isPremium, cache, setCachedData, setScroll, getScroll } = useApp();
   const location = useLocation();
   const navigate = useNavigate();
   const [selectedCat, setSelectedCat] = useState('all');
@@ -29,7 +30,22 @@ export default function TemplatesPage() {
   }, [location.state]);
 
   useEffect(() => {
-    fetchPrompts();
+    if (cache.storePrompts) {
+      setPrompts(cache.storePrompts);
+      setLoading(false);
+      // Restore scroll after a small delay to ensure content is rendered
+      const savedPos = getScroll(location.pathname);
+      if (savedPos) {
+        setTimeout(() => window.scrollTo(0, savedPos), 100);
+      }
+    } else {
+      fetchPrompts();
+    }
+
+    // Save scroll on unmount
+    return () => {
+      setScroll(location.pathname, window.scrollY);
+    };
   }, []);
 
   const fetchPrompts = async () => {
@@ -38,6 +54,7 @@ export default function TemplatesPage() {
       const data = await res.json();
       if (data.success) {
         setPrompts(data.prompts);
+        setCachedData('storePrompts', data.prompts);
       }
     } catch (err) {
       console.error('Failed to fetch prompts:', err);
@@ -145,38 +162,21 @@ export default function TemplatesPage() {
                   >
                     {!isTextOnly ? (
                       <div className="template-card__visual">
-                        {tmpl.video || coverSrc?.toLowerCase().match(/\.(mp4|webm|ogg)$/) || tmpl.generateType === 'video' ? (
-                          <video src={tmpl.video || coverSrc} autoPlay muted loop className="template-card__media template-card__media-main" />
-                        ) : (
-                          <img
-                            src={coverSrc || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400'}
-                            alt={tmpl.title || tmpl.name}
-                            className="template-card__media template-card__media-main"
-                            onError={e => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400'; }}
-                          />
-                        )}
+                        <PromptThumbnail 
+                          src={tmpl.video || coverSrc} 
+                          alt={tmpl.title || tmpl.name} 
+                          className="template-card__media template-card__media-main" 
+                        />
 
                         {/* Hover gallery — all 3 samples */}
                         {s0 && s1 && s2 && (
                           <div className="template-card__gallery">
                             <div className="template-card__gallery-main">
-                              {s0.toLowerCase().match(/\.(mp4|webm|ogg)$/) || tmpl.generateType === 'video' ? (
-                                <video src={s0} autoPlay muted loop />
-                              ) : (
-                                <img src={s0} alt="sample 1" />
-                              )}
+                              <PromptThumbnail src={s0} alt="sample 1" />
                             </div>
                             <div className="template-card__gallery-side">
-                              {s1.toLowerCase().match(/\.(mp4|webm|ogg)$/) || tmpl.generateType === 'video' ? (
-                                <video src={s1} autoPlay muted loop />
-                              ) : (
-                                <img src={s1} alt="sample 2" />
-                              )}
-                              {s2.toLowerCase().match(/\.(mp4|webm|ogg)$/) || tmpl.generateType === 'video' ? (
-                                <video src={s2} autoPlay muted loop />
-                              ) : (
-                                <img src={s2} alt="sample 3" />
-                              )}
+                              <PromptThumbnail src={s1} alt="sample 2" />
+                              <PromptThumbnail src={s2} alt="sample 3" />
                             </div>
                           </div>
                         )}
