@@ -28,14 +28,17 @@ router.get('/stats', auth, async (req, res) => {
 
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
-    // Calculate total spent (Each use cost 'amount' from request, but we'll assume 5 for now if not tracked)
-    // Actually, we don't track historical spent tokens yet in a separate model, so we'll estimate or just show the library
+    // Calculate real total spent by summing the prices of all purchased prompts
+    const totalSpent = user.purchasedPrompts.reduce((sum, p) => {
+      const price = p.priceTokens || p.tokens || 5;
+      return sum + price;
+    }, 0);
     
     res.json({
       success: true,
       stats: {
         totalPurchased: user.purchasedPrompts.length,
-        totalSpent: user.purchasedPrompts.length * 5, // Estimation based on 5 tokens per unlock
+        totalSpent: totalSpent,
         library: user.purchasedPrompts.sort((a, b) => b.createdAt - a.createdAt),
         credits: user.credits
       }

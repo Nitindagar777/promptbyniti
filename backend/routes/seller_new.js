@@ -51,15 +51,14 @@ router.get('/stats', auth, async (req, res) => {
     const completedWithdrawals = await Withdrawal.find({ sellerId: sellerIdObj, status: 'completed' });
     const totalWithdrawn = completedWithdrawals.reduce((sum, w) => sum + (w.amount || 0), 0);
     
-    // Total Earnings should be 80% of sales. Assuming standard 5 tokens per sale, seller gets 4.
-    // Or we can just use totalSales * 4. This is more accurate for "Total Earnings" than just current wallet balance.
-    const totalEarnings = totalSales * 4; 
+    // Total Earnings should match the wallet and navbar (which use .credits).
+    const totalEarnings = Math.floor((user.credits || 0) + (totalWithdrawn || 0));
 
     // Performance Data (Last 7 days sales)
     const dailyTokens = [0, 0, 0, 0, 0, 0, 0]; 
-    // In a real scenario, we'd query a 'Sales' model, but here we'll distribute totalSales for the chart
     for (let i = 0; i < 7; i++) {
-        dailyTokens[i] = Math.floor(totalSales / 7);
+        // Distribute total earnings roughly for the chart
+        dailyTokens[i] = Math.floor(totalEarnings / 7);
     }
 
     // Fetch Buyers for Recent Activity (Sales)
@@ -71,14 +70,16 @@ router.get('/stats', auth, async (req, res) => {
         buyer.purchasedPrompts.some(bId => bId.toString() === p._id.toString())
       );
       boughtPrompts.forEach(p => {
+        const price = Number(p.priceTokens || p.tokens || 5);
+        const share = Math.floor(price * 0.8);
         recentActivity.push({
           id: `sale-${buyer._id}-${p._id}`,
           type: 'sale',
           user: buyer.name || 'Anonymous',
           prompt: p.name || p.title,
           time: 'Recently',
-          price: Math.floor((p.priceTokens || p.tokens || 5) * 0.8),
-          timestamp: p.createdAt // fallback for sort if we don't have purchase time
+          price: share,
+          timestamp: p.createdAt 
         });
       });
     });
@@ -115,7 +116,7 @@ router.get('/stats', auth, async (req, res) => {
     res.json({
       success: true,
       stats: {
-        totalEarnings: totalEarnings, // Fixed 80% logic
+        totalEarnings: totalEarnings,
         totalSales: totalSales,
         totalViews: totalViews,
         activePrompts: prompts.length,
@@ -129,7 +130,7 @@ router.get('/stats', auth, async (req, res) => {
           }
           return doc;
         }),
-        dailyEarnings: dailyTokens.map(s => s * 4), // Tokens earned: 80% of 5 = 4
+        dailyEarnings: dailyTokens, // Use the calculated daily tokens
         performanceGrowth: 0,
         earningGrowth: 0,
         salesGrowth: 0

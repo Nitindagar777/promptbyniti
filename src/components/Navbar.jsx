@@ -56,7 +56,7 @@ export default function Navbar() {
             <>
               <div className="navbar__credits" title="Remaining Credits">
                 <Zap size={16} fill="currentColor" />
-                <span>{state?.credits ?? 0}</span>
+                <span>{Math.floor(state?.credits ?? 0)}</span>
               </div>
               <Link to="/settings" className="navbar__avatar" title="Settings">
                 <img 

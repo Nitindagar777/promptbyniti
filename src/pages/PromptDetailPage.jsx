@@ -269,14 +269,7 @@ export default function PromptDetailPage() {
                   {template.samples && template.samples.slice(0, 3).map((sample, idx) => (
                     <div key={idx} className="text-sample-card">
                       <div className="text-sample-badge">Example {idx + 1}</div>
-                      {sample.input && (
-                        <div className="text-sample-input">
-                          <span className="label">Input:</span>
-                          <p>{sample.input}</p>
-                        </div>
-                      )}
                       <div className="text-sample-output">
-                        <span className="label">AI Response:</span>
                         <div className="output-bubble">
                           {sample.output || (typeof sample === 'string' ? sample : '')}
                         </div>
@@ -457,22 +450,23 @@ export default function PromptDetailPage() {
                         <div className="p-detail__price-row">
                           <div className="token-price">
                             <Zap size={24} fill="var(--color-orange)" className="text-orange" />
-                            <span>5 Tokens</span>
+                            <span>{Math.floor(template.priceTokens || template.tokens || 5)} Tokens</span>
                           </div>
-                          <div className="price-label">Per Generation</div>
+                          <div className="price-label">Unlock Full Access</div>
                         </div>
 
                         <button
                           onClick={async () => {
-                            if (state.credits < 5) {
-                              alert('Insufficient tokens! You need 5 tokens to use this prompt.');
+                            const price = template.priceTokens || template.tokens || 5;
+                            if (Math.floor(state.credits) < price) {
+                              alert(`Insufficient tokens! You need ${price} tokens to unlock this prompt.`);
                               return;
                             }
 
                             const templateId = template.id || template._id;
                             try {
                               // Deduct credits and process split
-                              await useCredit(5, templateId);
+                              await useCredit(price, templateId);
                               // Redirect to success page in a new tab
                               window.open(`/purchase-success/${templateId}`, '_blank');
                             } catch (err) {

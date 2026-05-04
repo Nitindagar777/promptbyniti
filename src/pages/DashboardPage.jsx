@@ -285,7 +285,7 @@ export default function DashboardPage() {
                   <div className="stat-icon-circle green-bg"><Zap size={24} /></div>
                   <div className="stat-data">
                     <span className="stat-label">Total Earnings</span>
-                    <h2 className="stat-value">{stats.totalEarnings} <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>Tokens</span></h2>
+                    <h2 className="stat-value">{Math.floor(walletTokens)} <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>Tokens</span></h2>
                   </div>
                 </div>
                 <div className="stat-card-new theme-cyan">
@@ -414,6 +414,7 @@ export default function DashboardPage() {
                                   src={p.thumbnail || p.video || (p.samples && p.samples.length > 0 ? (p.samples[0].output || p.samples[0]) : null)}
                                   alt={p.name}
                                   type={p.generateType}
+                                  samples={p.samples}
                                   style={{ width: '45px', height: '45px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }}
                                 />
                                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
@@ -440,7 +441,7 @@ export default function DashboardPage() {
                             <td><div className="table-stat-box"><ShoppingCart size={14} /> {p.sales || 0}</div></td>
                             <td>
                               <span className="table-price-tag" style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--color-orange)', fontWeight: 'bold' }}>
-                                <Zap size={14} fill="currentColor" /> {p.priceTokens || p.tokens || 5} Tokens
+                                <Zap size={14} fill="currentColor" /> {Math.floor(p.priceTokens || p.tokens || 5)} Tokens
                               </span>
                             </td>
                             <td>
@@ -498,7 +499,7 @@ export default function DashboardPage() {
                     <span className="balance-label">Available Balance</span>
                     <h2 className="balance-value">
                       <Zap size={48} className="text-orange" fill="var(--color-orange)" style={{ marginRight: '15px' }} />
-                      {walletTokens}
+                      {Math.floor(walletTokens)}
                       <span className="balance-unit">Tokens</span>
                     </h2>
                     <p className="balance-approx">

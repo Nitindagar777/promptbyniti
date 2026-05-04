@@ -188,7 +188,7 @@ const PurchaseSuccess = () => {
               <Unlock size={14} /> FULL ACCESS UNLOCKED
             </div>
             <div className="prompt-meta-info">
-              <span><Zap size={14} /> {prompt.priceTokens || prompt.tokens || 5} Tokens</span>
+              <span><Zap size={14} /> {Math.floor(prompt.priceTokens || prompt.tokens || 5)} Tokens</span>
               <span><Star size={14} /> {modelLabel}</span>
               <span><Clock size={14} /> {new Date(prompt.createdAt).toLocaleDateString()}</span>
             </div>
@@ -200,6 +200,7 @@ const PurchaseSuccess = () => {
                 src={prompt.thumbnail || prompt.video || (prompt.samples?.[0]?.output || prompt.samples?.[0])} 
                 alt={prompt.name} 
                 type={prompt.generateType}
+                samples={prompt.samples}
                 className="success-thumb" 
               />
               <div className="header-text">

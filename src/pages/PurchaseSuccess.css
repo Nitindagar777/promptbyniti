@@ -1,3 +1,28 @@
+.prompt-header-info {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  margin-bottom: 30px;
+}
+
+.success-thumb {
+  width: 120px !important;
+  height: 120px !important;
+  aspect-ratio: 1 / 1;
+  border-radius: 20px;
+  flex-shrink: 0;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.success-desc {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  line-height: 1.6;
+  margin: 12px 0;
+  max-width: 600px;
+}
+
 .purchase-success-page {
   padding-top: 120px;
   padding-bottom: 80px;

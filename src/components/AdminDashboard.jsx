@@ -284,6 +284,7 @@ const AdminDashboard = () => {
                       <PromptThumbnail 
                         src={prompt.thumbnail || (prompt.samples && prompt.samples.length > 0 ? (prompt.samples[0].output || prompt.samples[0]) : null)} 
                         alt={prompt.name}
+                        type={prompt.generateType}
                         style={{ width: '45px', height: '45px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }}
                       />
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>

@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import {
   ShoppingBag, Zap, Clock, Search, Filter,
   Copy, Eye, ChevronRight, Layout, ArrowLeft,
-  Sparkles, Download, Heart, Play, Image
+  Sparkles, Download, Heart, Play, Image, Type
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import PromptThumbnail from '../components/PromptThumbnail';
@@ -126,14 +126,14 @@ export default function BuyerDashboard() {
             <div className="stat-icon-circle green-bg"><Zap size={24} /></div>
             <div className="stat-data">
               <span className="stat-label">Tokens Spent</span>
-              <h2 className="stat-value">{stats.totalSpent}</h2>
+              <h2 className="stat-value">{Math.floor(stats.totalSpent || 0)}</h2>
             </div>
           </div>
           <div className="stat-card-new theme-cyan">
             <div className="stat-icon-circle cyan-bg"><Clock size={24} /></div>
             <div className="stat-data">
               <span className="stat-label">Available Balance</span>
-              <h2 className="stat-value">{state.user?.credits || 0} <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>Tokens</span></h2>
+              <h2 className="stat-value">{Math.floor(state.credits || 0)} <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>Tokens</span></h2>
             </div>
           </div>
         </div>
@@ -165,9 +165,12 @@ export default function BuyerDashboard() {
                       src={prompt.thumbnail || prompt.video || (prompt.samples?.[0]?.output || prompt.samples?.[0])}
                       alt={prompt.name}
                       type={prompt.generateType}
+                      samples={prompt.samples}
                     />
                     <div className="purchase-type-badge">
-                      {prompt.generateType === 'video' ? <><Play size={12} fill="currentColor" /> Video</> : <><Image size={12} /> Image</>}
+                      {prompt.generateType === 'video' ? <><Play size={12} fill="currentColor" /> Video</> : 
+                       (prompt.generateType === 'text' || !prompt.thumbnail) ? <><Type size={12} /> Text</> :
+                       <><Image size={12} /> Image</>}
                     </div>
                     <div className="purchase-overlay">
                       <button className="btn-icon-glass" onClick={() => window.open(`/purchase-success/${prompt._id}`, '_blank')} title="View Secret Details">

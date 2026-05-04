@@ -534,7 +534,7 @@ export default function SettingsPage() {
                     <h2 style={{ fontSize: '2rem', margin: '8px 0' }}>
                       {state.plan === 'free' ? 'Free Access' : (state.plan === 'pro' ? 'Creator Pack' : 'Studio Pack')}
                     </h2>
-                    <p className="text-muted">You have <span className="text-cyan">{state.credits}</span> Prompt Packs remaining.</p>
+                    <p className="text-muted">You have <span className="text-cyan">{Math.floor(state.credits)}</span> Prompt Packs remaining.</p>
                   </div>
                   <button className="btn btn-primary" onClick={() => navigate('/pricing')}>
                     {state.plan === 'free' ? 'Get More Packs' : 'Purchase More'}
