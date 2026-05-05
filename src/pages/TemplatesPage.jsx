@@ -159,10 +159,10 @@ export default function TemplatesPage() {
                   >
                     {!isTextOnly ? (
                       <div className="template-card__visual">
-                        <PromptThumbnail 
-                          src={tmpl.video || coverSrc} 
-                          alt={tmpl.title || tmpl.name} 
-                          className="template-card__media template-card__media-main" 
+                        <PromptThumbnail
+                          src={tmpl.video || coverSrc}
+                          alt={tmpl.title || tmpl.name}
+                          className="template-card__media template-card__media-main"
                         />
 
                         {/* Hover gallery — all 3 samples */}

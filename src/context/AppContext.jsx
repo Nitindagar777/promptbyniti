@@ -23,6 +23,12 @@ const defaultState = {
   isPrivateMode: false,
   darkMode: true,
   scrollPositions: {}, // { '/path': scrollY }
+  adminStats: null,
+  adminSettings: null,
+  adminPrompts: [],
+  adminUsers: [],
+  adminTransactions: [],
+  adminWithdrawals: [],
 };
 
 /* Load persisted state */
@@ -163,9 +169,9 @@ export function AppProvider({ children }) {
   const [authLoading, setAuthLoading] = useState(!!localStorage.getItem(TOKEN_KEY));
   const [cache, setCache] = useState({}); // Transient API cache
 
-  /* Persist specific parts of state to localStorage (Exclude heavy marketplace/library) */
+  /* Persist specific parts of state to localStorage (Exclude heavy marketplace/library/prompts) */
   useEffect(() => {
-    const { marketplace, library, buyerStats, ...rest } = state;
+    const { marketplace, library, buyerStats, adminPrompts, adminUsers, ...rest } = state;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(rest));
   }, [state]);
 
@@ -259,7 +265,60 @@ export function AppProvider({ children }) {
     };
 
     preload();
-  }, [state.user?.id]); // Re-run if user changes (e.g., login/logout)
+  }, [state.user?.id, state.user?.email]);
+
+  /* 3. Preload Admin Data (Specific Admin only) - Dedicated Effect */
+  useEffect(() => {
+    const preloadAdmin = async () => {
+      const token = localStorage.getItem(TOKEN_KEY);
+      const adminEmail = 'nitindagar0800@gmail.com';
+      const isSystemAdmin = state.user?.email?.toLowerCase().trim() === adminEmail.toLowerCase().trim();
+
+      if (token && isSystemAdmin) {
+        const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8845/api';
+        try {
+          // Fetch all critical admin data in parallel for speed
+          const [sRes, setRes, pRes, uRes, tRes, wRes] = await Promise.all([
+            fetch(`${API_BASE}/admin/stats`, { headers: { 'Authorization': `Bearer ${token}` } }),
+            fetch(`${API_BASE}/admin/settings`, { headers: { 'Authorization': `Bearer ${token}` } }),
+            fetch(`${API_BASE}/admin/prompts`, { headers: { 'Authorization': `Bearer ${token}` } }),
+            fetch(`${API_BASE}/admin/users`, { headers: { 'Authorization': `Bearer ${token}` } }),
+            fetch(`${API_BASE}/admin/transactions`, { headers: { 'Authorization': `Bearer ${token}` } }),
+            fetch(`${API_BASE}/admin/withdrawals`, { headers: { 'Authorization': `Bearer ${token}` } })
+          ]);
+
+          if (sRes.ok) {
+            const sData = await sRes.json();
+            dispatch({ type: actions.PRELOAD_DATA, payload: { adminStats: sData.stats } });
+          }
+          if (setRes.ok) {
+            const setData = await setRes.json();
+            dispatch({ type: actions.PRELOAD_DATA, payload: { adminSettings: setData.settings } });
+          }
+          if (pRes.ok) {
+            const pData = await pRes.json();
+            dispatch({ type: actions.PRELOAD_DATA, payload: { adminPrompts: pData.prompts || [] } });
+          }
+          if (uRes.ok) {
+            const uData = await uRes.json();
+            dispatch({ type: actions.PRELOAD_DATA, payload: { adminUsers: uData.users || [] } });
+          }
+          if (tRes.ok) {
+            const tData = await tRes.json();
+            dispatch({ type: actions.PRELOAD_DATA, payload: { adminTransactions: tData.transactions || tData.data || [] } });
+          }
+          if (wRes.ok) {
+            const wData = await wRes.json();
+            dispatch({ type: actions.PRELOAD_DATA, payload: { adminWithdrawals: wData.withdrawals || wData.data || [] } });
+          }
+        } catch (err) {
+          console.warn('Admin background preload failed:', err);
+        }
+      }
+    };
+
+    preloadAdmin();
+  }, [state.user?.id, state.user?.email]);
 
 
   const value = {

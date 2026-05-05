@@ -1,13 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { DollarSign, Zap, Shield } from 'lucide-react';
+import { useApp } from '../context/AppContext';
 import PromptThumbnail from './PromptThumbnail';
 import './AdminDashboard.css';
-
 const AdminDashboard = () => {
-  const [stats, setStats] = useState(null);
+  const { state, dispatch } = useApp();
+  const [stats, setStats] = useState(state.adminStats || null);
   const [activeTab, setActiveTab] = useState('overview');
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  
+  // Initialize data with preloaded values if available
+  const getInitialData = (tab) => {
+    if (tab === 'verification' || tab === 'prompts') return state.adminPrompts || [];
+    if (tab === 'users') return state.adminUsers || [];
+    if (tab === 'transactions') return state.adminTransactions || [];
+    if (tab === 'withdrawals') return state.adminWithdrawals || [];
+    return [];
+  };
+
+  const [data, setData] = useState(getInitialData('overview'));
+  const [loading, setLoading] = useState(!getInitialData('overview').length);
   const [error, setError] = useState(null);
   const [selectedPrompt, setSelectedPrompt] = useState(null);
   const [copyStatus, setCopyStatus] = useState(false);
@@ -16,9 +27,24 @@ const AdminDashboard = () => {
   const [rejectionModal, setRejectionModal] = useState({ show: false, id: null, reason: "", type: null });
   const [deleteConfirmModal, setDeleteConfirmModal] = useState({ show: false, id: null });
   const [payModal, setPayModal] = useState(null); // stores the withdrawal object being paid
-  const [systemSettings, setSystemSettings] = useState({ geminiApiKey: '', promptCreationRules: [] });
+  const [systemSettings, setSystemSettings] = useState(state.adminSettings || { geminiApiKey: '', promptCreationRules: [] });
   const [settingsLoading, setSettingsLoading] = useState(false);
   const [settingsMessage, setSettingsMessage] = useState(null);
+  const [newRule, setNewRule] = useState('');
+
+  // Sync Global State to Local State when background fetches complete
+  useEffect(() => {
+    if (state.adminStats) setStats(state.adminStats);
+  }, [state.adminStats]);
+
+  useEffect(() => {
+    if (state.adminSettings) setSystemSettings(state.adminSettings);
+  }, [state.adminSettings]);
+
+  useEffect(() => {
+    const initialData = getInitialData(activeTab);
+    if (initialData.length > 0) setData(initialData);
+  }, [state.adminPrompts, state.adminUsers, state.adminTransactions, state.adminWithdrawals, activeTab]);
 
   const openLightbox = (media, index) => {
     setFullScreenMedia(media);
@@ -40,14 +66,17 @@ const AdminDashboard = () => {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('promptbyniti_token')}` }
       });
       const json = await response.json();
-      if (json.success) setStats(json.stats);
+      if (json.success) {
+        setStats(json.stats);
+        dispatch({ type: 'PRELOAD_DATA', payload: { adminStats: json.stats } });
+      }
     } catch (err) {
       console.error('Error fetching stats:', err);
     }
   };
 
-  const fetchData = async (tab) => {
-    setLoading(true);
+  const fetchData = async (tab, showLoading = true) => {
+    if (showLoading) setLoading(true);
     setError(null);
     try {
       const endpoint = tab === 'verification' ? 'prompts' : tab;
@@ -58,6 +87,16 @@ const AdminDashboard = () => {
       if (json.success) {
         const resultData = json[endpoint] || json.data || [];
         setData(resultData);
+        // Sync to global state
+        if (tab === 'verification' || tab === 'prompts') {
+          dispatch({ type: 'PRELOAD_DATA', payload: { adminPrompts: resultData } });
+        } else if (tab === 'users') {
+          dispatch({ type: 'PRELOAD_DATA', payload: { adminUsers: resultData } });
+        } else if (tab === 'transactions') {
+          dispatch({ type: 'PRELOAD_DATA', payload: { adminTransactions: resultData } });
+        } else if (tab === 'withdrawals') {
+          dispatch({ type: 'PRELOAD_DATA', payload: { adminWithdrawals: resultData } });
+        }
       } else {
         setError(json.message);
       }
@@ -65,7 +104,7 @@ const AdminDashboard = () => {
       console.error('Fetch error:', err);
       setError('Failed to fetch data. Please check your connection.');
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
@@ -74,7 +113,16 @@ const AdminDashboard = () => {
     if (activeTab === 'api' || activeTab === 'rules') {
       fetchSettings();
     } else if (activeTab !== 'overview') {
-      fetchData(activeTab);
+      const initialData = getInitialData(activeTab);
+      let needsLoading = true;
+      if (initialData && initialData.length > 0) {
+        setData(initialData);
+        setLoading(false);
+        needsLoading = false;
+      } else {
+        setLoading(true);
+      }
+      fetchData(activeTab, needsLoading);
     }
   }, [activeTab]);
 
@@ -87,6 +135,7 @@ const AdminDashboard = () => {
       const json = await response.json();
       if (json.success) {
         setSystemSettings(json.settings);
+        dispatch({ type: 'PRELOAD_DATA', payload: { adminSettings: json.settings } });
       }
     } catch (err) {
       console.error('Error fetching settings:', err);
@@ -444,8 +493,6 @@ const AdminDashboard = () => {
   );
 
   const renderRules = () => {
-    const [newRule, setNewRule] = useState('');
-    
     const addRule = () => {
       if (!newRule.trim()) return;
       const updatedRules = [...systemSettings.promptCreationRules, newRule.trim()];

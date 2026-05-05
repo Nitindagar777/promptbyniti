@@ -264,7 +264,7 @@ export default function PromptDetailPage() {
                     <p className="text-xs text-muted">Previewing {template.samples?.length || 0} real-world generations</p>
                   </div>
                 </div>
-                
+
                 <div className="text-samples-list">
                   {template.samples && template.samples.slice(0, 3).map((sample, idx) => (
                     <div key={idx} className="text-sample-card">
@@ -279,7 +279,7 @@ export default function PromptDetailPage() {
                 </div>
 
                 <div className="text-footer">
-                  <ShieldCheck size={16} className="text-green" /> 
+                  <ShieldCheck size={16} className="text-green" />
                   <span>Verified prompt results for {model.label}</span>
                 </div>
               </div>
