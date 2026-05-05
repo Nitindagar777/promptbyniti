@@ -11,7 +11,7 @@ import './TemplatesPage.css';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8845/api';
 
 export default function TemplatesPage() {
-  const { isPremium, cache, setCachedData, setScroll, getScroll } = useApp();
+  const { state, dispatch, isPremium, setScroll, getScroll } = useApp();
   const location = useLocation();
   const navigate = useNavigate();
   const [selectedCat, setSelectedCat] = useState('all');
@@ -22,31 +22,25 @@ export default function TemplatesPage() {
   useEffect(() => {
     if (location.state?.search) {
       setSearchTerm(location.state.search);
-      setSelectedCat('all'); // Reset category when searching via specific tag
+      setSelectedCat('all');
     } else if (location.state?.category) {
       setSelectedCat(location.state.category);
-      setSearchTerm(''); // Clear search if we specifically landed on a category
+      setSearchTerm('');
     }
   }, [location.state]);
 
   useEffect(() => {
-    if (cache.storePrompts) {
-      setPrompts(cache.storePrompts);
+    if (state.marketplace && state.marketplace.length > 0) {
+      setPrompts(state.marketplace);
       setLoading(false);
-      // Restore scroll after a small delay to ensure content is rendered
-      const savedPos = getScroll(location.pathname);
-      if (savedPos) {
-        setTimeout(() => window.scrollTo(0, savedPos), 100);
-      }
     } else {
       fetchPrompts();
     }
 
-    // Save scroll on unmount
     return () => {
       setScroll(location.pathname, window.scrollY);
     };
-  }, []);
+  }, [state.marketplace]);
 
   const fetchPrompts = async () => {
     try {
@@ -54,7 +48,10 @@ export default function TemplatesPage() {
       const data = await res.json();
       if (data.success) {
         setPrompts(data.prompts);
-        setCachedData('storePrompts', data.prompts);
+        // Sync to global state
+        if (!state.marketplace || state.marketplace.length === 0) {
+          dispatch({ type: 'PRELOAD_DATA', payload: { marketplace: data.prompts } });
+        }
       }
     } catch (err) {
       console.error('Failed to fetch prompts:', err);

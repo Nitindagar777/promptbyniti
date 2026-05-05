@@ -4,6 +4,7 @@ const User = require('../models/User');
 const Prompt = require('../models/Prompt');
 const Transaction = require('../models/Transaction');
 const Withdrawal = require('../models/Withdrawal');
+const SystemSettings = require('../models/SystemSettings');
 const jwt = require('jsonwebtoken');
 
 // Middleware to check if user is admin
@@ -188,6 +189,39 @@ router.patch('/withdrawals/:id', isAdmin, async (req, res) => {
     const updatedWithdrawal = await Withdrawal.findById(withdrawal._id).populate('sellerId', 'name email avatar paymentMethod');
 
     res.json({ success: true, withdrawal: updatedWithdrawal });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// GET System Settings
+router.get('/settings', isAdmin, async (req, res) => {
+  try {
+    let settings = await SystemSettings.findOne();
+    if (!settings) {
+      settings = new SystemSettings();
+      await settings.save();
+    }
+    res.json({ success: true, settings });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// UPDATE System Settings
+router.post('/settings', isAdmin, async (req, res) => {
+  try {
+    const { geminiApiKey, promptCreationRules } = req.body;
+    let settings = await SystemSettings.findOne();
+    if (!settings) settings = new SystemSettings();
+    
+    if (geminiApiKey !== undefined) settings.geminiApiKey = geminiApiKey;
+    if (promptCreationRules !== undefined) settings.promptCreationRules = promptCreationRules;
+    
+    settings.updatedAt = Date.now();
+    await settings.save();
+    
+    res.json({ success: true, settings, message: 'Settings updated successfully' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

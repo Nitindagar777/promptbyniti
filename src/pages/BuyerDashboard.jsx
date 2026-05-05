@@ -10,7 +10,7 @@ import PromptThumbnail from '../components/PromptThumbnail';
 import './BuyerDashboard.css';
 
 export default function BuyerDashboard() {
-  const { state } = useApp();
+  const { state, dispatch } = useApp();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -28,29 +28,38 @@ export default function BuyerDashboard() {
   };
 
   useEffect(() => {
-    const fetchBuyerData = async () => {
-      try {
-        const token = localStorage.getItem('promptbyniti_token');
-        const API_BASE = import.meta.env.VITE_API_URL ||
-          (window.location.hostname.includes('oopsverse.cloud')
-            ? 'https://oopsverse.cloud/api'
-            : 'http://localhost:8845/api');
-
-        const res = await fetch(`${API_BASE}/buyer/stats`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await res.json();
-        if (data.success) {
-          setStats(data.stats);
-        }
-      } catch (err) {
-        console.error('Buyer fetch error:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
+    // Priority 1: Use globally preloaded data for instant render
+    if (state.buyerStats) {
+      setStats(state.buyerStats);
+      setLoading(false);
+    }
+    
+    // Always fetch in background to ensure data is fresh
     fetchBuyerData();
-  }, []);
+  }, [state.user?.id, state.buyerStats]);
+
+  const fetchBuyerData = async () => {
+    try {
+      const token = localStorage.getItem('promptbyniti_token');
+      if (!token) return;
+      
+      const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8845/api';
+
+      const res = await fetch(`${API_BASE}/buyer/stats`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setStats(data.stats);
+        // Sync back to global state if changed
+        dispatch({ type: 'PRELOAD_DATA', payload: { library: data.stats.library, buyerStats: data.stats } });
+      }
+    } catch (err) {
+      console.error('Buyer fetch error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleCopy = (text) => {
     navigator.clipboard.writeText(text);

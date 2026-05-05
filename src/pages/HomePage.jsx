@@ -11,7 +11,7 @@ import './HomePage.css';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8845/api';
 
 export default function HomePage() {
-  const { state, canGenerate, useCredit, addPrompt, cache, setCachedData, setScroll, getScroll } = useApp();
+  const { state, dispatch, canGenerate, useCredit, addPrompt, cache, setCachedData, setScroll, getScroll } = useApp();
   const location = useLocation();
   const [demoInput, setDemoInput] = useState('');
   const [demoResult, setDemoResult] = useState(null);
@@ -19,13 +19,9 @@ export default function HomePage() {
   const [loadingPrompts, setLoadingPrompts] = useState(true);
 
   useEffect(() => {
-    if (cache.homePrompts) {
-      setPrompts(cache.homePrompts);
+    if (state.marketplace && state.marketplace.length > 0) {
+      setPrompts(state.marketplace.slice(0, 8));
       setLoadingPrompts(false);
-      const savedPos = getScroll(location.pathname);
-      if (savedPos) {
-        setTimeout(() => window.scrollTo(0, savedPos), 100);
-      }
     } else {
       fetchPrompts();
     }
@@ -33,7 +29,7 @@ export default function HomePage() {
     return () => {
       setScroll(location.pathname, window.scrollY);
     };
-  }, []);
+  }, [state.marketplace]);
 
   const fetchPrompts = async () => {
     try {
@@ -42,7 +38,10 @@ export default function HomePage() {
       if (data.success) {
         const sliced = data.prompts.slice(0, 8);
         setPrompts(sliced);
-        setCachedData('homePrompts', sliced);
+        // Dispatch to global state if missing or to update it
+        if (!state.marketplace || state.marketplace.length === 0) {
+          dispatch({ type: 'PRELOAD_DATA', payload: { marketplace: data.prompts } });
+        }
       }
     } catch (err) {
       console.error('Failed to fetch home prompts:', err);

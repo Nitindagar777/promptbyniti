@@ -16,6 +16,9 @@ const defaultState = {
   maxCredits: 0,
   plan: 'free', // free | pro | unlimited
   prompts: [],
+  marketplace: [],
+  library: [],
+  buyerStats: null,
   favorites: [],
   isPrivateMode: false,
   darkMode: true,
@@ -49,6 +52,7 @@ const actions = {
   LOGOUT: 'LOGOUT',
   ADD_PURCHASE: 'ADD_PURCHASE',
   SET_SCROLL: 'SET_SCROLL',
+  PRELOAD_DATA: 'PRELOAD_DATA',
 };
 
 /* Reducer */
@@ -141,6 +145,12 @@ function appReducer(state, action) {
         }
       };
 
+    case actions.PRELOAD_DATA:
+      return {
+        ...state,
+        ...action.payload
+      };
+
     default:
       return state;
   }
@@ -153,9 +163,10 @@ export function AppProvider({ children }) {
   const [authLoading, setAuthLoading] = useState(!!localStorage.getItem(TOKEN_KEY));
   const [cache, setCache] = useState({}); // Transient API cache
 
-  /* Persist to localStorage */
+  /* Persist specific parts of state to localStorage (Exclude heavy marketplace/library) */
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    const { marketplace, library, buyerStats, ...rest } = state;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(rest));
   }, [state]);
 
   /* Validate User Session on Mount */
@@ -204,6 +215,52 @@ export function AppProvider({ children }) {
 
     validateSession();
   }, []);
+
+  /* Background Data Preloading (Marketplace & Stats) */
+  useEffect(() => {
+    const preload = async () => {
+      const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8845/api';
+      const token = localStorage.getItem(TOKEN_KEY);
+
+      // 1. Preload Marketplace (Public)
+      try {
+        const mRes = await fetch(`${API_BASE}/prompts`);
+        if (mRes.ok) {
+          const mData = await mRes.json();
+          dispatch({ 
+            type: actions.PRELOAD_DATA, 
+            payload: { marketplace: mData.prompts || [] } 
+          });
+        }
+      } catch (err) {
+        console.warn('Marketplace preload failed:', err);
+      }
+
+      // 2. Preload Buyer Stats & Library (Authenticated)
+      if (token) {
+        try {
+          const bRes = await fetch(`${API_BASE}/buyer/stats`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (bRes.ok) {
+            const bData = await bRes.json();
+            dispatch({ 
+              type: actions.PRELOAD_DATA, 
+              payload: { 
+                library: bData.stats?.library || [],
+                buyerStats: bData.stats
+              } 
+            });
+          }
+        } catch (err) {
+          console.warn('Buyer data preload failed:', err);
+        }
+      }
+    };
+
+    preload();
+  }, [state.user?.id]); // Re-run if user changes (e.g., login/logout)
+
 
   const value = {
     state,
