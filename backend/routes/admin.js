@@ -216,13 +216,20 @@ router.post('/settings', isAdmin, async (req, res) => {
     if (!settings) settings = new SystemSettings();
     
     if (geminiApiKey !== undefined) settings.geminiApiKey = geminiApiKey;
-    if (promptCreationRules !== undefined) settings.promptCreationRules = promptCreationRules;
+    if (promptCreationRules !== undefined) {
+      // Normalize rules: convert any legacy strings to objects
+      settings.promptCreationRules = promptCreationRules.map(r => {
+        if (typeof r === 'string') return { text: r, example: '' };
+        return r;
+      });
+    }
     
     settings.updatedAt = Date.now();
     await settings.save();
     
     res.json({ success: true, settings, message: 'Settings updated successfully' });
   } catch (err) {
+    console.error('❌ ERROR UPDATING SETTINGS:', err);
     res.status(500).json({ success: false, message: err.message });
   }
 });

@@ -63,8 +63,8 @@ export default function SellPage() {
   const [rules, setRules] = useState([]);
   const [showRules, setShowRules] = useState(true);
 
+  // Load Rules
   useEffect(() => {
-    // Fetch creation rules
     fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8845/api'}/prompts/rules`)
       .then(res => res.json())
       .then(data => {
@@ -72,6 +72,8 @@ export default function SellPage() {
       })
       .catch(err => console.warn("Failed to load rules:", err));
   }, []);
+
+  // Load Edit Data
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const id = params.get('edit');
@@ -234,7 +236,7 @@ export default function SellPage() {
         </p>
       </div>
 
-      {rules.length > 0 && (
+      {rules && rules.length > 0 && (
         <div className={`rules-guidelines-box card reveal ${!showRules ? 'collapsed' : ''}`} style={{ marginBottom: 'var(--space-xl)', border: '1px solid var(--color-purple-faint)' }}>
           <div className="rules-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }} onClick={() => setShowRules(!showRules)}>
             <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--color-purple)', fontSize: '1.2rem' }}>

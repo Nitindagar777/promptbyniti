@@ -1,7 +1,10 @@
 .admin-dashboard {
-  padding: 15px;
+  padding: 20px;
   max-width: 100%;
-  overflow-x: hidden;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* Main container fixed, internal areas scroll */
 }
 
 .admin-header {
@@ -25,16 +28,28 @@
   display: flex;
   gap: 8px;
   background: rgba(255, 255, 255, 0.05);
-  padding: 5px;
+  padding: 8px;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   overflow-x: auto;
   max-width: 100%;
-  scrollbar-width: none; /* Hide scrollbar for Chrome/Firefox */
+  scrollbar-width: thin; /* Show thin scrollbar for Firefox */
+  scrollbar-color: var(--color-orange) rgba(255, 255, 255, 0.05);
 }
 
 .admin-tabs::-webkit-scrollbar {
-  display: none; /* Hide scrollbar for Safari */
+  height: 4px; /* Horizontal scrollbar height */
+  display: block;
+}
+
+.admin-tabs::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 10px;
+}
+
+.admin-tabs::-webkit-scrollbar-thumb {
+  background: var(--color-orange);
+  border-radius: 10px;
 }
 
 .admin-tabs button {
@@ -56,6 +71,31 @@
   background: var(--color-orange);
   color: white;
   box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+}
+
+/* Content Area Scrolling */
+.admin-content-area {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 5px; /* Space for scrollbar */
+  margin-top: 20px;
+}
+
+.admin-content-area::-webkit-scrollbar {
+  width: 6px;
+}
+
+.admin-content-area::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.admin-content-area::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.admin-content-area::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .stats-grid {

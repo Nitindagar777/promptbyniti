@@ -35,6 +35,9 @@ const AdminDashboard = () => {
   const [settingsMessage, setSettingsMessage] = useState(null);
   const [newRule, setNewRule] = useState('');
   const [newRuleExample, setNewRuleExample] = useState('');
+  const [isBulkMode, setIsBulkMode] = useState(false);
+  const [bulkRules, setBulkRules] = useState('');
+  const ruleFormRef = React.useRef(null);
 
   // Sync Global State to Local State when background fetches complete
   useEffect(() => {
@@ -518,15 +521,82 @@ const AdminDashboard = () => {
       handleUpdateSettings({ promptCreationRules: updatedRules });
     };
 
+    const handleSaveBulkRules = () => {
+      const parsed = bulkRules.split('\n')
+        .filter(line => line.trim())
+        .map(line => {
+          const [text, example] = line.split('|').map(s => s.trim());
+          return { text, example: example || '' };
+        });
+      handleUpdateSettings({ promptCreationRules: parsed });
+      setIsBulkMode(false);
+    };
+
+    const scrollToForm = () => {
+      if (ruleFormRef.current) {
+        ruleFormRef.current.scrollIntoView({ behavior: 'smooth' });
+      }
+    };
+
+    const enterBulkMode = () => {
+      const currentText = (systemSettings.promptCreationRules || []).map(r => {
+        const t = typeof r === 'string' ? r : r.text;
+        const e = typeof r === 'object' ? r.example : '';
+        return e ? `${t} | ${e}` : t;
+      }).join('\n');
+      setBulkRules(currentText);
+      setIsBulkMode(true);
+    };
+
     return (
       <div className="admin-settings-container card">
-        <div className="settings-header-box">
-          <Shield size={24} className="text-purple" />
-          <h2>Prompt Creation Rules</h2>
+        <div className="settings-header-box" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Shield size={24} className="text-purple" />
+            <h2 style={{ margin: 0 }}>Prompt Creation Rules</h2>
+          </div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {!isBulkMode && (
+              <button 
+                className="approve-btn" 
+                onClick={scrollToForm}
+                style={{ padding: '6px 12px', fontSize: '0.8rem', background: '#22c55e' }}
+              >
+                + Add New Rule
+              </button>
+            )}
+            <button 
+              className="btn btn-secondary btn-sm" 
+              onClick={isBulkMode ? () => setIsBulkMode(false) : enterBulkMode}
+              style={{ padding: '6px 12px', fontSize: '0.8rem' }}
+            >
+              {isBulkMode ? 'Cancel Bulk Edit' : 'Notepad Mode (Bulk Edit)'}
+            </button>
+          </div>
         </div>
-        <p className="text-secondary mb-6">Define the guidelines for sellers when creating new prompts.</p>
+        <p className="text-secondary mb-6">
+          {isBulkMode 
+            ? "Paste your rules here. Format: Rule Text | Example (optional). Each rule on a new line."
+            : "Define the guidelines for sellers when creating new prompts."}
+        </p>
 
-        <div className="rules-list">
+        {isBulkMode ? (
+          <div className="bulk-rules-editor">
+            <textarea
+              className="admin-input"
+              style={{ width: '100%', minHeight: '300px', fontFamily: 'monospace', fontSize: '0.9rem', lineHeight: '1.5', padding: '15px' }}
+              placeholder={`Rule 1\nRule 2 | Example for Rule 2\nRule 3`}
+              value={bulkRules}
+              onChange={(e) => setBulkRules(e.target.value)}
+            />
+            <div style={{ marginTop: '15px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button className="btn btn-ghost" onClick={() => setIsBulkMode(false)}>Discard</button>
+              <button className="approve-btn" onClick={handleSaveBulkRules}>Save All Rules</button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="rules-list">
           {(systemSettings.promptCreationRules || []).map((ruleObj, index) => {
             const ruleText = typeof ruleObj === 'string' ? ruleObj : ruleObj.text;
             const ruleExample = typeof ruleObj === 'object' ? ruleObj.example : '';
@@ -552,7 +622,7 @@ const AdminDashboard = () => {
           })}
         </div>
 
-        <div className="add-rule-box" style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '12px', background: 'rgba(255,255,255,0.02)', padding: '15px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+        <div ref={ruleFormRef} className="add-rule-box" style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '12px', background: 'rgba(255,255,255,0.02)', padding: '15px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
           <div className="form-group">
             <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block' }}>Rule Text</label>
             <input 
@@ -579,9 +649,11 @@ const AdminDashboard = () => {
           </div>
           <button className="approve-btn" onClick={addRule} style={{ alignSelf: 'flex-end', marginTop: '5px' }}>Add Rule</button>
         </div>
-      </div>
-    );
-  };
+      </>
+    )}
+  </div>
+);
+};
 
   return (
     <div className="admin-dashboard">
@@ -844,7 +916,7 @@ const AdminDashboard = () => {
         </div>
       )}
       
-      <div className="admin-content">
+      <div className="admin-content-area">
         {loading && activeTab !== 'overview' ? (
           <div className="admin-loader">Loading control data...</div>
         ) : error ? (
