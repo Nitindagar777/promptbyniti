@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const router = express.Router();
 const Prompt = require('../models/Prompt');
 const jwt = require('jsonwebtoken');
@@ -30,11 +31,43 @@ const auth = async (req, res, next) => {
   }
 };
 
+const cloudinary = require('cloudinary').v2;
+
+const uploadToCloudinary = async (base64String) => {
+  if (!base64String || !base64String.startsWith('data:')) return base64String;
+  try {
+    const result = await cloudinary.uploader.upload(base64String, {
+      resource_type: 'auto',
+      folder: 'prompt_gene'
+    });
+    return result.secure_url;
+  } catch (err) {
+    console.error('Cloudinary upload error:', err.message || err);
+    return base64String;
+  }
+};
+
 // POST Create Prompt
 router.post('/', auth, async (req, res) => {
   try {
+    const payload = { ...req.body };
+    
+    // Upload thumbnail if it's base64
+    if (payload.thumbnail) {
+      payload.thumbnail = await uploadToCloudinary(payload.thumbnail);
+    }
+    
+    // Upload samples if they are base64
+    if (payload.samples && payload.samples.length > 0) {
+      for (let i = 0; i < payload.samples.length; i++) {
+        if (payload.samples[i].output) {
+          payload.samples[i].output = await uploadToCloudinary(payload.samples[i].output);
+        }
+      }
+    }
+
     const prompt = new Prompt({
-      ...req.body,
+      ...payload,
       seller: req.userId,
       status: 'pending'
     });
@@ -47,10 +80,22 @@ router.post('/', auth, async (req, res) => {
 
 // GET All Approved Prompts (Public)
 router.get('/', async (req, res) => {
+  console.log('📬 GET /api/prompts - Fetching prompts...');
   try {
-    const prompts = await Prompt.find({ status: 'approved' }).sort({ createdAt: -1 });
-    res.json({ success: true, prompts });
+    const prompts = await Prompt.find({ status: 'approved' })
+      .select('-instructions -template') // Now includes thumbnail and samples as they are lightweight URLs
+      .sort({ createdAt: -1 })
+      .lean();
+      
+    // Normalize samples to be an array of output URLs for the marketplace
+    const normalizedPrompts = prompts.map(p => ({
+      ...p,
+      samples: (p.samples || []).map(s => s.output || s)
+    }));
+
+    res.json({ success: true, prompts: normalizedPrompts });
   } catch (err) {
+    console.error('❌ Error fetching prompts:', err.message);
     res.status(500).json({ success: false, message: err.message });
   }
 });

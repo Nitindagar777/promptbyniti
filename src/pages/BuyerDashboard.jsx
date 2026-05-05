@@ -12,9 +12,9 @@ import './BuyerDashboard.css';
 export default function BuyerDashboard() {
   const { state, dispatch } = useApp();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!state.buyerStats);
   const [searchTerm, setSearchTerm] = useState('');
-  const [stats, setStats] = useState({
+  const [stats, setStats] = useState(state.buyerStats || {
     totalPurchased: 0,
     totalSpent: 0,
     library: [],
@@ -173,8 +173,8 @@ export default function BuyerDashboard() {
                     <PromptThumbnail
                       src={prompt.thumbnail || prompt.video || (prompt.samples?.[0]?.output || prompt.samples?.[0])}
                       alt={prompt.name}
+                      title={prompt.name}
                       type={prompt.generateType}
-                      samples={prompt.samples}
                     />
                     <div className="purchase-type-badge">
                       {prompt.generateType === 'video' ? <><Play size={12} fill="currentColor" /> Video</> :

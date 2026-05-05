@@ -60,11 +60,24 @@ app.use('/api/seller', sellerNewRoutes);
 app.use('/api/buyer', buyerRoutes);
 
 // Health check
-app.get('/', (req, res) => {
+app.get('/', async (req, res) => {
+  console.log('🔍 Health check requested');
+  let promptCount = 0;
+  try {
+    const Prompt = require('./models/Prompt');
+    promptCount = await Prompt.countDocuments();
+    console.log('📊 Prompt count from health check (using model):', promptCount);
+  } catch (err) {
+    console.error('❌ Error counting prompts in health check:', err.message);
+  }
+
   res.json({ 
     message: "Prompt by Niti API - System Online", 
     port: PORT,
-    database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'
+    database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
+    readyState: mongoose.connection.readyState,
+    dbName: mongoose.connection.name,
+    promptCount
   });
 });
 

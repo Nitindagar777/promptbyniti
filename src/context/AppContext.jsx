@@ -23,6 +23,7 @@ const defaultState = {
   isPrivateMode: false,
   darkMode: true,
   scrollPositions: {}, // { '/path': scrollY }
+  sellerStats: null,
   adminStats: null,
   adminSettings: null,
   adminPrompts: [],
@@ -171,7 +172,7 @@ export function AppProvider({ children }) {
 
   /* Persist specific parts of state to localStorage (Exclude heavy marketplace/library/prompts) */
   useEffect(() => {
-    const { marketplace, library, buyerStats, adminPrompts, adminUsers, ...rest } = state;
+    const { marketplace, library, buyerStats, sellerStats, adminPrompts, adminUsers, ...rest } = state;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(rest));
   }, [state]);
 
@@ -242,24 +243,32 @@ export function AppProvider({ children }) {
         console.warn('Marketplace preload failed:', err);
       }
 
-      // 2. Preload Buyer Stats & Library (Authenticated)
+      // 2. Preload Buyer & Seller Stats (Authenticated)
       if (token) {
         try {
-          const bRes = await fetch(`${API_BASE}/buyer/stats`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
+          const [bRes, sRes] = await Promise.all([
+            fetch(`${API_BASE}/buyer/stats`, { headers: { 'Authorization': `Bearer ${token}` } }),
+            fetch(`${API_BASE}/seller/stats`, { headers: { 'Authorization': `Bearer ${token}` } })
+          ]);
+          
+          let preloadPayload = {};
+
           if (bRes.ok) {
             const bData = await bRes.json();
-            dispatch({ 
-              type: actions.PRELOAD_DATA, 
-              payload: { 
-                library: bData.stats?.library || [],
-                buyerStats: bData.stats
-              } 
-            });
+            preloadPayload.library = bData.stats?.library || [];
+            preloadPayload.buyerStats = bData.stats;
+          }
+
+          if (sRes.ok) {
+            const sData = await sRes.json();
+            preloadPayload.sellerStats = sData.stats;
+          }
+
+          if (Object.keys(preloadPayload).length > 0) {
+            dispatch({ type: actions.PRELOAD_DATA, payload: preloadPayload });
           }
         } catch (err) {
-          console.warn('Buyer data preload failed:', err);
+          console.warn('Authenticated data preload failed:', err);
         }
       }
     };

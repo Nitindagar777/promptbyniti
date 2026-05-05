@@ -78,9 +78,9 @@ export default function DashboardPage() {
       setIsEditingPayout(true);
     }
   };
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!state.sellerStats);
   const [rejectionReasonModal, setRejectionReasonModal] = useState({ show: false, reason: "" });
-  const [stats, setStats] = useState({
+  const [stats, setStats] = useState(state.sellerStats || {
     totalEarnings: 0,
     walletBalance: 0,
     totalSales: 0,
@@ -93,6 +93,14 @@ export default function DashboardPage() {
     recentActivity: [],
     recentPayouts: []
   });
+
+  // Sync with global preloaded data
+  useEffect(() => {
+    if (state.sellerStats) {
+      setStats(state.sellerStats);
+      setLoading(false);
+    }
+  }, [state.sellerStats]);
 
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this prompt? This action cannot be undone.')) return;
@@ -182,6 +190,7 @@ export default function DashboardPage() {
 
         if (data.success) {
           setStats(data.stats);
+          // Optional: You could dispatch an update to global sellerStats here if needed
           console.log(`Successfully loaded ${data.stats?.prompts?.length || 0} prompts.`);
         }
       } catch (err) {
@@ -413,8 +422,8 @@ export default function DashboardPage() {
                                 <PromptThumbnail
                                   src={p.thumbnail || p.video || (p.samples && p.samples.length > 0 ? (p.samples[0].output || p.samples[0]) : null)}
                                   alt={p.name}
+                                  title={p.name}
                                   type={p.generateType}
-                                  samples={p.samples}
                                   style={{ width: '45px', height: '45px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }}
                                 />
                                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>

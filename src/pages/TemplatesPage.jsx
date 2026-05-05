@@ -16,8 +16,8 @@ export default function TemplatesPage() {
   const navigate = useNavigate();
   const [selectedCat, setSelectedCat] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [prompts, setPrompts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [prompts, setPrompts] = useState(state.marketplace || []);
+  const [loading, setLoading] = useState(!state.marketplace || state.marketplace.length === 0);
 
   useEffect(() => {
     if (location.state?.search) {
@@ -143,76 +143,59 @@ export default function TemplatesPage() {
           <div className="templates-page__grid">
             {filteredTemplates.length > 0 ? (
               filteredTemplates.map((tmpl, i) => {
-                const s0 = tmpl.samples?.[0]?.output || tmpl.samples?.[0];
-                const s1 = tmpl.samples?.[1]?.output || tmpl.samples?.[1];
-                const s2 = tmpl.samples?.[2]?.output || tmpl.samples?.[2];
-                const coverSrc = tmpl.thumbnail || (tmpl.generateType !== 'text' ? s0 : null);
+                const s0 = tmpl.samples?.[0];
+                const s1 = tmpl.samples?.[1];
+                const s2 = tmpl.samples?.[2];
+                const coverSrc = tmpl.thumbnail && tmpl.thumbnail.startsWith('http') ? tmpl.thumbnail : (tmpl.generateType !== 'text' ? s0 : null);
                 const isTextOnly = tmpl.generateType === 'text' || (!coverSrc && !tmpl.video);
 
                 return (
                   <Link
                     key={tmpl.id || tmpl._id}
                     to={`/prompt/${tmpl.id || tmpl._id}`}
-                    className="template-card card"
+                    className={`template-card card ${tmpl.generateType === 'text' ? 'template-card--text' : ''}`}
                     id={`template-${tmpl.id || tmpl._id}`}
                     style={{ animationDelay: `${i * 0.05}s`, textDecoration: 'none' }}
                   >
-                    {!isTextOnly ? (
-                      <div className="template-card__visual">
-                        <PromptThumbnail
-                          src={tmpl.video || coverSrc}
-                          alt={tmpl.title || tmpl.name}
-                          className="template-card__media template-card__media-main"
-                        />
+                    <div className="template-card__visual">
+                      <PromptThumbnail
+                        src={tmpl.video || coverSrc}
+                        alt={tmpl.title || tmpl.name}
+                        title={tmpl.title || tmpl.name}
+                        className="template-card__media template-card__media-main"
+                        type={tmpl.generateType}
+                      />
 
-                        {/* Hover gallery — all 3 samples */}
-                        {s0 && s1 && s2 && (
-                          <div className="template-card__gallery">
-                            <div className="template-card__gallery-main">
-                              <PromptThumbnail src={s0} alt="sample 1" />
-                            </div>
-                            <div className="template-card__gallery-side">
-                              <PromptThumbnail src={s1} alt="sample 2" />
-                              <PromptThumbnail src={s2} alt="sample 3" />
-                            </div>
+                      {/* Hover gallery — all 3 samples */}
+                      {tmpl.generateType !== 'text' && (
+                        <div className="template-card__gallery">
+                          <div className="template-card__gallery-main">
+                            <PromptThumbnail src={s0} alt="sample 1" type={tmpl.generateType} />
                           </div>
-                        )}
-
-                        <div className="template-card__overlay template-card__overlay--top">
-                          <span className="template-card__model-tag">
-                            {tmpl.model || (tmpl.category === 'anime' ? 'Niji v6' : 'Flux.1')}
-                          </span>
-                          <div className="template-card__view-badge">
-                            <Eye size={12} /> {tmpl.views || 0}
+                          <div className="template-card__gallery-side">
+                            <PromptThumbnail src={s1} alt="sample 2" type={tmpl.generateType} />
+                            <PromptThumbnail src={s2} alt="sample 3" type={tmpl.generateType} />
                           </div>
                         </div>
-                        <div className="template-card__overlay template-card__overlay--bottom">
-                          <div style={{ flex: 1 }}>
-                            <h3 className="template-card__title-overlay">{tmpl.title || tmpl.name}</h3>
-                          </div>
-                          <div className="template-card__token-badge">
-                            <Zap size={12} fill="currentColor" /> {tmpl.priceTokens || tmpl.tokens || 5}
-                          </div>
+                      )}
+
+                      <div className="template-card__overlay template-card__overlay--top">
+                        <span className={`template-card__model-tag ${tmpl.generateType === 'text' ? 'template-card__model-tag--text' : ''}`}>
+                          {tmpl.model || (tmpl.category === 'anime' ? 'Niji v6' : (tmpl.generateType === 'text' ? 'GPT-4o' : 'Flux.1'))}
+                        </span>
+                        <div className="template-card__view-badge">
+                          <Eye size={12} /> {tmpl.views || 0}
                         </div>
                       </div>
-                    ) : (
-                      <div className="template-card__content template-card__content--text">
-                        <div className="template-card__overlay template-card__overlay--top">
-                          <span className="template-card__model-tag template-card__model-tag--text">
-                            {tmpl.model || 'GPT-4o'}
-                          </span>
-                          <div className="template-card__view-badge">
-                            <Eye size={12} /> {tmpl.views || 0}
-                          </div>
+                      <div className="template-card__overlay template-card__overlay--bottom">
+                        <div style={{ flex: 1 }}>
+                          <h3 className="template-card__title-overlay">{tmpl.title || tmpl.name}</h3>
                         </div>
-                        <h3 className="template-card__title-center">{tmpl.title || tmpl.name}</h3>
-                        <div className="template-card__overlay template-card__overlay--bottom template-card__overlay--right">
-                          <div className="template-card__token-badge template-card__token-badge--text">
-                            <Zap size={12} fill="currentColor" /> {tmpl.priceTokens || tmpl.tokens || 5}
-                          </div>
+                        <div className={`template-card__token-badge ${tmpl.generateType === 'text' ? 'template-card__token-badge--text' : ''}`}>
+                          <Zap size={12} fill="currentColor" /> {tmpl.priceTokens || tmpl.tokens || 5}
                         </div>
                       </div>
-                    )}
+                    </div>
                   </Link>
                 );
               })

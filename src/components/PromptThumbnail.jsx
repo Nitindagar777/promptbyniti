@@ -5,105 +5,92 @@ import React from 'react';
  * Handles both static images and video thumbnails for prompts.
  * For videos, it shows the first frame (metadata preload) or a poster if available.
  */
-const PromptThumbnail = ({ src, alt, className, style, type, samples, objectFit = 'cover' }) => {
-  const isVideo = type === 'video' ||
-    src?.toLowerCase().match(/\.(mp4|webm|ogg|mov)(\?.*)?$/) ||
-    (src && src.startsWith('data:video/'));
+const PromptThumbnail = ({ src, alt, className, style, type, title, objectFit = 'cover' }) => {
+  const srcStr = typeof src === 'string' ? src : (src?.output || '');
+  
+  // Sleek Dark Navy gradient to match Marketplace Cards
+  const cardGradient = 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)';
 
-  const isText = type === 'text' || (!src && !type) || (type === 'image' && (!src || src.includes('placeholder') || src.includes('unsplash')));
-
-  const previewSamples = (samples || []).slice(0, 6);
-
-  if (isText) {
+  if (!srcStr || type === 'text' && !srcStr.startsWith('http')) {
+    const isSmall = style?.width && parseInt(style.width) < 60;
+    
     return (
       <div 
         className={className} 
         style={{ 
           ...style, 
-          width: '100%',
-          height: '100%',
-          background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', 
-          display: 'flex', 
-          flexDirection: 'column',
-          alignItems: 'center', 
-          justifyContent: 'center', 
-          overflow: 'hidden',
+          width: style?.width || '100%',
+          height: style?.height || '100%',
+          background: cardGradient,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: isSmall ? '4px' : '12px',
+          textAlign: 'center',
           position: 'relative',
-          padding: '15px',
-          userSelect: 'none',
-          pointerEvents: 'none' // Ensures clicks pass through to the parent overlay
+          overflow: 'hidden',
+          border: '1px solid rgba(255, 255, 255, 0.05)'
         }}
       >
-        {/* Sample Background Overlay - Moved to bottom and spread out */}
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(3, 1fr)', 
-          gap: '8px', 
-          width: '100%', 
-          position: 'absolute',
-          bottom: '15px',
-          left: '10px',
-          right: '10px',
-          opacity: 0.2
-        }}>
-          {previewSamples.map((s, i) => (
-            <div key={i} style={{ 
-              background: 'rgba(255,255,255,0.05)', 
-              height: '40px', 
-              borderRadius: '4px',
-              fontSize: '5px',
-              padding: '5px',
-              color: 'rgba(255,255,255,0.3)',
-              overflow: 'hidden',
-              textAlign: 'left'
-            }}>
-              {s.output || s}
-            </div>
-          ))}
-        </div>
-
-        {/* Centered Title */}
-        <span style={{ 
-          color: '#fff', 
-          fontSize: '0.9rem', 
-          fontFamily: 'var(--font-display)', 
-          textAlign: 'center', 
-          textTransform: 'uppercase',
-          lineHeight: '1.3',
-          letterSpacing: '0.1em',
-          fontWeight: '900',
-          textShadow: '0 0 15px rgba(0,255,255,0.4)',
-          zIndex: 2,
-          maxWidth: '90%',
-          marginTop: '-10px' // Slight adjustment to feel perfectly centered
-        }}>
-          {alt}
-        </span>
+        {title && !isSmall && (
+          <span style={{ 
+            color: 'white', 
+            fontWeight: 'bold', 
+            fontSize: '1.2rem',
+            fontFamily: 'var(--font-display)',
+            zIndex: 2,
+            lineHeight: 1.2,
+            display: '-webkit-box',
+            WebkitLineClamp: 3,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden'
+          }}>
+            {title}
+          </span>
+        )}
+        {isSmall && (
+          <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: '10px' }}>
+            TEXT
+          </div>
+        )}
       </div>
     );
   }
 
+  const isVideo = type === 'video' ||
+    srcStr.toLowerCase().match(/\.(mp4|webm|ogg|mov)(\?.*)?$/) ||
+    srcStr.includes('/video/upload/') || 
+    srcStr.startsWith('data:video/');
+
   if (isVideo) {
     return (
       <video
-        src={src}
+        src={srcStr}
         className={className}
         style={{ ...style, objectFit: objectFit }}
-        preload="metadata"
+        preload="auto"
         muted
+        loop
         playsInline
+        onMouseOver={(e) => e.target.play()}
+        onMouseOut={(e) => {
+          e.target.pause();
+          e.target.currentTime = 0;
+        }}
       />
     );
   }
 
   return (
     <img
-      src={src || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100&auto=format&fit=crop&q=60'}
+      src={srcStr}
       alt={alt}
       className={className}
       style={{ ...style, objectFit: objectFit }}
       onError={(e) => {
-        e.target.src = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100&auto=format&fit=crop&q=60';
+        e.target.style.display = 'none';
+        const parent = e.target.parentElement;
+        if (parent) parent.style.background = cardGradient;
       }}
     />
   );

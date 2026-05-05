@@ -35,10 +35,11 @@
 }
 
 .purchase-thumb img,
-.purchase-thumb video {
+.purchase-thumb video,
+.purchase-thumb > div {
   width: 100%;
   height: 100%;
-  object-fit: inherit; /* Use the object-fit passed to PromptThumbnail */
+  object-fit: cover !important;
   transition: transform 0.5s ease;
 }
 
