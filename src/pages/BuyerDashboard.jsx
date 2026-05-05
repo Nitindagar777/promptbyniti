@@ -176,11 +176,6 @@ export default function BuyerDashboard() {
                       title={prompt.name}
                       type={prompt.generateType}
                     />
-                    <div className="purchase-type-badge">
-                      {prompt.generateType === 'video' ? <><Play size={12} fill="currentColor" /> Video</> :
-                        (prompt.generateType === 'text' || !prompt.thumbnail) ? <><Type size={12} /> Text</> :
-                          <><Image size={12} /> Image</>}
-                    </div>
                     <div className="purchase-overlay">
                       <button className="btn-icon-glass" onClick={() => window.open(`/purchase-success/${prompt._id}`, '_blank')} title="View Secret Details">
                         <Eye size={20} />

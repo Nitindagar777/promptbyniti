@@ -11,7 +11,7 @@ const PromptThumbnail = ({ src, alt, className, style, type, title, objectFit = 
   // Sleek Dark Navy gradient to match Marketplace Cards
   const cardGradient = 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)';
 
-  if (!srcStr || type === 'text' && !srcStr.startsWith('http')) {
+  if (type === 'text' || !srcStr) {
     const isSmall = style?.width && parseInt(style.width) < 60;
     
     return (
@@ -25,7 +25,7 @@ const PromptThumbnail = ({ src, alt, className, style, type, title, objectFit = 
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: isSmall ? '4px' : '12px',
+          padding: isSmall ? '4px' : '20px',
           textAlign: 'center',
           position: 'relative',
           overflow: 'hidden',
@@ -38,18 +38,22 @@ const PromptThumbnail = ({ src, alt, className, style, type, title, objectFit = 
             fontWeight: 'bold', 
             fontSize: '1.2rem',
             fontFamily: 'var(--font-display)',
-            zIndex: 2,
-            lineHeight: 1.2,
+            zIndex: 1, // Lower than eye icon
+            lineHeight: 1.3,
+            maxWidth: '90%',
             display: '-webkit-box',
-            WebkitLineClamp: 3,
+            WebkitLineClamp: 4,
             WebkitBoxOrient: 'vertical',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            textShadow: '0 2px 10px rgba(0,0,0,0.5)',
+            userSelect: 'none',
+            pointerEvents: 'none'
           }}>
             {title}
           </span>
         )}
         {isSmall && (
-          <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: '10px' }}>
+          <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: 'bold' }}>
             TEXT
           </div>
         )}
