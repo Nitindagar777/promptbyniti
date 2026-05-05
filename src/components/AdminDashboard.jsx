@@ -37,6 +37,7 @@ const AdminDashboard = () => {
   const [newRuleExample, setNewRuleExample] = useState('');
   const [isBulkMode, setIsBulkMode] = useState(false);
   const [bulkRules, setBulkRules] = useState('');
+  const [showApiKey, setShowApiKey] = useState(false);
   const ruleFormRef = React.useRef(null);
 
   // Sync Global State to Local State when background fetches complete
@@ -480,14 +481,28 @@ const AdminDashboard = () => {
 
       <div className="admin-field">
         <label>Gemini API Key</label>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <input 
-            type="password" 
-            className="admin-input" 
-            placeholder="Enter your Gemini API key..." 
-            value={systemSettings.geminiApiKey}
-            onChange={(e) => setSystemSettings({...systemSettings, geminiApiKey: e.target.value})}
-          />
+        <div style={{ display: 'flex', gap: '10px', position: 'relative' }}>
+          <div style={{ position: 'relative', flex: 1 }}>
+            <input 
+              type={showApiKey ? "text" : "password"} 
+              className="admin-input" 
+              placeholder="Enter your Gemini API key..." 
+              value={systemSettings.geminiApiKey}
+              onChange={(e) => setSystemSettings({...systemSettings, geminiApiKey: e.target.value})}
+              style={{ width: '100%', paddingRight: '45px' }}
+            />
+            <button 
+              type="button"
+              onClick={() => setShowApiKey(!showApiKey)}
+              style={{
+                position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
+                background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer'
+              }}
+              title={showApiKey ? "Hide Key" : "Show Key"}
+            >
+              {showApiKey ? '👁️' : '🔒'}
+            </button>
+          </div>
           <button 
             className="approve-btn" 
             onClick={() => handleUpdateSettings({ geminiApiKey: systemSettings.geminiApiKey })}
@@ -496,6 +511,11 @@ const AdminDashboard = () => {
             {settingsLoading ? 'Saving...' : 'Save Key'}
           </button>
         </div>
+        {systemSettings.geminiApiKey && !showApiKey && (
+          <p className="text-xs mt-2" style={{ color: 'var(--color-cyan)', opacity: 0.8 }}>
+            Current Key: {systemSettings.geminiApiKey.substring(0, 6)}...{systemSettings.geminiApiKey.slice(-4)}
+          </p>
+        )}
         <p className="text-xs text-muted mt-2">This key is used for secure background prompt generation and enhancements.</p>
       </div>
 
