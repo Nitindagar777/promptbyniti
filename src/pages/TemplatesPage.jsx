@@ -191,9 +191,11 @@ export default function TemplatesPage() {
                         <div style={{ flex: 1 }}>
                           <h3 className="template-card__title-overlay">{tmpl.title || tmpl.name}</h3>
                         </div>
-                        <div className={`template-card__token-badge ${tmpl.generateType === 'text' ? 'template-card__token-badge--text' : ''}`}>
-                          <Zap size={12} fill="currentColor" /> {tmpl.priceTokens || tmpl.tokens || 5}
-                        </div>
+                      </div>
+
+                      {/* Absolute token badge */}
+                      <div className={`template-card__token-badge ${tmpl.generateType === 'text' ? 'template-card__token-badge--text' : ''}`}>
+                        <Zap size={12} fill="currentColor" /> {tmpl.priceTokens || tmpl.tokens || 5}
                       </div>
                     </div>
                   </Link>

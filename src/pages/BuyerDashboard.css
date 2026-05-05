@@ -44,8 +44,13 @@
 }
 
 .purchase-card:hover .purchase-thumb img,
-.purchase-card:hover .purchase-thumb video {
+.purchase-card:hover .purchase-thumb video,
+.purchase-card:hover .purchase-thumb > div {
   transform: scale(1.05);
+}
+
+.template-card--text:hover .purchase-thumb > div {
+  transform: none !important;
 }
 
 .purchase-overlay {

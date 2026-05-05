@@ -389,6 +389,20 @@ p {
   opacity: 0;
 }
 
+/* Hard Disable Hover for Text Prompts */
+.template-card--text:hover .template-card__media-main,
+.template-card--text:hover .template-card__media,
+.template-card--text:hover .template-card__img {
+  transform: none !important;
+  opacity: 1 !important;
+}
+
+.template-card--text:hover .template-card__gallery {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
 .template-card__overlay {
   position: absolute;
   left: 0;
@@ -421,27 +435,40 @@ p {
   margin: 0;
   font-family: var(--font-display);
   text-shadow: 0 2px 5px rgba(0,0,0,0.9);
-  max-width: 80%;
+  max-width: calc(100% - 70px); /* Leave room for token badge */
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .template-card__token-badge {
-  color: var(--color-orange);
+  color: #fbbf24 !important; /* Force visible gold */
   font-size: 0.95rem;
   font-weight: bold;
   display: flex;
   align-items: center;
   gap: 4px;
-  text-shadow: 0 1px 5px rgba(0,0,0,0.9);
-  position: relative;
-  z-index: 10;
+  text-shadow: 0 1px 10px rgba(0,0,0,0.8);
+  position: absolute !important;
+  right: 12px;
+  bottom: 12px;
+  z-index: 50 !important;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(4px);
+  padding: 2px 8px;
+  border-radius: 12px;
+  pointer-events: none;
+}
+
+.template-card__token-badge--text {
+  background: rgba(0,0,0,0.3) !important;
 }
 
 /* Text Prompt Specifics */
-.template-card--text:hover .template-card__img {
+.template-card--text:hover .template-card__img,
+.template-card--text:hover .template-card__media-main {
   transform: none !important;
+  opacity: 1 !important;
 }
 
 .template-card--text:hover .template-card__gallery {

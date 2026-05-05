@@ -168,7 +168,7 @@ export default function BuyerDashboard() {
           <div className="purchased-grid">
             {filteredLibrary.length > 0 ? (
               filteredLibrary.map(prompt => (
-                <div key={prompt._id} className="purchase-card animate-fade-in">
+                <div key={prompt._id} className={`purchase-card template-card animate-fade-in ${prompt.generateType === 'text' ? 'template-card--text' : ''}`}>
                   <div className="purchase-thumb">
                     <PromptThumbnail
                       src={prompt.thumbnail || prompt.video || (prompt.samples?.[0]?.output || prompt.samples?.[0])}
