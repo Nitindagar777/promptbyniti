@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { DollarSign, Zap, Shield } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import PromptThumbnail from './PromptThumbnail';
@@ -6,7 +7,8 @@ import './AdminDashboard.css';
 const AdminDashboard = () => {
   const { state, dispatch } = useApp();
   const [stats, setStats] = useState(state.adminStats || null);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(searchParams.get('sub') || 'overview');
   
   // Initialize data with preloaded values if available
   const getInitialData = (tab) => {
@@ -14,6 +16,7 @@ const AdminDashboard = () => {
     if (tab === 'users') return state.adminUsers || [];
     if (tab === 'transactions') return state.adminTransactions || [];
     if (tab === 'withdrawals') return state.adminWithdrawals || [];
+    if (tab === 'api' || tab === 'rules') return state.adminSettings ? [state.adminSettings] : [];
     return [];
   };
 
@@ -31,6 +34,7 @@ const AdminDashboard = () => {
   const [settingsLoading, setSettingsLoading] = useState(false);
   const [settingsMessage, setSettingsMessage] = useState(null);
   const [newRule, setNewRule] = useState('');
+  const [newRuleExample, setNewRuleExample] = useState('');
 
   // Sync Global State to Local State when background fetches complete
   useEffect(() => {
@@ -42,9 +46,16 @@ const AdminDashboard = () => {
   }, [state.adminSettings]);
 
   useEffect(() => {
+    const sub = searchParams.get('sub');
+    if (sub && sub !== activeTab) {
+      setActiveTab(sub);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
     const initialData = getInitialData(activeTab);
     if (initialData.length > 0) setData(initialData);
-  }, [state.adminPrompts, state.adminUsers, state.adminTransactions, state.adminWithdrawals, activeTab]);
+  }, [state.adminPrompts, state.adminUsers, state.adminTransactions, state.adminWithdrawals, state.adminSettings, activeTab]);
 
   const openLightbox = (media, index) => {
     setFullScreenMedia(media);
@@ -141,6 +152,7 @@ const AdminDashboard = () => {
       console.error('Error fetching settings:', err);
     } finally {
       setSettingsLoading(false);
+      setLoading(false);
     }
   };
 
@@ -495,13 +507,14 @@ const AdminDashboard = () => {
   const renderRules = () => {
     const addRule = () => {
       if (!newRule.trim()) return;
-      const updatedRules = [...systemSettings.promptCreationRules, newRule.trim()];
+      const updatedRules = [...(systemSettings.promptCreationRules || []), { text: newRule.trim(), example: newRuleExample.trim() }];
       handleUpdateSettings({ promptCreationRules: updatedRules });
       setNewRule('');
+      setNewRuleExample('');
     };
 
     const removeRule = (index) => {
-      const updatedRules = systemSettings.promptCreationRules.filter((_, i) => i !== index);
+      const updatedRules = (systemSettings.promptCreationRules || []).filter((_, i) => i !== index);
       handleUpdateSettings({ promptCreationRules: updatedRules });
     };
 
@@ -514,25 +527,57 @@ const AdminDashboard = () => {
         <p className="text-secondary mb-6">Define the guidelines for sellers when creating new prompts.</p>
 
         <div className="rules-list">
-          {systemSettings.promptCreationRules.map((rule, index) => (
-            <div key={index} className="rule-item">
-              <span className="rule-number">{index + 1}</span>
-              <p className="rule-text">{rule}</p>
-              <button className="remove-rule-btn" onClick={() => removeRule(index)}>&times;</button>
-            </div>
-          ))}
+          {(systemSettings.promptCreationRules || []).map((ruleObj, index) => {
+            const ruleText = typeof ruleObj === 'string' ? ruleObj : ruleObj.text;
+            const ruleExample = typeof ruleObj === 'object' ? ruleObj.example : '';
+            
+            return (
+              <div key={index} className="rule-item">
+                <div className="rule-content">
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                    <span className="rule-number">{index + 1}</span>
+                    <div style={{ flex: 1 }}>
+                      <p className="rule-text">{ruleText}</p>
+                      {ruleExample && (
+                        <p className="rule-example" style={{ fontSize: '0.85rem', color: 'var(--color-cyan)', marginTop: '4px', fontStyle: 'italic' }}>
+                          Example: {ruleExample}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <button className="remove-rule-btn" onClick={() => removeRule(index)}>&times;</button>
+              </div>
+            );
+          })}
         </div>
 
-        <div className="add-rule-box" style={{ marginTop: '20px', display: 'flex', gap: '10px' }}>
-          <input 
-            type="text" 
-            className="admin-input" 
-            placeholder="Add a new rule..." 
-            value={newRule}
-            onChange={(e) => setNewRule(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && addRule()}
-          />
-          <button className="approve-btn" onClick={addRule}>Add Rule</button>
+        <div className="add-rule-box" style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '12px', background: 'rgba(255,255,255,0.02)', padding: '15px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+          <div className="form-group">
+            <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block' }}>Rule Text</label>
+            <input 
+              type="text" 
+              className="admin-input" 
+              placeholder="e.g. Include clear aspect ratios..." 
+              value={newRule}
+              onChange={(e) => setNewRule(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && addRule()}
+              style={{ width: '100%' }}
+            />
+          </div>
+          <div className="form-group">
+            <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block' }}>Example (Optional)</label>
+            <input 
+              type="text" 
+              className="admin-input" 
+              placeholder="e.g. Use --ar 16:9 for cinematic shots" 
+              value={newRuleExample}
+              onChange={(e) => setNewRuleExample(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && addRule()}
+              style={{ width: '100%' }}
+            />
+          </div>
+          <button className="approve-btn" onClick={addRule} style={{ alignSelf: 'flex-end', marginTop: '5px' }}>Add Rule</button>
         </div>
       </div>
     );
@@ -543,18 +588,18 @@ const AdminDashboard = () => {
       <div className="admin-header">
         <h1>Admin Control Center</h1>
         <div className="admin-tabs">
-          <button className={activeTab === 'overview' ? 'active' : ''} onClick={() => setActiveTab('overview')}>Overview</button>
-          <button className={activeTab === 'users' ? 'active' : ''} onClick={() => setActiveTab('users')}>Users</button>
-          <button className={activeTab === 'verification' ? 'active' : ''} onClick={() => setActiveTab('verification')}>
+          <button className={activeTab === 'overview' ? 'active' : ''} onClick={() => { setActiveTab('overview'); setSearchParams({ tab: 'admin', sub: 'overview' }); }}>Overview</button>
+          <button className={activeTab === 'users' ? 'active' : ''} onClick={() => { setActiveTab('users'); setSearchParams({ tab: 'admin', sub: 'users' }); }}>Users</button>
+          <button className={activeTab === 'verification' ? 'active' : ''} onClick={() => { setActiveTab('verification'); setSearchParams({ tab: 'admin', sub: 'verification' }); }}>
             Verification {stats?.pendingPrompts > 0 && <span className="tab-badge">{stats.pendingPrompts}</span>}
           </button>
-          <button className={activeTab === 'prompts' ? 'active' : ''} onClick={() => setActiveTab('prompts')}>All Prompts</button>
-          <button className={activeTab === 'transactions' ? 'active' : ''} onClick={() => setActiveTab('transactions')}>Transactions</button>
-          <button className={activeTab === 'withdrawals' ? 'active' : ''} onClick={() => setActiveTab('withdrawals')}>
+          <button className={activeTab === 'prompts' ? 'active' : ''} onClick={() => { setActiveTab('prompts'); setSearchParams({ tab: 'admin', sub: 'prompts' }); }}>All Prompts</button>
+          <button className={activeTab === 'transactions' ? 'active' : ''} onClick={() => { setActiveTab('transactions'); setSearchParams({ tab: 'admin', sub: 'transactions' }); }}>Transactions</button>
+          <button className={activeTab === 'withdrawals' ? 'active' : ''} onClick={() => { setActiveTab('withdrawals'); setSearchParams({ tab: 'admin', sub: 'withdrawals' }); }}>
             Withdrawals {stats?.pendingWithdrawals > 0 && <span className="tab-badge">{stats.pendingWithdrawals}</span>}
           </button>
-          <button className={activeTab === 'api' ? 'active' : ''} onClick={() => setActiveTab('api')}>API Settings</button>
-          <button className={activeTab === 'rules' ? 'active' : ''} onClick={() => setActiveTab('rules')}>Rules</button>
+          <button className={activeTab === 'api' ? 'active' : ''} onClick={() => { setActiveTab('api'); setSearchParams({ tab: 'admin', sub: 'api' }); }}>API Settings</button>
+          <button className={activeTab === 'rules' ? 'active' : ''} onClick={() => { setActiveTab('rules'); setSearchParams({ tab: 'admin', sub: 'rules' }); }}>Rules</button>
           <button className="refresh-btn" onClick={() => { fetchStats(); if(activeTab !== 'overview' && activeTab !== 'api' && activeTab !== 'rules') fetchData(activeTab); else if(activeTab === 'api' || activeTab === 'rules') fetchSettings(); }} title="Refresh Data">
             <span style={{ fontSize: '1.2rem' }}>↻</span>
           </button>

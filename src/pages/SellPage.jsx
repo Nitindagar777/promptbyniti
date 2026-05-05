@@ -60,7 +60,18 @@ export default function SellPage() {
   const [submitted, setSubmitted] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editId, setEditId] = useState(null);
+  const [rules, setRules] = useState([]);
+  const [showRules, setShowRules] = useState(true);
 
+  useEffect(() => {
+    // Fetch creation rules
+    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8845/api'}/prompts/rules`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) setRules(data.rules);
+      })
+      .catch(err => console.warn("Failed to load rules:", err));
+  }, []);
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const id = params.get('edit');
@@ -222,6 +233,39 @@ export default function SellPage() {
             : "Create a listing with 3 samples to prove your prompt's power and start earning tokens."}
         </p>
       </div>
+
+      {rules.length > 0 && (
+        <div className={`rules-guidelines-box card reveal ${!showRules ? 'collapsed' : ''}`} style={{ marginBottom: 'var(--space-xl)', border: '1px solid var(--color-purple-faint)' }}>
+          <div className="rules-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }} onClick={() => setShowRules(!showRules)}>
+            <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--color-purple)', fontSize: '1.2rem' }}>
+              <ShieldCheck size={24} /> Seller Guidelines
+            </h3>
+            <button type="button" className="collapse-btn" style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', fontSize: '1.5rem' }}>
+              {showRules ? '−' : '+'}
+            </button>
+          </div>
+          
+          {showRules && (
+            <div className="rules-content mt-md">
+              <p className="text-sm text-secondary mb-4">Please ensure your prompt follows these requirements to guarantee a fast approval:</p>
+              <div className="rules-grid-v2" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '15px' }}>
+                {rules.map((rule, idx) => (
+                  <div key={idx} className="rule-card-v2" style={{ background: 'rgba(168, 85, 247, 0.05)', padding: '15px', borderRadius: '12px', borderLeft: '4px solid var(--color-purple)' }}>
+                    <p style={{ fontWeight: '600', fontSize: '0.95rem', marginBottom: '4px' }}>{rule.text || rule}</p>
+                    {rule.example && (
+                      <p style={{ fontSize: '0.85rem', color: 'var(--color-cyan)', fontStyle: 'italic', opacity: 0.9 }}>
+                        <span style={{ fontWeight: '700', fontSize: '0.75rem', textTransform: 'uppercase', marginRight: '5px' }}>Example:</span>
+                        {rule.example}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       <form className="sell-form-v2" onSubmit={handleSubmit}>
         <div className="sell-page__grid">
           <div className="sell-section reveal" style={{ animationDelay: '0.1s' }}>

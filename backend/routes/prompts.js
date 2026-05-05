@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const router = express.Router();
 const Prompt = require('../models/Prompt');
 const jwt = require('jsonwebtoken');
+const SystemSettings = require('../models/SystemSettings');
 
 const User = require('../models/User');
 
@@ -96,6 +97,17 @@ router.get('/', async (req, res) => {
     res.json({ success: true, prompts: normalizedPrompts });
   } catch (err) {
     console.error('❌ Error fetching prompts:', err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// GET Prompt Creation Rules (Public)
+router.get('/rules', async (req, res) => {
+  try {
+    const settings = await SystemSettings.findOne();
+    const rules = settings ? settings.promptCreationRules : [];
+    res.json({ success: true, rules });
+  } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 });
