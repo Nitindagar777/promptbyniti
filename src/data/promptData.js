@@ -886,3 +886,108 @@ export const pricingPlans = [
     popular: false,
   },
 ];
+
+/* --- RANDOM SAMPLES FOR GENERATOR --- */
+export const subjectDetailsSamples = [
+  "intricate tattoos, glowing eyes, battle scars",
+  "wearing a sleek futuristic armor suit, neon accents",
+  "holding a glowing magical staff, flowing silk robes",
+  "covered in stardust, ethereal presence, levitating",
+  "steampunk goggles, mechanical arm, leather duster",
+  "adorned with delicate floral crowns and vines",
+  "cybernetic implants, glowing circuitry on skin",
+  "wearing elegant Victorian era clothing with a modern twist",
+  "draped in heavy velvet, holding an ancient grimoire",
+  "face half-hidden by a traditional kitsune mask",
+  "made entirely of flowing liquid gold, hyper-detailed",
+  "wearing a heavy astronaut suit with a shattered visor",
+  "dressed in tactical urban techwear, holding dual katanas",
+  "translucent skin revealing glowing energy veins beneath",
+  "adorned with massive mechanical wings and a halo of light",
+  "dressed in ancient Egyptian royal garb made of dark matter",
+  "covered in intricate tribal war paint, tribal bone jewelry",
+  "wearing a glowing holographic jacket, cyberpunk fashion",
+  "holding an umbrella made of glowing lotus petals"
+];
+
+export const environmentSamples = [
+  "in a dense bioluminescent forest at midnight",
+  "standing on the edge of a crumbling skyscraper",
+  "inside a bustling interstellar marketplace",
+  "surrounded by floating islands and waterfalls",
+  "in a neon-drenched cyberpunk alleyway",
+  "within a grand, forgotten library filled with floating books",
+  "in a serene Zen garden during a light snowfall",
+  "on a barren alien planet with twin suns",
+  "deep inside a crystalline cave system",
+  "in an abandoned gothic cathedral overgrown with dark vines",
+  "inside a massive rotating space station overlooking Earth",
+  "on a train moving through a surreal, cloud-filled void",
+  "in a busy retro-futuristic diner with robot waitresses",
+  "on an ancient battlefield littered with colossal, rusted swords",
+  "inside a cozy, magical potion shop cluttered with glowing vials",
+  "in a sprawling underwater city enclosed in a glass dome",
+  "on a quiet, foggy bridge over a dark, mysterious river",
+  "inside a glitching, digital matrix with cascading green code",
+  "on a mountaintop temple surrounded by swirling auroras"
+];
+
+export const negativePromptSamples = [
+  "ugly, deformed, poorly drawn, extra limbs, low resolution",
+  "blurry, out of focus, distorted, watermark, signature",
+  "cartoon, illustration, 3d render, artificial, synthetic",
+  "overexposed, underexposed, bad lighting, noisy, grainy",
+  "text, font, writing, letters, logo",
+  "missing fingers, mutated hands, anatomical nonsense",
+  "flat colors, dull, boring, simple background",
+  "bad anatomy, bad proportions, disfigured, poorly drawn face",
+  "cloned face, cropped, worst quality, low quality, jpeg artifacts",
+  "mutation, deformed, blurry, bad anatomy, bad proportions",
+  "extra limbs, cloned face, disfigured, gross proportions",
+  "malformed limbs, missing arms, missing legs, extra arms",
+  "fused fingers, too many fingers, long neck, bad hands"
+];
+
+export const modelParameterSamples = [
+  "--ar 16:9 --v 6.0 --stylize 250",
+  "--ar 2:3 --niji 6 --style raw",
+  "CFG: 7, Steps: 30, Sampler: Euler a",
+  "--ar 21:9 --v 6.0 --chaos 10",
+  "CFG: 4.5, Steps: 40, Sampler: DPM++ 2M Karras",
+  "--ar 1:1 --v 5.2 --stylize 500",
+  "--ar 3:4 --v 6.0 --weird 50",
+  "--ar 16:9 --v 6.0 --stylize 100 --chaos 25",
+  "CFG: 8, Steps: 50, Sampler: DPM++ SDE Karras, Seed: 42",
+  "--ar 9:16 --niji 6 --stylize 300",
+  "--ar 4:5 --v 6.0 --style raw --weird 250",
+  "CFG: 6, Steps: 20, Sampler: DDIM",
+  "--ar 3:2 --v 5.2 --stylize 1000"
+];
+
+export const randomDescriptions = [
+  "A futuristic cyberpunk city with neon lights and flying cars in the rain.",
+  "An underwater kingdom with glowing jellyfish and ancient ruins.",
+  "A cozy cottage in a mystical forest with talking animals and fairy dust.",
+  "A majestic dragon guarding a treasure hoard in a volcanic cavern.",
+  "An astronaut exploring a vibrant alien planet with purple vegetation.",
+  "A Victorian steampunk laboratory filled with brass gears and steam.",
+  "A peaceful Japanese garden with cherry blossoms and a koi pond.",
+  "A gritty noir detective standing in a dark alley with a trench coat.",
+  "A colossal floating island suspended by massive glowing crystals.",
+  "A lone samurai facing down a massive mechanical beast in a snowstorm.",
+  "An ancient forgotten library where books flutter like birds.",
+  "A sprawling metropolis built entirely within the branches of a giant tree.",
+  "A ghostly pirate ship sailing through a sea of stars and nebulas.",
+  "A hyper-realistic close-up of a cybernetic eye reflecting a neon skyline.",
+  "A post-apocalyptic survivor wandering through an overgrown, ruined Times Square.",
+  "A magical tea party taking place on the rings of Saturn.",
+  "A gargantuan sea monster rising from the ocean during a violent thunderstorm.",
+  "A hidden elf village illuminated by hundreds of glowing fireflies.",
+  "A futuristic racing car drifting through a track made of pure light.",
+  "A hauntingly beautiful ice palace carved into a frozen glacier.",
+  "A whimsical hot air balloon festival over a landscape of candy-colored mountains.",
+  "A mecha pilot looking out over a destroyed city at sunset.",
+  "An enchanted clockmaker's shop where time physically slows down.",
+  "A lone wanderer discovering a glowing portal in the middle of a desert.",
+  "A beautiful goddess woven entirely from threads of galaxies and stars."
+];

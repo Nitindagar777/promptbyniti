@@ -2,6 +2,7 @@
 import { Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { generatePrompt } from '../data/promptEngine';
+import { randomDescriptions } from '../data/promptData';
 import PromptOutput from '../components/PromptOutput';
 import { ArrowRight, Sparkles, Zap, Image, Layers, Heart, Wand2, Rocket, Star, Palette, MessageSquare, ShieldCheck, Zap as ZapIcon, ShoppingBag, Coins, DollarSign, Eye } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
@@ -62,18 +63,8 @@ export default function HomePage() {
   };
 
   const handleRandomGenerate = () => {
-    const randomPrompts = [
-      "A futuristic cyberpunk city with neon lights and flying cars in the rain.",
-      "An underwater kingdom with glowing jellyfish and ancient ruins.",
-      "A cozy cottage in a mystical forest with talking animals and fairy dust.",
-      "A majestic dragon guarding a treasure hoard in a volcanic cavern.",
-      "An astronaut exploring a vibrant alien planet with purple vegetation.",
-      "A Victorian steampunk laboratory filled with brass gears and steam.",
-      "A peaceful Japanese garden with cherry blossoms and a koi pond.",
-      "A gritty noir detective standing in a dark alley with a trench coat."
-    ];
-    const randomIndex = Math.floor(Math.random() * randomPrompts.length);
-    const selected = randomPrompts[randomIndex];
+    const randomIndex = Math.floor(Math.random() * randomDescriptions.length);
+    const selected = randomDescriptions[randomIndex];
     setDemoInput(selected);
     setTimeout(() => {
       navigate('/generate', { state: { initialInput: selected, isRandom: true } });

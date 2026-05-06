@@ -1,9 +1,9 @@
 /* GeneratePage — Main prompt generator */
 import { useState, useEffect } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, Link, useLocation } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { generatePrompt } from '../data/promptEngine';
-import { categories, styles, moods, lightingOptions, cameraAngles, aiModels, promptTemplates, lensSettings, compositions, colorPalettes, qualityTags, renderingEngines, motionActions } from '../data/promptData';
+import { categories, styles, moods, lightingOptions, cameraAngles, aiModels, promptTemplates, lensSettings, compositions, colorPalettes, qualityTags, renderingEngines, motionActions, subjectDetailsSamples, environmentSamples, negativePromptSamples, modelParameterSamples, randomDescriptions } from '../data/promptData';
 import PromptOutput from '../components/PromptOutput';
 import { 
   Sparkles, Info, Image as ImageIcon, ChevronDown, ChevronUp, 
@@ -15,6 +15,7 @@ import './GeneratePage.css';
 export default function GeneratePage() {
   const { state, canGenerate, useCredit, addPrompt, isPremium } = useApp();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
 
   const [form, setForm] = useState({
     category: 'portrait',
@@ -92,6 +93,18 @@ export default function GeneratePage() {
     }
   }, [searchParams, isPremium]);
 
+  /* Handle incoming state from Home Page */
+  useEffect(() => {
+    if (location.state) {
+      if (location.state.initialInput) {
+        setForm(prev => ({ ...prev, description: location.state.initialInput }));
+      }
+      if (location.state.isRandom) {
+        handleRandomize(location.state.initialInput);
+      }
+    }
+  }, [location.state]);
+
   const updateForm = (key, value) => {
     setForm(prev => ({ ...prev, [key]: value }));
   };
@@ -123,11 +136,16 @@ export default function GeneratePage() {
     }, 800);
   };
 
-  const handleRandomize = () => {
+  const handleRandomize = (initialDesc = null) => {
     const randomPick = (list) => list[Math.floor(Math.random() * list.length)].id;
+    
+    const selectedIdea = typeof initialDesc === 'string' 
+      ? initialDesc 
+      : randomDescriptions[Math.floor(Math.random() * randomDescriptions.length)];
     
     setForm(prev => ({
       ...prev,
+      model: randomPick(aiModels),
       category: randomPick(categories),
       style: randomPick(styles),
       mood: randomPick(moods),
@@ -139,7 +157,11 @@ export default function GeneratePage() {
       quality: randomPick(qualityTags),
       rendering: randomPick(renderingEngines),
       action: randomPick(motionActions),
-      description: "A random masterpiece of " + categories[Math.floor(Math.random() * categories.length)].label
+      subjectDetails: subjectDetailsSamples[Math.floor(Math.random() * subjectDetailsSamples.length)],
+      environment: environmentSamples[Math.floor(Math.random() * environmentSamples.length)],
+      negativePrompt: negativePromptSamples[Math.floor(Math.random() * negativePromptSamples.length)],
+      modelParams: modelParameterSamples[Math.floor(Math.random() * modelParameterSamples.length)],
+      description: selectedIdea
     }));
   };
 
