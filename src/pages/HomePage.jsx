@@ -4,8 +4,8 @@ import { useApp } from '../context/AppContext';
 import { generatePrompt } from '../data/promptEngine';
 import PromptOutput from '../components/PromptOutput';
 import { ArrowRight, Sparkles, Zap, Image, Layers, Heart, Wand2, Rocket, Star, Palette, MessageSquare, ShieldCheck, Zap as ZapIcon, ShoppingBag, Coins, DollarSign, Eye } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import PromptThumbnail from '../components/PromptThumbnail';
 import './HomePage.css';
 
@@ -18,6 +18,8 @@ export default function HomePage() {
   const [demoResult, setDemoResult] = useState(null);
   const [prompts, setPrompts] = useState(state.marketplace ? state.marketplace.slice(0, 8) : []);
   const [loadingPrompts, setLoadingPrompts] = useState(!state.marketplace || state.marketplace.length === 0);
+  const inputRef = useRef(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (state.marketplace && state.marketplace.length > 0) {
@@ -52,19 +54,11 @@ export default function HomePage() {
   };
 
   const handleDemoGenerate = () => {
-    if (!demoInput.trim() || state.credits < 5) return;
-    const result = generatePrompt({
-      category: 'portrait',
-      style: 'photorealistic',
-      mood: 'aesthetic',
-      lighting: 'golden-hour',
-      camera: 'medium-shot',
-      description: demoInput,
-      model: 'midjourney',
-    });
-    setDemoResult(result);
-    useCredit(5);
-    addPrompt(result);
+    if (!demoInput.trim()) {
+      inputRef.current?.focus();
+      return;
+    }
+    navigate('/generate', { state: { initialInput: demoInput } });
   };
 
   const handleRandomGenerate = () => {
@@ -79,7 +73,11 @@ export default function HomePage() {
       "A gritty noir detective standing in a dark alley with a trench coat."
     ];
     const randomIndex = Math.floor(Math.random() * randomPrompts.length);
-    setDemoInput(randomPrompts[randomIndex]);
+    const selected = randomPrompts[randomIndex];
+    setDemoInput(selected);
+    setTimeout(() => {
+      navigate('/generate', { state: { initialInput: selected, isRandom: true } });
+    }, 500);
   };
 
   return (
@@ -118,6 +116,7 @@ export default function HomePage() {
           </div>
           <div className="p-playground__input">
             <textarea
+              ref={inputRef}
               className="p-playground__textarea"
               placeholder="e.g., A majestic white lion sitting on a throne made of flowers..."
               value={demoInput}
@@ -128,7 +127,6 @@ export default function HomePage() {
             <button
               className="btn btn-primary btn-xl"
               onClick={handleDemoGenerate}
-              disabled={!demoInput.trim() || state.credits < 5}
               style={{ minWidth: '320px' }}
             >
               <Wand2 size={24} /> Transform into Professional Prompt
@@ -141,11 +139,6 @@ export default function HomePage() {
               <ZapIcon size={24} /> Randomly Generate
             </button>
           </div>
-          {state.credits < 5 && demoInput.trim() && (
-            <p style={{ color: 'var(--color-pink)', textAlign: 'center', marginTop: '15px', fontFamily: 'var(--font-display)' }}>
-              Insufficient credits (5 needed)
-            </p>
-          )}
           {demoResult && <div className="mt-2xl"><PromptOutput result={demoResult} /></div>}
         </div>
       </section>
