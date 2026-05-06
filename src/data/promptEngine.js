@@ -203,8 +203,17 @@ export function generatePrompt(form) {
 
   /* Build structured output */
   return {
+    id: `prompt_${Date.now()}`,
+    title: (description ? (description.length > 30 ? description.substring(0, 30) + '...' : description) : `${catLabel} Masterpiece`),
+    description: description || `A professional ${catLabel} prompt optimized for high-end creative results.`,
     mainPrompt,
     negativePrompt: negPrompt,
+    promptTemplate: `[description], [subjectDetails], [subjectExpansion], [action], [environment], [mood], [lighting], [style], [camera], [lens], [composition], [color], [quality], [rendering] ${modelParams}`,
+    examplePrompts: [
+      mainPrompt,
+      variations[0].prompt,
+      variations[1].prompt
+    ],
     variations,
     structured: {
       subject: description || `${catLabel} scene`,
@@ -214,8 +223,8 @@ export function generatePrompt(form) {
       quality: qualityDesc || 'High End',
     },
     model,
+    priceTokens: 5,
     timestamp: Date.now(),
-    id: `prompt_${Date.now()}`,
   };
 }
 
@@ -241,7 +250,7 @@ function generateVariations({ category, style, mood, lighting, camera, descripti
     lightingDescriptors[altLight1] || lightingDescriptors['soft-light'],
     cameraDescriptors[altCamera1] || cameraDescriptors['medium-shot'],
     styleKeywords[style] || styleKeywords.photorealistic,
-    qualityKeywords.join(', '),
+    'masterpiece, best quality, ultra-detailed',
   ];
 
   const v2Parts = [
@@ -251,7 +260,7 @@ function generateVariations({ category, style, mood, lighting, camera, descripti
     lightingDescriptors[altLight2] || lightingDescriptors['soft-light'],
     cameraDescriptors[camera] || cameraDescriptors['medium-shot'],
     styleKeywords[style] || styleKeywords.photorealistic,
-    qualityKeywords.join(', '),
+    'masterpiece, best quality, ultra-detailed',
   ];
 
   let var1 = v1Parts.join(', ');

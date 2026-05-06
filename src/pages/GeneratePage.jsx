@@ -1,5 +1,5 @@
 /* GeneratePage — Main prompt generator */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, Link, useLocation } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { generatePrompt } from '../data/promptEngine';
@@ -16,6 +16,7 @@ export default function GeneratePage() {
   const { state, canGenerate, useCredit, addPrompt, isPremium } = useApp();
   const [searchParams] = useSearchParams();
   const location = useLocation();
+  const descriptionRef = useRef(null);
 
   const [form, setForm] = useState({
     category: 'portrait',
@@ -96,11 +97,29 @@ export default function GeneratePage() {
   /* Handle incoming state from Home Page */
   useEffect(() => {
     if (location.state) {
-      if (location.state.initialInput) {
-        setForm(prev => ({ ...prev, description: location.state.initialInput }));
-      }
       if (location.state.isRandom) {
         handleRandomize(location.state.initialInput);
+      } else if (location.state.initialInput) {
+        // Manual input: Set description and reset all categories to default
+        setForm(prev => ({
+          ...prev,
+          description: location.state.initialInput,
+          category: 'default',
+          style: 'default',
+          mood: 'default',
+          lighting: 'default',
+          camera: 'default',
+          lens: 'default',
+          composition: 'default',
+          color: 'default',
+          quality: 'default',
+          rendering: 'default',
+          action: 'default',
+          subjectDetails: '',
+          environment: '',
+          negativePrompt: '',
+          modelParams: ''
+        }));
       }
     }
   }, [location.state]);
@@ -110,6 +129,11 @@ export default function GeneratePage() {
   };
 
   const handleGenerate = () => {
+    if (!form.description || !form.description.trim()) {
+      descriptionRef.current?.focus();
+      return;
+    }
+
     if (!canGenerate) {
       setShowPaywall(true);
       return;
@@ -578,8 +602,9 @@ export default function GeneratePage() {
             {/* Your Description */}
             <div className={`gen-section gen-section--full ${form.description ? 'gen-section--expanded' : ''}`} id="gen-description">
               <h3 className="gen-section__title mb-4" style={{ color: '#ff0080', fontSize: '1.2rem' }}>Your Description</h3>
-              <textarea
-                className="gen-textarea"
+              <textarea 
+                ref={descriptionRef}
+                className="gen-textarea" 
                 placeholder="Describe your scene here... (e.g., A futuristic cyberpunk city with neon rainy streets, cinematic lighting)"
                 value={form.description}
                 onChange={(e) => updateForm('description', e.target.value)}

@@ -18,12 +18,58 @@ export default function PromptOutput({ result }) {
 
   return (
     <div className="prompt-output animate-fade-in-up" id="prompt-output">
-      {/* Main Prompt */}
+      {/* Marketplace Listing Details */}
+      <div className="prompt-output__section prompt-output__section--premium">
+        <div className="prompt-output__header">
+          <div className="prompt-output__label">
+            <Sparkles size={16} color="#ff0080" />
+            <span style={{ color: '#ff0080', fontWeight: 'bold' }}>Marketplace Listing Metadata</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="badge badge-primary">{result.priceTokens} Credits</span>
+          </div>
+        </div>
+        <div className="prompt-output__meta-grid">
+          <div className="prompt-output__meta-item">
+            <label>Suggested Title</label>
+            <div className="flex items-center justify-between gap-2 p-2 rounded bg-dark-lighter border border-dark-accent">
+              <span className="text-sm">{result.title}</span>
+              <button onClick={() => copyToClipboard(result.title, 'title')}><Copy size={14} /></button>
+            </div>
+          </div>
+          <div className="prompt-output__meta-item">
+            <label>Product Description</label>
+            <div className="flex items-center justify-between gap-2 p-2 rounded bg-dark-lighter border border-dark-accent">
+              <span className="text-sm line-clamp-1">{result.description}</span>
+              <button onClick={() => copyToClipboard(result.description, 'desc')}><Copy size={14} /></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Prompt Template Section */}
+      <div className="prompt-output__section prompt-output__section--template">
+        <div className="prompt-output__header">
+          <div className="prompt-output__label">
+            <Layers size={16} />
+            <span>Prompt Template (with variables)</span>
+          </div>
+          <button
+            className={`prompt-output__copy ${copied === 'template' ? 'prompt-output__copy--copied' : ''}`}
+            onClick={() => copyToClipboard(result.promptTemplate, 'template')}
+          >
+            {copied === 'template' ? <><Check size={14} /> Copied!</> : <><Copy size={14} /> Copy Template</>}
+          </button>
+        </div>
+        <div className="prompt-output__text prompt-output__text--template">
+          {result.promptTemplate}
+        </div>
+      </div>
       <div className="prompt-output__section">
         <div className="prompt-output__header">
           <div className="prompt-output__label">
             <Sparkles size={16} />
-            <span>Main Prompt</span>
+            <span>Sample Example A (Best Result)</span>
           </div>
           <button
             className={`prompt-output__copy ${copied === 'main' ? 'prompt-output__copy--copied' : ''}`}
