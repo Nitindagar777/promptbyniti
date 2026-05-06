@@ -37,6 +37,7 @@ export default function GeneratePage() {
     rendering: 'default',
     negativePrompt: '',
     modelParams: '',
+    characterImage: null
   });
 
   const [result, setResult] = useState(null);
@@ -128,7 +129,7 @@ export default function GeneratePage() {
     setForm(prev => ({ ...prev, [key]: value }));
   };
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     if (!form.description || !form.description.trim()) {
       descriptionRef.current?.focus();
       return;
@@ -142,22 +143,36 @@ export default function GeneratePage() {
     setIsGenerating(true);
     setResult(null);
 
-    // Simulate a brief processing feel
-    setTimeout(async () => {
-      const templateId = searchParams.get('template');
-      const promptResult = generatePrompt(form);
+    const templateId = searchParams.get('template');
+    
+    try {
+      const response = await fetch('http://localhost:8845/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate prompt');
+      }
+
+      const promptResult = await response.json();
       setResult(promptResult);
       
       // If using a template, deduct 5 credits and redirect to success page
       const cost = templateId ? 5 : 1;
       await useCredit(cost, templateId);
       addPrompt(promptResult);
-      setIsGenerating(false);
-
+      
       if (templateId) {
         navigate(`/purchase-success/${templateId}`);
       }
-    }, 800);
+    } catch (error) {
+      console.error('Generation Error:', error);
+      alert('Failed to generate prompt. Please try again.');
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const handleRandomize = (initialDesc = null) => {
@@ -582,11 +597,32 @@ export default function GeneratePage() {
             <div className="gen-section gen-section--expanded" id="gen-consistency">
               <h3 className="gen-section__title mb-4" style={{ color: '#ff0080', fontSize: '1.2rem' }}>Character Consistency</h3>
               <div className="consistency-upload">
-                <div className="upload-placeholder">
-                  <ImageIcon size={24} />
-                  <p className="text-sm">Upload Reference Image</p>
-                  <span className="text-xs text-muted">Supports JPG, PNG</span>
-                </div>
+                <label className="upload-placeholder" style={{ cursor: 'pointer' }}>
+                  <input 
+                    type="file" 
+                    style={{ display: 'none' }}
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          updateForm('characterImage', reader.result);
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                  />
+                  {form.characterImage ? (
+                    <img src={form.characterImage} alt="Reference" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
+                  ) : (
+                    <>
+                      <ImageIcon size={24} />
+                      <p className="text-sm">Upload Reference Image</p>
+                      <span className="text-xs text-muted">Supports JPG, PNG</span>
+                    </>
+                  )}
+                </label>
                 <div className="consistency-info">
                   <div className="info-badge">
                     <Info size={12} /> <span>How it works</span>
