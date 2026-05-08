@@ -128,6 +128,19 @@
   object-fit: cover;
 }
 
+/* Admin Test Lab link */
+.navbar__link--admin {
+  color: #ef4444 !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.navbar__link--admin:hover {
+  color: #f97316 !important;
+  opacity: 1 !important;
+}
+
 @media (max-width: 900px) {
   .navbar__nav { display: none; }
 }

@@ -1,0 +1,115 @@
+/* Admin Test Lab Styles */
+.admin-lab {
+  padding-top: calc(40px + var(--space-xl));
+  padding-bottom: var(--space-3xl);
+  min-height: 100vh;
+}
+
+.admin-lab__header {
+  text-align: center;
+  margin-bottom: var(--space-2xl);
+  position: relative;
+}
+
+.admin-lab__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 18px;
+  border-radius: var(--radius-full);
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: var(--space-md);
+  animation: pulse-red 2s infinite;
+}
+
+@keyframes pulse-red {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.3); }
+  50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+}
+
+.admin-lab__title {
+  font-size: 2.5rem;
+  color: var(--text-primary);
+  margin-bottom: var(--space-sm);
+}
+
+.admin-lab__subtitle {
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-lg);
+}
+
+.admin-lab__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2xl);
+  align-items: start;
+}
+
+.admin-lab__form {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-md);
+}
+
+.admin-lab__output {
+  position: sticky;
+  top: 100px;
+}
+
+.admin-lab__preview {
+  text-align: center;
+  padding: var(--space-4xl) var(--space-xl);
+}
+
+.admin-lab__preview h3 {
+  font-size: 1.2rem;
+  margin-bottom: var(--space-sm);
+  color: var(--text-secondary);
+}
+
+.admin-lab__preview p {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+/* Actions bar in admin lab */
+.admin-lab__actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: var(--space-md);
+  margin-top: var(--space-md);
+}
+
+.admin-lab__actions .gen-random {
+  flex: 0 0 260px;
+}
+
+.admin-lab__actions .gen-submit {
+  flex: 1;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .admin-lab__grid {
+    grid-template-columns: 1fr;
+  }
+  .admin-lab__output {
+    position: static;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-lab__title {
+    font-size: 1.8rem;
+  }
+  .admin-lab__form {
+    grid-template-columns: 1fr;
+  }
+}

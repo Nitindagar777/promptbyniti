@@ -1,9 +1,11 @@
 /* Navbar Component — Premium Human Design */
 import { Link, useLocation } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { Zap, User, Menu, X } from 'lucide-react';
+import { Zap, User, Menu, X, FlaskConical } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import './Navbar.css';
+
+const ADMIN_EMAIL = 'nitindagar0800@gmail.com';
 
 export default function Navbar() {
   const { state } = useApp();
@@ -18,6 +20,7 @@ export default function Navbar() {
   }, []);
 
   const isActive = (path) => location.pathname === path;
+  const isAdmin = state?.user?.email?.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
 
   return (
     <nav className={`navbar ${scrolled ? 'navbar--scrolled' : ''}`} id="main-navbar">
@@ -49,6 +52,14 @@ export default function Navbar() {
           <li>
             <Link to="/pricing" className={`navbar__link ${isActive('/pricing') ? 'navbar__link--active' : ''}`}>Pricing</Link>
           </li>
+          {isAdmin && (
+            <li>
+              <Link to="/admin-lab" className={`navbar__link navbar__link--admin ${isActive('/admin-lab') ? 'navbar__link--active' : ''}`}>
+                <FlaskConical size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '4px' }} />
+                Test Lab
+              </Link>
+            </li>
+          )}
         </ul>
 
         <div className="navbar__actions">

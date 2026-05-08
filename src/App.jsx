@@ -17,6 +17,7 @@ import PromptDetailPage from './pages/PromptDetailPage';
 import SellPage from './pages/SellPage';
 import BuyerDashboard from './pages/BuyerDashboard';
 import PurchaseSuccess from './pages/PurchaseSuccess';
+import AdminTestLab from './pages/AdminTestLab';
 
 import './App.css';
 
@@ -34,6 +35,27 @@ function ProtectedRoute({ children }) {
   }
 
   if (!state?.user) return <Navigate to="/login" replace />;
+  return children;
+}
+
+/* Route guard: admin only */
+function AdminRoute({ children }) {
+  const { state, authLoading } = useApp();
+  const ADMIN_EMAIL = 'nitindagar0800@gmail.com';
+
+  if (authLoading) {
+    return (
+      <div className="auth-loading-screen">
+        <div className="loader-premium"></div>
+        <p>Verifying Session...</p>
+      </div>
+    );
+  }
+
+  if (!state?.user) return <Navigate to="/login" replace />;
+  if (state.user.email?.toLowerCase().trim() !== ADMIN_EMAIL.toLowerCase().trim()) {
+    return <Navigate to="/" replace />;
+  }
   return children;
 }
 
@@ -69,6 +91,7 @@ function App() {
             <Route path="/sell" element={<ProtectedRoute><SellPage /></ProtectedRoute>} />
             <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
             <Route path="/buyer-dashboard" element={<ProtectedRoute><BuyerDashboard /></ProtectedRoute>} />
+            <Route path="/admin-lab" element={<AdminRoute><AdminTestLab /></AdminRoute>} />
             <Route path="/purchase-success/:id" element={<ProtectedRoute><PurchaseSuccess /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
             <Route path="/login" element={<GuestRoute><AuthPage initialMode="login" /></GuestRoute>} />
