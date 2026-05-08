@@ -211,11 +211,12 @@ router.get('/settings', isAdmin, async (req, res) => {
 // UPDATE System Settings
 router.post('/settings', isAdmin, async (req, res) => {
   try {
-    const { geminiApiKey, promptCreationRules } = req.body;
+    const { geminiApiKey, geminiModel, promptCreationRules } = req.body;
     let settings = await SystemSettings.findOne();
     if (!settings) settings = new SystemSettings();
     
     if (geminiApiKey !== undefined) settings.geminiApiKey = geminiApiKey;
+    if (geminiModel !== undefined) settings.geminiModel = geminiModel;
     if (promptCreationRules !== undefined) {
       // Normalize rules: convert any legacy strings to objects
       settings.promptCreationRules = promptCreationRules.map(r => {

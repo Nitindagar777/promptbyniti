@@ -519,6 +519,31 @@ const AdminDashboard = () => {
         <p className="text-xs text-muted mt-2">This key is used for secure background prompt generation and enhancements.</p>
       </div>
 
+      <div className="admin-field" style={{ marginTop: '20px' }}>
+        <label>Gemini Model</label>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <select 
+            className="admin-input" 
+            value={systemSettings.geminiModel || 'gemini-2.0-flash'}
+            onChange={(e) => setSystemSettings({...systemSettings, geminiModel: e.target.value})}
+            style={{ flex: 1 }}
+          >
+            <option value="gemini-2.0-flash">Gemini 2.0 Flash (Stable)</option>
+            <option value="gemini-2.5-flash">Gemini 2.5 Flash (Advanced)</option>
+            <option value="gemini-3-flash-preview">Gemini 3 Flash Preview (Experimental)</option>
+            <option value="gemini-flash-latest">Gemini Flash Latest (Auto-update)</option>
+          </select>
+          <button 
+            className="approve-btn" 
+            onClick={() => handleUpdateSettings({ geminiModel: systemSettings.geminiModel })}
+            disabled={settingsLoading}
+          >
+            Update Model
+          </button>
+        </div>
+        <p className="text-xs text-muted mt-2">Switching models can improve prompt quality or reduce costs. "Latest" always points to the newest stable version.</p>
+      </div>
+
       {settingsMessage && (
         <div className={`settings-status ${settingsMessage.type}`}>
           {settingsMessage.text}

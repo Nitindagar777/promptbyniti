@@ -6,7 +6,6 @@ import './PromptOutput.css';
 export default function PromptOutput({ result }) {
   const [copied, setCopied] = useState(null);
   const [showStructured, setShowStructured] = useState(false);
-  const [showVariations, setShowVariations] = useState(false);
 
   if (!result) return null;
 
@@ -26,22 +25,46 @@ export default function PromptOutput({ result }) {
             <span style={{ color: '#ff0080', fontWeight: 'bold' }}>Marketplace Listing Metadata</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="badge badge-primary">{result.priceTokens} Credits</span>
+            <span className="badge badge-primary">{result.priceTokens || 5} Credits</span>
           </div>
         </div>
         <div className="prompt-output__meta-grid">
           <div className="prompt-output__meta-item">
             <label>Suggested Title</label>
-            <div className="flex items-center justify-between gap-2 p-2 rounded bg-dark-lighter border border-dark-accent">
-              <span className="text-sm">{result.title}</span>
-              <button onClick={() => copyToClipboard(result.title, 'title')}><Copy size={14} /></button>
+            <div className="prompt-output__meta-box">
+              <span className="text-sm">{result.title || 'Untitled Prompt'}</span>
+              <button 
+                className={`prompt-output__copy-mini ${copied === 'title' ? 'copied' : ''}`}
+                onClick={() => copyToClipboard(result.title, 'title')}
+              >
+                {copied === 'title' ? <Check size={14} /> : <Copy size={14} />}
+              </button>
             </div>
           </div>
           <div className="prompt-output__meta-item">
             <label>Product Description</label>
-            <div className="flex items-center justify-between gap-2 p-2 rounded bg-dark-lighter border border-dark-accent">
-              <span className="text-sm line-clamp-1">{result.description}</span>
-              <button onClick={() => copyToClipboard(result.description, 'desc')}><Copy size={14} /></button>
+            <div className="prompt-output__meta-box">
+              <span className="text-sm line-clamp-1">{result.description || 'No description available'}</span>
+              <button 
+                className={`prompt-output__copy-mini ${copied === 'desc' ? 'copied' : ''}`}
+                onClick={() => copyToClipboard(result.description, 'desc')}
+              >
+                {copied === 'desc' ? <Check size={14} /> : <Copy size={14} />}
+              </button>
+            </div>
+          </div>
+          <div className="prompt-output__meta-item">
+            <label className="uppercase tracking-widest text-[10px] opacity-60">PROMPT TYPE</label>
+            <div className="prompt-output__meta-badge">
+              <Sparkles size={12} />
+              <span className="capitalize">{result.promptType || 'Image'} Prompt</span>
+            </div>
+          </div>
+          <div className="prompt-output__meta-item">
+            <label className="uppercase tracking-widest text-[10px] opacity-60">TARGET MODEL</label>
+            <div className="prompt-output__meta-badge prompt-output__meta-badge--model">
+              <Layers size={12} />
+              <span className="uppercase">{result.model || 'Midjourney'}</span>
             </div>
           </div>
         </div>
@@ -65,24 +88,27 @@ export default function PromptOutput({ result }) {
           {result.promptTemplate}
         </div>
       </div>
-      <div className="prompt-output__section">
-        <div className="prompt-output__header">
-          <div className="prompt-output__label">
-            <Sparkles size={16} />
-            <span>Sample Example A (Best Result)</span>
+
+      {/* 3 Sample Examples (Replaced Variables) */}
+      {(result.samples || []).map((sample, idx) => (
+        <div className="prompt-output__section" key={idx}>
+          <div className="prompt-output__header">
+            <div className="prompt-output__label">
+              <Sparkles size={16} />
+              <span>Sample Example {String.fromCharCode(65 + idx)} (Best Result)</span>
+            </div>
+            <button
+              className={`prompt-output__copy ${copied === `sample-${idx}` ? 'prompt-output__copy--copied' : ''}`}
+              onClick={() => copyToClipboard(sample, `sample-${idx}`)}
+            >
+              {copied === `sample-${idx}` ? <><Check size={14} /> Copied!</> : <><Copy size={14} /> Copy</>}
+            </button>
           </div>
-          <button
-            className={`prompt-output__copy ${copied === 'main' ? 'prompt-output__copy--copied' : ''}`}
-            onClick={() => copyToClipboard(result.mainPrompt, 'main')}
-            id="copy-main-prompt"
-          >
-            {copied === 'main' ? <><Check size={14} /> Copied!</> : <><Copy size={14} /> Copy</>}
-          </button>
+          <div className="prompt-output__text">
+            {sample}
+          </div>
         </div>
-        <div className="prompt-output__text" id="main-prompt-text">
-          {result.mainPrompt}
-        </div>
-      </div>
+      ))}
 
       {/* Negative Prompt */}
       <div className="prompt-output__section prompt-output__section--negative">
@@ -94,7 +120,6 @@ export default function PromptOutput({ result }) {
           <button
             className={`prompt-output__copy ${copied === 'neg' ? 'prompt-output__copy--copied' : ''}`}
             onClick={() => copyToClipboard(result.negativePrompt, 'neg')}
-            id="copy-negative-prompt"
           >
             {copied === 'neg' ? <><Check size={14} /> Copied!</> : <><Copy size={14} /> Copy</>}
           </button>
@@ -104,38 +129,26 @@ export default function PromptOutput({ result }) {
         </div>
       </div>
 
-      {/* Variations */}
-      <div className="prompt-output__section">
-        <button
-          className="prompt-output__toggle"
-          onClick={() => setShowVariations(!showVariations)}
-          id="toggle-variations"
-        >
-          <div className="prompt-output__label">
-            <Layers size={16} />
-            <span>Prompt Variations ({result.variations.length})</span>
-          </div>
-          {showVariations ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-        </button>
-
-        {showVariations && (
-          <div className="prompt-output__variations">
-            {result.variations.map((v, i) => (
-              <div key={i} className="prompt-output__variation">
-                <div className="prompt-output__header">
-                  <span className="prompt-output__var-label">{v.label}</span>
-                  <button
-                    className={`prompt-output__copy ${copied === `var-${i}` ? 'prompt-output__copy--copied' : ''}`}
-                    onClick={() => copyToClipboard(v.prompt, `var-${i}`)}
-                  >
-                    {copied === `var-${i}` ? <><Check size={14} /> Copied!</> : <><Copy size={14} /> Copy</>}
-                  </button>
-                </div>
-                <div className="prompt-output__text">{v.prompt}</div>
-              </div>
+      {/* Keywords & Instructions */}
+      <div className="prompt-output__section" style={{ padding: '24px' }}>
+        <div className="mb-6">
+          <label className="text-xs uppercase text-muted block mb-3 font-bold tracking-widest">Target Keywords</label>
+          <div className="flex flex-wrap gap-2">
+            {(result.keywords || []).map((kw, i) => (
+              <span key={i} className="px-3 py-1.5 rounded-full bg-dark-lighter border border-dark-accent text-[11px] text-cyan font-medium">
+                #{kw.replace(/^#/, '')}
+              </span>
             ))}
+            {(!result.keywords || result.keywords.length === 0) && <span className="text-muted text-xs italic">No keywords generated.</span>}
           </div>
-        )}
+        </div>
+        
+        <div>
+          <label className="text-xs uppercase text-muted block mb-3 font-bold tracking-widest">Usage Instructions</label>
+          <div className="text-sm text-secondary leading-relaxed bg-dark-lighter p-4 rounded border border-dark-accent">
+            {result.instructions || "Use this prompt in your favorite AI generator."}
+          </div>
+        </div>
       </div>
 
       {/* Structured Breakdown */}
@@ -154,7 +167,7 @@ export default function PromptOutput({ result }) {
 
         {showStructured && (
           <div className="prompt-output__structured">
-            {Object.entries(result.structured).map(([key, value]) => (
+            {result.structured && Object.entries(result.structured).map(([key, value]) => (
               <div key={key} className="prompt-output__field">
                 <span className="prompt-output__field-key">
                   {key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase())}

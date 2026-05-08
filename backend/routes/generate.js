@@ -9,7 +9,8 @@ router.post('/', async (req, res) => {
     const { 
       category, style, mood, lighting, camera, description, model, 
       subjectDetails, action, environment, lens, composition, 
-      color, quality, rendering, negativePrompt, modelParams 
+      color, quality, rendering, negativePrompt, modelParams,
+      promptType // 'image', 'video', or 'text'
     } = req.body;
 
     // 1. Fetch Admin Settings (API Key and Rules)
@@ -19,7 +20,7 @@ router.post('/', async (req, res) => {
     }
 
     const genAI = new GoogleGenerativeAI(settings.geminiApiKey);
-    const geminiModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const geminiModel = genAI.getGenerativeModel({ model: settings.geminiModel || "gemini-flash-latest" });
 
     // 2. Prepare Rules string
     const rulesStr = settings.promptCreationRules
@@ -32,7 +33,7 @@ router.post('/', async (req, res) => {
 STRICT RULES YOU MUST FOLLOW:
 ${rulesStr}
 
-USER PREFERENCES:
+- Type: ${promptType} (IMPORTANT: Optimize the prompt strictly for this format. If Video, include motion/camera movement. If Text, focus on structure/tone. If Image, focus on visual detail.)
 - Category: ${category}
 - Style: ${style}
 - Mood: ${mood}
@@ -58,7 +59,13 @@ You must return a JSON object with the following fields:
   "mainPrompt": "The full, optimized, professional prompt string",
   "negativePrompt": "A comprehensive negative prompt based on the user's input and best practices",
   "promptTemplate": "A version of the mainPrompt where specific variables are in [BRACKETS], e.g., 'A [SUBJECT] in [LIGHTING] style'",
-  "examplePrompts": ["Example 1 (Main)", "Example 2 (Variation)", "Example 3 (Variation)"],
+  "samples": [
+    "Example 1: The prompt with [VARIABLES] replaced by real values",
+    "Example 2: Another variation with different values",
+    "Example 3: A third unique variation"
+  ],
+  "keywords": ["Keyword1", "Keyword2", "Keyword3", "Keyword4"],
+  "instructions": "Step-by-step instructions on how to use this prompt effectively, which variables to change, and recommended settings.",
   "structured": {
     "subject": "The core subject",
     "style": "The art style used",
@@ -79,15 +86,63 @@ Return ONLY the JSON object. No markdown, no extra text.`;
     try {
       const jsonStr = text.replace(/```json|```/g, '').trim();
       const promptData = JSON.parse(jsonStr);
+      
+      // Ensure frontend fields are present and reflect user selection
+      promptData.priceTokens = 5; 
+      promptData.promptType = promptType || 'image';
+      promptData.model = model || 'midjourney';
+      
+      // Ensure exactly 3 samples
+      if (!Array.isArray(promptData.samples)) promptData.samples = [];
+      while (promptData.samples.length < 3) {
+        promptData.samples.push(promptData.mainPrompt || "Generate a variation here.");
+      }
+      promptData.samples = promptData.samples.slice(0, 3);
+
+      // Ensure keywords and instructions
+      if (!Array.isArray(promptData.keywords) || promptData.keywords.length === 0) {
+        promptData.keywords = [category, style, mood, lighting].filter(x => x && x !== 'default');
+      }
+      if (!promptData.instructions) {
+        promptData.instructions = `Use this prompt in ${model.toUpperCase()}. Adjust the [VARIABLES] to customize the result.`;
+      }
+
+      // Build a comprehensive structured breakdown from ACTUAL user selection
+      promptData.structured = {
+        "Target Format": `${promptData.promptType.toUpperCase()} Prompt`,
+        "AI Model": promptData.model.toUpperCase(),
+        "Category": category,
+        "Base Style": style,
+        "Mood/Atmosphere": mood,
+        "Lighting": lighting,
+        "Camera/Angle": camera,
+        "Lens/Focal": lens,
+        "Composition": composition,
+        "Environment": environment,
+        "Action/Pose": action,
+        "Subject Detail": subjectDetails,
+        "Color Palette": color,
+        "Quality Level": quality,
+        "Rendering": rendering,
+        "Parameters": modelParams || 'Standard'
+      };
+      
       res.json(promptData);
     } catch (parseError) {
       console.error('JSON Parse Error:', text);
-      res.status(500).json({ message: 'Failed to parse AI response.', raw: text });
+      res.status(500).json({ 
+        message: 'Failed to parse AI response.', 
+        details: 'The AI returned an invalid format. Please try again.',
+        raw: text 
+      });
     }
 
   } catch (error) {
     console.error('Generation Error:', error);
-    res.status(500).json({ message: 'Error generating prompt with Gemini.' });
+    res.status(500).json({ 
+      message: 'Error generating prompt with Gemini.',
+      details: error.message || 'Unknown error'
+    });
   }
 });
 

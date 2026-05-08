@@ -8,7 +8,7 @@ import PromptOutput from '../components/PromptOutput';
 import { 
   Sparkles, Info, Image as ImageIcon, ChevronDown, ChevronUp, 
   RefreshCw, Copy, Check, Download, Share2, Wand2, AlertTriangle, 
-  Crown, Dices, Zap 
+  Crown, Dices, Zap, Video, Type 
 } from 'lucide-react';
 import './GeneratePage.css';
 
@@ -37,7 +37,8 @@ export default function GeneratePage() {
     rendering: 'default',
     negativePrompt: '',
     modelParams: '',
-    characterImage: null
+    characterImage: null,
+    promptType: 'image'
   });
 
   const [result, setResult] = useState(null);
@@ -153,7 +154,8 @@ export default function GeneratePage() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to generate prompt');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.details || errorData.message || 'Failed to generate prompt');
       }
 
       const promptResult = await response.json();
@@ -169,7 +171,7 @@ export default function GeneratePage() {
       }
     } catch (error) {
       console.error('Generation Error:', error);
-      alert('Failed to generate prompt. Please try again.');
+      alert(error.message || 'Failed to generate prompt. Please try again.');
     } finally {
       setIsGenerating(false);
     }
@@ -647,6 +649,28 @@ export default function GeneratePage() {
                 style={{ minHeight: '120px', fontSize: '1.1rem' }}
                 id="gen-main-description"
               ></textarea>
+
+              <div className="mt-6">
+                <h4 className="text-xs uppercase text-muted mb-3 font-bold tracking-widest flex items-center gap-2">
+                  <Zap size={14} color="#ff0080" /> Which kind of prompt do you want?
+                </h4>
+                <div className="prompt-type-selector">
+                  {['image', 'video', 'text'].map((type) => (
+                    <button
+                      key={type}
+                      className={`prompt-type-btn ${form.promptType === type ? 'active' : ''}`}
+                      onClick={() => updateForm('promptType', type)}
+                    >
+                      <div className="prompt-type-btn__icon">
+                        {type === 'image' && <ImageIcon size={20} />}
+                        {type === 'video' && <Video size={20} />}
+                        {type === 'text' && <Type size={20} />}
+                      </div>
+                      <span className="capitalize">{type} Prompt</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
 
             {/* Generate Actions */}
