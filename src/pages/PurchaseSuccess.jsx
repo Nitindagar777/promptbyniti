@@ -251,6 +251,58 @@ const PurchaseSuccess = () => {
               </div>
             )}
 
+            {/* AI Generator Metadata (Auto-filled) */}
+            {(prompt.mainPrompt || prompt.negativePrompt || prompt.imageAnalysis) && (
+              <div className="secret-section generator-metadata-reveal">
+                <div className="section-title">
+                  <h3 style={{ color: 'var(--color-cyan)' }}><Sparkles size={18} /> Auto-filled from Generator</h3>
+                </div>
+                
+                <div className="generator-metadata-box">
+                  {prompt.mainPrompt && (
+                    <div className="metadata-item">
+                      <div className="metadata-label">
+                        <span>Complete Prompt Example</span>
+                        <button 
+                          className={`btn-icon-tiny ${copiedStates['mainPrompt'] ? 'copied' : ''}`}
+                          onClick={() => handleCopy(prompt.mainPrompt, 'mainPrompt')}
+                        >
+                          {copiedStates['mainPrompt'] ? <Check size={14} /> : <Copy size={14} />}
+                        </button>
+                      </div>
+                      <div className="metadata-value prompt-box-reveal">{prompt.mainPrompt}</div>
+                    </div>
+                  )}
+
+                  {prompt.negativePrompt && (
+                    <div className="metadata-item">
+                      <div className="metadata-label">
+                        <span>Negative Prompt</span>
+                        <button 
+                          className={`btn-icon-tiny ${copiedStates['negativePrompt'] ? 'copied' : ''}`}
+                          onClick={() => handleCopy(prompt.negativePrompt, 'negativePrompt')}
+                        >
+                          {copiedStates['negativePrompt'] ? <Check size={14} /> : <Copy size={14} />}
+                        </button>
+                      </div>
+                      <div className="metadata-value prompt-box-reveal">{prompt.negativePrompt}</div>
+                    </div>
+                  )}
+
+                  {prompt.imageAnalysis && (
+                    <div className="metadata-item">
+                      <div className="metadata-label">
+                        <span>Image Analysis</span>
+                      </div>
+                      <div className="metadata-value prompt-box-reveal" style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                        {prompt.imageAnalysis}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {prompt.samples && prompt.samples.length > 0 && (
               <div className="secret-section">
                 <div className="section-title">

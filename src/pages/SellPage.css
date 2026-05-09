@@ -420,3 +420,8 @@
     flex-direction: column;
   }
 }
+
+/* Publish button tooltip on hover when disabled */
+.publish-btn-wrapper:hover .publish-tooltip {
+  opacity: 1 !important;
+}

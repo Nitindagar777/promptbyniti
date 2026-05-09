@@ -18,6 +18,9 @@ const promptSchema = new mongoose.Schema({
     }
   ],
   seller: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  negativePrompt: { type: String },
+  imageAnalysis: { type: String },
+  mainPrompt: { type: String },
   status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
   rejectionReason: { type: String, default: '' },
   price: { type: Number, default: 0 },

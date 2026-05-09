@@ -164,6 +164,9 @@ router.get('/:id', optionalAuth, async (req, res) => {
     if (!isAuthorized) {
       delete promptObj.template;
       delete promptObj.instructions;
+      delete promptObj.mainPrompt;
+      delete promptObj.negativePrompt;
+      delete promptObj.imageAnalysis;
     }
     
     res.json({ 

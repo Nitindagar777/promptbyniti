@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { aiModels } from '../data/promptData';
@@ -78,9 +78,13 @@ export default function SellPage() {
   }, []);
 
   // ── Auto-fill from Prompt Generator ──
+  // Use a ref (not state) so the value is synchronously available when the generateType useEffect fires
+  const fromGeneratorRef = useRef(false);
   useEffect(() => {
     if (location.state?.fromGenerator && location.state?.promptData) {
       const d = location.state.promptData;
+      // Set BEFORE updating formData so the generateType useEffect sees it immediately
+      fromGeneratorRef.current = true;
       setFormData(prev => ({
         ...prev,
         name: d.name || '',
@@ -94,12 +98,12 @@ export default function SellPage() {
         imageAnalysis: d.imageAnalysis || '',
         mainPrompt: d.mainPrompt || '',
       }));
-      // Auto-fill samples with text prompts
+      // Auto-fill samples: input = generated prompt text, output = null (user uploads image)
       if (d.samples && d.samples.length > 0) {
         const filledSamples = [
-          { id: 1, input: d.samples[0]?.input || 'Sample A', output: d.samples[0]?.output || null },
-          { id: 2, input: d.samples[1]?.input || 'Sample B', output: d.samples[1]?.output || null },
-          { id: 3, input: d.samples[2]?.input || 'Sample C', output: d.samples[2]?.output || null },
+          { id: 1, input: d.samples[0]?.input || '', output: d.samples[0]?.output || null },
+          { id: 2, input: d.samples[1]?.input || '', output: d.samples[1]?.output || null },
+          { id: 3, input: d.samples[2]?.input || '', output: d.samples[2]?.output || null },
         ];
         setSamples(filledSamples);
       }
@@ -122,16 +126,19 @@ export default function SellPage() {
         .then(data => {
           if (data.success && data.prompt) {
             const p = data.prompt;
-            setFormData({
-              name: p.name || '',
-              description: p.description || '',
-              generateType: p.generateType || 'image',
-              model: p.model || '',
-              tokens: p.priceTokens ? p.priceTokens.toString() : '5',
-              template: p.template || '',
-              instructions: p.instructions || '',
-              keywords: p.keywords || [],
-            });
+              setFormData({
+                name: p.name || '',
+                description: p.description || '',
+                generateType: p.generateType || 'image',
+                model: p.model || '',
+                tokens: p.priceTokens ? p.priceTokens.toString() : '5',
+                template: p.template || '',
+                instructions: p.instructions || '',
+                keywords: p.keywords || [],
+                mainPrompt: p.mainPrompt || '',
+                negativePrompt: p.negativePrompt || '',
+                imageAnalysis: p.imageAnalysis || '',
+              });
             if (p.samples && p.samples.length > 0) {
               const loadedSamples = [
                 { id: 1, input: p.samples[0]?.input || '', output: p.samples[0]?.output || null },
@@ -155,10 +162,24 @@ export default function SellPage() {
   });
 
   useEffect(() => {
+    // Skip model reset if data came from the generator (preserve user's original model selection)
+    if (fromGeneratorRef.current) {
+      fromGeneratorRef.current = false; // only skip once
+      return;
+    }
     if (filteredModels.length > 0) {
       setFormData(prev => ({ ...prev, model: filteredModels[0].id }));
     }
   }, [formData.generateType]);
+
+  // ── Validation: check if all sample images are uploaded (for image/video types) ──
+  const allSamplesHaveOutput = formData.generateType === 'text'
+    ? samples.every(s => s.output && s.output.trim() !== '')
+    : samples.every(s => s.output !== null && s.output !== undefined);
+  const missingSampleCount = formData.generateType === 'text'
+    ? samples.filter(s => !s.output || s.output.trim() === '').length
+    : samples.filter(s => !s.output).length;
+  const canPublish = allSamplesHaveOutput && !loading;
 
   const handleMediaChange = (id, e) => {
     const file = e.target.files[0];
@@ -216,6 +237,8 @@ export default function SellPage() {
 
       const data = await response.json();
       if (data.success) {
+        // Clear generator session after successful publish
+        sessionStorage.removeItem('promptgen_session');
         setSubmitted(true);
         window.scrollTo(0, 0);
       } else {
@@ -335,6 +358,10 @@ export default function SellPage() {
                   <label>Model</label>
                   <select className="input" required value={formData.model} onChange={e => setFormData({ ...formData, model: e.target.value })}>
                     {filteredModels.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
+                    {/* If model from generator isn't in the filtered list, show it as an option */}
+                    {formData.model && !filteredModels.find(m => m.id === formData.model) && formData.model !== 'other' && (
+                      <option value={formData.model}>{location.state?.promptData?.modelLabel || formData.model}</option>
+                    )}
                     <option value="other">Other (Custom Model)</option>
                   </select>
                 </div>
@@ -435,7 +462,7 @@ export default function SellPage() {
                       </div>
                     ) : (
                       <>
-                        <div className="form-group"><label>Input Prompt</label><input type="text" required className="input input-sm" placeholder="Input used" value={sample.input} onChange={e => handleInputChange(sample.id, e.target.value)} /></div>
+                        <div className="form-group"><label>Input Prompt</label><textarea required className="textarea" style={{ minHeight: '60px', fontSize: '0.85rem' }} placeholder="The prompt used to generate this output..." value={sample.input} onChange={e => handleInputChange(sample.id, e.target.value)} /></div>
                         <div className="sample-media-section">
                           <div className="sample-media-upload">
                             {sample.output ? (
@@ -444,7 +471,7 @@ export default function SellPage() {
                                 <button type="button" className="media-remove" onClick={() => handleTextOutputChange(sample.id, null)}>×</button>
                               </div>
                             ) : (
-                              <label className="sample-upload-btn"><input type="file" hidden accept={formData.generateType === 'video' ? 'video/*' : 'image/*'} onChange={e => handleMediaChange(sample.id, e)} /><Upload size={20} /><span>Upload</span></label>
+                              <label className="sample-upload-btn"><input type="file" hidden accept={formData.generateType === 'video' ? 'video/*' : 'image/*'} onChange={e => handleMediaChange(sample.id, e)} /><Upload size={20} /><span>Upload {formData.generateType === 'video' ? 'Video' : 'Image'}</span><span style={{ fontSize: '0.7rem', color: 'var(--color-orange)', marginTop: '4px' }}>Required</span></label>
                             )}
                           </div>
                         </div>
@@ -458,7 +485,21 @@ export default function SellPage() {
         </div>
         <div className="sell-footer mt-2xl">
           <div className="security-note"><ShieldCheck size={18} className="text-green" /><span>Verified Listing - 80% Creator Royalty</span></div>
-          <button type="submit" className="btn btn-primary btn-xl" disabled={loading} style={{ minWidth: '300px' }}>{loading ? 'Submitting...' : (isEditMode ? 'Save & Request Review' : 'Publish to Store')} <ChevronRight size={20} /></button>
+          <div style={{ position: 'relative', display: 'inline-block' }} className="publish-btn-wrapper">
+            <button type="submit" className="btn btn-primary btn-xl" disabled={!canPublish} style={{ minWidth: '300px', opacity: canPublish ? 1 : 0.5, cursor: canPublish ? 'pointer' : 'not-allowed' }}>{loading ? 'Submitting...' : (isEditMode ? 'Save & Request Review' : 'Publish to Store')} <ChevronRight size={20} /></button>
+            {!allSamplesHaveOutput && (
+              <div className="publish-tooltip" style={{
+                position: 'absolute', bottom: '110%', left: '50%', transform: 'translateX(-50%)',
+                background: 'rgba(239, 68, 68, 0.95)', color: '#fff', padding: '10px 18px',
+                borderRadius: '12px', fontSize: '0.85rem', fontFamily: 'var(--font-display)',
+                whiteSpace: 'nowrap', pointerEvents: 'none', opacity: 0,
+                transition: 'opacity 0.2s ease', zIndex: 100,
+                boxShadow: '0 4px 20px rgba(239, 68, 68, 0.3)'
+              }}>
+                ⚠️ Please upload {formData.generateType === 'text' ? 'output responses' : 'output images'} for all {missingSampleCount} missing sample{missingSampleCount > 1 ? 's' : ''}
+              </div>
+            )}
+          </div>
         </div>
       </form>
       {showKeywordModal && (

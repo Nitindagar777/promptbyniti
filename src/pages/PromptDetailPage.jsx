@@ -167,8 +167,8 @@ export default function PromptDetailPage() {
   const isPremium = template.premium && !state.isPremium;
   const category = (template.category || template.keywords?.[0] || 'Art');
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(template.config?.description || '');
+  const handleCopyText = (text) => {
+    navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -292,6 +292,66 @@ export default function PromptDetailPage() {
               <span className="p-detail__category-tag">{category.replace('-', ' ')}</span>
               <h1 className="p-detail__title">{template.title || template.name}</h1>
               <p className="p-detail__desc">{template.description || "A professional high-end prompt optimized for creative production."}</p>
+
+              {/* AI Generator Metadata (Auto-filled) - Only visible if purchased/authorized */}
+              {(template.mainPrompt || template.negativePrompt || template.imageAnalysis) && (
+                <div className="p-detail__generator-metadata card" style={{
+                  marginTop: '24px',
+                  padding: '24px',
+                  background: 'rgba(6, 182, 212, 0.03)',
+                  border: '1px dashed rgba(6, 182, 212, 0.2)',
+                  borderRadius: '16px'
+                }}>
+                  <h4 style={{ color: 'var(--color-cyan)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1rem', fontFamily: 'var(--font-display)' }}>
+                    <Sparkles size={18} /> Auto-filled from Generator
+                  </h4>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    {template.mainPrompt && (
+                      <div className="metadata-item">
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Complete Prompt Example</span>
+                          <button
+                            className={`btn-icon-tiny ${copied ? 'copied' : ''}`}
+                            onClick={() => handleCopyText(template.mainPrompt)}
+                            style={{ width: '28px', height: '28px' }}
+                          >
+                            {copied ? <Check size={14} /> : <Copy size={14} />}
+                          </button>
+                        </div>
+                        <div className="prompt-box-reveal" style={{ fontSize: '0.9rem', padding: '16px', background: 'rgba(0,0,0,0.2)' }}>{template.mainPrompt}</div>
+                      </div>
+                    )}
+
+                    {template.negativePrompt && (
+                      <div className="metadata-item">
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Negative Prompt</span>
+                          <button
+                            className={`btn-icon-tiny ${copied ? 'copied' : ''}`}
+                            onClick={() => handleCopyText(template.negativePrompt)}
+                            style={{ width: '28px', height: '28px' }}
+                          >
+                            {copied ? <Check size={14} /> : <Copy size={14} />}
+                          </button>
+                        </div>
+                        <div className="prompt-box-reveal" style={{ fontSize: '0.9rem', padding: '16px', background: 'rgba(0,0,0,0.2)' }}>{template.negativePrompt}</div>
+                      </div>
+                    )}
+
+                    {template.imageAnalysis && (
+                      <div className="metadata-item">
+                        <div style={{ marginBottom: '8px' }}>
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Image Analysis</span>
+                        </div>
+                        <div className="prompt-box-reveal" style={{ fontSize: '0.85rem', padding: '16px', background: 'rgba(0,0,0,0.2)', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                          {template.imageAnalysis}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {template.keywords && template.keywords.length > 0 && (
                 <div className="p-detail__keywords">
