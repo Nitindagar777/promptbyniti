@@ -1,9 +1,184 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { Shield, CreditCard, User, Moon, Lock, LogOut, Camera, Check, AlertCircle, Loader2, LayoutGrid, ShoppingBag, TrendingUp } from 'lucide-react';
+import { Shield, CreditCard, User, Moon, Lock, LogOut, Camera, Check, AlertCircle, Loader2, LayoutGrid, ShoppingBag, TrendingUp, Bookmark, Trash2, Eye, ChevronLeft, Sparkles, Copy } from 'lucide-react';
 import AdminDashboard from '../components/AdminDashboard';
 import './SettingsPage.css';
+
+/* ── Saved Prompts Tab Component ── */
+function SavedPromptsTab() {
+  const [prompts, setPrompts] = useState([]);
+  const [selected, setSelected] = useState(null);
+  const [copiedField, setCopiedField] = useState('');
+
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('saved_prompts') || '[]');
+      setPrompts(saved);
+    } catch { setPrompts([]); }
+  }, []);
+
+  const handleDelete = (id) => {
+    if (!window.confirm('Delete this saved prompt?')) return;
+    const updated = prompts.filter(p => p.id !== id);
+    setPrompts(updated);
+    localStorage.setItem('saved_prompts', JSON.stringify(updated));
+    if (selected?.id === id) setSelected(null);
+  };
+
+  const copyText = (text, field) => {
+    navigator.clipboard.writeText(text);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(''), 2000);
+  };
+
+  // Detail View
+  if (selected) {
+    const p = selected;
+    return (
+      <section className="settings-section card">
+        <button
+          onClick={() => setSelected(null)}
+          style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', color: 'var(--color-cyan)', cursor: 'pointer', marginBottom: '16px', fontFamily: 'var(--font-display)', fontSize: '0.9rem' }}
+        >
+          <ChevronLeft size={18} /> Back to Saved Prompts
+        </button>
+
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '20px', marginBottom: '24px' }}>
+          {p.characterImage && (
+            <img src={p.characterImage} alt="Ref" style={{ width: '80px', height: '80px', borderRadius: '12px', objectFit: 'cover', border: '2px solid rgba(0,224,255,0.2)' }} />
+          )}
+          <div style={{ flex: 1 }}>
+            <h2 style={{ fontSize: '1.5rem', color: 'var(--text-primary)', margin: '0 0 4px' }}>{p.title || 'Untitled'}</h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0 }}>{p.description || ''}</p>
+            <div style={{ display: 'flex', gap: '8px', marginTop: '8px', flexWrap: 'wrap' }}>
+              <span style={{ padding: '3px 10px', background: 'rgba(249,115,22,0.1)', color: 'var(--color-orange)', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 600 }}>{p.promptType || 'image'}</span>
+              <span style={{ padding: '3px 10px', background: 'rgba(168,85,247,0.1)', color: 'var(--accent-primary)', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 600 }}>{p.model || 'midjourney'}</span>
+              <span style={{ padding: '3px 10px', background: 'rgba(100,116,139,0.1)', color: 'var(--text-muted)', borderRadius: '20px', fontSize: '0.75rem' }}>{new Date(p.savedAt).toLocaleDateString()}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Prompt fields */}
+        {[
+          { label: 'Main Prompt', value: p.mainPrompt, key: 'main' },
+          { label: 'Prompt Template', value: p.promptTemplate, key: 'template' },
+          { label: 'Negative Prompt', value: p.negativePrompt, key: 'negative' },
+          { label: 'Image Analysis', value: p.imageAnalysis, key: 'analysis' },
+          { label: 'Instructions', value: p.instructions, key: 'instructions' },
+        ].filter(f => f.value).map(f => (
+          <div key={f.key} style={{ marginBottom: '16px', padding: '14px', background: 'var(--bg-primary)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <label style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--color-cyan)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{f.label}</label>
+              <button
+                onClick={() => copyText(f.value, f.key)}
+                style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'none', border: 'none', color: copiedField === f.key ? 'var(--color-green)' : 'var(--text-muted)', cursor: 'pointer', fontSize: '0.8rem' }}
+              >
+                {copiedField === f.key ? <><Check size={14} /> Copied</> : <><Copy size={14} /> Copy</>}
+              </button>
+            </div>
+            <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: '0.9rem', color: 'var(--text-primary)', fontFamily: 'monospace', margin: 0, lineHeight: 1.6 }}>{f.value}</pre>
+          </div>
+        ))}
+
+        {/* Samples */}
+        {p.samples && p.samples.length > 0 && (
+          <div style={{ marginBottom: '16px' }}>
+            <h4 style={{ color: 'var(--color-orange)', marginBottom: '12px', fontSize: '0.95rem' }}>
+              <Sparkles size={16} style={{ marginRight: '6px', verticalAlign: 'text-bottom' }} />
+              Sample Variations
+            </h4>
+            {p.samples.map((s, i) => (
+              <div key={i} style={{ marginBottom: '10px', padding: '12px', background: 'var(--bg-primary)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)' }}>Sample {String.fromCharCode(65 + i)}</span>
+                  <button
+                    onClick={() => copyText(s, `sample-${i}`)}
+                    style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'none', border: 'none', color: copiedField === `sample-${i}` ? 'var(--color-green)' : 'var(--text-muted)', cursor: 'pointer', fontSize: '0.75rem' }}
+                  >
+                    {copiedField === `sample-${i}` ? <><Check size={12} /> Copied</> : <><Copy size={12} /> Copy</>}
+                  </button>
+                </div>
+                <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: '0.85rem', fontFamily: 'monospace', margin: 0, color: 'var(--text-primary)', lineHeight: 1.5 }}>{s}</pre>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Keywords */}
+        {p.keywords && p.keywords.length > 0 && (
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '12px' }}>
+            {p.keywords.map((kw, i) => (
+              <span key={i} style={{ padding: '4px 12px', background: 'rgba(168,85,247,0.08)', color: 'var(--accent-primary)', borderRadius: '20px', fontSize: '0.8rem', border: '1px solid rgba(168,85,247,0.15)' }}>{kw}</span>
+            ))}
+          </div>
+        )}
+      </section>
+    );
+  }
+
+  // List View
+  return (
+    <section className="settings-section card">
+      <h3 className="settings-section-title">
+        <Bookmark size={22} className="text-cyan" />
+        <span className="text-cyan">Saved Prompts</span>
+      </h3>
+      <p className="text-muted mb-6">Your locally saved prompts from the generator. These are stored in your browser.</p>
+
+      {prompts.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: 'var(--space-2xl)', border: '1px dashed var(--border-color)', borderRadius: 'var(--radius-md)' }}>
+          <Bookmark size={40} style={{ color: 'var(--text-muted)', opacity: 0.3, marginBottom: '12px' }} />
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>No saved prompts yet.</p>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', opacity: 0.7 }}>Generate a prompt and click "Save Prompt" to store it here.</p>
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px' }}>
+          {prompts.map(p => (
+            <div
+              key={p.id}
+              style={{
+                background: 'var(--bg-primary)',
+                borderRadius: 'var(--radius-lg)',
+                border: '1px solid var(--border-color)',
+                overflow: 'hidden',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                position: 'relative'
+              }}
+              className="saved-prompt-card"
+              onClick={() => setSelected(p)}
+            >
+              {/* Cover / Thumbnail */}
+              <div style={{ width: '100%', height: '140px', background: 'linear-gradient(135deg, rgba(168,85,247,0.15), rgba(0,224,255,0.1))', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                {p.characterImage ? (
+                  <img src={p.characterImage} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  <Sparkles size={32} style={{ color: 'var(--accent-primary)', opacity: 0.4 }} />
+                )}
+              </div>
+              {/* Info */}
+              <div style={{ padding: '14px' }}>
+                <h4 style={{ fontSize: '1rem', color: 'var(--text-primary)', margin: '0 0 4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.title || 'Untitled'}</h4>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0 0 8px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{p.description || p.userDescription || 'No description'}</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{new Date(p.savedAt).toLocaleDateString()}</span>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleDelete(p.id); }}
+                    style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px', borderRadius: '6px', transition: 'color 0.2s' }}
+                    title="Delete"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
 
 export default function SettingsPage() {
   const { state, dispatch, logout } = useApp();
@@ -258,6 +433,13 @@ export default function SettingsPage() {
             >
               <LayoutGrid size={20} className="icon-dashboards" />
               <span>Dashboards</span>
+            </button>
+            <button 
+              className={`settings-tab ${activeTab === 'saved' ? 'settings-tab--active' : ''}`}
+              onClick={() => handleTabChange('saved')}
+            >
+              <Bookmark size={20} className="icon-saved" />
+              <span>Saved Prompts</span>
             </button>
             {isAdminEmail && (
               <button 
@@ -548,6 +730,10 @@ export default function SettingsPage() {
                   </p>
                 </div>
               </section>
+            )}
+
+            {activeTab === 'saved' && (
+              <SavedPromptsTab />
             )}
 
             {activeTab === 'admin' && isAdminAuth && (

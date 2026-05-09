@@ -100,6 +100,18 @@
 .settings-tab--active .icon-billing { color: var(--color-green); }
 .settings-tab--active .icon-dashboards { color: var(--color-cyan); }
 .settings-tab--active .icon-admin { color: #f472b6; }
+.settings-tab--active .icon-saved { color: var(--color-cyan); }
+
+/* Saved Prompt Cards */
+.saved-prompt-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(0, 224, 255, 0.3) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.saved-prompt-card:hover button {
+  color: #ef4444;
+}
 
 .settings-content {
   display: flex;

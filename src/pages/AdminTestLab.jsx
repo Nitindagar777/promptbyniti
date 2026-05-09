@@ -10,7 +10,7 @@ import {
 import './AdminTestLab.css';
 
 export default function AdminTestLab() {
-  const { state, canGenerate, useCredit, addPrompt } = useApp();
+  const { state } = useApp();
   const descriptionRef = useRef(null);
 
   const [form, setForm] = useState({
@@ -52,33 +52,89 @@ export default function AdminTestLab() {
     setForm(prev => ({ ...prev, [key]: value }));
   };
 
-  const handleGenerate = async () => {
+  const handleGenerate = () => {
     if (!form.description || !form.description.trim()) {
       descriptionRef.current?.focus();
       return;
     }
     setIsGenerating(true);
     setResult(null);
-    try {
-      const response = await fetch('http://localhost:8845/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form)
-      });
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.details || errorData.message || 'Failed to generate prompt');
-      }
-      const promptResult = await response.json();
-      setResult(promptResult);
-      await useCredit(1);
-      addPrompt(promptResult);
-    } catch (error) {
-      console.error('Generation Error:', error);
-      alert(error.message || 'Failed to generate prompt. Please try again.');
-    } finally {
+
+    // Fully local — NO API call, NO credits
+    setTimeout(() => {
+      const lookup = (list, id) => list.find(i => i.id === id)?.label || '';
+      const catLabel = lookup(categories, form.category);
+      const styleLabel = lookup(styles, form.style);
+      const moodLabel = lookup(moods, form.mood);
+      const lightLabel = lookup(lightingOptions, form.lighting);
+      const camLabel = lookup(cameraAngles, form.camera);
+      const lensLabel = lookup(lensSettings, form.lens);
+      const compLabel = lookup(compositions, form.composition);
+      const colorLabel = lookup(colorPalettes, form.color);
+      const qualLabel = lookup(qualityTags, form.quality);
+      const renderLabel = lookup(renderingEngines, form.rendering);
+      const actionLabel = lookup(motionActions, form.action);
+      const modelLabel = lookup(aiModels, form.model);
+
+      // Assemble a raw prompt from all characteristics
+      const parts = [
+        form.description.trim(),
+        catLabel && catLabel !== 'Default' ? catLabel : '',
+        styleLabel && styleLabel !== 'Default' ? `${styleLabel} style` : '',
+        moodLabel && moodLabel !== 'Default' ? `${moodLabel} mood` : '',
+        lightLabel && lightLabel !== 'Default' ? `${lightLabel} lighting` : '',
+        camLabel && camLabel !== 'Default' ? `${camLabel}` : '',
+        actionLabel && actionLabel !== 'Default' ? `${actionLabel}` : '',
+        form.subjectDetails || '',
+        form.environment || '',
+        lensLabel && lensLabel !== 'Default' ? `shot on ${lensLabel}` : '',
+        compLabel && compLabel !== 'Default' ? `${compLabel}` : '',
+        colorLabel && colorLabel !== 'Default' ? `${colorLabel}` : '',
+        qualLabel && qualLabel !== 'Default' ? `${qualLabel}` : '',
+        renderLabel && renderLabel !== 'Default' ? `rendered in ${renderLabel}` : '',
+      ].filter(Boolean);
+
+      const mainPrompt = parts.join(', ');
+
+      const localResult = {
+        title: `${catLabel || 'Custom'} — ${styleLabel || 'Prompt'}`,
+        description: `A ${moodLabel || 'creative'} ${(form.promptType || 'image')} prompt targeting ${modelLabel || 'AI'}.`,
+        mainPrompt,
+        negativePrompt: form.negativePrompt || 'blurry, low quality, distorted, watermark',
+        promptTemplate: mainPrompt.replace(form.description.trim(), '[YOUR SCENE DESCRIPTION]'),
+        samples: [
+          mainPrompt,
+          mainPrompt.replace(form.description.trim(), 'A serene mountain lake at dawn'),
+          mainPrompt.replace(form.description.trim(), 'A neon-lit cyberpunk street corner'),
+        ],
+        keywords: [catLabel, styleLabel, moodLabel, lightLabel].filter(x => x && x !== 'Default'),
+        instructions: `Paste the main prompt into ${modelLabel || 'your AI tool'}. ${form.modelParams ? `Use parameters: ${form.modelParams}` : 'Adjust parameters as needed.'}`,
+        priceTokens: 5,
+        promptType: form.promptType || 'image',
+        model: form.model || 'midjourney',
+        structured: {
+          'Target Format': `${(form.promptType || 'image').toUpperCase()} Prompt`,
+          'AI Model': modelLabel || form.model,
+          'Category': catLabel,
+          'Base Style': styleLabel,
+          'Mood/Atmosphere': moodLabel,
+          'Lighting': lightLabel,
+          'Camera/Angle': camLabel,
+          'Lens/Focal': lensLabel,
+          'Composition': compLabel,
+          'Environment': form.environment || 'Not specified',
+          'Action/Pose': actionLabel,
+          'Subject Detail': form.subjectDetails || 'Not specified',
+          'Color Palette': colorLabel,
+          'Quality Level': qualLabel,
+          'Rendering': renderLabel,
+          'Parameters': form.modelParams || 'Standard'
+        }
+      };
+
+      setResult(localResult);
       setIsGenerating(false);
-    }
+    }, 400); // small delay for UX feel
   };
 
   const handleRandomize = () => {

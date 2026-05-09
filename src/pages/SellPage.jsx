@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { aiModels } from '../data/promptData';
 import {
@@ -13,6 +13,7 @@ import './SellPage.css';
 export default function SellPage() {
   const { state } = useApp();
   const navigate = useNavigate();
+  const location = useLocation();
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -22,6 +23,9 @@ export default function SellPage() {
     template: '',
     instructions: '',
     keywords: [],
+    negativePrompt: '',
+    imageAnalysis: '',
+    mainPrompt: '',
   });
 
   const [showKeywordModal, setShowKeywordModal] = useState(false);
@@ -72,6 +76,35 @@ export default function SellPage() {
       })
       .catch(err => console.warn("Failed to load rules:", err));
   }, []);
+
+  // ── Auto-fill from Prompt Generator ──
+  useEffect(() => {
+    if (location.state?.fromGenerator && location.state?.promptData) {
+      const d = location.state.promptData;
+      setFormData(prev => ({
+        ...prev,
+        name: d.name || '',
+        description: d.description || '',
+        generateType: d.generateType || 'image',
+        model: d.model || '',
+        template: d.template || '',
+        instructions: d.instructions || '',
+        keywords: d.keywords || [],
+        negativePrompt: d.negativePrompt || '',
+        imageAnalysis: d.imageAnalysis || '',
+        mainPrompt: d.mainPrompt || '',
+      }));
+      // Auto-fill samples with text prompts
+      if (d.samples && d.samples.length > 0) {
+        const filledSamples = [
+          { id: 1, input: d.samples[0]?.input || 'Sample A', output: d.samples[0]?.output || null },
+          { id: 2, input: d.samples[1]?.input || 'Sample B', output: d.samples[1]?.output || null },
+          { id: 3, input: d.samples[2]?.input || 'Sample C', output: d.samples[2]?.output || null },
+        ];
+        setSamples(filledSamples);
+      }
+    }
+  }, [location.state]);
 
   // Load Edit Data
   useEffect(() => {
@@ -337,6 +370,32 @@ export default function SellPage() {
                 <textarea required className="textarea" style={{ minHeight: '100px' }} placeholder="e.g. For best results, use aspect ratio 16:9 and set stylize to 250..." value={formData.instructions} onChange={e => setFormData({ ...formData, instructions: e.target.value })}></textarea>
                 <span className="input-hint"><Info size={14} /> Tips for the buyer on how to use this prompt.</span>
               </div>
+              {/* Extra fields from Generator (only shown when populated) */}
+              {(formData.mainPrompt || formData.negativePrompt || formData.imageAnalysis) && (
+                <div style={{ marginTop: 'var(--space-md)', padding: 'var(--space-md)', background: 'rgba(0, 224, 255, 0.03)', borderRadius: 'var(--radius-md)', border: '1px dashed rgba(0, 224, 255, 0.2)' }}>
+                  <h4 style={{ color: 'var(--color-cyan)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.95rem' }}>
+                    <Sparkles size={16} /> Auto-filled from Generator
+                  </h4>
+                  {formData.mainPrompt && (
+                    <div className="form-group">
+                      <label>Main Prompt</label>
+                      <textarea className="textarea" style={{ minHeight: '80px', fontFamily: 'monospace', fontSize: '0.85rem' }} value={formData.mainPrompt} onChange={e => setFormData({ ...formData, mainPrompt: e.target.value })}></textarea>
+                    </div>
+                  )}
+                  {formData.negativePrompt && (
+                    <div className="form-group">
+                      <label>Negative Prompt</label>
+                      <textarea className="textarea" style={{ minHeight: '60px', fontFamily: 'monospace', fontSize: '0.85rem' }} value={formData.negativePrompt} onChange={e => setFormData({ ...formData, negativePrompt: e.target.value })}></textarea>
+                    </div>
+                  )}
+                  {formData.imageAnalysis && (
+                    <div className="form-group">
+                      <label>Image Analysis</label>
+                      <textarea className="textarea" style={{ minHeight: '60px', fontSize: '0.85rem' }} value={formData.imageAnalysis} onChange={e => setFormData({ ...formData, imageAnalysis: e.target.value })} readOnly></textarea>
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="form-group mt-md">
                 <label>Keywords (Select at least 4)</label>
                 <div className="selected-keywords-preview">
