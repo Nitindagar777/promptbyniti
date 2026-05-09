@@ -378,7 +378,7 @@ export default function SellPage() {
                   </h4>
                   {formData.mainPrompt && (
                     <div className="form-group">
-                      <label>Main Prompt</label>
+                      <label>Complete Prompt Example</label>
                       <textarea className="textarea" style={{ minHeight: '80px', fontFamily: 'monospace', fontSize: '0.85rem' }} value={formData.mainPrompt} onChange={e => setFormData({ ...formData, mainPrompt: e.target.value })}></textarea>
                     </div>
                   )}

@@ -134,20 +134,24 @@ export default function GeneratePage() {
 
   // ── Sell Prompt: navigate to sell page with all data ──
   const handleSellPrompt = () => {
+    // Find the human-readable model label
+    const modelEntry = aiModels.find(m => m.id === form.model);
     const sellData = {
       name: result.title || '',
       description: result.description || '',
       generateType: form.promptType || 'image',
       model: form.model || '',
+      modelLabel: modelEntry ? modelEntry.label : form.model,
       template: result.promptTemplate || result.mainPrompt || '',
       instructions: result.instructions || '',
       keywords: result.keywords || [],
       mainPrompt: result.mainPrompt || '',
       negativePrompt: result.negativePrompt || '',
       imageAnalysis: result.imageAnalysis || '',
-      samples: (result.samples || []).map((s, i) => ({
-        input: `Sample ${String.fromCharCode(65 + i)}`,
-        output: s
+      // Pass generated sample prompts as INPUT text; leave output null so user uploads their own images
+      samples: (result.samples || []).map((s) => ({
+        input: s || '',
+        output: null
       }))
     };
     navigate('/sell', { state: { fromGenerator: true, promptData: sellData } });
