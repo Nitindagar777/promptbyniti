@@ -1,6 +1,6 @@
 /* Footer — Minimalist Human Design Version */
 import { Link } from 'react-router-dom';
-import { Mail, Sparkles, Globe } from 'lucide-react';
+import { Mail, Sparkles, Globe, Play, Camera, MessageCircle, MessageSquare } from 'lucide-react';
 import './Footer.css';
 
 export default function Footer() {
@@ -20,8 +20,11 @@ export default function Footer() {
             Get <span className="text-orange">Tokens</span>, generate studio-quality <span className="text-cyan">Prompts</span>, and <span className="text-pink">Sell</span> your creations in seconds.
           </p>
           <div className="footer__socials">
-            <a href="#" className="footer__social-link"><Globe size={20} /></a>
-            <a href="#" className="footer__social-link"><Mail size={20} /></a>
+            <a href="#" className="footer__social-link" title="YouTube"><Play size={20} /></a>
+            <a href="#" className="footer__social-link" title="Instagram"><Camera size={20} /></a>
+            <a href="#" className="footer__social-link" title="X (Twitter)"><MessageCircle size={20} /></a>
+            <a href="#" className="footer__social-link" title="Email"><Mail size={20} /></a>
+            <a href="#" className="footer__social-link" title="Discord"><MessageSquare size={20} /></a>
           </div>
         </div>
 
@@ -35,9 +38,7 @@ export default function Footer() {
           </div>
           <div className="footer__column">
             <h4 className="text-purple">Resources</h4>
-            <a href="#">Help Center</a>
-            <a href="#">Community</a>
-            <a href="#">Blog</a>
+            <Link to="/help">Help Center</Link>
           </div>
           <div className="footer__column">
             <h4 className="text-pink">Company</h4>

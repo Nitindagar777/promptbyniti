@@ -252,6 +252,32 @@ export default function SellPage() {
     }
   };
 
+  const handleListAnother = () => {
+    setFormData({
+      name: '',
+      description: '',
+      generateType: 'image',
+      model: '',
+      tokens: '5',
+      template: '',
+      instructions: '',
+      keywords: [],
+      negativePrompt: '',
+      imageAnalysis: '',
+      mainPrompt: '',
+    });
+    setSamples([
+      { id: 1, input: '', output: null },
+      { id: 2, input: '', output: null },
+      { id: 3, input: '', output: null },
+    ]);
+    setSubmitted(false);
+    setIsEditMode(false);
+    setEditId(null);
+    // Clear navigation state so it doesn't auto-fill again
+    navigate('/sell', { replace: true, state: {} });
+  };
+
   if (submitted) {
     return (
       <div className="sell-page sell-page--success container">
@@ -264,7 +290,7 @@ export default function SellPage() {
             Your prompt package "{formData.name}" is now being reviewed by our quality team. You will be notified once it is approved and live in the Store.
           </p>
           <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
-            <button className="btn btn-primary" onClick={() => window.location.href = '/sell'}>List Another</button>
+            <button className="btn btn-primary" onClick={handleListAnother}>List Another</button>
             <button className="btn btn-secondary" onClick={() => navigate('/')}>Go Home</button>
           </div>
         </div>

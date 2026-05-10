@@ -293,66 +293,7 @@ export default function PromptDetailPage() {
               <h1 className="p-detail__title">{template.title || template.name}</h1>
               <p className="p-detail__desc">{template.description || "A professional high-end prompt optimized for creative production."}</p>
 
-              {/* AI Generator Metadata (Auto-filled) - Only visible if purchased/authorized */}
-              {(template.mainPrompt || template.negativePrompt || template.imageAnalysis) && (
-                <div className="p-detail__generator-metadata card" style={{
-                  marginTop: '24px',
-                  padding: '24px',
-                  background: 'rgba(6, 182, 212, 0.03)',
-                  border: '1px dashed rgba(6, 182, 212, 0.2)',
-                  borderRadius: '16px'
-                }}>
-                  <h4 style={{ color: 'var(--color-cyan)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1rem', fontFamily: 'var(--font-display)' }}>
-                    <Sparkles size={18} /> Auto-filled from Generator
-                  </h4>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                    {template.mainPrompt && (
-                      <div className="metadata-item">
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Complete Prompt Example</span>
-                          <button
-                            className={`btn-icon-tiny ${copied ? 'copied' : ''}`}
-                            onClick={() => handleCopyText(template.mainPrompt)}
-                            style={{ width: '28px', height: '28px' }}
-                          >
-                            {copied ? <Check size={14} /> : <Copy size={14} />}
-                          </button>
-                        </div>
-                        <div className="prompt-box-reveal" style={{ fontSize: '0.9rem', padding: '16px', background: 'rgba(0,0,0,0.2)' }}>{template.mainPrompt}</div>
-                      </div>
-                    )}
-
-                    {template.negativePrompt && (
-                      <div className="metadata-item">
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Negative Prompt</span>
-                          <button
-                            className={`btn-icon-tiny ${copied ? 'copied' : ''}`}
-                            onClick={() => handleCopyText(template.negativePrompt)}
-                            style={{ width: '28px', height: '28px' }}
-                          >
-                            {copied ? <Check size={14} /> : <Copy size={14} />}
-                          </button>
-                        </div>
-                        <div className="prompt-box-reveal" style={{ fontSize: '0.9rem', padding: '16px', background: 'rgba(0,0,0,0.2)' }}>{template.negativePrompt}</div>
-                      </div>
-                    )}
-
-                    {template.imageAnalysis && (
-                      <div className="metadata-item">
-                        <div style={{ marginBottom: '8px' }}>
-                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Image Analysis</span>
-                        </div>
-                        <div className="prompt-box-reveal" style={{ fontSize: '0.85rem', padding: '16px', background: 'rgba(0,0,0,0.2)', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
-                          {template.imageAnalysis}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
+              {/* Keywords Section */}
               {template.keywords && template.keywords.length > 0 && (
                 <div className="p-detail__keywords">
                   {template.keywords.map((kw, i) => {
@@ -709,7 +650,7 @@ export default function PromptDetailPage() {
               </h2>
               <div className="related-grid-vertical">
                 {(() => {
-                  let related = state.prompts.filter(t => {
+                  let related = (state.marketplace || []).filter(t => {
                     const isSelf = (t.id || t._id) === (template.id || template._id);
                     if (isSelf) return false;
 
@@ -718,22 +659,40 @@ export default function PromptDetailPage() {
                     return catMatch || keywordMatch;
                   });
 
-                  // Fallback: If no related found, just show any other prompts
+                  // Fallback: If no related found, just show any other marketplace prompts
                   if (related.length === 0) {
-                    related = state.prompts.filter(t => (t.id || t._id) !== (template.id || template._id));
+                    related = (state.marketplace || []).filter(t => (t.id || t._id) !== (template.id || template._id));
                   }
 
                   return related.slice(0, relatedLimit).map(t => (
-                    <Link key={t.id || t._id} to={`/prompt/${t.id || t._id}`} className="related-card-small card" style={{ textDecoration: 'none' }}>
-                      <div className="related-card-small__media">
-                        <PromptThumbnail
-                          src={t.thumbnail || (t.samples?.[0]?.output || t.samples?.[0])}
-                          alt={t.title || t.name}
+                    <Link 
+                      key={t.id || t._id} 
+                      to={`/prompt/${t.id || t._id}`} 
+                      className={`template-card card reveal template-card--no-hover ${t.generateType === 'text' ? 'template-card--text' : ''}`}
+                      style={{ textDecoration: 'none', minHeight: 'auto' }}
+                    >
+                      <div className="template-card__visual">
+                        <PromptThumbnail 
+                          src={t.video || t.thumbnail || t.samples?.[0]?.output || t.samples?.[0]} 
+                          alt={t.title || t.name} 
+                          title={t.title || t.name}
+                          className="template-card__media template-card__media-main"
+                          type={t.generateType}
                         />
-                      </div>
-                      <div className="related-card-small__info">
-                        <h4>{t.title || t.name}</h4>
-                        <span className="text-muted" style={{ fontSize: '0.8rem' }}>{t.model || 'Flux.1'}</span>
+                        
+                        <div className="template-card__overlay template-card__overlay--top">
+                          <span className={`template-card__model-tag ${t.generateType === 'text' ? 'template-card__model-tag--text' : ''}`}>
+                            {t.model || (t.generateType === 'text' ? 'GPT-4o' : 'Flux.1')}
+                          </span>
+                        </div>
+
+                        <div className="template-card__overlay template-card__overlay--bottom">
+                          <h3 className="template-card__title-overlay" style={{ fontSize: '0.8rem' }}>{t.title || t.name}</h3>
+                        </div>
+
+                        <div className={`template-card__token-badge ${t.generateType === 'text' ? 'template-card__token-badge--text' : ''}`} style={{ fontSize: '0.65rem', padding: '3px 6px' }}>
+                          <Zap size={10} fill="currentColor" /> {t.priceTokens || 5}
+                        </div>
                       </div>
                     </Link>
                   ));

@@ -1,7 +1,7 @@
 /* Navbar Component — Premium Human Design */
 import { Link, useLocation } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { Zap, User, Menu, X, FlaskConical } from 'lucide-react';
+import { Zap, User, Menu, X, FlaskConical, Bell, ShoppingBag, Sparkles, AlertCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import './Navbar.css';
 
@@ -12,6 +12,73 @@ export default function Navbar() {
   const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [hasUnread, setHasUnread] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  
+  // Persist last seen count in localStorage
+  const [lastCount, setLastCount] = useState(() => {
+    const saved = localStorage.getItem('promptniti_notif_count');
+    return saved ? parseInt(saved, 10) : 0;
+  });
+
+  // Generate real notifications from app state
+  useEffect(() => {
+    if (!state.user) return;
+
+    const list = [];
+    
+    // 1. Prompt generations
+    if (state.prompts && state.prompts.length > 0) {
+      state.prompts.slice(0, 5).forEach(p => {
+        list.push({
+          id: `p-${p.id}`,
+          type: 'prompt',
+          text: `Prompt "${p.title || p.name || 'Untitled'}" generated successfully.`,
+          time: new Date(p.createdAt || Date.now()).toLocaleDateString(),
+          icon: <Sparkles size={14} className="text-cyan" />,
+          rawTime: p.createdAt || Date.now()
+        });
+      });
+    }
+
+    // 2. Marketplace Purchases
+    if (state.user.purchasedPrompts && state.user.purchasedPrompts.length > 0) {
+      state.user.purchasedPrompts.slice(0, 3).forEach((id, idx) => {
+        list.push({
+          id: `buy-${id}-${idx}`,
+          type: 'payment',
+          text: `You purchased a new prompt from the marketplace.`,
+          time: 'Recently',
+          icon: <Zap size={14} className="text-orange" />,
+          rawTime: Date.now() - (idx * 3600000)
+        });
+      });
+    }
+
+    // Sort by time
+    const sorted = list.sort((a, b) => b.rawTime - a.rawTime);
+    setNotifications(sorted);
+
+    // Red dot logic: if current count is more than what we saw last time
+    if (sorted.length > lastCount && lastCount !== 0) {
+      setHasUnread(true);
+    } else if (lastCount === 0 && sorted.length > 0) {
+      // First load, let's show the dot once
+      setHasUnread(true);
+    }
+  }, [state.prompts, state.user?.purchasedPrompts, state.user]);
+
+  const handleToggleNotifications = () => {
+    const newShow = !showNotifications;
+    setShowNotifications(newShow);
+    if (newShow) {
+      setHasUnread(false);
+      const currentCount = notifications.length;
+      setLastCount(currentCount);
+      localStorage.setItem('promptniti_notif_count', currentCount.toString());
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -69,6 +136,40 @@ export default function Navbar() {
                 <Zap size={16} fill="currentColor" />
                 <span>{Math.floor(state?.credits ?? 0)}</span>
               </div>
+
+              {/* Notification Bell */}
+              <div className="navbar__notifications-wrapper">
+                <button 
+                  className={`navbar__action-btn ${showNotifications ? 'active' : ''}`} 
+                  onClick={handleToggleNotifications}
+                  title="Notifications"
+                >
+                  <Bell size={20} />
+                  {hasUnread && <span className="navbar__notification-dot"></span>}
+                </button>
+
+                {showNotifications && (
+                  <div className="navbar__notifications-dropdown glass-effect">
+                    <div className="notifications-header">
+                      <h3>Notifications</h3>
+                    </div>
+                    <div className="notifications-list">
+                      {notifications.map(notif => (
+                        <div key={notif.id} className="notification-item">
+                          <div className="notification-icon-box">
+                            {notif.icon}
+                          </div>
+                          <div className="notification-content">
+                            <p>{notif.text}</p>
+                            <span>{notif.time}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <Link to="/settings" className="navbar__avatar" title="Settings">
                 <img 
                   src={state.user?.avatar || 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=100&auto=format&fit=crop&q=60'} 

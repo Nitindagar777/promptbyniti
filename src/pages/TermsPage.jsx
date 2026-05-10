@@ -1,6 +1,6 @@
 /* TermsPage — Service agreement and marketplace rules */
 import React from 'react';
-import { Gavel, Scale, FileText, AlertTriangle, Copyright, HelpCircle } from 'lucide-react';
+import { Gavel, Scale, FileText, AlertTriangle, Copyright, HelpCircle, Zap } from 'lucide-react';
 import './LegalPages.css';
 
 export default function TermsPage() {

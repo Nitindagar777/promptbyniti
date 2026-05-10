@@ -682,9 +682,20 @@
 
 /* RELATED SIDEBAR */
 .related-grid-vertical {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 16px;
+}
+
+/* Disable hover effects for related cards */
+.template-card--no-hover:hover .template-card__media-main {
+  transform: none !important;
+  opacity: 1 !important;
+}
+
+.template-card--no-hover:hover {
+  transform: none !important;
+  border-color: var(--border-color) !important;
 }
 
 .related-card-small {

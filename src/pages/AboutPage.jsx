@@ -12,7 +12,7 @@ export default function AboutPage() {
           <div className="hero-badge">Our Story</div>
           <h1>Empowering Creativity through <span className="text-orange">AI Excellence</span></h1>
           <p className="hero-subtitle">
-            Prompt by Niti is the world's most advanced prompt engineering platform, 
+            Prompt by Niti is the world's most advanced prompt engineering platform,
             designed to bridge the gap between human imagination and AI generation.
           </p>
         </div>
@@ -33,7 +33,7 @@ export default function AboutPage() {
 
         {/* Values Section */}
         <section className="about-section">
-          <h2 className="section-title">Why Choose <span className="text-orange">Prompt by Niti</span>?</h2>
+          <h2 className="section-title">Why Choose <span className="text-orange">Prompt by Niti</span> <span>?</span></h2>
           <div className="values-grid">
             <div className="value-item">
               <div className="value-header">
@@ -63,7 +63,7 @@ export default function AboutPage() {
         <div className="founder-quote-box">
           <div className="quote-icon">"</div>
           <p className="quote-text">
-            We didn't just build a marketplace; we built a workshop for the next generation of creators. 
+            We didn't just build a marketplace; we built a workshop for the next generation of creators.
             AI is the brush, but the prompt is the hand that guides it.
           </p>
           <div className="founder-meta">

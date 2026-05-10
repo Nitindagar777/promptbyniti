@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { 
   CheckCircle, Copy, ArrowLeft, Star, Clock, 
-  Lock, Unlock, RefreshCw, Zap, Download, Maximize2, Check
+  Lock, Unlock, RefreshCw, Zap, Download, Maximize2, Check, Sparkles
 } from 'lucide-react';
 import { aiModels } from '../data/promptData';
 import PromptThumbnail from '../components/PromptThumbnail';
@@ -212,12 +212,17 @@ const PurchaseSuccess = () => {
               </div>
             </div>
 
+
+
             <div className="secret-section">
-              <div className="section-title">
-                <h3><Lock size={18} /> The Secret Prompt</h3>
+              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px', width: '100%' }}>
+                <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px', fontFamily: 'var(--font-display)', fontSize: '1.2rem' }}>
+                  <Lock size={18} /> The Secret Prompt
+                </h3>
                 <button 
                   className={`btn-copy-small ${mainCopied ? 'copied' : ''}`}
                   onClick={() => handleCopy(prompt.template, 'main')}
+                  style={{ marginLeft: 'auto', whiteSpace: 'nowrap' }}
                 >
                   {mainCopied ? <><Check size={16} /> Copied!</> : <><Copy size={16} /> Copy Prompt</>}
                 </button>
@@ -251,58 +256,57 @@ const PurchaseSuccess = () => {
               </div>
             )}
 
-            {/* AI Generator Metadata (Auto-filled) */}
-            {(prompt.mainPrompt || prompt.negativePrompt || prompt.imageAnalysis) && (
-              <div className="secret-section generator-metadata-reveal">
-                <div className="section-title">
-                  <h3 style={{ color: 'var(--color-cyan)' }}><Sparkles size={18} /> Auto-filled from Generator</h3>
+            {/* AI Generator Metadata (Auto-filled) - Premium Unlocked Bonus */}
+            {(prompt.mainPrompt || prompt.negativePrompt) && (
+              <div className="secret-section generator-metadata-reveal animate-fade-in" style={{
+                background: 'rgba(6, 182, 212, 0.05)',
+                border: '1px solid rgba(6, 182, 212, 0.2)',
+                borderRadius: '16px',
+                padding: '24px',
+                marginTop: '32px'
+              }}>
+                <div className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h3 style={{ color: 'var(--color-cyan)', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '10px', margin: 0 }}>
+                    <Sparkles size={20} className="text-cyan" /> Generator Metadata
+                  </h3>
+                  <span className="premium-badge-tiny">BONUS</span>
                 </div>
                 
                 <div className="generator-metadata-box">
                   {prompt.mainPrompt && (
                     <div className="metadata-item">
-                      <div className="metadata-label">
+                      <div className="metadata-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                         <span>Complete Prompt Example</span>
                         <button 
-                          className={`btn-icon-tiny ${copiedStates['mainPrompt'] ? 'copied' : ''}`}
+                          className={`btn-copy-small ${copiedStates['mainPrompt'] ? 'copied' : ''}`}
                           onClick={() => handleCopy(prompt.mainPrompt, 'mainPrompt')}
                         >
-                          {copiedStates['mainPrompt'] ? <Check size={14} /> : <Copy size={14} />}
+                          {copiedStates['mainPrompt'] ? <><Check size={14} /> Copied!</> : <><Copy size={14} /> Copy Prompt</>}
                         </button>
                       </div>
-                      <div className="metadata-value prompt-box-reveal">{prompt.mainPrompt}</div>
+                      <div className="metadata-value prompt-box-reveal" style={{ background: 'rgba(0,0,0,0.3)', marginTop: '8px' }}>{prompt.mainPrompt}</div>
                     </div>
                   )}
 
                   {prompt.negativePrompt && (
-                    <div className="metadata-item">
-                      <div className="metadata-label">
+                    <div className="metadata-item" style={{ marginTop: '20px' }}>
+                      <div className="metadata-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                         <span>Negative Prompt</span>
                         <button 
-                          className={`btn-icon-tiny ${copiedStates['negativePrompt'] ? 'copied' : ''}`}
+                          className={`btn-copy-small ${copiedStates['negativePrompt'] ? 'copied' : ''}`}
                           onClick={() => handleCopy(prompt.negativePrompt, 'negativePrompt')}
                         >
-                          {copiedStates['negativePrompt'] ? <Check size={14} /> : <Copy size={14} />}
+                          {copiedStates['negativePrompt'] ? <><Check size={14} /> Copied!</> : <><Copy size={14} /> Copy Prompt</>}
                         </button>
                       </div>
-                      <div className="metadata-value prompt-box-reveal">{prompt.negativePrompt}</div>
-                    </div>
-                  )}
-
-                  {prompt.imageAnalysis && (
-                    <div className="metadata-item">
-                      <div className="metadata-label">
-                        <span>Image Analysis</span>
-                      </div>
-                      <div className="metadata-value prompt-box-reveal" style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-                        {prompt.imageAnalysis}
-                      </div>
+                      <div className="metadata-value prompt-box-reveal" style={{ background: 'rgba(0,0,0,0.3)', marginTop: '8px' }}>{prompt.negativePrompt}</div>
                     </div>
                   )}
                 </div>
               </div>
             )}
 
+            {/* Samples Section */}
             {prompt.samples && prompt.samples.length > 0 && (
               <div className="secret-section">
                 <div className="section-title">

@@ -21,6 +21,7 @@ import AdminTestLab from './pages/AdminTestLab';
 import AboutPage from './pages/AboutPage';
 import PrivacyPage from './pages/PrivacyPage';
 import TermsPage from './pages/TermsPage';
+import HelpPage from './pages/HelpPage';
 
 import './App.css';
 
@@ -102,6 +103,7 @@ function App() {
             <Route path="/about" element={<AboutPage />} />
             <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="/terms" element={<TermsPage />} />
+            <Route path="/help" element={<HelpPage />} />
 
             <Route path="/login" element={<GuestRoute><AuthPage initialMode="login" /></GuestRoute>} />
             <Route path="/signup" element={<GuestRoute><AuthPage initialMode="signup" /></GuestRoute>} />
