@@ -4,10 +4,11 @@ import { useSearchParams, Link, useLocation, useNavigate } from 'react-router-do
 import { useApp } from '../context/AppContext';
 import { randomDescriptions, aiModels } from '../data/promptData';
 import PromptOutput from '../components/PromptOutput';
+import PromptThumbnail from '../components/PromptThumbnail';
 import {
   Sparkles, Info, Image as ImageIcon,
   RefreshCw, AlertTriangle,
-  Crown, Dices, Zap, Video, Type, Search,
+  Crown, Dices, Zap, Video, Type, Search, Layers,
   Save, ShoppingBag, RotateCcw, Check
 } from 'lucide-react';
 import './GeneratePage.css';
@@ -29,7 +30,7 @@ export default function GeneratePage() {
         const parsed = JSON.parse(saved);
         return parsed.form || { description: '', characterImage: null, promptType: 'image', model: 'midjourney' };
       }
-    } catch {}
+    } catch { }
     return { description: '', characterImage: null, promptType: 'image', model: 'midjourney' };
   };
 
@@ -40,13 +41,13 @@ export default function GeneratePage() {
         const parsed = JSON.parse(saved);
         return parsed.result || null;
       }
-    } catch {}
+    } catch { }
     return null;
   };
 
   const [form, setForm] = useState(getInitialForm);
   const [result, setResult] = useState(getInitialResult);
-  
+
   const [generatorMode, setGeneratorMode] = useState('prompt'); // 'prompt' or 'example'
   const [exampleTemplate, setExampleTemplate] = useState('');
 
@@ -72,7 +73,7 @@ export default function GeneratePage() {
   useEffect(() => {
     try {
       sessionStorage.setItem(SESSION_KEY, JSON.stringify({ form, result }));
-    } catch {}
+    } catch { }
   }, [form, result]);
 
   /* Handle incoming state from Home Page */
@@ -109,8 +110,8 @@ export default function GeneratePage() {
     setIsGenerating(true);
     setResult(null);
     try {
-      const payload = generatorMode === 'prompt' 
-        ? form 
+      const payload = generatorMode === 'prompt'
+        ? form
         : { ...form, mode: 'example', description: exampleTemplate };
 
       const response = await fetch('http://localhost:8845/api/generate', {
@@ -189,7 +190,7 @@ export default function GeneratePage() {
       savedPrompts.unshift(newPrompt);
       localStorage.setItem('saved_prompts', JSON.stringify(savedPrompts));
       setSaveMessage('Prompt saved!');
-      
+
       // Clear page after saving
       setTimeout(() => {
         handleRefresh();
@@ -241,34 +242,36 @@ export default function GeneratePage() {
               <div style={{ display: 'flex', gap: '10px', background: 'var(--bg-secondary)', padding: '8px', borderRadius: '16px' }}>
                 <button
                   className={`btn ${generatorMode === 'prompt' ? '' : 'btn-ghost'}`}
-                  style={{ 
-                    flex: 1, 
-                    borderRadius: '12px', 
+                  style={{
+                    flex: 1,
+                    borderRadius: '12px',
                     padding: '12px',
                     background: generatorMode === 'prompt' ? 'var(--color-cyan)' : 'transparent',
                     color: generatorMode === 'prompt' ? 'white' : 'var(--text-muted)',
-                    fontWeight: generatorMode === 'prompt' ? 'bold' : 'normal',
-                    border: 'none'
+                    fontWeight: 'bold',
+                    border: 'none',
+                    transition: 'all 0.2s ease'
                   }}
                   onClick={() => { setGeneratorMode('prompt'); setResult(null); }}
                 >
-                  <Sparkles size={18} />
+                  <Sparkles size={18} color={generatorMode === 'prompt' ? '#001a1e' : 'var(--color-cyan)'} />
                   Prompt Generator
                 </button>
                 <button
                   className={`btn ${generatorMode === 'example' ? '' : 'btn-ghost'}`}
-                  style={{ 
-                    flex: 1, 
-                    borderRadius: '12px', 
-                    padding: '12px', 
-                    background: generatorMode === 'example' ? 'var(--color-orange)' : 'transparent', 
-                    color: generatorMode === 'example' ? 'white' : 'var(--text-muted)',
-                    fontWeight: generatorMode === 'example' ? 'bold' : 'normal',
-                    border: 'none'
+                  style={{
+                    flex: 1,
+                    borderRadius: '12px',
+                    padding: '12px',
+                    background: generatorMode === 'example' ? 'var(--color-orange)' : 'transparent',
+                    color: generatorMode === 'example' ? '#1e0d00' : 'var(--text-muted)',
+                    fontWeight: 'bold',
+                    border: 'none',
+                    transition: 'all 0.2s ease'
                   }}
                   onClick={() => { setGeneratorMode('example'); setResult(null); }}
                 >
-                  <Type size={18} />
+                  <Type size={18} color={generatorMode === 'example' ? '#1e0d00' : 'var(--color-orange)'} />
                   Example Generator
                 </button>
               </div>
@@ -278,167 +281,168 @@ export default function GeneratePage() {
               <>
                 {/* Character Consistency */}
                 <div className="gen-section gen-section--expanded" id="gen-consistency">
-              <h3 className="gen-section__title mb-4" style={{ color: '#ff0080', fontSize: '1.2rem' }}>Character Consistency</h3>
-              <div className="consistency-upload">
-                <label className="upload-placeholder" style={{ cursor: 'pointer' }}>
-                  <input
-                    type="file"
-                    style={{ display: 'none' }}
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files[0];
-                      if (file) {
-                        const img = new Image();
-                        const reader = new FileReader();
-                        reader.onload = (ev) => {
-                          img.onload = () => {
-                            const canvas = document.createElement('canvas');
-                            const MAX_SIZE = 1024;
-                            let w = img.width, h = img.height;
-                            if (w > MAX_SIZE || h > MAX_SIZE) {
-                              if (w > h) { h = Math.round(h * MAX_SIZE / w); w = MAX_SIZE; }
-                              else { w = Math.round(w * MAX_SIZE / h); h = MAX_SIZE; }
-                            }
-                            canvas.width = w;
-                            canvas.height = h;
-                            const ctx = canvas.getContext('2d');
-                            ctx.drawImage(img, 0, 0, w, h);
-                            const compressed = canvas.toDataURL('image/jpeg', 0.85);
-                            updateForm('characterImage', compressed);
-                          };
-                          img.src = ev.target.result;
-                        };
-                        reader.readAsDataURL(file);
-                      }
-                    }}
-                  />
-                  {form.characterImage ? (
-                    <img src={form.characterImage} alt="Reference" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
-                  ) : (
-                    <>
-                      <ImageIcon size={24} />
-                      <p className="text-sm">Upload Reference Image</p>
-                      <span className="text-xs text-muted">Supports JPG, PNG</span>
-                    </>
-                  )}
-                </label>
-                <div className="consistency-info">
-                  <div className="info-badge">
-                    <Info size={12} /> <span>How it works</span>
-                  </div>
-                  <p className="text-xs text-muted mt-2">
-                    Our AI identifies the character in your reference image and maintains their
-                    identity across different scenes and styles.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Your Description */}
-            <div className={`gen-section gen-section--full ${form.description ? 'gen-section--expanded' : ''}`} id="gen-description">
-              <h3 className="gen-section__title mb-4" style={{ color: '#ff0080', fontSize: '1.2rem' }}>Your Description</h3>
-              <div style={{ position: 'relative' }}>
-                <textarea
-                  ref={descriptionRef}
-                  className="gen-textarea"
-                  placeholder="Describe your scene here... (e.g., A futuristic cyberpunk city with neon rainy streets, cinematic lighting)"
-                  value={form.description}
-                  onChange={(e) => {
-                    if (e.target.value.length <= 450) {
-                      updateForm('description', e.target.value);
-                    }
-                  }}
-                  maxLength={450}
-                  style={{ minHeight: '120px', fontSize: '1.1rem' }}
-                  id="gen-main-description"
-                ></textarea>
-                <div style={{
-                  position: 'absolute', bottom: '10px', right: '14px',
-                  fontSize: '0.75rem', fontFamily: 'var(--font-display)',
-                  color: form.description.length >= 420 ? '#ef4444' : 'var(--text-muted)',
-                  opacity: 0.7
-                }}>
-                  {form.description.length}/450
-                </div>
-              </div>
-
-              {/* Prompt Type Selector */}
-              <div className="mt-6">
-                <h4 className="text-xs uppercase text-muted mb-3 font-bold tracking-widest flex items-center gap-2">
-                  <Zap size={14} color="#ff0080" /> Which kind of prompt do you want?
-                </h4>
-                <div className="prompt-type-selector">
-                  {['image', 'video', 'text'].map((type) => (
-                    <button
-                      key={type}
-                      className={`prompt-type-btn ${form.promptType === type ? 'active' : ''}`}
-                      onClick={() => handlePromptTypeChange(type)}
-                    >
-                      <div className="prompt-type-btn__icon">
-                        {type === 'image' && <ImageIcon size={20} />}
-                        {type === 'video' && <Video size={20} />}
-                        {type === 'text' && <Type size={20} />}
+                  <h3 className="gen-section__title mb-4" style={{ color: '#ff0080', fontSize: '1.2rem' }}>Character Consistency</h3>
+                  <div className="consistency-upload">
+                    <label className="upload-placeholder" style={{ cursor: 'pointer' }}>
+                      <input
+                        type="file"
+                        style={{ display: 'none' }}
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files[0];
+                          if (file) {
+                            const img = new Image();
+                            const reader = new FileReader();
+                            reader.onload = (ev) => {
+                              img.onload = () => {
+                                const canvas = document.createElement('canvas');
+                                const MAX_SIZE = 1024;
+                                let w = img.width, h = img.height;
+                                if (w > MAX_SIZE || h > MAX_SIZE) {
+                                  if (w > h) { h = Math.round(h * MAX_SIZE / w); w = MAX_SIZE; }
+                                  else { w = Math.round(w * MAX_SIZE / h); h = MAX_SIZE; }
+                                }
+                                canvas.width = w;
+                                canvas.height = h;
+                                const ctx = canvas.getContext('2d');
+                                ctx.drawImage(img, 0, 0, w, h);
+                                const compressed = canvas.toDataURL('image/jpeg', 0.85);
+                                updateForm('characterImage', compressed);
+                              };
+                              img.src = ev.target.result;
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                      {form.characterImage ? (
+                        <img src={form.characterImage} alt="Reference" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
+                      ) : (
+                        <>
+                          <ImageIcon size={24} />
+                          <p className="text-sm">Upload Reference Image</p>
+                          <span className="text-xs text-muted">Supports JPG, PNG</span>
+                        </>
+                      )}
+                    </label>
+                    <div className="consistency-info">
+                      <div className="info-badge">
+                        <Info size={12} /> <span>How it works</span>
                       </div>
-                      <span className="capitalize">{type} Prompt</span>
-                    </button>
-                  ))}
+                      <p className="text-xs text-muted mt-2">
+                        Our AI identifies the character in your reference image and maintains their
+                        identity across different scenes and styles.
+                      </p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <br></br>
-              {/* Target Model Selector */}
-              <div className="mt-6">
-                <h4 className="text-xs uppercase text-muted mb-3 font-bold tracking-widest flex items-center gap-2">
-                  <Zap size={14} color="#a855f7" /> Select target AI model
-                </h4>
-                <div className="model-selector">
-                  {filteredModels.map((m) => (
-                    <button
-                      key={m.id}
-                      className={`model-chip ${form.model === m.id && !showCustomInput ? 'model-chip--active' : ''}`}
-                      onClick={() => {
-                        updateForm('model', m.id);
-                        setShowCustomInput(false);
-                        setCustomModel('');
+
+                {/* Your Description */}
+                <div className={`gen-section gen-section--full ${form.description ? 'gen-section--expanded' : ''}`} id="gen-description">
+                  <h3 className="gen-section__title mb-4" style={{ color: '#ff0080', fontSize: '1.2rem' }}>Your Description</h3>
+                  <div style={{ position: 'relative' }}>
+                    <textarea
+                      ref={descriptionRef}
+                      className="gen-textarea"
+                      placeholder="Describe your scene here... (e.g., A futuristic cyberpunk city with neon rainy streets, cinematic lighting)"
+                      value={form.description}
+                      onChange={(e) => {
+                        if (e.target.value.length <= 450) {
+                          updateForm('description', e.target.value);
+                        }
                       }}
-                    >
-                      <span>{m.icon}</span>
-                      <span>{m.label}</span>
-                    </button>
-                  ))}
-                  <button
-                    className={`model-chip model-chip--custom ${showCustomInput ? 'model-chip--active' : ''}`}
-                    onClick={() => {
-                      setShowCustomInput(true);
-                      updateForm('model', customModel || '');
-                    }}
-                  >
-                    <Search size={14} />
-                    <span>Other</span>
-                  </button>
+                      maxLength={450}
+                      style={{ minHeight: '120px', fontSize: '1.1rem' }}
+                      id="gen-main-description"
+                    ></textarea>
+                    <div style={{
+                      position: 'absolute', bottom: '10px', right: '14px',
+                      fontSize: '0.75rem', fontFamily: 'var(--font-display)',
+                      color: form.description.length >= 420 ? '#ef4444' : 'var(--text-muted)',
+                      opacity: 0.7
+                    }}>
+                      {form.description.length}/450
+                    </div>
+                  </div>
+
+                  {/* Prompt Type Selector */}
+                  <div className="mt-6">
+                    <h4 className="text-xs uppercase text-muted mb-3 font-bold tracking-widest flex items-center gap-2">
+                      <Zap size={14} color="#ff0080" /> Which kind of prompt do you want?
+                    </h4>
+                    <div className="prompt-type-selector">
+                      {['image', 'video', 'text'].map((type) => (
+                        <button
+                          key={type}
+                          className={`prompt-type-btn ${form.promptType === type ? 'active' : ''}`}
+                          onClick={() => handlePromptTypeChange(type)}
+                        >
+                          <div className="prompt-type-btn__icon">
+                            {type === 'image' && <ImageIcon size={20} />}
+                            {type === 'video' && <Video size={20} />}
+                            {type === 'text' && <Type size={20} />}
+                          </div>
+                          <span className="capitalize">{type} Prompt</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <br></br>
+                  {/* Target Model Selector */}
+                  <div className="mt-6">
+                    <h4 className="text-xs uppercase text-muted mb-3 font-bold tracking-widest flex items-center gap-2">
+                      <Zap size={14} color="#a855f7" /> Select target AI model
+                    </h4>
+                    <div className="model-selector">
+                      {filteredModels.map((m) => (
+                        <button
+                          key={m.id}
+                          className={`model-chip ${form.model === m.id && !showCustomInput ? 'model-chip--active' : ''}`}
+                          onClick={() => {
+                            updateForm('model', m.id);
+                            setShowCustomInput(false);
+                            setCustomModel('');
+                          }}
+                        >
+                          <span>{m.icon}</span>
+                          <span>{m.label}</span>
+                        </button>
+                      ))}
+                      <button
+                        className={`model-chip model-chip--custom ${showCustomInput ? 'model-chip--active' : ''}`}
+                        onClick={() => {
+                          setShowCustomInput(true);
+                          updateForm('model', customModel || '');
+                        }}
+                      >
+                        <Search size={14} />
+                        <span>Other</span>
+                      </button>
+                    </div>
+                    {showCustomInput && (
+                      <input
+                        className="model-custom-input"
+                        type="text"
+                        placeholder="Type your model name... (e.g., Pixart-α, SDXL Turbo)"
+                        value={customModel}
+                        onChange={(e) => {
+                          setCustomModel(e.target.value);
+                          updateForm('model', e.target.value);
+                        }}
+                        autoFocus
+                      />
+                    )}
+                  </div>
                 </div>
-                {showCustomInput && (
-                  <input
-                    className="model-custom-input"
-                    type="text"
-                    placeholder="Type your model name... (e.g., Pixart-α, SDXL Turbo)"
-                    value={customModel}
-                    onChange={(e) => {
-                      setCustomModel(e.target.value);
-                      updateForm('model', e.target.value);
-                    }}
-                    autoFocus
-                  />
-                )}
-              </div>
-            </div>
-            </>
+              </>
             ) : (
               <div className="gen-section gen-section--expanded gen-section--full" id="gen-example-mode">
                 <h3 className="gen-section__title mb-4" style={{ color: 'var(--color-orange)', fontSize: '1.2rem' }}>Example Prompt Generator</h3>
                 <p className="text-sm text-muted mb-4">
-                  Enter a prompt template using variables in brackets, and the AI will generate 5 diverse sample variations. <br/>
+                  Enter a prompt template using variables in brackets, and the AI will generate 5 diverse sample variations. <br />
                   <strong>Example:</strong> A [color] [animal] riding a [vehicle] in a [setting].
                 </p>
+                <br></br>
                 <div style={{ position: 'relative' }}>
                   <textarea
                     className="gen-textarea"
@@ -448,50 +452,79 @@ export default function GeneratePage() {
                     style={{ minHeight: '160px', fontSize: '1.1rem', borderColor: 'var(--color-orange)' }}
                   ></textarea>
                 </div>
-
-                {/* Target Model Selector for Example Mode */}
+                <br></br>
+                {/* Purchased Prompts Library for Example Mode */}
                 <div className="mt-6">
-                  <h4 className="text-xs uppercase text-muted mb-3 font-bold tracking-widest flex items-center gap-2">
-                    <Zap size={14} color="#a855f7" /> Select target AI model
+                  <h4 className="text-xs uppercase text-muted mb-4 font-bold tracking-widest flex items-center gap-2">
+                    <Layers size={14} color="var(--color-orange)" /> Choice from Purchased Prompts
                   </h4>
-                  <div className="model-selector">
-                    {aiModels.map((m) => (
-                      <button
-                        key={m.id}
-                        className={`model-chip ${form.model === m.id && !showCustomInput ? 'model-chip--active' : ''}`}
-                        onClick={() => {
-                          updateForm('model', m.id);
-                          setShowCustomInput(false);
-                          setCustomModel('');
-                        }}
-                      >
-                        <span>{m.icon}</span>
-                        <span>{m.label}</span>
-                      </button>
-                    ))}
-                    <button
-                      className={`model-chip model-chip--custom ${showCustomInput ? 'model-chip--active' : ''}`}
-                      onClick={() => {
-                        setShowCustomInput(true);
-                        updateForm('model', customModel || '');
-                      }}
-                    >
-                      <Search size={14} />
-                      <span>Other</span>
-                    </button>
+                  <br></br>
+                  <div className="purchased-mini-grid custom-scrollbar" style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))',
+                    gap: '12px',
+                    maxHeight: '300px', // Perfectly fits ~2 rows (8 cards) before scrolling
+                    overflowY: 'auto',
+                    padding: '4px',
+                    scrollbarWidth: 'thin',
+                    scrollbarColor: 'var(--color-orange) transparent'
+                  }}>
+                    {state.library && state.library.length > 0 ? (
+                      state.library.map((p) => {
+                        const promptName = p.name || p.title || 'Untitled';
+                        const promptType = p.generateType || p.promptType || p.type || 'image';
+                        const promptThumb = p.thumbnail || p.coverImage || p.video || (p.samples?.[0]?.output || p.samples?.[0]);
+
+                        return (
+                          <div
+                            key={p.id || p._id}
+                            className="purchased-mini-card"
+                            onClick={() => setExampleTemplate(p.promptTemplate || p.mainPrompt || p.template || '')}
+                            style={{
+                              aspectRatio: '1/1',
+                              borderRadius: '12px',
+                              background: 'var(--dark-lighter)',
+                              border: '1px solid var(--dark-accent)',
+                              cursor: 'pointer',
+                              overflow: 'hidden',
+                              position: 'relative',
+                              transition: 'all 0.2s ease',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.borderColor = 'var(--color-orange)';
+                              e.currentTarget.style.transform = 'translateY(-2px)';
+                              e.currentTarget.style.boxShadow = '0 6px 16px rgba(251, 146, 60, 0.2)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.borderColor = 'var(--dark-accent)';
+                              e.currentTarget.style.transform = 'translateY(0)';
+                              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+                            }}
+                          >
+                            <div style={{ flex: 1, background: '#000', position: 'relative' }}>
+                              <PromptThumbnail
+                                src={promptThumb}
+                                alt={promptName}
+                                title={promptName}
+                                type={promptType}
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                              />
+                            </div>
+                            <div style={{ padding: '6px', fontSize: '10px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', background: 'rgba(0,0,0,0.8)', textAlign: 'center', fontWeight: '500' }}>
+                              {promptName}
+                            </div>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div className="text-muted text-xs p-4 border border-dashed border-dark-accent rounded-lg text-center col-span-full">
+                        You haven't purchased any prompts yet.
+                      </div>
+                    )}
                   </div>
-                  {showCustomInput && (
-                    <input
-                      className="model-custom-input"
-                      type="text"
-                      placeholder="Type your model name... (e.g., Pixart-α, SDXL Turbo)"
-                      value={customModel}
-                      onChange={(e) => {
-                        setCustomModel(e.target.value);
-                        updateForm('model', e.target.value);
-                      }}
-                    />
-                  )}
                 </div>
               </div>
             )}
@@ -501,23 +534,27 @@ export default function GeneratePage() {
               {result ? (
                 /* ── Post-generation buttons ── */
                 <>
-                  <button
-                    className="btn btn-lg gen-action-btn gen-action-btn--sell"
-                    onClick={handleSellPrompt}
-                    id="gen-sell-btn"
-                  >
-                    <ShoppingBag size={18} />
-                    <span>Sell Prompt</span>
-                  </button>
+                  {generatorMode !== 'example' && (
+                    <>
+                      <button
+                        className="btn btn-lg gen-action-btn gen-action-btn--sell"
+                        onClick={handleSellPrompt}
+                        id="gen-sell-btn"
+                      >
+                        <ShoppingBag size={18} />
+                        <span>Sell Prompt</span>
+                      </button>
 
-                  <button
-                    className="btn btn-lg gen-action-btn gen-action-btn--save"
-                    onClick={handleSavePrompt}
-                    id="gen-save-btn"
-                  >
-                    {saveMessage ? <Check size={18} /> : <Save size={18} />}
-                    <span>{saveMessage || 'Save Prompt'}</span>
-                  </button>
+                      <button
+                        className="btn btn-lg gen-action-btn gen-action-btn--save"
+                        onClick={handleSavePrompt}
+                        id="gen-save-btn"
+                      >
+                        {saveMessage ? <Check size={18} /> : <Save size={18} />}
+                        <span>{saveMessage || 'Save Prompt'}</span>
+                      </button>
+                    </>
+                  )}
 
                   <button
                     className="btn btn-lg gen-action-btn gen-action-btn--refresh"
@@ -525,24 +562,38 @@ export default function GeneratePage() {
                     id="gen-refresh-btn"
                   >
                     <RotateCcw size={18} />
-                    <span>New Prompt</span>
+                    <span>{generatorMode === 'example' ? 'Clear' : 'New Prompt'}</span>
                   </button>
+
+                  {generatorMode === 'example' && (
+                    <button
+                      className="btn btn-lg gen-action-btn gen-action-btn--save"
+                      style={{ background: 'var(--color-orange)', border: 'none' }}
+                      onClick={handleGenerate}
+                      disabled={isGenerating}
+                    >
+                      <Sparkles size={18} />
+                      <span>Generate More 5</span>
+                    </button>
+                  )}
                 </>
               ) : (
                 /* ── Pre-generation buttons ── */
                 <>
-                  <button
-                    className="btn btn-secondary btn-lg gen-random"
-                    onClick={() => handleRandomize()}
-                    disabled={isGenerating}
-                  >
-                    <div>
-                      <div className="flex items-center gap-2 justify-center">
-                        <Dices size={20} /> Surprise Me
+                  {generatorMode === 'prompt' && (
+                    <button
+                      className="btn btn-secondary btn-lg gen-random"
+                      onClick={() => handleRandomize()}
+                      disabled={isGenerating}
+                    >
+                      <div>
+                        <div className="flex items-center gap-2 justify-center">
+                          <Dices size={20} /> Surprise Me
+                        </div>
+                        <span className="text-xs opacity-70 block mt-1" style={{ fontSize: '0.75rem', fontWeight: 400 }}>Random Generate</span>
                       </div>
-                      <span className="text-xs opacity-70 block mt-1" style={{ fontSize: '0.75rem', fontWeight: 400 }}>Random Generate</span>
-                    </div>
-                  </button>
+                    </button>
+                  )}
 
                   <button
                     className={`btn btn-primary btn-lg gen-submit ${isGenerating ? 'gen-submit--loading' : ''} ${form.description.length > 5 ? 'gen-submit--glow' : ''}`}
@@ -568,13 +619,24 @@ export default function GeneratePage() {
           {/* Output / Preview panel */}
           <div className="generate-page__output">
             {result ? (
-              <PromptOutput result={result} />
+              <PromptOutput result={result} mode={generatorMode} />
             ) : (
               <div className="generate-page__preview">
-                <h3>
-                  <span className="text-cyan">Your Prompt Will Appear Here</span>
-                </h3>
-                <p>Describe your vision and hit Generate to create a professional AI prompt</p>
+                {generatorMode === 'prompt' ? (
+                  <>
+                    <h3>
+                      <span className="text-cyan">Your Prompt Will Appear Here</span>
+                    </h3>
+                    <p>Describe your vision and hit Generate to create a professional AI prompt</p>
+                  </>
+                ) : (
+                  <>
+                    <h3>
+                      <span className="text-orange">Your 5 Sample Variations Will Appear Here</span>
+                    </h3>
+                    <p>Enter your prompt template with variables and hit Generate to create 5 unique examples</p>
+                  </>
+                )}
               </div>
             )}
           </div>

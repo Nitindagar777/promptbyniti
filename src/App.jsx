@@ -18,6 +18,9 @@ import SellPage from './pages/SellPage';
 import BuyerDashboard from './pages/BuyerDashboard';
 import PurchaseSuccess from './pages/PurchaseSuccess';
 import AdminTestLab from './pages/AdminTestLab';
+import AboutPage from './pages/AboutPage';
+import PrivacyPage from './pages/PrivacyPage';
+import TermsPage from './pages/TermsPage';
 
 import './App.css';
 
@@ -94,6 +97,12 @@ function App() {
             <Route path="/admin-lab" element={<AdminRoute><AdminTestLab /></AdminRoute>} />
             <Route path="/purchase-success/:id" element={<ProtectedRoute><PurchaseSuccess /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+            
+            {/* Public Legal Pages */}
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/terms" element={<TermsPage />} />
+
             <Route path="/login" element={<GuestRoute><AuthPage initialMode="login" /></GuestRoute>} />
             <Route path="/signup" element={<GuestRoute><AuthPage initialMode="signup" /></GuestRoute>} />
             <Route path="*" element={

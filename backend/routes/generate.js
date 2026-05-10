@@ -70,9 +70,11 @@ You must return a VALID JSON object with these fields:
   "negativePrompt": "A comprehensive negative prompt (things to avoid/exclude)",
   "promptTemplate": "Take the mainPrompt and replace ONLY the changeable parts with [BRACKET] variables. Keep the rest of the text IDENTICAL.",
   "samples": [
-    "Take the promptTemplate and fill in every [BRACKET] with a new real value. Keep ALL other text identical to mainPrompt.",
-    "Same promptTemplate, different set of values for the [BRACKETS]. Same sentence structure.",
-    "Same promptTemplate, yet another set of values. Same sentence structure."
+    "Variation 1 using the template...",
+    "Variation 2 using the template...",
+    "Variation 3 using the template...",
+    "Variation 4 using the template...",
+    "Variation 5 using the template..."
   ],
   "keywords": ["keyword1", "keyword2", "keyword3", "keyword4"],
   "instructions": "Step-by-step instructions on how to use this prompt effectively."
@@ -81,7 +83,7 @@ You must return a VALID JSON object with these fields:
 HOW TO BUILD SAMPLES (FOLLOW THIS EXACTLY):
 1. Write the mainPrompt first.
 2. Create promptTemplate: take the mainPrompt and replace AT LEAST 5-7 different changeable parts with [BRACKET] variables. Spread the variables throughout the ENTIRE prompt, not just at the end. Variables should include things like [MEDIUM], [SUBJECT], [STYLE], [COLOR PALETTE], [BACKGROUND], [LIGHTING], [MOOD], [DETAIL TECHNIQUE], etc.
-3. For each sample, copy the promptTemplate and replace every [BRACKET] with a COMPLETELY DIFFERENT real value. The 3 samples must look VISIBLY DIFFERENT from each other — not just minor word swaps.
+3. For each sample, copy the promptTemplate and replace every [BRACKET] with a COMPLETELY DIFFERENT real value. The samples must look VISIBLY DIFFERENT from each other — not just minor word swaps. Generate 3 samples by default, or exactly 5 if requested.
 
 EXAMPLE:
 mainPrompt: "A professional black and white ink illustration of a blooming peony, fine hatching and variable line weights, on a clean white background, minimalist botanical style, soft diffused lighting, high detail --ar 1:1"
@@ -89,9 +91,11 @@ promptTemplate: "A professional [MEDIUM] illustration of a [SUBJECT], [DETAIL TE
 sample 1: "A professional watercolor illustration of a wild sunflower, soft wet-on-wet blending, on a warm cream paper background, impressionist floral style, golden hour lighting, high detail --ar 1:1"
 sample 2: "A professional digital vector illustration of a tropical hibiscus, clean sharp gradients and flat shapes, on a deep navy background, modern pop art style, neon glow lighting, high detail --ar 1:1"
 sample 3: "A professional colored pencil illustration of a cherry blossom branch, layered cross-hatching and burnishing, on a soft grey textured background, Japanese botanical style, ambient overcast lighting, high detail --ar 1:1"
+sample 4: "A professional oil painting illustration of a red tulip, thick impasto textures and visible brushstrokes, on a dark mahogany background, baroque still life style, dramatic chiaroscuro lighting, high detail --ar 1:1"
+sample 5: "A professional charcoal sketch illustration of a white lily, soft smudging and high contrast values, on a light tan parchment background, classical realism style, side window lighting, high detail --ar 1:1"
 
 NOTICE how each sample is DRAMATICALLY different:
-- sample 1 uses watercolor/sunflower/cream — sample 2 uses digital vector/hibiscus/navy — sample 3 uses colored pencil/cherry blossom/grey
+- sample 1 uses watercolor/sunflower — sample 2 uses digital vector/hibiscus — sample 3 uses colored pencil/cherry blossom — sample 4 uses oil painting/tulip — sample 5 uses charcoal sketch/lily
 - The VALUES are clearly distinct, not just slightly different shades of the same thing
 - But the SENTENCE STRUCTURE stays identical
 
@@ -99,6 +103,8 @@ BAD example (DO NOT do this — values too similar):
 - sample 1: "...soft blue palette, textured brushwork, storybook style..."
 - sample 2: "...muted teal palette, charcoal brushwork, vintage style..."
 - sample 3: "...pastel cyan palette, washed-out brushwork, fairytale style..."
+- sample 4: "...light azure palette, pencil brushwork, mythical style..."
+- sample 5: "...soft navy palette, acrylic brushwork, fantasy style..."
 These are TOO similar. Make each sample DRAMATICALLY different.
 
 - Samples must NEVER start with labels like "Variation", "Example", "Sample", numbers, etc.
@@ -164,19 +170,23 @@ router.post('/', async (req, res) => {
     // Core user request
     if (mode === 'example') {
       userParts.push({
-        text: `The user has provided a prompt template with [BRACKET] variables. Your task is to generate exactly 5 distinct examples (samples) of this prompt by replacing the variables with different, creative values. 
+        text: `OVERRIDE SYSTEM INSTRUCTIONS: DO NOT generate a new prompt from scratch. The user HAS ALREADY provided their own Prompt Template below.
 
 USER TEMPLATE:
 "${description.trim()}"
 
-Target AI Model: ${model || 'midjourney'}
+YOUR MISSION:
+Take the USER TEMPLATE and generate exactly 5 distinct examples (samples) by replacing the [BRACKETED] variables with creative, high-quality values.
 
-REQUIREMENTS:
-1. Return the same JSON format as usual.
-2. For "mainPrompt", return the FIRST generated sample.
-3. For "promptTemplate", return the exact user template provided above.
-4. For "samples", provide exactly 5 strings (the 5 different variations). Keep all text OUTSIDE the brackets completely identical. Only change the values inside the brackets.
-5. The 5 samples should be dramatically different in tone, subject, or style, based on what the variables allow.`
+STRICT RULES:
+1. DO NOT change any text outside the brackets. The sentence structure must remain 100% IDENTICAL to the USER TEMPLATE.
+2. Generate exactly 5 unique variations.
+3. For the "promptTemplate" field in the JSON, return the exact USER TEMPLATE provided above.
+4. For the "mainPrompt" field, return your FIRST generated sample.
+5. For the "samples" array, return all 5 generated samples as strings.
+6. Target AI Model: ${model || 'midjourney'}
+
+Return the results in the standard JSON format.`
       });
     } else if (hasRefImage && userParts.length > 0) {
       // When reference image is provided — force the AI to analyze it deeply
@@ -277,12 +287,16 @@ Target AI Model: ${model || 'midjourney'} — optimize the prompt syntax and key
       promptData.promptType = promptType || 'image';
       promptData.model = model || 'ai-optimized';
 
-      // Ensure exactly 3 samples
+      // Ensure samples (min 3, max 5)
       if (!Array.isArray(promptData.samples)) promptData.samples = [];
-      while (promptData.samples.length < 3) {
+      const requiredCount = mode === 'example' ? 5 : 3;
+      
+      while (promptData.samples.length < requiredCount) {
         promptData.samples.push(promptData.mainPrompt || 'Generate a variation here.');
       }
-      promptData.samples = promptData.samples.slice(0, 3);
+      if (promptData.samples.length > 5) {
+        promptData.samples = promptData.samples.slice(0, 5);
+      }
 
       // ── Post-processing: strip labels & enforce --ar 1:1 ──
       const stripLabel = (s) => s.replace(/^(Variation\s*\d*[:.\-]\s*|Example\s*\d*[:.\-]\s*|Sample\s*[A-C\d]*[:.\-]\s*|Version\s*\d*[:.\-]\s*|\d+[:.)\-]\s*)/i, '').trim();

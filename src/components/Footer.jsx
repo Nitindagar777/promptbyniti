@@ -28,31 +28,29 @@ export default function Footer() {
         <div className="footer__links">
           <div className="footer__column">
             <h4 className="text-cyan">Platform</h4>
-            <Link to="/generate">Generator</Link>
-            <Link to="/templates">Store</Link>
-            <Link to="/library">Free</Link>
+            <Link to="/generate">Prompt Generator</Link>
+            <Link to="/templates">Marketplace</Link>
+            <Link to="/library">Free Library</Link>
             <Link to="/pricing">Pricing</Link>
           </div>
           <div className="footer__column">
             <h4 className="text-purple">Resources</h4>
-            <a href="#">Docs</a>
+            <a href="#">Help Center</a>
+            <a href="#">Community</a>
             <a href="#">Blog</a>
-            <a href="#">Tutorials</a>
-            <a href="#">API</a>
           </div>
           <div className="footer__column">
             <h4 className="text-pink">Company</h4>
-            <Link to="/settings">About</Link>
-            <a href="#">Careers</a>
-            <a href="#">Privacy</a>
-            <a href="#">Terms</a>
+            <Link to="/about">About Us</Link>
+            <Link to="/privacy">Privacy Policy</Link>
+            <Link to="/terms">Terms of Service</Link>
           </div>
         </div>
       </div>
 
       <div className="container footer__bottom">
         <p>© {currentYear} Prompt by <span className="text-orange">Niti</span>. All rights reserved.</p>
-        <p>Made with ❤️ by <span className="text-orange">Niti</span></p>
+        <p>Made with ❤️ by <span className="text-orange">Nitin</span></p>
       </div>
     </footer>
   );

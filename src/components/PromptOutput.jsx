@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Copy, Check, ChevronDown, ChevronUp, Sparkles, Layers, Ban } from 'lucide-react';
 import './PromptOutput.css';
 
-export default function PromptOutput({ result }) {
+export default function PromptOutput({ result, mode }) {
   const [copied, setCopied] = useState(null);
   const [showStructured, setShowStructured] = useState(false);
 
@@ -18,7 +18,8 @@ export default function PromptOutput({ result }) {
   return (
     <div className="prompt-output animate-fade-in-up" id="prompt-output">
       {/* Marketplace Listing Details */}
-      <div className="prompt-output__section prompt-output__section--premium">
+      {mode !== 'example' && (
+        <div className="prompt-output__section prompt-output__section--premium">
         <div className="prompt-output__header">
           <div className="prompt-output__label">
             <Sparkles size={16} color="#ff0080" />
@@ -67,27 +68,30 @@ export default function PromptOutput({ result }) {
               <span className="uppercase">{result.model || 'Midjourney'}</span>
             </div>
           </div>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Prompt Template Section */}
-      <div className="prompt-output__section prompt-output__section--template">
-        <div className="prompt-output__header">
-          <div className="prompt-output__label">
-            <Layers size={16} />
-            <span>Prompt Template (with variables)</span>
+      {mode !== 'example' && (
+        <div className="prompt-output__section prompt-output__section--template">
+          <div className="prompt-output__header">
+            <div className="prompt-output__label">
+              <Layers size={16} />
+              <span>Prompt Template (with variables)</span>
+            </div>
+            <button
+              className={`prompt-output__copy ${copied === 'template' ? 'prompt-output__copy--copied' : ''}`}
+              onClick={() => copyToClipboard(result.promptTemplate, 'template')}
+            >
+              {copied === 'template' ? <><Check size={14} /> Copied!</> : <><Copy size={14} /> Copy Template</>}
+            </button>
           </div>
-          <button
-            className={`prompt-output__copy ${copied === 'template' ? 'prompt-output__copy--copied' : ''}`}
-            onClick={() => copyToClipboard(result.promptTemplate, 'template')}
-          >
-            {copied === 'template' ? <><Check size={14} /> Copied!</> : <><Copy size={14} /> Copy Template</>}
-          </button>
+          <div className="prompt-output__text prompt-output__text--template">
+            {result.promptTemplate}
+          </div>
         </div>
-        <div className="prompt-output__text prompt-output__text--template">
-          {result.promptTemplate}
-        </div>
-      </div>
+      )}
 
       {/* 3 Sample Examples (Replaced Variables) */}
       {(result.samples || []).map((sample, idx) => (
@@ -111,7 +115,9 @@ export default function PromptOutput({ result }) {
       ))}
 
       {/* Negative Prompt */}
-      <div className="prompt-output__section prompt-output__section--negative">
+      {mode !== 'example' && (
+        <>
+          <div className="prompt-output__section prompt-output__section--negative">
         <div className="prompt-output__header">
           <div className="prompt-output__label">
             <Ban size={16} />
@@ -178,6 +184,8 @@ export default function PromptOutput({ result }) {
           </div>
         )}
       </div>
+        </>
+      )}
     </div>
   );
 }
