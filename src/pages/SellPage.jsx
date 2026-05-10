@@ -100,11 +100,11 @@ export default function SellPage() {
       }));
       // Auto-fill samples: input = generated prompt text, output = null (user uploads image)
       if (d.samples && d.samples.length > 0) {
-        const filledSamples = [
-          { id: 1, input: d.samples[0]?.input || '', output: d.samples[0]?.output || null },
-          { id: 2, input: d.samples[1]?.input || '', output: d.samples[1]?.output || null },
-          { id: 3, input: d.samples[2]?.input || '', output: d.samples[2]?.output || null },
-        ];
+        const filledSamples = d.samples.map((s, idx) => ({
+          id: idx + 1,
+          input: s.input || '',
+          output: s.output || null
+        }));
         setSamples(filledSamples);
       }
     }
@@ -140,11 +140,11 @@ export default function SellPage() {
                 imageAnalysis: p.imageAnalysis || '',
               });
             if (p.samples && p.samples.length > 0) {
-              const loadedSamples = [
-                { id: 1, input: p.samples[0]?.input || '', output: p.samples[0]?.output || null },
-                { id: 2, input: p.samples[1]?.input || '', output: p.samples[1]?.output || null },
-                { id: 3, input: p.samples[2]?.input || '', output: p.samples[2]?.output || null }
-              ];
+              const loadedSamples = p.samples.map((s, idx) => ({
+                id: idx + 1,
+                input: s.input || '',
+                output: s.output || null
+              }));
               setSamples(loadedSamples);
             }
           }

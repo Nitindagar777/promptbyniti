@@ -121,10 +121,10 @@ Return ONLY the JSON object. No markdown fences, no explanation.`;
 // POST /api/generate
 router.post('/', async (req, res) => {
   try {
-    const { description, characterImage, promptType, model } = req.body;
+    const { description, characterImage, promptType, model, mode } = req.body;
 
     if (!description || !description.trim()) {
-      return res.status(400).json({ message: 'Description is required.' });
+      return res.status(400).json({ message: 'Description or Template is required.' });
     }
 
     // 1. Get cached model (rules baked in as systemInstruction)
@@ -162,7 +162,23 @@ router.post('/', async (req, res) => {
     }
 
     // Core user request
-    if (hasRefImage && userParts.length > 0) {
+    if (mode === 'example') {
+      userParts.push({
+        text: `The user has provided a prompt template with [BRACKET] variables. Your task is to generate exactly 5 distinct examples (samples) of this prompt by replacing the variables with different, creative values. 
+
+USER TEMPLATE:
+"${description.trim()}"
+
+Target AI Model: ${model || 'midjourney'}
+
+REQUIREMENTS:
+1. Return the same JSON format as usual.
+2. For "mainPrompt", return the FIRST generated sample.
+3. For "promptTemplate", return the exact user template provided above.
+4. For "samples", provide exactly 5 strings (the 5 different variations). Keep all text OUTSIDE the brackets completely identical. Only change the values inside the brackets.
+5. The 5 samples should be dramatically different in tone, subject, or style, based on what the variables allow.`
+      });
+    } else if (hasRefImage && userParts.length > 0) {
       // When reference image is provided — force the AI to analyze it deeply
       userParts.push({
         text: `I have attached a REFERENCE IMAGE above. This is the most important input.

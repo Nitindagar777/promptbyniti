@@ -1,15 +1,19 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { Shield, CreditCard, User, Moon, Lock, LogOut, Camera, Check, AlertCircle, Loader2, LayoutGrid, ShoppingBag, TrendingUp, Bookmark, Trash2, Eye, ChevronLeft, Sparkles, Copy } from 'lucide-react';
+import { aiModels } from '../data/promptData';
+import { Shield, CreditCard, User, Moon, Lock, LogOut, Camera, Check, AlertCircle, Loader2, LayoutGrid, ShoppingBag, TrendingUp, Bookmark, Trash2, Eye, ChevronLeft, Sparkles, Copy, Tag } from 'lucide-react';
 import AdminDashboard from '../components/AdminDashboard';
 import './SettingsPage.css';
 
 /* ── Saved Prompts Tab Component ── */
 function SavedPromptsTab() {
+  const navigate = useNavigate();
   const [prompts, setPrompts] = useState([]);
   const [selected, setSelected] = useState(null);
   const [copiedField, setCopiedField] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
 
   useEffect(() => {
     try {
@@ -19,11 +23,40 @@ function SavedPromptsTab() {
   }, []);
 
   const handleDelete = (id) => {
-    if (!window.confirm('Delete this saved prompt?')) return;
-    const updated = prompts.filter(p => p.id !== id);
+    setDeleteId(id);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = () => {
+    if (!deleteId) return;
+    const updated = prompts.filter(p => p.id !== deleteId);
     setPrompts(updated);
     localStorage.setItem('saved_prompts', JSON.stringify(updated));
-    if (selected?.id === id) setSelected(null);
+    if (selected?.id === deleteId) setSelected(null);
+    setShowDeleteModal(false);
+    setDeleteId(null);
+  };
+
+  const handleSell = (p) => {
+    const modelEntry = aiModels.find(m => m.id === p.model);
+    const sellData = {
+      name: p.title || '',
+      description: p.description || '',
+      generateType: p.promptType || 'image',
+      model: p.model || '',
+      modelLabel: modelEntry ? modelEntry.label : p.model,
+      template: p.promptTemplate || p.mainPrompt || '',
+      instructions: p.instructions || '',
+      keywords: p.keywords || [],
+      mainPrompt: p.mainPrompt || '',
+      negativePrompt: p.negativePrompt || '',
+      imageAnalysis: p.imageAnalysis || '',
+      samples: (p.samples || []).map((s) => ({
+        input: s || '',
+        output: null
+      }))
+    };
+    navigate('/sell', { state: { fromGenerator: true, promptData: sellData } });
   };
 
   const copyText = (text, field) => {
@@ -56,6 +89,23 @@ function SavedPromptsTab() {
               <span style={{ padding: '3px 10px', background: 'rgba(168,85,247,0.1)', color: 'var(--accent-primary)', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 600 }}>{p.model || 'midjourney'}</span>
               <span style={{ padding: '3px 10px', background: 'rgba(100,116,139,0.1)', color: 'var(--text-muted)', borderRadius: '20px', fontSize: '0.75rem' }}>{new Date(p.savedAt).toLocaleDateString()}</span>
             </div>
+          </div>
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <button
+              onClick={() => handleSell(p)}
+              className="btn btn-primary btn-sm"
+              style={{ borderRadius: '12px', padding: '10px 24px', gap: '8px', fontSize: '1rem', background: 'var(--color-orange)', border: 'none' }}
+            >
+              <ShoppingBag size={18} /> Sell
+            </button>
+            <button
+              onClick={() => handleDelete(p.id)}
+              className="btn btn-secondary-outline btn-sm"
+              style={{ borderRadius: '12px', padding: '10px', width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.1)' }}
+              title="Delete Saved Prompt"
+            >
+              <Trash2 size={18} className="text-muted" />
+            </button>
           </div>
         </div>
 
@@ -124,8 +174,8 @@ function SavedPromptsTab() {
         <Bookmark size={22} className="text-cyan" />
         <span className="text-cyan">Saved Prompts</span>
       </h3>
-      <p className="text-muted mb-6">Your locally saved prompts from the generator. These are stored in your browser.</p>
-
+      <p className="text-muted mb-6">Your prompts from the generator. These are stored in your browser.</p>
+      <br></br>
       {prompts.length === 0 ? (
         <div style={{ textAlign: 'center', padding: 'var(--space-2xl)', border: '1px dashed var(--border-color)', borderRadius: 'var(--radius-md)' }}>
           <Bookmark size={40} style={{ color: 'var(--text-muted)', opacity: 0.3, marginBottom: '12px' }} />
@@ -163,17 +213,70 @@ function SavedPromptsTab() {
                 <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0 0 8px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{p.description || p.userDescription || 'No description'}</p>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{new Date(p.savedAt).toLocaleDateString()}</span>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleDelete(p.id); }}
-                    style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px', borderRadius: '6px', transition: 'color 0.2s' }}
-                    title="Delete"
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleSell(p); }}
+                      style={{ background: 'rgba(6, 182, 212, 0.1)', border: 'none', color: 'var(--color-cyan)', cursor: 'pointer', padding: '4px 10px', borderRadius: '6px', fontSize: '0.7rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}
+                    >
+                      <ShoppingBag size={12} /> Sell
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleDelete(p.id); }}
+                      style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px', borderRadius: '6px', transition: 'color 0.2s' }}
+                      title="Delete"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Custom Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+          background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 10000, animation: 'fadeIn 0.2s ease-out'
+        }}>
+          <div className="card" style={{
+            width: '100%', maxWidth: '400px', padding: '32px',
+            textAlign: 'center', border: '1px solid rgba(239, 68, 68, 0.2)',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.5), 0 0 20px rgba(239, 68, 68, 0.1)'
+          }}>
+            <div style={{
+              width: '64px', height: '64px', borderRadius: '50%',
+              background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              margin: '0 auto 20px'
+            }}>
+              <Trash2 size={32} />
+            </div>
+            <h3 style={{ fontSize: '1.5rem', marginBottom: '12px', color: 'white', fontFamily: 'var(--font-display)' }}>Delete Prompt?</h3>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '32px', lineHeight: 1.5 }}>
+              Are you sure you want to remove this prompt from your saved library? This action cannot be undone.
+            </p>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                className="btn btn-secondary w-full"
+                onClick={() => setShowDeleteModal(false)}
+                style={{ flex: 1, height: '48px', borderRadius: '12px' }}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn btn-primary w-full"
+                onClick={confirmDelete}
+                style={{ flex: 1, height: '48px', borderRadius: '12px', background: '#ef4444', border: 'none' }}
+              >
+                Yes, Delete
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </section>
@@ -406,35 +509,35 @@ export default function SettingsPage() {
         <div className="settings-grid">
           {/* Tabs Sidebar */}
           <div className="settings-sidebar">
-            <button 
+            <button
               className={`settings-tab ${activeTab === 'profile' ? 'settings-tab--active' : ''}`}
               onClick={() => handleTabChange('profile')}
             >
               <User size={20} className="icon-profile" />
               <span>Edit Profile</span>
             </button>
-            <button 
+            <button
               className={`settings-tab ${activeTab === 'security' ? 'settings-tab--active' : ''}`}
               onClick={() => handleTabChange('security')}
             >
               <Shield size={20} className="icon-security" />
               <span>Account Security</span>
             </button>
-            <button 
+            <button
               className={`settings-tab ${activeTab === 'subscription' ? 'settings-tab--active' : ''}`}
               onClick={() => handleTabChange('subscription')}
             >
               <CreditCard size={20} className="icon-billing" />
               <span>Subscription</span>
             </button>
-            <button 
+            <button
               className={`settings-tab ${activeTab === 'dashboards' ? 'settings-tab--active' : ''}`}
               onClick={() => handleTabChange('dashboards')}
             >
               <LayoutGrid size={20} className="icon-dashboards" />
               <span>Dashboards</span>
             </button>
-            <button 
+            <button
               className={`settings-tab ${activeTab === 'saved' ? 'settings-tab--active' : ''}`}
               onClick={() => handleTabChange('saved')}
             >
@@ -442,7 +545,7 @@ export default function SettingsPage() {
               <span>Saved Prompts</span>
             </button>
             {isAdminEmail && (
-              <button 
+              <button
                 className={`settings-tab ${activeTab === 'admin' ? 'settings-tab--active' : ''}`}
                 onClick={() => {
                   if (!isAdminAuth) {
@@ -465,29 +568,29 @@ export default function SettingsPage() {
                 {/* Profile Section */}
                 <form className="settings-section card" onSubmit={handleUpdateProfile}>
                   <h3 className="settings-section-title">
-                    <User size={22} className="text-orange" /> 
+                    <User size={22} className="text-orange" />
                     <span className="text-orange">Public Profile</span>
                   </h3>
-                  
+
                   <div className="profile-upload-container">
                     <div className="profile-avatar-wrapper">
                       <div className="profile-avatar-preview">
-                        <img 
-                          src={preview || formData.avatar || 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=100&auto=format&fit=crop&q=60'} 
-                          alt="Avatar" 
+                        <img
+                          src={preview || formData.avatar || 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=100&auto=format&fit=crop&q=60'}
+                          alt="Avatar"
                         />
                       </div>
-                      <button 
+                      <button
                         type="button"
-                        className="avatar-edit-btn" 
+                        className="avatar-edit-btn"
                         onClick={() => fileInputRef.current.click()}
                       >
                         <Camera size={16} />
                       </button>
-                      <input 
-                        type="file" 
-                        ref={fileInputRef} 
-                        hidden 
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        hidden
                         accept="image/*"
                         onChange={handleImageChange}
                       />
@@ -501,10 +604,10 @@ export default function SettingsPage() {
 
                   <div className="settings-field">
                     <label>Display Name</label>
-                    <input 
-                      type="text" 
-                      className="input" 
-                      placeholder="Your Name" 
+                    <input
+                      type="text"
+                      className="input"
+                      placeholder="Your Name"
                       value={formData.name}
                       onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                       required
@@ -513,9 +616,9 @@ export default function SettingsPage() {
 
                   <div className="settings-field">
                     <label>Short Bio</label>
-                    <textarea 
-                      className="textarea" 
-                      placeholder="Tell the world about your prompt engineering skills..." 
+                    <textarea
+                      className="textarea"
+                      placeholder="Tell the world about your prompt engineering skills..."
                       value={formData.bio}
                       onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
                       maxLength={200}
@@ -527,9 +630,9 @@ export default function SettingsPage() {
                   </div>
 
                   <div style={{ marginTop: 'var(--space-md)' }}>
-                    <button 
+                    <button
                       type="submit"
-                      className="btn btn-primary" 
+                      className="btn btn-primary"
                       style={{ padding: '12px 32px', fontSize: '1.1rem' }}
                       disabled={loading}
                     >
@@ -546,7 +649,7 @@ export default function SettingsPage() {
                 {/* Danger Zone Section (kept in profile as requested) */}
                 <section className="settings-section settings-section--danger card">
                   <h3 className="settings-section-title">
-                    <LogOut size={22} className="text-pink" /> 
+                    <LogOut size={22} className="text-pink" />
                     <span className="text-pink">Danger Zone</span>
                   </h3>
                   <div className="danger-box">
@@ -554,7 +657,7 @@ export default function SettingsPage() {
                       <h4>Sign Out</h4>
                       <p>Logout from your account on this device.</p>
                     </div>
-                    <button 
+                    <button
                       type="button"
                       className="btn danger-btn"
                       onClick={handleLogout}
@@ -569,7 +672,7 @@ export default function SettingsPage() {
             {activeTab === 'security' && (
               <section className="settings-section card">
                 <h3 className="settings-section-title">
-                  <Shield size={22} className="text-purple" /> 
+                  <Shield size={22} className="text-purple" />
                   <span className="text-purple">Account Security</span>
                 </h3>
                 <div className="settings-field">
@@ -579,19 +682,19 @@ export default function SettingsPage() {
                     Your account is secured via {state.user?.provider === 'google' ? 'Google OAuth' : 'Email Verification'}.
                   </p>
                 </div>
-                
-                <form 
+
+                <form
                   onSubmit={handleSecurityFlow}
                   style={{ marginTop: 'var(--space-xl)', padding: 'var(--space-md)', background: 'rgba(168, 85, 247, 0.05)', borderRadius: 'var(--radius-md)', border: '1px dashed var(--color-purple)' }}
                 >
                   <h4 style={{ color: 'var(--text-primary)', marginBottom: '8px' }}>Password</h4>
-                  
+
                   {securityStep === 'start' && (
                     <>
                       <p className="text-sm text-muted">To change your password or security settings, please use the secure link sent to your verified email.</p>
-                      <button 
-                        type="submit" 
-                        className="btn btn-secondary btn-sm" 
+                      <button
+                        type="submit"
+                        className="btn btn-secondary btn-sm"
                         style={{ marginTop: '16px', padding: '10px 20px' }}
                         disabled={securityLoading}
                       >
@@ -603,10 +706,10 @@ export default function SettingsPage() {
                   {securityStep === 'otp' && (
                     <div style={{ marginTop: '12px' }}>
                       <p className="text-sm text-muted">Enter the 4-digit code sent to your email.</p>
-                      <input 
-                        type="text" 
-                        className="input" 
-                        placeholder="0000" 
+                      <input
+                        type="text"
+                        className="input"
+                        placeholder="0000"
                         maxLength={4}
                         value={securityOtp}
                         onChange={(e) => setSecurityOtp(e.target.value)}
@@ -614,16 +717,16 @@ export default function SettingsPage() {
                         style={{ maxWidth: '120px', textAlign: 'center', fontSize: '1.2rem', marginTop: '12px' }}
                       />
                       <div style={{ marginTop: '16px', display: 'flex', gap: '10px' }}>
-                        <button 
-                          type="submit" 
+                        <button
+                          type="submit"
                           className="btn btn-primary btn-sm"
                           disabled={securityLoading}
                         >
                           {securityLoading ? 'Verifying...' : 'Verify Code'}
                         </button>
-                        <button 
-                          type="button" 
-                          className="btn btn-secondary btn-sm" 
+                        <button
+                          type="button"
+                          className="btn btn-secondary btn-sm"
                           onClick={() => setSecurityStep('start')}
                         >
                           Cancel
@@ -635,10 +738,10 @@ export default function SettingsPage() {
                   {securityStep === 'password' && (
                     <div style={{ marginTop: '12px' }}>
                       <p className="text-sm text-muted">Enter your new password below.</p>
-                      <input 
-                        type="password" 
-                        className="input" 
-                        placeholder="New Password" 
+                      <input
+                        type="password"
+                        className="input"
+                        placeholder="New Password"
                         minLength={6}
                         value={securityNewPassword}
                         onChange={(e) => setSecurityNewPassword(e.target.value)}
@@ -646,16 +749,16 @@ export default function SettingsPage() {
                         style={{ marginTop: '12px' }}
                       />
                       <div style={{ marginTop: '16px', display: 'flex', gap: '10px' }}>
-                        <button 
-                          type="submit" 
+                        <button
+                          type="submit"
                           className="btn btn-primary btn-sm"
                           disabled={securityLoading}
                         >
                           {securityLoading ? 'Updating...' : 'Set New Password'}
                         </button>
-                        <button 
-                          type="button" 
-                          className="btn btn-secondary btn-sm" 
+                        <button
+                          type="button"
+                          className="btn btn-secondary btn-sm"
                           onClick={() => setSecurityStep('start')}
                         >
                           Cancel
@@ -670,11 +773,11 @@ export default function SettingsPage() {
             {activeTab === 'dashboards' && (
               <section className="settings-section card">
                 <h3 className="settings-section-title">
-                  <LayoutGrid size={22} className="text-cyan" /> 
+                  <LayoutGrid size={22} className="text-cyan" />
                   <span className="text-cyan">Account Dashboards</span>
                 </h3>
                 <p className="text-muted mb-6">Switch between your selling performance and your personal acquisition hub.</p>
-                
+
                 <div className="dashboards-selector-grid">
                   <div className="dashboard-option-card" onClick={() => navigate('/dashboard')}>
                     <div className="option-icon-box seller-bg">
@@ -704,10 +807,10 @@ export default function SettingsPage() {
             {activeTab === 'subscription' && (
               <section className="settings-section card">
                 <h3 className="settings-section-title">
-                  <CreditCard size={22} className="text-cyan" /> 
+                  <CreditCard size={22} className="text-cyan" />
                   <span className="text-cyan">Account & Packs</span>
                 </h3>
-                
+
                 <div className="plan-card" style={{ background: 'var(--bg-primary)', padding: 'var(--space-lg)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
                     <span className="section-tag" style={{ background: state.plan === 'free' ? 'var(--text-muted)' : 'var(--color-orange)' }}>
@@ -756,8 +859,8 @@ export default function SettingsPage() {
               <p className="text-muted mb-4">Please enter the security password to access the Admin Panel.</p>
               <div className="settings-field">
                 <label>Admin Password</label>
-                <input 
-                  type="password" 
+                <input
+                  type="password"
                   className={`input ${adminError ? 'input--error' : ''}`}
                   placeholder="••••••••"
                   value={adminInput}

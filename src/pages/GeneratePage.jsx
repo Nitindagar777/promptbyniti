@@ -46,6 +46,9 @@ export default function GeneratePage() {
 
   const [form, setForm] = useState(getInitialForm);
   const [result, setResult] = useState(getInitialResult);
+  
+  const [generatorMode, setGeneratorMode] = useState('prompt'); // 'prompt' or 'example'
+  const [exampleTemplate, setExampleTemplate] = useState('');
 
   const [customModel, setCustomModel] = useState('');
   const [showCustomInput, setShowCustomInput] = useState(false);
@@ -88,10 +91,17 @@ export default function GeneratePage() {
   };
 
   const handleGenerate = async () => {
-    if (!form.description || !form.description.trim()) {
-      descriptionRef.current?.focus();
-      return;
+    if (generatorMode === 'prompt') {
+      if (!form.description || !form.description.trim()) {
+        descriptionRef.current?.focus();
+        return;
+      }
+    } else {
+      if (!exampleTemplate || !exampleTemplate.trim()) {
+        return;
+      }
     }
+
     if (!canGenerate) {
       setShowPaywall(true);
       return;
@@ -99,10 +109,14 @@ export default function GeneratePage() {
     setIsGenerating(true);
     setResult(null);
     try {
+      const payload = generatorMode === 'prompt' 
+        ? form 
+        : { ...form, mode: 'example', description: exampleTemplate };
+
       const response = await fetch('http://localhost:8845/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form)
+        body: JSON.stringify(payload)
       });
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -175,7 +189,12 @@ export default function GeneratePage() {
       savedPrompts.unshift(newPrompt);
       localStorage.setItem('saved_prompts', JSON.stringify(savedPrompts));
       setSaveMessage('Prompt saved!');
-      setTimeout(() => setSaveMessage(''), 3000);
+      
+      // Clear page after saving
+      setTimeout(() => {
+        handleRefresh();
+        setSaveMessage('');
+      }, 2000);
     } catch (err) {
       console.error('Save error:', err);
       alert('Failed to save prompt.');
@@ -216,8 +235,49 @@ export default function GeneratePage() {
         {/* Generator Form */}
         <div className="generate-page__grid">
           <div className="generate-page__form">
-            {/* Character Consistency */}
-            <div className="gen-section gen-section--expanded" id="gen-consistency">
+
+            {/* Mode Toggle */}
+            <div className="gen-section gen-section--expanded" style={{ marginBottom: '24px' }}>
+              <div style={{ display: 'flex', gap: '10px', background: 'var(--bg-secondary)', padding: '8px', borderRadius: '16px' }}>
+                <button
+                  className={`btn ${generatorMode === 'prompt' ? '' : 'btn-ghost'}`}
+                  style={{ 
+                    flex: 1, 
+                    borderRadius: '12px', 
+                    padding: '12px',
+                    background: generatorMode === 'prompt' ? 'var(--color-cyan)' : 'transparent',
+                    color: generatorMode === 'prompt' ? 'white' : 'var(--text-muted)',
+                    fontWeight: generatorMode === 'prompt' ? 'bold' : 'normal',
+                    border: 'none'
+                  }}
+                  onClick={() => { setGeneratorMode('prompt'); setResult(null); }}
+                >
+                  <Sparkles size={18} />
+                  Prompt Generator
+                </button>
+                <button
+                  className={`btn ${generatorMode === 'example' ? '' : 'btn-ghost'}`}
+                  style={{ 
+                    flex: 1, 
+                    borderRadius: '12px', 
+                    padding: '12px', 
+                    background: generatorMode === 'example' ? 'var(--color-orange)' : 'transparent', 
+                    color: generatorMode === 'example' ? 'white' : 'var(--text-muted)',
+                    fontWeight: generatorMode === 'example' ? 'bold' : 'normal',
+                    border: 'none'
+                  }}
+                  onClick={() => { setGeneratorMode('example'); setResult(null); }}
+                >
+                  <Type size={18} />
+                  Example Generator
+                </button>
+              </div>
+            </div>
+
+            {generatorMode === 'prompt' ? (
+              <>
+                {/* Character Consistency */}
+                <div className="gen-section gen-section--expanded" id="gen-consistency">
               <h3 className="gen-section__title mb-4" style={{ color: '#ff0080', fontSize: '1.2rem' }}>Character Consistency</h3>
               <div className="consistency-upload">
                 <label className="upload-placeholder" style={{ cursor: 'pointer' }}>
@@ -371,6 +431,70 @@ export default function GeneratePage() {
                 )}
               </div>
             </div>
+            </>
+            ) : (
+              <div className="gen-section gen-section--expanded gen-section--full" id="gen-example-mode">
+                <h3 className="gen-section__title mb-4" style={{ color: 'var(--color-orange)', fontSize: '1.2rem' }}>Example Prompt Generator</h3>
+                <p className="text-sm text-muted mb-4">
+                  Enter a prompt template using variables in brackets, and the AI will generate 5 diverse sample variations. <br/>
+                  <strong>Example:</strong> A [color] [animal] riding a [vehicle] in a [setting].
+                </p>
+                <div style={{ position: 'relative' }}>
+                  <textarea
+                    className="gen-textarea"
+                    placeholder="Enter your prompt template with variables (e.g. A [size] [subject] in the [location]...)"
+                    value={exampleTemplate}
+                    onChange={(e) => setExampleTemplate(e.target.value)}
+                    style={{ minHeight: '160px', fontSize: '1.1rem', borderColor: 'var(--color-orange)' }}
+                  ></textarea>
+                </div>
+
+                {/* Target Model Selector for Example Mode */}
+                <div className="mt-6">
+                  <h4 className="text-xs uppercase text-muted mb-3 font-bold tracking-widest flex items-center gap-2">
+                    <Zap size={14} color="#a855f7" /> Select target AI model
+                  </h4>
+                  <div className="model-selector">
+                    {aiModels.map((m) => (
+                      <button
+                        key={m.id}
+                        className={`model-chip ${form.model === m.id && !showCustomInput ? 'model-chip--active' : ''}`}
+                        onClick={() => {
+                          updateForm('model', m.id);
+                          setShowCustomInput(false);
+                          setCustomModel('');
+                        }}
+                      >
+                        <span>{m.icon}</span>
+                        <span>{m.label}</span>
+                      </button>
+                    ))}
+                    <button
+                      className={`model-chip model-chip--custom ${showCustomInput ? 'model-chip--active' : ''}`}
+                      onClick={() => {
+                        setShowCustomInput(true);
+                        updateForm('model', customModel || '');
+                      }}
+                    >
+                      <Search size={14} />
+                      <span>Other</span>
+                    </button>
+                  </div>
+                  {showCustomInput && (
+                    <input
+                      className="model-custom-input"
+                      type="text"
+                      placeholder="Type your model name... (e.g., Pixart-α, SDXL Turbo)"
+                      value={customModel}
+                      onChange={(e) => {
+                        setCustomModel(e.target.value);
+                        updateForm('model', e.target.value);
+                      }}
+                    />
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Action Buttons — change based on state */}
             <div className="gen-actions">
@@ -431,7 +555,7 @@ export default function GeneratePage() {
                     ) : (
                       <>
                         <Sparkles size={18} />
-                        Generate Prompt
+                        Generate {generatorMode === 'example' ? 'Examples' : 'Prompt'}
                         {state.plan !== 'unlimited' && <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>(-1 credit)</span>}
                       </>
                     )}
