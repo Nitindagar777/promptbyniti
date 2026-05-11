@@ -703,16 +703,16 @@ export default function PromptDetailPage() {
 
           {/* Unified View More Button */}
           {(reviews.length > reviewsLimit || state.prompts.length > relatedLimit + 1) && (
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '50px', marginBottom: '50px' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '40px', marginBottom: '60px' }}>
               <button
-                className="btn btn-secondary-outline btn-xl"
+                className="btn btn-secondary-outline btn-sm"
                 onClick={() => {
                   if (reviews.length > reviewsLimit) setReviewsLimit(prev => prev + 4);
                   if (state.prompts.length > relatedLimit + 1) setRelatedLimit(prev => prev + 3);
                 }}
-                style={{ minWidth: '280px', borderRadius: '15px', border: '1px solid rgba(255,255,255,0.1)' }}
+                style={{ cursor: 'pointer', width: 'fit-content', minWidth: 'auto', color: 'var(--color-cyan)', borderColor: 'rgba(6, 182, 212, 0.3)' }}
               >
-                View More Content <ChevronRight size={18} style={{ marginLeft: '8px' }} />
+                View More Content <ChevronRight size={16} style={{ marginLeft: '8px', color: 'var(--color-cyan)' }} />
               </button>
             </div>
           )}

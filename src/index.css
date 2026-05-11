@@ -177,6 +177,39 @@ p {
   box-shadow: 0 2px 0 #0369a1;
 }
 
+.btn-sm {
+  padding: 10px 24px;
+  font-size: 1rem;
+  border-radius: 12px;
+}
+
+.btn-secondary-outline {
+  display: inline-flex;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  padding: 14px 28px;
+  border-radius: 12px;
+  font-family: var(--font-display);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.2s ease;
+  width: auto;
+}
+
+.btn-secondary-outline:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.btn-sm {
+  padding: 10px 24px !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+}
+
 /* --- CARDS --- */
 .card {
   background: var(--bg-card);
