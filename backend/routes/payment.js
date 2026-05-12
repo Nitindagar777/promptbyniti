@@ -137,4 +137,15 @@ router.post('/verify-payment', auth, async (req, res) => {
   }
 });
 
+// GET /api/payment/history
+router.get('/history', auth, async (req, res) => {
+  try {
+    const transactions = await Transaction.find({ userId: req.userId, status: 'completed' }).sort({ createdAt: -1 });
+    res.json({ success: true, transactions });
+  } catch (err) {
+    console.error('Fetch history error:', err.message);
+    res.status(500).json({ success: false, message: 'Could not fetch transaction history' });
+  }
+});
+
 module.exports = router;

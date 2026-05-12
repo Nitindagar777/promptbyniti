@@ -277,7 +277,7 @@ function SavedPromptsTab() {
               </button>
             </div>
           </div>
-        </div>
+re         </div>
       )}
     </section>
   );
@@ -396,6 +396,33 @@ export default function SettingsPage() {
   const [securityOtp, setSecurityOtp] = useState('');
   const [securityNewPassword, setSecurityNewPassword] = useState('');
   const [securityLoading, setSecurityLoading] = useState(false);
+
+  // Transactions State
+  const [transactions, setTransactions] = useState([]);
+  const [txLoading, setTxLoading] = useState(false);
+
+  useEffect(() => {
+    if (activeTab === 'token-history') {
+      const fetchTransactions = async () => {
+        setTxLoading(true);
+        try {
+          const token = localStorage.getItem('promptbyniti_token');
+          const res = await fetch(`${API_URL}/payment/history`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const data = await res.json();
+          if (data.success) {
+            setTransactions(data.transactions);
+          }
+        } catch (err) {
+          console.error('Failed to fetch transactions:', err);
+        } finally {
+          setTxLoading(false);
+        }
+      };
+      fetchTransactions();
+    }
+  }, [activeTab]);
 
   // Admin Session State
   const [isAdminAuth, setIsAdminAuth] = useState(false);
@@ -524,11 +551,11 @@ export default function SettingsPage() {
               <span>Account Security</span>
             </button>
             <button
-              className={`settings-tab ${activeTab === 'subscription' ? 'settings-tab--active' : ''}`}
-              onClick={() => handleTabChange('subscription')}
+              className={`settings-tab ${activeTab === 'token-history' ? 'settings-tab--active' : ''}`}
+              onClick={() => handleTabChange('token-history')}
             >
               <CreditCard size={20} className="icon-billing" />
-              <span>Subscription</span>
+              <span>Token History</span>
             </button>
             <button
               className={`settings-tab ${activeTab === 'dashboards' ? 'settings-tab--active' : ''}`}
@@ -804,7 +831,7 @@ export default function SettingsPage() {
               </section>
             )}
 
-            {activeTab === 'subscription' && (
+            {activeTab === 'token-history' && (
               <section className="settings-section card">
                 <h3 className="settings-section-title">
                   <CreditCard size={22} className="text-cyan" />
@@ -813,24 +840,57 @@ export default function SettingsPage() {
 
                 <div className="plan-card" style={{ background: 'var(--bg-primary)', padding: 'var(--space-lg)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
-                    <span className="section-tag" style={{ background: state.plan === 'free' ? 'var(--text-muted)' : 'var(--color-orange)' }}>
-                      {state.plan.toUpperCase()} {state.plan === 'free' ? 'STARTER' : 'PACK'}
+                    <span className="section-tag" style={{ background: 'rgba(0, 224, 255, 0.1)', color: 'var(--color-cyan)', fontWeight: 700 }}>
+                      ACCOUNT BALANCE
                     </span>
-                    <h2 style={{ fontSize: '2rem', margin: '8px 0' }}>
-                      {state.plan === 'free' ? 'Free Access' : (state.plan === 'pro' ? 'Creator Pack' : 'Studio Pack')}
+                    <h2 style={{ fontSize: '2.5rem', margin: '12px 0', fontFamily: 'var(--font-display)', color: 'white' }}>
+                      {Math.floor(state.credits)} <span style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}>Tokens</span>
                     </h2>
-                    <p className="text-muted">You have <span className="text-cyan">{Math.floor(state.credits)}</span> Prompt Packs remaining.</p>
+                    <p className="text-muted">Use tokens to generate and purchase premium prompts.</p>
                   </div>
-                  <button className="btn btn-primary" onClick={() => navigate('/pricing')}>
-                    {state.plan === 'free' ? 'Get More Packs' : 'Purchase More'}
+                  <button className="btn btn-primary" onClick={() => navigate('/pricing')} style={{ padding: '14px 28px', fontSize: '1.1rem' }}>
+                    Buy Tokens
                   </button>
                 </div>
 
                 <div style={{ marginTop: 'var(--space-xl)' }}>
                   <h4 style={{ marginBottom: 'var(--space-md)' }}>Recent Transactions</h4>
-                  <p className="text-muted" style={{ textAlign: 'center', padding: 'var(--space-xl)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)' }}>
-                    Your one-time pack purchases will appear here.
-                  </p>
+                  {txLoading ? (
+                    <div style={{ textAlign: 'center', padding: 'var(--space-xl)', color: 'var(--text-muted)' }}>Loading history...</div>
+                  ) : transactions.length > 0 ? (
+                    <div className="table-responsive" style={{ background: 'var(--bg-primary)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+                      <table className="table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                        <thead style={{ background: 'rgba(255,255,255,0.02)' }}>
+                          <tr>
+                            <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>Date</th>
+                            <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>Pack / Plan</th>
+                            <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>Amount</th>
+                            <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>Order ID</th>
+                            <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {transactions.map(tx => (
+                            <tr key={tx._id} style={{ borderTop: '1px solid var(--border-color)' }}>
+                              <td style={{ padding: '12px 16px', fontSize: '0.9rem' }}>{new Date(tx.createdAt).toLocaleDateString()}</td>
+                              <td style={{ padding: '12px 16px', fontSize: '0.9rem', color: 'var(--color-cyan)', textTransform: 'capitalize' }}>{tx.planId} Pack</td>
+                              <td style={{ padding: '12px 16px', fontSize: '0.9rem' }}>₹{tx.amount}</td>
+                              <td style={{ padding: '12px 16px', fontSize: '0.8rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{tx.orderId}</td>
+                              <td style={{ padding: '12px 16px' }}>
+                                <span style={{ padding: '4px 8px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 'bold', background: 'rgba(34, 197, 94, 0.1)', color: '#22c55e' }}>
+                                  {tx.status.toUpperCase()}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <p className="text-muted" style={{ textAlign: 'center', padding: 'var(--space-xl)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)' }}>
+                      You haven't purchased any token packs yet.
+                    </p>
+                  )}
                 </div>
               </section>
             )}

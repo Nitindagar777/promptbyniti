@@ -323,7 +323,7 @@ export default function DashboardPage() {
                     </div>
                     <button className="btn-view-all" onClick={() => setShowActivityModal(true)}>View All</button>
                   </div>
-                  <div className="activity-list">
+                  <div className="activity-list scroll-area" style={{ maxHeight: '400px', overflowY: 'auto', overflowX: 'hidden' }}>
                     {stats.recentActivity && stats.recentActivity.length > 0 ? (
                       stats.recentActivity.map(item => (
                         <div key={item.id} className="activity-item" style={{ display: 'flex', alignItems: 'center', padding: '12px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
@@ -390,7 +390,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
               </div>
-              <div className="prompts-table-wrapper card">
+              <div className="prompts-table-wrapper card scroll-area" style={{ maxHeight: '500px', overflowY: 'auto' }}>
                 <table className="prompts-table">
                   <thead>
                     <tr>
