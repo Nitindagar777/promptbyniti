@@ -1,7 +1,7 @@
 /* Navbar Component — Premium Human Design */
 import { Link, useLocation } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { Zap, User, Menu, X, FlaskConical, Bell, ShoppingBag, Sparkles, AlertCircle } from 'lucide-react';
+import { Zap, User, Menu, X, FlaskConical, Bell, ShoppingBag, Sparkles, AlertCircle, DollarSign } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import './Navbar.css';
 
@@ -58,8 +58,43 @@ export default function Navbar() {
     if (!state.user) return;
 
     const list = [];
+    let baseTime = Date.now();
     
-    // 1. Prompt generations
+    // 1. Account / Plan Status
+    if (state.user.plan !== 'free') {
+      list.push({
+        id: 'plan-active',
+        type: 'system',
+        text: `Your ${state.user.plan.toUpperCase()} plan is currently active.`,
+        time: 'Active',
+        icon: <Zap size={14} className="text-orange" />,
+        rawTime: baseTime
+      });
+    } else {
+      list.push({
+        id: 'welcome',
+        type: 'system',
+        text: 'Welcome to Prompt by Niti! Explore the free library or upgrade for tokens.',
+        time: 'System',
+        icon: <Sparkles size={14} className="text-pink" />,
+        rawTime: baseTime - 10000000
+      });
+    }
+
+    // 2. Token / Credit Balance
+    if (state.credits !== undefined || state.user.credits !== undefined) {
+      const credits = Math.floor(state.credits || state.user.credits || 0);
+      list.push({
+        id: 'balance',
+        type: 'system',
+        text: `You currently have ${credits} tokens available in your account.`,
+        time: 'Current Balance',
+        icon: <ShoppingBag size={14} className="text-cyan" />,
+        rawTime: baseTime - 500000
+      });
+    }
+    
+    // 3. Prompt generations
     if (state.prompts && state.prompts.length > 0) {
       state.prompts.slice(0, 5).forEach(p => {
         list.push({
@@ -68,27 +103,46 @@ export default function Navbar() {
           text: `Prompt "${p.title || p.name || 'Untitled'}" generated successfully.`,
           time: new Date(p.createdAt || Date.now()).toLocaleDateString(),
           icon: <Sparkles size={14} className="text-cyan" />,
-          rawTime: p.createdAt || Date.now()
+          rawTime: new Date(p.createdAt || Date.now()).getTime()
         });
       });
     }
 
-    // 2. Marketplace Purchases
+    // 4. Marketplace Purchases (Buy)
     if (state.user.purchasedPrompts && state.user.purchasedPrompts.length > 0) {
       state.user.purchasedPrompts.slice(0, 3).forEach((id, idx) => {
         list.push({
           id: `buy-${id}-${idx}`,
           type: 'payment',
-          text: `You purchased a new prompt from the marketplace.`,
+          text: `You successfully purchased a new premium prompt!`,
           time: 'Recently',
           icon: <Zap size={14} className="text-orange" />,
-          rawTime: Date.now() - (idx * 3600000)
+          rawTime: baseTime - (idx * 3600000)
         });
       });
     }
 
-    // Sort by time
-    const sorted = list.sort((a, b) => b.rawTime - a.rawTime);
+    // 5. Seller Activity (Sale)
+    if (state.sellerStats && state.sellerStats.recentActivity) {
+      const sales = state.sellerStats.recentActivity.filter(a => a.type === 'sale');
+      sales.slice(0, 3).forEach((sale, idx) => {
+        list.push({
+          id: sale.id || `sale-${idx}`,
+          type: 'sale',
+          text: `${sale.user} bought your prompt "${sale.prompt}"! You earned ${sale.price} tokens.`,
+          time: sale.time || 'Recently',
+          icon: <DollarSign size={14} className="text-green" />,
+          rawTime: new Date(sale.timestamp).getTime() || (baseTime - (idx * 1800000))
+        });
+      });
+    }
+
+    // Sort by time (Newest at the top)
+    const sorted = list.sort((a, b) => {
+      const timeA = Number(a.rawTime) || 0;
+      const timeB = Number(b.rawTime) || 0;
+      return timeB - timeA;
+    });
     setNotifications(sorted);
 
     // Red dot logic: if current count is more than what we saw last time
@@ -98,7 +152,7 @@ export default function Navbar() {
       // First load, let's show the dot once
       setHasUnread(true);
     }
-  }, [state.prompts, state.user?.purchasedPrompts, state.user]);
+  }, [state.prompts, state.user?.purchasedPrompts, state.user, state.credits, state.sellerStats]);
 
   const handleToggleNotifications = () => {
     const newShow = !showNotifications;

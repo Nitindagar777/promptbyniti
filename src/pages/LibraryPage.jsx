@@ -25,33 +25,24 @@ export default function LibraryPage() {
     };
   }, []);
 
-  // Since we don't have a real backend, we'll use the user's public prompts and mock some data
-  const mockPublicPrompts = [
-    {
-      id: 'mock_1',
-      mainPrompt: 'A cinematic portrait of a cyberpunk hacker in a neon-lit alleyway, rain falling, dramatic rim lighting, 8k resolution, highly detailed --ar 16:9 --v 6.0',
-      negativePrompt: 'blurry, low quality, deformed, out of focus',
-      structured: { subject: 'cyberpunk hacker', lighting: 'neon rim lighting', style: 'cinematic' },
-      variations: [],
-      category: 'portrait',
-      timestamp: Date.now() - 1000000,
-    },
-    {
-      id: 'mock_2',
-      mainPrompt: 'Minimalist product photography of a luxury perfume bottle on a marble pedestal, golden hour lighting, soft shadows, photorealistic --ar 1:1 --v 6.0',
-      negativePrompt: 'cluttered background, reflections, text, watermark',
-      structured: { subject: 'perfume bottle', lighting: 'golden hour', style: 'minimalist' },
-      variations: [],
-      category: 'product',
-      timestamp: Date.now() - 5000000,
-    },
-  ];
+  // The single free prompt given to new users
+  const freePrompt = {
+    id: 'free_welcome_prompt',
+    mainPrompt: 'Masterpiece, highly detailed portrait of a [CHARACTER_DESCRIPTION] wearing [CLOTHING_STYLE], standing in [BACKGROUND_SETTING], cinematic [LIGHTING_STYLE] lighting, 8k resolution, photorealistic, octane render --ar 16:9 --v 6.0',
+    negativePrompt: 'blurry, low quality, deformed, out of focus, watermark, text, 3d render, cartoon',
+    structured: { subject: '[CHARACTER_DESCRIPTION]', lighting: '[LIGHTING_STYLE]', style: 'photorealistic' },
+    variations: [],
+    category: 'portrait',
+    model: 'Midjourney v6',
+    timestamp: Date.now(),
+  };
 
-  // Combine real user public prompts with mock data
-  const publicPrompts = [
-    ...state.prompts.filter(p => !state.isPrivateMode), 
-    ...mockPublicPrompts
-  ];
+  // Logic: If user has EVER purchased a token, their plan is upgraded from 'free'. 
+  // We hide the free prompt from users who have purchased.
+  const hasPurchasedTokens = state.user && state.user.plan !== 'free';
+  
+  // Show ONLY the free prompt with variables for new/free users. Paid users get an empty library (or they go to the marketplace).
+  const publicPrompts = hasPurchasedTokens ? [] : [freePrompt];
 
   const filteredPrompts = publicPrompts.filter(p => {
     const searchLower = searchTerm.toLowerCase().trim();
@@ -123,9 +114,9 @@ export default function LibraryPage() {
               <div key={prompt.id} className="library-card card" style={{ animationDelay: `${i * 0.1}s` }}>
                 <div className="library-card__body">
                   <div className="library-card__meta">
-                    <span className="badge badge-primary">Midjourney</span>
+                    <span className="badge badge-primary">{prompt.model || 'Midjourney v6'}</span>
                     <span className="text-muted text-sm">
-                      {new Date(prompt.timestamp).toLocaleDateString()}
+                      {new Date(prompt.timestamp || prompt.createdAt || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </span>
                   </div>
                   <p className="library-card__prompt-text">
