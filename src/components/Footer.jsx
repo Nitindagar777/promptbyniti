@@ -1,17 +1,51 @@
 /* Footer — Minimalist Human Design Version */
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail } from 'lucide-react';
 import './Footer.css';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const [isHovered, setIsHovered] = useState(false);
+  const logoRef = useRef(null);
+  const currentAngle = useRef(0);
+  const velocity = useRef(0);
+  const animationRef = useRef(null);
+
+  useEffect(() => {
+    const animate = () => {
+      if (isHovered) {
+        // Wind up like a fan
+        velocity.current = Math.min(velocity.current + 0.5, 12);
+      } else {
+        // Wind down slowly like a real fan
+        velocity.current = Math.max(velocity.current - 0.15, 0);
+      }
+
+      if (velocity.current > 0) {
+        currentAngle.current += velocity.current;
+        if (logoRef.current) {
+          logoRef.current.style.transform = `rotate(${currentAngle.current}deg)`;
+        }
+      }
+
+      animationRef.current = requestAnimationFrame(animate);
+    };
+
+    animationRef.current = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationRef.current);
+  }, [isHovered]);
 
   return (
     <footer className="footer bg-primary" id="main-footer">
       <div className="container footer__grid">
         <div className="footer__brand">
-          <div className="footer__logo">
-            <img src="/image.png" alt="Prompt by Niti" className="footer__logo-img" />
+          <div 
+            className="footer__logo"
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+          >
+            <img ref={logoRef} src="/image.png" alt="Prompt by Niti" className="footer__logo-img" />
             <span className="footer__logo-text">
               Prompt <span className="text-secondary" style={{ fontSize: '0.8em' }}>by</span> <span className="text-orange">Niti</span>
             </span>

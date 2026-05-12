@@ -17,12 +17,15 @@
   align-items: center;
   gap: 12px;
   margin-bottom: var(--space-md);
+  cursor: pointer;
 }
 
 .footer__logo-img {
   height: 32px;
   width: auto;
   object-fit: contain;
+  /* Hardware acceleration for smooth JS animation */
+  will-change: transform;
 }
 
 .footer__logo-text {

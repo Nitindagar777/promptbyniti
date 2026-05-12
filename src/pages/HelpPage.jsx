@@ -28,7 +28,7 @@ export default function HelpPage() {
             </div>
             <h3>Email Support</h3>
             <p>Direct support for account, billing, and technical inquiries.</p>
-            <a href="mailto:support@promptbyniti.com" className="help-link">support@promptbyniti.com</a>
+            <a href="mailto:ndootweb@gmail.com" className="help-link">ndootweb@gmail.com</a>
           </div>
           <div className="mission-card">
             <div className="mission-icon" style={{ background: 'rgba(56, 189, 248, 0.1)', color: 'var(--color-cyan)' }}>
@@ -36,7 +36,7 @@ export default function HelpPage() {
             </div>
             <h3>Discord Community</h3>
             <p>Join our 24/7 community of prompt engineers and creators.</p>
-            <a href="#" className="help-link">Join Discord <ExternalLink size={14} /></a>
+            <a href="https://discord.gg/vMSfcpQDpu" className="help-link">Join Discord <ExternalLink size={14} /></a>
           </div>
         </div>
 
@@ -44,21 +44,21 @@ export default function HelpPage() {
         <section className="about-section">
           <h2 className="section-title">Connect with <span className="text-orange">Nitin</span></h2>
           <div className="social-grid-premium" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
-            <a href="#" className="social-card youtube">
+            <a href="https://www.youtube.com/@promptbyniti" className="social-card youtube">
               <Play size={40} />
               <div className="social-info">
                 <h4>YouTube</h4>
                 <span>Tutorials & Tips</span>
               </div>
             </a>
-            <a href="#" className="social-card instagram">
+            <a href="https://www.instagram.com/prompt_by_niti/" className="social-card instagram">
               <Camera size={40} />
               <div className="social-info">
                 <h4>Instagram</h4>
                 <span>Behind the Scenes</span>
               </div>
             </a>
-            <a href="#" className="social-card twitter">
+            <a href="https://x.com/ndoot_official" className="social-card twitter">
               <MessageCircle size={40} />
               <div className="social-info">
                 <h4>X (Twitter)</h4>

@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const SystemSettingsSchema = new mongoose.Schema({
   geminiApiKey: { type: String, default: '' },
+  paidGeminiApiKey: { type: String, default: '' },
   geminiModel: { type: String, default: 'gemini-flash-latest' },
   promptCreationRules: {
     type: Array,

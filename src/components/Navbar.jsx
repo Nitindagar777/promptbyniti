@@ -2,7 +2,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { Zap, User, Menu, X, FlaskConical, Bell, ShoppingBag, Sparkles, AlertCircle } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import './Navbar.css';
 
 const ADMIN_EMAIL = 'nitindagar0800@gmail.com';
@@ -21,6 +21,37 @@ export default function Navbar() {
     const saved = localStorage.getItem('promptniti_notif_count');
     return saved ? parseInt(saved, 10) : 0;
   });
+
+  // Logo Animation Hooks
+  const [isLogoHovered, setIsLogoHovered] = useState(false);
+  const logoRef = useRef(null);
+  const logoAngle = useRef(0);
+  const logoVelocity = useRef(0);
+  const logoAnimRef = useRef(null);
+
+  useEffect(() => {
+    const animateLogo = () => {
+      if (isLogoHovered) {
+        // Wind up like a fan
+        logoVelocity.current = Math.min(logoVelocity.current + 0.5, 12);
+      } else {
+        // Wind down slowly like a real fan
+        logoVelocity.current = Math.max(logoVelocity.current - 0.15, 0);
+      }
+
+      if (logoVelocity.current > 0) {
+        logoAngle.current += logoVelocity.current;
+        if (logoRef.current) {
+          logoRef.current.style.transform = `rotate(${logoAngle.current}deg)`;
+        }
+      }
+
+      logoAnimRef.current = requestAnimationFrame(animateLogo);
+    };
+
+    logoAnimRef.current = requestAnimationFrame(animateLogo);
+    return () => cancelAnimationFrame(logoAnimRef.current);
+  }, [isLogoHovered]);
 
   // Generate real notifications from app state
   useEffect(() => {
@@ -92,8 +123,14 @@ export default function Navbar() {
   return (
     <nav className={`navbar ${scrolled ? 'navbar--scrolled' : ''}`} id="main-navbar">
       <div className="navbar__inner container">
-        <Link to="/" className="navbar__logo" id="nav-logo">
-          <img src="/image.png" alt="Prompt by Niti" className="navbar__logo-img" />
+        <Link 
+          to="/" 
+          className="navbar__logo" 
+          id="nav-logo"
+          onMouseEnter={() => setIsLogoHovered(true)}
+          onMouseLeave={() => setIsLogoHovered(false)}
+        >
+          <img ref={logoRef} src="/image.png" alt="Prompt by Niti" className="navbar__logo-img" />
           <span className="navbar__logo-text">
             Prompt <span className="text-secondary" style={{ fontSize: '0.8em' }}>by</span> <span className="text-orange">Niti</span>
           </span>

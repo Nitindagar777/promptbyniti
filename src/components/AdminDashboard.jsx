@@ -480,14 +480,14 @@ const AdminDashboard = () => {
       <p className="text-secondary mb-6">Manage external AI service keys and parameters.</p>
 
       <div className="admin-field">
-        <label>Gemini API Key</label>
+        <label>Free Gemini API Key</label>
         <div style={{ display: 'flex', gap: '10px', position: 'relative' }}>
           <div style={{ position: 'relative', flex: 1 }}>
             <input 
               type={showApiKey ? "text" : "password"} 
               className="admin-input" 
-              placeholder="Enter your Gemini API key..." 
-              value={systemSettings.geminiApiKey}
+              placeholder="Enter your Free Gemini API key..." 
+              value={systemSettings.geminiApiKey || ''}
               onChange={(e) => setSystemSettings({...systemSettings, geminiApiKey: e.target.value})}
               style={{ width: '100%', paddingRight: '45px' }}
             />
@@ -508,7 +508,7 @@ const AdminDashboard = () => {
             onClick={() => handleUpdateSettings({ geminiApiKey: systemSettings.geminiApiKey })}
             disabled={settingsLoading}
           >
-            {settingsLoading ? 'Saving...' : 'Save Key'}
+            {settingsLoading ? 'Saving...' : 'Save Free Key'}
           </button>
         </div>
         {systemSettings.geminiApiKey && !showApiKey && (
@@ -516,7 +516,48 @@ const AdminDashboard = () => {
             Current Key: {systemSettings.geminiApiKey.substring(0, 6)}...{systemSettings.geminiApiKey.slice(-4)}
           </p>
         )}
-        <p className="text-xs text-muted mt-2">This key is used for secure background prompt generation and enhancements.</p>
+        <p className="text-xs text-muted mt-2">This is the primary key used for generation. Try to use a free tier key here.</p>
+      </div>
+
+      <div className="admin-field" style={{ marginTop: '20px' }}>
+        <label>Paid Gemini API Key (Failover)</label>
+        <div style={{ display: 'flex', gap: '10px', position: 'relative' }}>
+          <div style={{ position: 'relative', flex: 1 }}>
+            <input 
+              type={showApiKey ? "text" : "password"} 
+              className="admin-input" 
+              placeholder="Enter your Paid Gemini API key (optional)..." 
+              value={systemSettings.paidGeminiApiKey || ''}
+              onChange={(e) => setSystemSettings({...systemSettings, paidGeminiApiKey: e.target.value})}
+              style={{ width: '100%', paddingRight: '45px', borderColor: 'rgba(239, 68, 68, 0.3)' }}
+            />
+            <button 
+              type="button"
+              onClick={() => setShowApiKey(!showApiKey)}
+              style={{
+                position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
+                background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer'
+              }}
+              title={showApiKey ? "Hide Key" : "Show Key"}
+            >
+              {showApiKey ? '👁️' : '🔒'}
+            </button>
+          </div>
+          <button 
+            className="approve-btn" 
+            style={{ background: 'linear-gradient(135deg, #f97316, #ef4444)' }}
+            onClick={() => handleUpdateSettings({ paidGeminiApiKey: systemSettings.paidGeminiApiKey })}
+            disabled={settingsLoading}
+          >
+            {settingsLoading ? 'Saving...' : 'Save Paid Key'}
+          </button>
+        </div>
+        {systemSettings.paidGeminiApiKey && !showApiKey && (
+          <p className="text-xs mt-2" style={{ color: '#ef4444', opacity: 0.8 }}>
+            Current Key: {systemSettings.paidGeminiApiKey.substring(0, 6)}...{systemSettings.paidGeminiApiKey.slice(-4)}
+          </p>
+        )}
+        <p className="text-xs text-muted mt-2">This key is ONLY used if the free key hits a rate limit or quota exhaustion. It ensures users never see a failure.</p>
       </div>
 
       <div className="admin-field" style={{ marginTop: '20px' }}>

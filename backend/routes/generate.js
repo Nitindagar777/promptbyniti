@@ -32,7 +32,7 @@ async function getOrCreateModel() {
     .map((r, i) => `${i + 1}. ${r.text}${r.example ? ` (Example: ${r.example})` : ''}`)
     .join('\n');
 
-  const currentHash = `${SYSTEM_PROMPT_VERSION}::${settings.geminiApiKey}::${settings.geminiModel}::${rulesStr}`;
+  const currentHash = `${SYSTEM_PROMPT_VERSION}::${settings.geminiApiKey}::${settings.paidGeminiApiKey || ''}::${settings.geminiModel}::${rulesStr}`;
 
   // Return cached model if nothing changed
   if (cachedModel && cachedRulesHash === currentHash) {
@@ -90,15 +90,16 @@ HOW TO BUILD SAMPLES (FOLLOW THIS EXACTLY):
 
 Return ONLY the JSON object. No markdown fences, no explanation.`;
 
-  const genAI = new GoogleGenerativeAI(settings.geminiApiKey);
+  const genAIFree = new GoogleGenerativeAI(settings.geminiApiKey);
+  const genAIPaid = settings.paidGeminiApiKey ? new GoogleGenerativeAI(settings.paidGeminiApiKey) : null;
 
-  // Store genAI and systemInstruction for per-request model fallback
-  cachedModel = { genAI, systemInstruction };
+  // Store both genAI instances and systemInstruction
+  cachedModel = { genAIFree, genAIPaid, systemInstruction };
 
   cachedRulesHash = currentHash;
   cachedApiKey = settings.geminiApiKey;
 
-  console.log(`✅ Gemini initialized. Model chain: ${MODEL_CHAIN.join(' → ')}`);
+  console.log(`✅ Gemini initialized. Model chain: ${MODEL_CHAIN.join(' → ')}. Paid key configured: ${!!genAIPaid}`);
   return cachedModel;
 }
 
@@ -209,45 +210,77 @@ Target AI Model: ${model || 'midjourney'} — optimize the prompt syntax and key
 
     console.log(`📤 Sending to Gemini: ${userParts.length} parts, hasImage: ${hasRefImage}`);
 
-    // 3. Try each model in the chain until one works
+    // 3. Try each model in the chain until one works. Try free key first, then paid.
     let text = null;
     let lastError = null;
 
     for (const modelName of MODEL_CHAIN) {
-      try {
-        console.log(`🔄 Trying model: ${modelName}...`);
-        const gemModel = cached.genAI.getGenerativeModel({
-          model: modelName,
-          systemInstruction: {
-            role: 'system',
-            parts: [{ text: cached.systemInstruction }]
+      const keysToTry = [{ name: 'FREE', instance: cached.genAIFree }];
+      if (cached.genAIPaid) {
+        keysToTry.push({ name: 'PAID', instance: cached.genAIPaid });
+      }
+
+      let modelSuccess = false;
+
+      for (const { name: keyName, instance: genAIInstance } of keysToTry) {
+        try {
+          console.log(`🔄 Trying model: ${modelName} with ${keyName} key...`);
+          const gemModel = genAIInstance.getGenerativeModel({
+            model: modelName,
+            systemInstruction: {
+              role: 'system',
+              parts: [{ text: cached.systemInstruction }]
+            }
+          });
+
+          const result = await gemModel.generateContent({
+            contents: [{ role: 'user', parts: userParts }]
+          });
+
+          const response = await result.response;
+          text = response.text();
+          console.log(`✅ Success with model: ${modelName} using ${keyName} key`);
+          modelSuccess = true;
+          break; // success with this key — stop trying other keys
+        } catch (modelErr) {
+          console.warn(`⚠️ ${modelName} with ${keyName} key failed: ${modelErr.message}`);
+          lastError = modelErr;
+
+          // If 429 (Too Many Requests/Quota) and we have a paid key, we definitely want to try the next key
+          if (modelErr.message?.includes('429') || modelErr.message?.includes('quota') || modelErr.message?.includes('exhausted')) {
+            console.log(`  → ${keyName} key quota exceeded, falling back if another key exists...`);
+            continue; // try the next key in keysToTry
           }
-        });
+          
+          // If 503 (overloaded), wait 2s, but still try the next key if this is the free one
+          if (modelErr.message?.includes('503') || modelErr.message?.includes('Service Unavailable')) {
+            console.log('  → Model overloaded, trying next key or model...');
+            if (keyName === 'FREE' && cached.genAIPaid) {
+               continue; // try paid key immediately without wait
+            } else {
+               await new Promise(r => setTimeout(r, 2000));
+               break; // break out of keys loop, go to next model
+            }
+          }
 
-        const result = await gemModel.generateContent({
-          contents: [{ role: 'user', parts: userParts }]
-        });
-
-        const response = await result.response;
-        text = response.text();
-        console.log(`✅ Success with model: ${modelName}`);
-        break; // success — stop trying
-      } catch (modelErr) {
-        console.warn(`⚠️ ${modelName} failed: ${modelErr.message}`);
-        lastError = modelErr;
-
-        // If 503 (overloaded), wait 2s and try next model
-        if (modelErr.message?.includes('503') || modelErr.message?.includes('Service Unavailable')) {
-          console.log('  → Model overloaded, trying next...');
-          await new Promise(r => setTimeout(r, 2000));
-          continue;
+          // If 404 (not found), skip immediately to next model
+          if (modelErr.message?.includes('404') || modelErr.message?.includes('not found')) {
+            break; // break out of keys loop, go to next model
+          }
+          
+          // For other errors, if we have a paid key and free failed, try paid.
+          if (keyName === 'FREE' && cached.genAIPaid) {
+             console.log(`  → Free key had error, trying paid key...`);
+             continue;
+          }
+          
+          // Other errors and no other keys to try — throw immediately to try next model
+          break; 
         }
-        // If 404 (not found), skip immediately
-        if (modelErr.message?.includes('404') || modelErr.message?.includes('not found')) {
-          continue;
-        }
-        // Other errors — throw immediately
-        throw modelErr;
+      }
+
+      if (modelSuccess) {
+        break; // success with this model — stop trying other models
       }
     }
 

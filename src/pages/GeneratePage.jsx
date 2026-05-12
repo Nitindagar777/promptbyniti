@@ -23,33 +23,32 @@ export default function GeneratePage() {
   const descriptionRef = useRef(null);
 
   // Restore from sessionStorage on mount
-  const getInitialForm = () => {
+  const getInitialState = () => {
     try {
       const saved = sessionStorage.getItem(SESSION_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        return parsed.form || { description: '', characterImage: null, promptType: 'image', model: 'midjourney' };
+        return {
+          form: parsed.form || { description: '', characterImage: null, promptType: 'image', model: 'midjourney' },
+          result: parsed.result || null,
+          generatorMode: parsed.generatorMode || 'prompt',
+          exampleTemplate: parsed.exampleTemplate || ''
+        };
       }
     } catch { }
-    return { description: '', characterImage: null, promptType: 'image', model: 'midjourney' };
+    return {
+      form: { description: '', characterImage: null, promptType: 'image', model: 'midjourney' },
+      result: null,
+      generatorMode: 'prompt',
+      exampleTemplate: ''
+    };
   };
 
-  const getInitialResult = () => {
-    try {
-      const saved = sessionStorage.getItem(SESSION_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return parsed.result || null;
-      }
-    } catch { }
-    return null;
-  };
-
-  const [form, setForm] = useState(getInitialForm);
-  const [result, setResult] = useState(getInitialResult);
-
-  const [generatorMode, setGeneratorMode] = useState('prompt'); // 'prompt' or 'example'
-  const [exampleTemplate, setExampleTemplate] = useState('');
+  const initialState = getInitialState();
+  const [form, setForm] = useState(initialState.form);
+  const [result, setResult] = useState(initialState.result);
+  const [generatorMode, setGeneratorMode] = useState(initialState.generatorMode);
+  const [exampleTemplate, setExampleTemplate] = useState(initialState.exampleTemplate);
 
   const [customModel, setCustomModel] = useState('');
   const [showCustomInput, setShowCustomInput] = useState(false);
@@ -69,12 +68,17 @@ export default function GeneratePage() {
     setShowCustomInput(false);
   };
 
-  // Persist form + result to sessionStorage
+  // Persist everything to sessionStorage
   useEffect(() => {
     try {
-      sessionStorage.setItem(SESSION_KEY, JSON.stringify({ form, result }));
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify({ 
+        form, 
+        result, 
+        generatorMode, 
+        exampleTemplate 
+      }));
     } catch { }
-  }, [form, result]);
+  }, [form, result, generatorMode, exampleTemplate]);
 
   /* Handle incoming state from Home Page */
   useEffect(() => {
@@ -238,41 +242,51 @@ export default function GeneratePage() {
         <div className="generate-page__grid">
           <div className="generate-page__form">
 
-            {/* Clean Page Button (Outside Box) */}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
-              <button
-                className="btn btn-sm"
-                onClick={handleRefresh}
-                style={{
-                  fontSize: '0.8rem',
-                  padding: '8px 16px',
-                  borderRadius: '12px',
-                  background: '#ef4444',
-                  color: 'white',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  border: 'none',
-                  boxShadow: '0 4px 12px rgba(239, 68, 68, 0.2)',
-                  fontWeight: 'bold',
-                  transition: 'all 0.2s ease',
-                  cursor: 'pointer'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.background = '#dc2626';
-                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(239, 68, 68, 0.3)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.background = '#ef4444';
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.2)';
+            {/* Clean Page Button (Dynamic Visibility) */}
+            {(form.description.trim() || form.characterImage || exampleTemplate.trim() || result) && (
+              <div 
+                style={{ 
+                  display: 'flex', 
+                  justifyContent: 'flex-end', 
+                  marginBottom: '16px', 
+                  gridColumn: '1 / -1',
+                  animation: 'fadeIn 0.3s ease'
                 }}
               >
-                <RotateCcw size={14} />
-                Clean Page
-              </button>
-            </div>
+                <button
+                  className="btn btn-sm"
+                  onClick={handleRefresh}
+                  style={{
+                    fontSize: '0.8rem',
+                    padding: '8px 16px',
+                    borderRadius: '12px',
+                    background: '#ef4444',
+                    color: 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    border: 'none',
+                    boxShadow: '0 4px 12px rgba(239, 68, 68, 0.2)',
+                    fontWeight: 'bold',
+                    transition: 'all 0.2s ease',
+                    cursor: 'pointer'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.background = '#dc2626';
+                    e.currentTarget.style.boxShadow = '0 6px 16px rgba(239, 68, 68, 0.3)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.background = '#ef4444';
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.2)';
+                  }}
+                >
+                  <RotateCcw size={14} />
+                  Clean Page
+                </button>
+              </div>
+            )}
 
             {/* Mode Toggle */}
             <div className="gen-section gen-section--expanded" style={{ marginBottom: '24px' }}>
@@ -289,7 +303,7 @@ export default function GeneratePage() {
                     border: 'none',
                     transition: 'all 0.2s ease'
                   }}
-                  onClick={() => { setGeneratorMode('prompt'); setResult(null); }}
+                  onClick={() => { setGeneratorMode('prompt'); }}
                 >
                   <Sparkles size={18} color={generatorMode === 'prompt' ? '#001a1e' : 'var(--color-cyan)'} />
                   Prompt Generator
@@ -306,7 +320,7 @@ export default function GeneratePage() {
                     border: 'none',
                     transition: 'all 0.2s ease'
                   }}
-                  onClick={() => { setGeneratorMode('example'); setResult(null); }}
+                  onClick={() => { setGeneratorMode('example'); }}
                 >
                   <Type size={18} color={generatorMode === 'example' ? '#1e0d00' : 'var(--color-orange)'} />
                   Example Generator
