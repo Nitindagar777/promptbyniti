@@ -40,7 +40,7 @@
 
 .footer__socials {
   display: flex;
-  gap: var(--space-md);
+  gap: 12px;
 }
 
 .footer__social-link {

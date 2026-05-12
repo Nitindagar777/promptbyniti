@@ -206,6 +206,7 @@ export default function GeneratePage() {
   const handleRefresh = () => {
     setForm({ description: '', characterImage: null, promptType: 'image', model: 'midjourney' });
     setResult(null);
+    setExampleTemplate('');
     setCustomModel('');
     setShowCustomInput(false);
     setSaveMessage('');
@@ -236,6 +237,42 @@ export default function GeneratePage() {
         {/* Generator Form */}
         <div className="generate-page__grid">
           <div className="generate-page__form">
+
+            {/* Clean Page Button (Outside Box) */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
+              <button
+                className="btn btn-sm"
+                onClick={handleRefresh}
+                style={{
+                  fontSize: '0.8rem',
+                  padding: '8px 16px',
+                  borderRadius: '12px',
+                  background: '#ef4444',
+                  color: 'white',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  border: 'none',
+                  boxShadow: '0 4px 12px rgba(239, 68, 68, 0.2)',
+                  fontWeight: 'bold',
+                  transition: 'all 0.2s ease',
+                  cursor: 'pointer'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.background = '#dc2626';
+                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(239, 68, 68, 0.3)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.background = '#ef4444';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.2)';
+                }}
+              >
+                <RotateCcw size={14} />
+                Clean Page
+              </button>
+            </div>
 
             {/* Mode Toggle */}
             <div className="gen-section gen-section--expanded" style={{ marginBottom: '24px' }}>
