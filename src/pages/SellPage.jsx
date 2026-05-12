@@ -65,7 +65,7 @@ export default function SellPage() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [editId, setEditId] = useState(null);
   const [rules, setRules] = useState([]);
-  const [showRules, setShowRules] = useState(true);
+  const [showRules, setShowRules] = useState(false);
 
   // Load Rules
   useEffect(() => {
@@ -126,19 +126,19 @@ export default function SellPage() {
         .then(data => {
           if (data.success && data.prompt) {
             const p = data.prompt;
-              setFormData({
-                name: p.name || '',
-                description: p.description || '',
-                generateType: p.generateType || 'image',
-                model: p.model || '',
-                tokens: p.priceTokens ? p.priceTokens.toString() : '5',
-                template: p.template || '',
-                instructions: p.instructions || '',
-                keywords: p.keywords || [],
-                mainPrompt: p.mainPrompt || '',
-                negativePrompt: p.negativePrompt || '',
-                imageAnalysis: p.imageAnalysis || '',
-              });
+            setFormData({
+              name: p.name || '',
+              description: p.description || '',
+              generateType: p.generateType || 'image',
+              model: p.model || '',
+              tokens: p.priceTokens ? p.priceTokens.toString() : '5',
+              template: p.template || '',
+              instructions: p.instructions || '',
+              keywords: p.keywords || [],
+              mainPrompt: p.mainPrompt || '',
+              negativePrompt: p.negativePrompt || '',
+              imageAnalysis: p.imageAnalysis || '',
+            });
             if (p.samples && p.samples.length > 0) {
               const loadedSamples = p.samples.map((s, idx) => ({
                 id: idx + 1,
@@ -328,22 +328,45 @@ export default function SellPage() {
               {showRules ? '−' : '+'}
             </button>
           </div>
-          
+
           {showRules && (
             <div className="rules-content mt-md">
               <p className="text-sm text-secondary mb-4">Please ensure your prompt follows these requirements to guarantee a fast approval:</p>
+              <br></br>
               <div className="rules-grid-v2" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '15px' }}>
-                {rules.map((rule, idx) => (
-                  <div key={idx} className="rule-card-v2" style={{ background: 'rgba(168, 85, 247, 0.05)', padding: '15px', borderRadius: '12px', borderLeft: '4px solid var(--color-purple)' }}>
-                    <p style={{ fontWeight: '600', fontSize: '0.95rem', marginBottom: '4px' }}>{rule.text || rule}</p>
-                    {rule.example && (
-                      <p style={{ fontSize: '0.85rem', color: 'var(--color-cyan)', fontStyle: 'italic', opacity: 0.9 }}>
-                        <span style={{ fontWeight: '700', fontSize: '0.75rem', textTransform: 'uppercase', marginRight: '5px' }}>Example:</span>
-                        {rule.example}
+                {rules.map((rule, idx) => {
+                  const ruleTextRaw = rule.text || rule;
+                  const match = typeof ruleTextRaw === 'string' ? ruleTextRaw.match(/^(\d+\.)\s*(.*)/) : null;
+                  const numStr = match ? match[1] : `${idx + 1}.`;
+                  const textStr = match ? match[2] : ruleTextRaw;
+                  
+                  const colors = ['var(--color-cyan)', 'var(--color-pink)', 'var(--color-orange)', 'var(--color-purple)', '#fbbf24', '#22c55e'];
+                  const themeColor = colors[idx % colors.length];
+
+                  // Highlight important keywords
+                  const highlightRegex = /(\[.*?\]|\b(?:must|no|not|max|only|exactly|never|consistent|unique|distinctive)\b)/gi;
+                  const textParts = textStr.split(highlightRegex);
+
+                  return (
+                    <div key={idx} className="rule-card-v2" style={{ background: `rgba(255, 255, 255, 0.03)`, padding: '15px', borderRadius: '12px', borderLeft: `4px solid ${themeColor}` }}>
+                      <p style={{ fontWeight: '600', fontSize: '0.95rem', marginBottom: '4px', color: 'var(--text-primary)', lineHeight: '1.5' }}>
+                        <span style={{ color: themeColor, marginRight: '6px', fontSize: '1.2rem', fontFamily: 'var(--font-display)' }}>{numStr}</span>
+                        {textParts.map((part, i) => {
+                          if (part && part.match(highlightRegex)) {
+                            return <span key={i} style={{ color: themeColor, opacity: 0.9 }}>{part}</span>;
+                          }
+                          return part;
+                        })}
                       </p>
-                    )}
-                  </div>
-                ))}
+                      {rule.example && (
+                        <p style={{ fontSize: '0.85rem', color: themeColor, fontStyle: 'italic', opacity: 0.9 }}>
+                          <span style={{ fontWeight: '700', fontSize: '0.75rem', textTransform: 'uppercase', marginRight: '5px' }}>Example:</span>
+                          {rule.example}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
