@@ -44,12 +44,51 @@
 }
 
 .footer__social-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
   color: var(--text-muted);
-  transition: var(--transition);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid var(--border-color);
 }
 
 .footer__social-link:hover {
-  color: var(--text-primary);
+  transform: translateY(-4px);
+  color: white;
+}
+
+.footer__social-link.youtube:hover {
+  background: #ff0000;
+  border-color: #ff0000;
+  box-shadow: 0 4px 20px rgba(255, 0, 0, 0.3);
+}
+
+.footer__social-link.instagram:hover {
+  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+  border-color: #dc2743;
+  box-shadow: 0 4px 20px rgba(220, 39, 67, 0.3);
+}
+
+.footer__social-link.x-twitter:hover {
+  background: #000000;
+  border-color: #333;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.footer__social-link.email:hover {
+  background: var(--color-orange);
+  border-color: var(--color-orange);
+  box-shadow: 0 4px 20px rgba(249, 115, 22, 0.3);
+}
+
+.footer__social-link.discord:hover {
+  background: #5865F2;
+  border-color: #5865F2;
+  box-shadow: 0 4px 20px rgba(88, 101, 242, 0.3);
 }
 
 .footer__links {
