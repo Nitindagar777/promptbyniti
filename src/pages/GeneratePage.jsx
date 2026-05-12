@@ -479,7 +479,11 @@ export default function GeneratePage() {
                           <div
                             key={p.id || p._id}
                             className="purchased-mini-card"
-                            onClick={() => setExampleTemplate(p.promptTemplate || p.mainPrompt || p.template || '')}
+                            onClick={() => {
+                              const secretPrompt = p.template || p.promptTemplate || p.mainPrompt || '';
+                              setExampleTemplate(secretPrompt);
+                              
+                            }}
                             style={{
                               aspectRatio: '1/1',
                               borderRadius: '12px',
