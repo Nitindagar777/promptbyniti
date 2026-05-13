@@ -52,9 +52,26 @@ export default function GeneratePage() {
 
   const [customModel, setCustomModel] = useState('');
   const [showCustomInput, setShowCustomInput] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(() => sessionStorage.getItem('isGenerating') === 'true');
   const [showPaywall, setShowPaywall] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
+
+  // Recover state if background generation finished while we were mounted or just navigated back
+  useEffect(() => {
+    if (isGenerating && sessionStorage.getItem('isGenerating') !== 'true') {
+      setIsGenerating(false);
+      try {
+        const saved = JSON.parse(sessionStorage.getItem(SESSION_KEY) || '{}');
+        if (saved.result) setResult(saved.result);
+      } catch (e) {}
+    } else if (!result && sessionStorage.getItem('isGenerating') !== 'true') {
+      // Just a safety check in case we mounted after it finished
+      try {
+        const saved = JSON.parse(sessionStorage.getItem(SESSION_KEY) || '{}');
+        if (saved.result) setResult(saved.result);
+      } catch (e) {}
+    }
+  }, [state.prompts, isGenerating]);
 
   // Filter models by selected prompt type
   const typeMap = { image: 'image', video: 'video', text: 'chat' };
@@ -112,13 +129,15 @@ export default function GeneratePage() {
       return;
     }
     setIsGenerating(true);
+    sessionStorage.setItem('isGenerating', 'true');
     setResult(null);
     try {
       const payload = generatorMode === 'prompt'
         ? form
         : { ...form, mode: 'example', description: exampleTemplate };
 
-      const response = await fetch('http://localhost:8845/api/generate', {
+      const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8845/api';
+      const response = await fetch(`${API_BASE}/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -128,6 +147,16 @@ export default function GeneratePage() {
         throw new Error(errorData.details || errorData.message || 'Failed to generate prompt');
       }
       const promptResult = await response.json();
+      
+      // Force update sessionStorage immediately to survive unmounts
+      try {
+        const currentSession = JSON.parse(sessionStorage.getItem(SESSION_KEY) || '{}');
+        sessionStorage.setItem(SESSION_KEY, JSON.stringify({
+          ...currentSession,
+          result: promptResult
+        }));
+      } catch (e) {}
+
       setResult(promptResult);
       await useCredit(1);
       addPrompt(promptResult);
@@ -136,6 +165,7 @@ export default function GeneratePage() {
       alert(error.message || 'Failed to generate prompt. Please try again.');
     } finally {
       setIsGenerating(false);
+      sessionStorage.removeItem('isGenerating');
     }
   };
 
