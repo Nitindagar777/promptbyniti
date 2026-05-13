@@ -3,6 +3,8 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const cloudinary = require('cloudinary').v2;
 const path = require('path');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const app = express();
@@ -10,6 +12,19 @@ const app = express();
 const PORT = 8845; 
 
 // Middleware
+// Security: Helmet adds 14+ essential HTTP headers to prevent XSS, clickjacking, and sniffing attacks
+app.use(helmet({
+  crossOriginResourcePolicy: false, // Prevents CORS errors when loading images
+}));
+
+// Security: Rate Limiting prevents DDoS and brute-force attacks on the API
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 1000, // Limit each IP to 1000 requests per window
+  message: { success: false, message: 'Too many requests, please try again later. System secured.' }
+});
+app.use('/api', apiLimiter);
+
 app.use(cors({
   origin: [
     'http://localhost:7744',
