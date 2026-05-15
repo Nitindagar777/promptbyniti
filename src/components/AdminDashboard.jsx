@@ -77,7 +77,7 @@ const AdminDashboard = () => {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8845/api'}/admin/stats`, {
+      const response = await fetch(`/api/admin/stats`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('promptbyniti_token')}` }
       });
       const json = await response.json();
@@ -95,7 +95,7 @@ const AdminDashboard = () => {
     setError(null);
     try {
       const endpoint = tab === 'verification' ? 'prompts' : tab;
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8845/api'}/admin/${endpoint}`, {
+      const response = await fetch(`/api/admin/${endpoint}`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('promptbyniti_token')}` }
       });
       const json = await response.json();
@@ -144,7 +144,7 @@ const AdminDashboard = () => {
   const fetchSettings = async () => {
     setSettingsLoading(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8845/api'}/admin/settings`, {
+      const response = await fetch(`/api/admin/settings`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('promptbyniti_token')}` }
       });
       const json = await response.json();
@@ -164,7 +164,7 @@ const AdminDashboard = () => {
     setSettingsLoading(true);
     setSettingsMessage(null);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8845/api'}/admin/settings`, {
+      const response = await fetch(`/api/admin/settings`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -194,7 +194,7 @@ const AdminDashboard = () => {
     }
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8845/api'}/admin/prompts/${id}`, {
+      const response = await fetch(`/api/admin/prompts/${id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -220,7 +220,7 @@ const AdminDashboard = () => {
   const executeDeletePrompt = async () => {
     if (!deleteConfirmModal.id) return;
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8845/api'}/admin/prompts/${deleteConfirmModal.id}`, {
+      const response = await fetch(`/api/admin/prompts/${deleteConfirmModal.id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('promptbyniti_token')}`
@@ -242,7 +242,7 @@ const AdminDashboard = () => {
   const handleUserBan = async (id, currentStatus) => {
     try {
       const isBanned = !currentStatus;
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8845/api'}/admin/users/${id}/ban`, {
+      const response = await fetch(`/api/admin/users/${id}/ban`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -274,7 +274,7 @@ const AdminDashboard = () => {
     }
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8845/api'}/admin/withdrawals/${id}`, {
+      const response = await fetch(`/api/admin/withdrawals/${id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

@@ -10,7 +10,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import PromptThumbnail from '../components/PromptThumbnail';
 import './HomePage.css';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8845/api';
+const API_URL = '/api';
 
 export default function HomePage() {
   const { state, dispatch, canGenerate, useCredit, addPrompt, cache, setCachedData, setScroll, getScroll } = useApp();

@@ -32,9 +32,9 @@ app.use(cors({
     'http://localhost:3000',
     'http://127.0.0.1:5173',
     'http://127.0.0.1:7744',
-    'https://oopsverse.cloud',
-    'http://oopsverse.cloud',
-    'https://www.oopsverse.cloud'
+    'https://promptbyniti.in',
+    'http://promptbyniti.in',
+    'https://www.promptbyniti.in'
   ],
   credentials: true
 }));

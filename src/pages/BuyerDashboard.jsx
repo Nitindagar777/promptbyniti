@@ -43,7 +43,7 @@ export default function BuyerDashboard() {
       const token = localStorage.getItem('promptbyniti_token');
       if (!token) return;
 
-      const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8845/api';
+      const API_BASE = '/api';
 
       const res = await fetch(`${API_BASE}/buyer/stats`, {
         headers: { 'Authorization': `Bearer ${token}` }

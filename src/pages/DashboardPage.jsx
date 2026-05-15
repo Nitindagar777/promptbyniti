@@ -49,7 +49,7 @@ export default function DashboardPage() {
   const fetchPaymentMethod = async () => {
     try {
       const token = localStorage.getItem('promptbyniti_token');
-      const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8845/api';
+      const API_BASE = '/api';
       const res = await fetch(`${API_BASE}/seller/payment-method`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -107,10 +107,7 @@ export default function DashboardPage() {
 
     try {
       const token = localStorage.getItem('promptbyniti_token');
-      const API_BASE = import.meta.env.VITE_API_URL ||
-        (window.location.hostname.includes('oopsverse.cloud')
-          ? 'https://oopsverse.cloud/api'
-          : 'http://localhost:8845/api');
+      const API_BASE = '/api';
 
       const res = await fetch(`${API_BASE}/prompts/${id}`, {
         method: 'DELETE',
@@ -139,10 +136,7 @@ export default function DashboardPage() {
   const handleWithdraw = async (amount, method, details) => {
     try {
       const token = localStorage.getItem('promptbyniti_token');
-      const API_BASE = import.meta.env.VITE_API_URL ||
-        (window.location.hostname.includes('oopsverse.cloud')
-          ? 'https://oopsverse.cloud/api'
-          : 'http://localhost:8845/api');
+      const API_BASE = '/api';
 
       const res = await fetch(`${API_BASE}/seller/withdraw`, {
         method: 'POST',
@@ -172,10 +166,7 @@ export default function DashboardPage() {
     const fetchStats = async () => {
       try {
         const token = localStorage.getItem('promptbyniti_token');
-        const API_BASE = import.meta.env.VITE_API_URL ||
-          (window.location.hostname.includes('oopsverse.cloud')
-            ? 'https://oopsverse.cloud/api'
-            : 'http://localhost:8845/api');
+        const API_BASE = '/api';
 
         console.log(`--- Dashboard Debug ---`);
         console.log(`Connecting to: ${API_BASE}/seller/stats`);
@@ -906,7 +897,7 @@ export default function DashboardPage() {
                   <button className="btn-payout-save" style={{ opacity: payoutFormFilled ? 1 : 0.4, pointerEvents: payoutFormFilled ? 'auto' : 'none' }} onClick={async () => {
                     try {
                       const token = localStorage.getItem('promptbyniti_token');
-                      const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8845/api';
+                      const API_BASE = '/api';
                       const res = await fetch(`${API_BASE}/seller/payment-method`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
@@ -934,7 +925,7 @@ export default function DashboardPage() {
                   <button className="btn-payout-save" style={{ background: 'var(--color-green, #22c55e)', gap: '8px' }} onClick={async () => {
                     try {
                       const token = localStorage.getItem('promptbyniti_token');
-                      const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8845/api';
+                      const API_BASE = '/api';
                       if (isEditingPayout) {
                         await fetch(`${API_BASE}/seller/payment-method`, {
                           method: 'POST',

@@ -136,7 +136,7 @@ export default function GeneratePage() {
         ? form
         : { ...form, mode: 'example', description: exampleTemplate };
 
-      const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8845/api';
+      const API_BASE = '/api';
       const response = await fetch(`${API_BASE}/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

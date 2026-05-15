@@ -187,7 +187,7 @@ export function AppProvider({ children }) {
 
       console.log('🔄 Validating session with token:', 'Exists');
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8845/api'}/auth/me`, {
+        const res = await fetch(`/api/auth/me`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Cache-Control': 'no-cache'
@@ -226,7 +226,7 @@ export function AppProvider({ children }) {
   /* Background Data Preloading (Marketplace & Stats) */
   useEffect(() => {
     const preload = async () => {
-      const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8845/api';
+      const API_BASE = '/api';
       const token = localStorage.getItem(TOKEN_KEY);
 
       // 1. Preload Marketplace (Public)
@@ -284,7 +284,7 @@ export function AppProvider({ children }) {
       const isSystemAdmin = state.user?.email?.toLowerCase().trim() === adminEmail.toLowerCase().trim();
 
       if (token && isSystemAdmin) {
-        const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8845/api';
+        const API_BASE = '/api';
         try {
           // Fetch all critical admin data in parallel for speed
           const [sRes, setRes, pRes, uRes, tRes, wRes] = await Promise.all([
@@ -343,7 +343,7 @@ export function AppProvider({ children }) {
       const token = localStorage.getItem(TOKEN_KEY);
       if (token) {
         try {
-          await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8845/api'}/auth/use-credits`, {
+          await fetch(`/api/auth/use-credits`, {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${token}`,

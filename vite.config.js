@@ -7,5 +7,11 @@ export default defineConfig({
   server: {
     port: 7744, // Unique port for this project
     strictPort: true,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8845',
+        changeOrigin: true
+      }
+    }
   }
 })

@@ -5,7 +5,7 @@ import { Mail, Lock, User, ArrowRight, Sparkles } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import './AuthPage.css';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8845/api';
+const API_URL = '/api';
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
 export default function AuthPage() {

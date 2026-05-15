@@ -69,7 +69,7 @@ export default function SellPage() {
 
   // Load Rules
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8845/api'}/prompts/rules`)
+    fetch(`/api/prompts/rules`)
       .then(res => res.json())
       .then(data => {
         if (data.success) setRules(data.rules);
@@ -117,7 +117,7 @@ export default function SellPage() {
     if (id) {
       setIsEditMode(true);
       setEditId(id);
-      fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8845/api'}/prompts/${id}`, {
+      fetch(`/api/prompts/${id}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('promptbyniti_token')}`
         }
@@ -223,8 +223,8 @@ export default function SellPage() {
       };
 
       const url = isEditMode
-        ? `${import.meta.env.VITE_API_URL || 'http://localhost:8845/api'}/prompts/${editId}`
-        : `${import.meta.env.VITE_API_URL || 'http://localhost:8845/api'}/prompts`;
+        ? `/api/prompts/${editId}`
+        : `/api/prompts`;
 
       const response = await fetch(url, {
         method: isEditMode ? 'PUT' : 'POST',

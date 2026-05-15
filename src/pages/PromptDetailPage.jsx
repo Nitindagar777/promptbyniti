@@ -31,10 +31,7 @@ export default function PromptDetailPage() {
   const [isPromptPurchased, setIsPromptPurchased] = useState(false);
   const [reviews, setReviews] = useState([]);
 
-  const API_BASE = import.meta.env.VITE_API_URL ||
-    (window.location.hostname.includes('oopsverse.cloud')
-      ? 'https://oopsverse.cloud/api'
-      : 'http://localhost:8845/api');
+  const API_BASE = '/api';
 
   const handleReplySubmit = async (idx) => {
     if (!replyText.trim()) return;
@@ -120,7 +117,7 @@ export default function PromptDetailPage() {
 
       // Try fetching from Database
       try {
-        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8845/api';
+        const API_URL = '/api';
         const token = localStorage.getItem('promptbyniti_token');
         const res = await fetch(`${API_URL}/prompts/${id}?t=${Date.now()}`, {
           headers: token ? { 'Authorization': `Bearer ${token}` } : {}

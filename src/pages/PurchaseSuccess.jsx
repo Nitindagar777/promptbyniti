@@ -74,10 +74,7 @@ const PurchaseSuccess = () => {
 
   const modelLabel = prompt ? (aiModels.find(m => m.id === prompt.model)?.label || prompt.model) : '';
 
-  const API_BASE = import.meta.env.VITE_API_URL || 
-    (window.location.hostname.includes('oopsverse.cloud') 
-      ? 'https://oopsverse.cloud/api' 
-      : 'http://localhost:8845/api');
+  const API_BASE = '/api';
 
   useEffect(() => {
     fetchPrompt();
