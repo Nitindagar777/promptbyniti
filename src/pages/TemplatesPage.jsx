@@ -6,6 +6,7 @@ import { Crown, Lock, ArrowRight, Sparkles, Filter, Zap, Loader2, Eye, Search } 
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import PromptThumbnail from '../components/PromptThumbnail';
+import PreviewModal from '../components/PreviewModal';
 import './TemplatesPage.css';
 
 const API_URL = '/api';
@@ -18,6 +19,7 @@ export default function TemplatesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [prompts, setPrompts] = useState(state.marketplace || []);
   const [loading, setLoading] = useState(!state.marketplace || state.marketplace.length === 0);
+  const [previewPrompt, setPreviewPrompt] = useState(null);
 
   useEffect(() => {
     if (location.state?.search) {
@@ -200,7 +202,7 @@ export default function TemplatesPage() {
                     </div>
 
                     {/* Hover eye icon (half inside/half outside) */}
-                    <div className="template-card__hover-eye">
+                    <div className="template-card__hover-eye" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPreviewPrompt(tmpl); }}>
                       <Eye size={18} color="red" />
                     </div>
                   </Link>
@@ -216,6 +218,8 @@ export default function TemplatesPage() {
           </div>
         )}
       </div>
+      {/* Preview Modal */}
+      {previewPrompt && <PreviewModal prompt={previewPrompt} onClose={() => setPreviewPrompt(null)} />}
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { generatePrompt } from '../data/promptEngine';
 import { randomDescriptions } from '../data/promptData';
 import PromptOutput from '../components/PromptOutput';
 import { ArrowRight, Sparkles, Zap, Image, Layers, Heart, Wand2, Rocket, Star, Palette, MessageSquare, ShieldCheck, Zap as ZapIcon, ShoppingBag, Coins, DollarSign, Eye } from 'lucide-react';
+import PreviewModal from '../components/PreviewModal';
 import { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import PromptThumbnail from '../components/PromptThumbnail';
@@ -21,6 +22,7 @@ export default function HomePage() {
   const [loadingPrompts, setLoadingPrompts] = useState(!state.marketplace || state.marketplace.length === 0);
   const inputRef = useRef(null);
   const navigate = useNavigate();
+  const [previewPrompt, setPreviewPrompt] = useState(null);
 
   useEffect(() => {
     if (state.marketplace && state.marketplace.length > 0) {
@@ -216,7 +218,7 @@ export default function HomePage() {
                     </div>
 
                     {/* Hover eye icon (half inside/half outside) */}
-                    <div className="template-card__hover-eye">
+                    <div className="template-card__hover-eye" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPreviewPrompt(tmpl); }}>
                       <Eye size={18} color="red" />
                     </div>
                   </Link>
@@ -277,6 +279,8 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      {/* Preview Modal */}
+      {previewPrompt && <PreviewModal prompt={previewPrompt} onClose={() => setPreviewPrompt(null)} />}
     </div>
   );
 }
