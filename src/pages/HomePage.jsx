@@ -214,6 +214,11 @@ export default function HomePage() {
                         <Zap size={12} fill="currentColor" /> {tmpl.priceTokens || tmpl.tokens || 5}
                       </div>
                     </div>
+
+                    {/* Hover eye icon (half inside/half outside) */}
+                    <div className="template-card__hover-eye">
+                      <Eye size={18} color="red" />
+                    </div>
                   </Link>
                 );
               })
