@@ -1,10 +1,12 @@
 /* PreviewModal — Quick-preview gallery for prompt samples */
-import { X, Share2, ImageOff } from 'lucide-react';
+import { X, Share2, ImageOff, ArrowRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import PromptThumbnail from './PromptThumbnail';
 
 export default function PreviewModal({ prompt, onClose }) {
   const [toast, setToast] = useState(false);
+  const navigate = useNavigate();
 
   // Close on Escape key
   useEffect(() => {
@@ -44,6 +46,11 @@ export default function PreviewModal({ prompt, onClose }) {
     if (e.target === e.currentTarget) onClose();
   };
 
+  const goToDetail = () => {
+    onClose();
+    navigate(`/prompt/${promptId}`);
+  };
+
   return (
     <div className="preview-modal-overlay" onClick={handleOverlayClick}>
       <div className="preview-modal">
@@ -51,6 +58,9 @@ export default function PreviewModal({ prompt, onClose }) {
         <div className="preview-modal__header">
           <h3 className="preview-modal__title">{title}</h3>
           <div className="preview-modal__actions">
+            <button className="preview-modal__detail-btn" onClick={goToDetail}>
+              View Details <ArrowRight size={14} />
+            </button>
             <button className="preview-modal__share-btn" onClick={handleShare}>
               <Share2 size={16} /> Share
             </button>
@@ -60,8 +70,8 @@ export default function PreviewModal({ prompt, onClose }) {
           </div>
         </div>
 
-        {/* Body */}
-        <div className="preview-modal__body">
+        {/* Body — clicking the gallery opens prompt detail */}
+        <div className="preview-modal__body" onClick={goToDetail} style={{ cursor: 'pointer' }}>
           {hasSamples ? (
             <div className="preview-modal__gallery">
               <div className="preview-modal__gallery-left">

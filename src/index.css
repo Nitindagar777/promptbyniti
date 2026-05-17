@@ -435,6 +435,26 @@ p {
   transform: translateY(-1px);
 }
 
+.preview-modal__detail-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: var(--color-orange);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.preview-modal__detail-btn:hover {
+  filter: brightness(1.15);
+  transform: translateY(-1px);
+}
+
 .preview-modal__close-btn {
   display: flex;
   align-items: center;
