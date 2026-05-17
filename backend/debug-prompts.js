@@ -18,7 +18,7 @@ const debug = async () => {
       console.log(`Prompt: "${p.name}" ID: ${p._id} Seller ID: ${p.seller} Status: ${p.status}`);
     });
 
-    console.log('--- DEBUG END here ---');
+    console.log('--- DEBUG END ---');
     process.exit(0);
   } catch (err) {
     console.error(err);
