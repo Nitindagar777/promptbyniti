@@ -289,8 +289,9 @@ export default function SellPage() {
           <p className="text-secondary" style={{ maxWidth: '600px', margin: '16px auto var(--space-xl)' }}>
             Your prompt package "{formData.name}" is now being reviewed by our quality team. You will be notified once it is approved and live in the Store.
           </p>
-          <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
             <button className="btn btn-primary" onClick={handleListAnother}>List Another</button>
+            <button className="btn btn-purple" onClick={() => navigate('/generate')} style={{ background: 'var(--color-purple)', boxShadow: '0 6px 0 #7e22ce' }}>Generate One More</button>
             <button className="btn btn-secondary" onClick={() => navigate('/')}>Go Home</button>
           </div>
         </div>
