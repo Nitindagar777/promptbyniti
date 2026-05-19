@@ -93,7 +93,7 @@ export default function HomePage() {
             <span className="text-orange">Generate.</span> <span className="text-cyan">Customize.</span> <span className="text-purple">Sell.</span>
           </p>
           <p className="reveal" style={{ color: 'white', fontSize: '1.8rem', fontFamily: 'var(--font-display)', marginBottom: '40px', animationDelay: '0.25s' }}>
-            Best Prompts for Midjourney, ChatGPT, DALL·E & More
+            Best Prompts for Midjourney, ChatGPT, DALL·E & More...
           </p>
           <div className="p-hero__btns reveal" style={{ animationDelay: '0.3s' }}>
             <Link to="/generate" className="btn btn-primary btn-xl">
