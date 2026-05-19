@@ -8,6 +8,7 @@ import {
   Wand2, ShieldCheck, DollarSign, Type,
   Plus, Trash2, ChevronRight, Sparkles, ArrowLeft
 } from 'lucide-react';
+import SEOHead from '../components/SEOHead';
 import './SellPage.css';
 
 export default function SellPage() {
@@ -301,6 +302,12 @@ export default function SellPage() {
 
   return (
     <div className="sell-page container">
+      <SEOHead
+        title="Sell Your AI Prompts — Earn Money as a Prompt Engineer"
+        description="Sell your AI prompts on Prompt by Niti marketplace. List your Midjourney, ChatGPT, DALL·E, and Stable Diffusion prompts. Earn 80% royalties on every sale. Start monetizing your prompt engineering skills today."
+        keywords="sell prompts, sell AI prompts, prompt marketplace seller, earn money with prompts, prompt engineer income, sell Midjourney prompts, prompt royalties, monetize prompts"
+        noIndex={true}
+      />
       <div className="sell-page__header reveal" style={{ position: 'relative' }}>
         {isEditMode && (
           <button

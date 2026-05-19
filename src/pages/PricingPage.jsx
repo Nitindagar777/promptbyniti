@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { pricingPlans } from '../data/promptData';
 import { Crown, Check, Star, Shield, Zap, Sparkles, Loader } from 'lucide-react';
+import SEOHead from '../components/SEOHead';
 import './PricingPage.css';
 
 const API_URL = '/api';
@@ -122,6 +123,12 @@ export default function PricingPage() {
 
   return (
     <div className="pricing-page" id="pricing-page">
+      <SEOHead
+        title="Pricing — Prompt Packs & Token Plans"
+        description="Get prompt packs and token plans for Prompt by Niti. Unlock unlimited AI prompt generation, premium marketplace access, and professional prompt engineering tools. Affordable plans for every creator."
+        keywords="prompt pricing, AI prompt plans, buy tokens, prompt credits, prompt packs, AI marketplace pricing, prompt by niti pricing"
+        noIndex={true}
+      />
       <div className="container">
         {/* Header */}
         <div className="pricing-page__header">

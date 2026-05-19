@@ -1,6 +1,7 @@
 /* TermsPage — Service agreement and marketplace rules */
 import React from 'react';
 import { Gavel, Scale, FileText, AlertTriangle, Copyright, HelpCircle, Zap } from 'lucide-react';
+import SEOHead from '../components/SEOHead';
 import './LegalPages.css';
 
 export default function TermsPage() {
@@ -8,6 +9,11 @@ export default function TermsPage() {
 
   return (
     <div className="legal-page terms-page">
+      <SEOHead
+        title="Terms of Service — Prompt by Niti"
+        description="Read Prompt by Niti's terms of service. Understand our marketplace rules, token usage policies, intellectual property guidelines, and user responsibilities on our AI prompt platform."
+        keywords="prompt by niti terms, AI prompt terms of service, prompt marketplace rules, prompt platform agreement"
+      />
       <div className="container">
         <div className="legal-page__hero text-center">
           <h1>Terms of <span className="text-pink">Service</span></h1>

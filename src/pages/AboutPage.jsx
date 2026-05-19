@@ -1,11 +1,17 @@
 /* AboutPage — Professional brand story */
 import React from 'react';
 import { Sparkles, Users, Shield, Zap, Globe, Target } from 'lucide-react';
+import SEOHead from '../components/SEOHead';
 import './LegalPages.css';
 
 export default function AboutPage() {
   return (
     <div className="legal-page about-page">
+      <SEOHead
+        title="About Prompt by Niti — The #1 AI Prompt Engineering Platform"
+        description="Learn about Prompt by Niti, the world's most advanced AI prompt generator and marketplace. Founded by Nitin Dagar, we help creators generate, buy, and sell professional prompts for Midjourney, ChatGPT, DALL·E, and more."
+        keywords="about prompt by niti, promptbyniti, Nitin Dagar, AI prompt platform, prompt engineering, prompt marketplace creator, AI tools company"
+      />
       <div className="container">
         {/* Hero Section */}
         <div className="legal-page__hero">

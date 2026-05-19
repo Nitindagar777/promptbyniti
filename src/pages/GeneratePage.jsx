@@ -5,6 +5,7 @@ import { useApp } from '../context/AppContext';
 import { randomDescriptions, aiModels } from '../data/promptData';
 import PromptOutput from '../components/PromptOutput';
 import PromptThumbnail from '../components/PromptThumbnail';
+import SEOHead from '../components/SEOHead';
 import {
   Sparkles, Info, Image as ImageIcon,
   RefreshCw, AlertTriangle,
@@ -249,6 +250,12 @@ export default function GeneratePage() {
 
   return (
     <div className="generate-page" id="generate-page">
+      <SEOHead
+        title="Free AI Prompt Generator — Create Prompts for Midjourney, ChatGPT, DALL·E"
+        description="Free AI prompt generator by Prompt by Niti. Transform your ideas into professional, studio-quality prompts for Midjourney, ChatGPT, DALL·E, Stable Diffusion, Flux, and more. Get prompt ideas and examples instantly."
+        keywords="prompt generator, AI prompt generator, free prompt generator, prompt creator, prompt builder, prompt ideas, Midjourney prompt generator, ChatGPT prompt generator, AI prompt maker, generate prompts, prompt engineering tool"
+        noIndex={true}
+      />
       <div className="container">
         {/* Header */}
         <div className="generate-page__header">

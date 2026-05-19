@@ -5,6 +5,7 @@ import { useApp } from '../context/AppContext';
 import PromptOutput from '../components/PromptOutput';
 import { Globe, Search, Filter, Sparkles } from 'lucide-react';
 import { categories } from '../data/promptData';
+import SEOHead from '../components/SEOHead';
 import './LibraryPage.css';
 
 export default function LibraryPage() {
@@ -65,6 +66,12 @@ export default function LibraryPage() {
 
   return (
     <div className="library-page" id="library-page">
+      <SEOHead
+        title="Free Prompt Library — AI Prompt Templates & Examples"
+        description="Access free AI prompt templates and examples from Prompt by Niti's community library. Download free prompts for Midjourney, ChatGPT, DALL·E, and Stable Diffusion. Start creating with professional prompt formulas."
+        keywords="free prompts, free AI prompts, prompt library, prompt templates free, free prompt examples, Midjourney free prompts, ChatGPT free prompts, prompt collection, prompt database"
+        noIndex={true}
+      />
       <div className="container">
         {/* Header */}
         <div className="library-page__header">

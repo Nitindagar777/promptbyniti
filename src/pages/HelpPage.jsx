@@ -5,11 +5,17 @@ import {
   LifeBuoy, BookOpen, ShieldQuestion,
   ExternalLink, Send
 } from 'lucide-react';
+import SEOHead from '../components/SEOHead';
 import './LegalPages.css';
 
 export default function HelpPage() {
   return (
     <div className="legal-page help-page">
+      <SEOHead
+        title="Help Center — Prompt by Niti Support & FAQ"
+        description="Get help with Prompt by Niti. Find answers to frequently asked questions about AI prompt generation, buying and selling prompts, token purchases, and more. Contact our support team."
+        keywords="prompt by niti help, prompt support, AI prompt FAQ, how to use prompts, prompt marketplace help, prompt generator help"
+      />
       <div className="container">
         {/* Hero Section */}
         <div className="legal-page__hero text-center">

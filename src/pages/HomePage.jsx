@@ -9,6 +9,7 @@ import PreviewModal from '../components/PreviewModal';
 import { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import PromptThumbnail from '../components/PromptThumbnail';
+import SEOHead from '../components/SEOHead';
 import './HomePage.css';
 
 const API_URL = '/api';
@@ -75,19 +76,24 @@ export default function HomePage() {
 
   return (
     <div className="p-home" id="home-page">
+      <SEOHead
+        title="AI Prompt Generator & Marketplace — Free Prompt Ideas, Templates & Examples"
+        description="Prompt by Niti is the #1 AI prompt generator, marketplace, and prompt engineering platform. Generate, buy, sell, and discover the best prompts for Midjourney, ChatGPT, DALL·E 3, Stable Diffusion, Flux, Sora, and more. Free prompt ideas, prompt templates, and prompt examples. Best PromptBase alternative."
+        keywords="prompt, prompts, AI prompt, prompt generator, prompt ideas, prompt marketplace, prompt engineering, prompt templates, prompt examples, best prompts, free prompts, buy prompts, sell prompts, PromptBase alternative, promptbase, promptbyniti, Midjourney prompts, ChatGPT prompts, DALL-E prompts, Stable Diffusion prompts, Flux prompts, AI art prompts, AI image prompts, prompt store, prompt library, prompt builder, prompt creator, AI tools"
+      />
       {/* 01. HERO */}
       <section className="p-hero container">
         <div className="p-hero__inner">
           <div><br /><br /><br /></div>
           <h1 className="p-hero__title reveal" style={{ animationDelay: '0.1s' }}>
-            The <span className="text-cyan">Smartest</span> Way to <br />
-            Imagine <span className="text-orange">Anything.</span>
+            The <span className="text-cyan">#1 AI Prompt</span> Generator <br />
+            & <span className="text-orange">Marketplace</span>
           </h1>
           <p className="p-hero__subtitle reveal" style={{ fontSize: '2rem', fontWeight: '700', fontFamily: 'var(--font-display)', animationDelay: '0.2s', marginBottom: '10px' }}>
             <span className="text-orange">Generate.</span> <span className="text-cyan">Customize.</span> <span className="text-purple">Sell.</span>
           </p>
           <p className="reveal" style={{ color: 'white', fontSize: '1.8rem', fontFamily: 'var(--font-display)', marginBottom: '40px', animationDelay: '0.25s' }}>
-            ai prompts.
+            Best Prompts for Midjourney, ChatGPT, DALL·E & More
           </p>
           <div className="p-hero__btns reveal" style={{ animationDelay: '0.3s' }}>
             <Link to="/generate" className="btn btn-primary btn-xl">
@@ -279,6 +285,29 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      {/* 06. SEO CONTENT — Keyword-rich text for search engines */}
+      <section className="p-seo-content container" style={{ paddingBottom: 'var(--space-2xl)' }}>
+        <div style={{ maxWidth: '900px', margin: '0 auto', padding: '40px 20px' }}>
+          <h2 className="h-display" style={{ textAlign: 'center', marginBottom: '24px' }}>
+            The Best <span className="text-cyan">AI Prompt</span> Platform — <span className="text-orange">Prompt by Niti</span>
+          </h2>
+          <div style={{ color: 'var(--text-secondary)', lineHeight: '1.8', fontSize: '1rem' }}>
+            <p>
+              <strong>Prompt by Niti</strong> is the ultimate <strong>AI prompt generator</strong> and <strong>prompt marketplace</strong> built for creators, designers, and prompt engineers. Whether you need <strong>Midjourney prompts</strong>, <strong>ChatGPT prompts</strong>, <strong>DALL·E prompts</strong>, <strong>Stable Diffusion prompts</strong>, or <strong>Flux prompts</strong> — our AI-powered platform generates studio-quality results in seconds.
+            </p>
+            <p style={{ marginTop: '16px' }}>
+              Looking for <strong>prompt ideas</strong>? Our <strong>free prompt generator</strong> transforms your simple descriptions into professional, optimized <strong>prompt templates</strong> and <strong>prompt examples</strong> for any AI model. From <strong>AI art prompts</strong> and <strong>AI image prompts</strong> to <strong>text generation prompts</strong> and <strong>video prompts</strong> — we've got you covered.
+            </p>
+            <p style={{ marginTop: '16px' }}>
+              <strong>Prompt by Niti</strong> is the best <strong>PromptBase alternative</strong> — offering a richer <strong>prompt store</strong>, smarter <strong>prompt engineering</strong> tools, and a thriving <strong>prompt marketplace</strong> where you can <strong>buy prompts</strong> and <strong>sell prompts</strong> to earn real money. Our <strong>prompt library</strong> includes thousands of curated <strong>prompt templates</strong> for <strong>Midjourney</strong>, <strong>ChatGPT</strong>, <strong>DALL·E 3</strong>, <strong>Stable Diffusion XL</strong>, <strong>Flux</strong>, <strong>Sora</strong>, <strong>Niji</strong>, and many more AI models.
+            </p>
+            <p style={{ marginTop: '16px' }}>
+              Start generating <strong>professional AI prompts</strong> today — for free. No credit card required. Join thousands of creators who trust <strong>Prompt by Niti</strong> as their go-to <strong>prompt builder</strong> and <strong>prompt creator</strong> platform.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Preview Modal */}
       {previewPrompt && <PreviewModal prompt={previewPrompt} onClose={() => setPreviewPrompt(null)} />}
     </div>

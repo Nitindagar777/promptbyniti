@@ -1,6 +1,7 @@
 /* PrivacyPage — Clear and transparent privacy policy */
 import React from 'react';
 import { ShieldCheck, Eye, Lock, Server, Share2, Bell } from 'lucide-react';
+import SEOHead from '../components/SEOHead';
 import './LegalPages.css';
 
 export default function PrivacyPage() {
@@ -8,6 +9,11 @@ export default function PrivacyPage() {
 
   return (
     <div className="legal-page privacy-page">
+      <SEOHead
+        title="Privacy Policy — Prompt by Niti"
+        description="Read Prompt by Niti's privacy policy. Learn how we protect your data, handle personal information, and ensure secure transactions on our AI prompt marketplace."
+        keywords="prompt by niti privacy, AI prompt privacy policy, data protection, prompt marketplace privacy"
+      />
       <div className="container">
         <div className="legal-page__hero text-center">
           <h1>Privacy <span className="text-purple">Policy</span></h1>

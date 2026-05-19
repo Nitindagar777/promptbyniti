@@ -1,0 +1,28 @@
+{
+  "name": "Prompt by Niti — AI Prompt Generator & Marketplace",
+  "short_name": "Prompt by Niti",
+  "description": "Generate, buy, sell, and discover the best AI prompts for Midjourney, ChatGPT, DALL·E, Stable Diffusion, Flux, Sora, and more. Free prompt ideas, templates, and examples.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0e1726",
+  "theme_color": "#0e1726",
+  "orientation": "portrait-primary",
+  "categories": ["productivity", "utilities", "design", "education"],
+  "lang": "en",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/image1.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/image.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

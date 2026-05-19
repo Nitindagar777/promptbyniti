@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import PromptThumbnail from '../components/PromptThumbnail';
 import PreviewModal from '../components/PreviewModal';
+import SEOHead from '../components/SEOHead';
 import './TemplatesPage.css';
 
 const API_URL = '/api';
@@ -95,6 +96,11 @@ export default function TemplatesPage() {
 
   return (
     <div className="templates-page" id="templates-page">
+      <SEOHead
+        title="Prompt Marketplace — Buy & Sell AI Prompts for Midjourney, ChatGPT, DALL·E"
+        description="Browse and buy premium AI prompts for Midjourney, ChatGPT, DALL·E, Stable Diffusion, Flux, and more. The best prompt store and PromptBase alternative. Discover prompt ideas, templates, and examples."
+        keywords="prompt marketplace, buy prompts, sell prompts, prompt store, AI prompts, Midjourney prompts, ChatGPT prompts, DALL-E prompts, prompt templates, prompt ideas, PromptBase alternative, prompt shop, AI art prompts, premium prompts"
+      />
       <div className="container">
         {/* Header */}
         <div className="templates-page__header">
