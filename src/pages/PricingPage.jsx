@@ -57,7 +57,7 @@ export default function PricingPage() {
         currency: orderData.currency,
         name: 'Prompt by Niti',
         description: `${planId === 'pro' ? 'Creator' : 'Studio'} One-time Pack`,
-        image: '/image.png',
+        image: '/image1.png',
         order_id: orderData.orderId,
         handler: async function (response) {
           // Step 3: Verify Payment on backend

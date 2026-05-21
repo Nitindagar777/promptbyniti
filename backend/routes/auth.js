@@ -48,7 +48,7 @@ const sendOTPEmail = async (email, otp) => {
     `,
     attachments: [{
       filename: 'logo.png',
-      path: 'c:\\Users\\nitin.LAPTOP-NAG2MKGV\\Desktop\\prompt_gene\\public\\image.png',
+      path: 'c:\\Users\\nitin.LAPTOP-NAG2MKGV\\Desktop\\prompt_gene\\public\\image1.png',
       cid: 'logo'
     }]
   };

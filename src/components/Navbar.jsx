@@ -184,7 +184,7 @@ export default function Navbar() {
           onMouseEnter={() => setIsLogoHovered(true)}
           onMouseLeave={() => setIsLogoHovered(false)}
         >
-          <img ref={logoRef} src="/image.png" alt="Prompt by Niti" className="navbar__logo-img" />
+          <img ref={logoRef} src="/image1.png" alt="Prompt by Niti" className="navbar__logo-img" />
           <span className="navbar__logo-text">
             Prompt <span className="text-secondary" style={{ fontSize: '0.8em' }}>by</span> <span className="text-orange">Niti</span>
           </span>

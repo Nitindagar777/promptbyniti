@@ -177,7 +177,7 @@ export default function PromptDetailPage() {
         title={`${template.title || template.name} — ${model.label} Prompt`}
         description={`${template.description || 'Premium AI prompt'} — Buy this ${model.label} prompt on Prompt by Niti. ${category} AI prompt template with ${template.samples?.length || 3} sample outputs.`}
         keywords={`${(template.keywords || []).join(', ')}, ${model.label} prompt, AI prompt, ${category} prompt, buy prompt, prompt template`}
-        ogImage={template.thumbnail || template.samples?.[0]?.output || template.samples?.[0] || 'https://promptbyniti.in/image.png'}
+        ogImage={template.thumbnail || template.samples?.[0]?.output || template.samples?.[0] || 'https://promptbyniti.in/image1.png'}
       />
       <div className="container">
         {/* Navigation */}

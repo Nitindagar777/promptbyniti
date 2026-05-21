@@ -45,7 +45,7 @@ export default function Footer() {
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
           >
-            <img ref={logoRef} src="/image.png" alt="Prompt by Niti" className="footer__logo-img" />
+            <img ref={logoRef} src="/image1.png" alt="Prompt by Niti" className="footer__logo-img" />
             <span className="footer__logo-text">
               Prompt <span className="text-secondary" style={{ fontSize: '0.8em' }}>by</span> <span className="text-orange">Niti</span>
             </span>
