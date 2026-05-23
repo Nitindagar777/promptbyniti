@@ -22,6 +22,8 @@ import AboutPage from './pages/AboutPage';
 import PrivacyPage from './pages/PrivacyPage';
 import TermsPage from './pages/TermsPage';
 import HelpPage from './pages/HelpPage';
+import LoungePage from './pages/LoungePage';
+
 
 import './App.css';
 
@@ -98,6 +100,8 @@ function App() {
             <Route path="/admin-lab" element={<AdminRoute><AdminTestLab /></AdminRoute>} />
             <Route path="/purchase-success/:id" element={<ProtectedRoute><PurchaseSuccess /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+            <Route path="/lounge" element={<LoungePage />} />
+
             
             {/* Public Legal Pages */}
             <Route path="/about" element={<AboutPage />} />
