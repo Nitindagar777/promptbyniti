@@ -50,13 +50,7 @@ export default function LoungePage() {
 
   const isAdmin = state?.user?.email === 'nitindagar0800@gmail.com';
 
-  if (authLoading || !state?.user) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', color: 'white', background: '#090d16', fontSize: '1.8rem', fontFamily: 'var(--font-display)' }}>
-        Loading Cosmic Lounge...
-      </div>
-    );
-  }
+
 
   // Switch chat modes cleanly
   const handleSwitchMode = (mode) => {
@@ -507,6 +501,14 @@ export default function LoungePage() {
       console.error('Error sending message:', err);
     }
   };
+
+  if (authLoading || !state?.user) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', color: 'white', background: '#090d16', fontSize: '1.8rem', fontFamily: 'var(--font-display)' }}>
+        Loading Cosmic Lounge...
+      </div>
+    );
+  }
 
   return (
     <div className="lounge-page container">
