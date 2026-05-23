@@ -1,12 +1,22 @@
 import { useState, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
+import { useNavigate } from 'react-router-dom';
 import { Send, Sparkles, Megaphone, Calendar, Trophy, Users, ShieldAlert, Heart, Terminal, Image, X, Plus, Pencil, Trash2 } from 'lucide-react';
 import './LoungePage.css';
 
 
 
 export default function LoungePage() {
-  const { state } = useApp();
+  const { state, authLoading } = useApp();
+  const navigate = useNavigate();
+
+  // Redirect to login if user session is unauthenticated
+  useEffect(() => {
+    if (!authLoading && !state?.user) {
+      navigate('/login');
+    }
+  }, [authLoading, state?.user, navigate]);
+
   // Persistent messages list stored in localStorage or starting empty
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
@@ -39,6 +49,14 @@ export default function LoungePage() {
   const isInitialLoadRef = useRef(true);
 
   const isAdmin = state?.user?.email === 'nitindagar0800@gmail.com';
+
+  if (authLoading || !state?.user) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', color: 'white', background: '#090d16', fontSize: '1.8rem', fontFamily: 'var(--font-display)' }}>
+        Loading Cosmic Lounge...
+      </div>
+    );
+  }
 
   // Switch chat modes cleanly
   const handleSwitchMode = (mode) => {
