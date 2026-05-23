@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const LoungeMessage = require('../models/LoungeMessage');
 const User = require('../models/User');
 const Prompt = require('../models/Prompt');
+const Announcement = require('../models/Announcement');
 const jwt = require('jsonwebtoken');
 const cloudinary = require('cloudinary').v2;
 
@@ -287,6 +288,124 @@ router.get('/unread-count', auth, async (req, res) => {
       isRead: { $ne: true }
     });
     res.json({ success: true, count: unreadCount });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// GET: Fetch all announcements (Seed defaults if collection is empty)
+router.get('/announcements', async (req, res) => {
+  try {
+    let list = await Announcement.find({}).sort({ createdAt: -1 }).lean();
+    if (list.length === 0) {
+      // Seed default announcements
+      const defaults = [
+        {
+          title: 'Prompt by Niti v2.0 is Live!',
+          desc: 'We have updated our prompt generation engine with advanced contextual memory and support for Claude 3.5 Sonnet. Tokens are now credited instantly!',
+          tag: 'LATEST',
+          tagColor: '#38bdf8',
+          type: 'latest',
+          date: 'May 23, 2026'
+        },
+        {
+          title: 'Weekly Prompt Challenge #14',
+          desc: 'Build the best "3D Isometric Illustration Generator" prompt for Midjourney v6.1. The top 3 creators win 500 bonus tokens and front-page features!',
+          tag: 'CHALLENGE',
+          tagColor: '#fb923c',
+          type: 'challenge',
+          date: 'May 22, 2026'
+        },
+        {
+          title: 'Enhanced Prompt Verification',
+          desc: 'All submitted marketplace prompts are now automatically screened by our AI validation sandbox to ensure 100% execution compatibility.',
+          tag: 'SECURITY',
+          tagColor: '#ef4444',
+          type: 'security',
+          date: 'May 20, 2026'
+        },
+        {
+          title: 'Live Q&A with Nitin Dagar',
+          desc: 'Join us next Saturday inside the Lounge for a live group discussion on prompt engineering tips, marketplace insights, and upcoming features.',
+          tag: 'EVENT',
+          tagColor: '#a855f7',
+          type: 'event',
+          date: 'May 18, 2026'
+        }
+      ];
+      await Announcement.insertMany(defaults);
+      list = await Announcement.find({}).sort({ createdAt: -1 }).lean();
+    }
+    res.json({ success: true, announcements: list });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// POST: Add new announcement (Admin Only)
+router.post('/announcements', auth, async (req, res) => {
+  try {
+    if (req.user.email !== ADMIN_EMAIL) {
+      return res.status(403).json({ success: false, message: 'Unauthorized access. Admin only.' });
+    }
+    const { title, desc, tag, tagColor, type } = req.body;
+    if (!title || !desc) {
+      return res.status(400).json({ success: false, message: 'Title and description required.' });
+    }
+    const dateStr = new Date().toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+    
+    const newAnnouncement = new Announcement({
+      title,
+      desc,
+      tag: tag || 'LATEST',
+      tagColor: tagColor || '#38bdf8',
+      type: type || 'latest',
+      date: dateStr
+    });
+    await newAnnouncement.save();
+    res.status(201).json({ success: true, announcement: newAnnouncement });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// PUT: Edit existing announcement (Admin Only)
+router.put('/announcements/:id', auth, async (req, res) => {
+  try {
+    if (req.user.email !== ADMIN_EMAIL) {
+      return res.status(403).json({ success: false, message: 'Unauthorized access. Admin only.' });
+    }
+    const { title, desc, tag, tagColor, type } = req.body;
+    
+    const updated = await Announcement.findByIdAndUpdate(
+      req.params.id,
+      { $set: { title, desc, tag, tagColor, type } },
+      { new: true }
+    );
+    if (!updated) {
+      return res.status(404).json({ success: false, message: 'Announcement not found.' });
+    }
+    res.json({ success: true, announcement: updated });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// DELETE: Delete announcement (Admin Only)
+router.delete('/announcements/:id', auth, async (req, res) => {
+  try {
+    if (req.user.email !== ADMIN_EMAIL) {
+      return res.status(403).json({ success: false, message: 'Unauthorized access. Admin only.' });
+    }
+    const deleted = await Announcement.findByIdAndDelete(req.params.id);
+    if (!deleted) {
+      return res.status(404).json({ success: false, message: 'Announcement not found.' });
+    }
+    res.json({ success: true, message: 'Announcement deleted successfully.' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

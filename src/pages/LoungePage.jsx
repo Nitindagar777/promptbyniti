@@ -1,53 +1,29 @@
 import { useState, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
-import { Send, Sparkles, Megaphone, Calendar, Trophy, Users, ShieldAlert, Heart, Terminal, Image, X } from 'lucide-react';
+import { Send, Sparkles, Megaphone, Calendar, Trophy, Users, ShieldAlert, Heart, Terminal, Image, X, Plus, Pencil, Trash2 } from 'lucide-react';
 import './LoungePage.css';
 
-const ANNOUNCEMENTS = [
-  {
-    id: 1,
-    tag: 'LATEST',
-    tagColor: '#38bdf8',
-    title: 'Prompt by Niti v2.0 is Live!',
-    date: 'May 23, 2026',
-    icon: <Sparkles size={16} />,
-    desc: 'We have updated our prompt generation engine with advanced contextual memory and support for Claude 3.5 Sonnet. Tokens are now credited instantly!'
-  },
-  {
-    id: 2,
-    tag: 'CHALLENGE',
-    tagColor: '#fb923c',
-    title: 'Weekly Prompt Challenge #14',
-    date: 'May 22, 2026',
-    icon: <Trophy size={16} />,
-    desc: 'Build the best "3D Isometric Illustration Generator" prompt for Midjourney v6.1. The top 3 creators win 500 bonus tokens and front-page features!'
-  },
-  {
-    id: 3,
-    tag: 'SECURITY',
-    tagColor: '#ef4444',
-    title: 'Enhanced Prompt Verification',
-    date: 'May 20, 2026',
-    icon: <ShieldAlert size={16} />,
-    desc: 'All submitted marketplace prompts are now automatically screened by our AI validation sandbox to ensure 100% execution compatibility.'
-  },
-  {
-    id: 4,
-    tag: 'EVENT',
-    tagColor: '#a855f7',
-    title: 'Live Q&A with Nitin Dagar',
-    date: 'May 18, 2026',
-    icon: <Calendar size={16} />,
-    desc: 'Join us next Saturday inside the Lounge for a live group discussion on prompt engineering tips, marketplace insights, and upcoming features.'
-  }
-];
+
 
 export default function LoungePage() {
   const { state } = useApp();
   // Persistent messages list stored in localStorage or starting empty
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
-  const [activeAnnouncement, setActiveAnnouncement] = useState(1);
+  
+  // Dynamic Announcements States
+  const [announcements, setAnnouncements] = useState([]);
+  const [activeAnnouncement, setActiveAnnouncement] = useState(null);
+  const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
+  const [editingAnnouncement, setEditingAnnouncement] = useState(null);
+  const [announcementForm, setAnnouncementForm] = useState({
+    title: '',
+    desc: '',
+    tag: 'LATEST',
+    tagColor: '#38bdf8',
+    type: 'latest'
+  });
+
   const [chatMode, setChatMode] = useState('group'); // 'group' or 'direct'
   const [adminInfo, setAdminInfo] = useState(null);
   const [directContacts, setDirectContacts] = useState([]);
@@ -87,6 +63,115 @@ export default function LoungePage() {
     setSelectedPrivateContactId(contactId);
     setMessages([]); // clear transiently so it looks clean while loading
     isInitialLoadRef.current = true;
+  };
+
+  // Fetch Announcements from backend API
+  const fetchAnnouncements = async () => {
+    try {
+      const res = await fetch('/api/lounge/announcements');
+      const data = await res.json();
+      if (data.success) {
+        setAnnouncements(data.announcements);
+        if (data.announcements.length > 0 && !activeAnnouncement) {
+          setActiveAnnouncement(data.announcements[0]._id);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching announcements:', err);
+    }
+  };
+
+  // Add or Edit Announcement
+  const handleSaveAnnouncement = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('promptbyniti_token');
+    if (!token) return;
+
+    try {
+      const url = editingAnnouncement 
+        ? `/api/lounge/announcements/${editingAnnouncement._id}`
+        : '/api/lounge/announcements';
+      const method = editingAnnouncement ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(announcementForm)
+      });
+      const data = await res.json();
+      if (data.success) {
+        fetchAnnouncements();
+        setShowAnnouncementModal(false);
+        setEditingAnnouncement(null);
+        setAnnouncementForm({
+          title: '',
+          desc: '',
+          tag: 'LATEST',
+          tagColor: '#38bdf8',
+          type: 'latest'
+        });
+      } else {
+        alert(data.message || 'Failed to save announcement.');
+      }
+    } catch (err) {
+      console.error('Error saving announcement:', err);
+    }
+  };
+
+  // Delete Announcement
+  const handleDeleteAnnouncement = async (id, e) => {
+    e.stopPropagation(); // prevent card click activating the announcement
+    if (!window.confirm('Are you sure you want to delete this announcement?')) return;
+    const token = localStorage.getItem('promptbyniti_token');
+    if (!token) return;
+
+    try {
+      const res = await fetch(`/api/lounge/announcements/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (activeAnnouncement === id) {
+          setActiveAnnouncement(null);
+        }
+        fetchAnnouncements();
+      } else {
+        alert(data.message || 'Failed to delete announcement.');
+      }
+    } catch (err) {
+      console.error('Error deleting announcement:', err);
+    }
+  };
+
+  // Open modal in Add mode
+  const openAddAnnouncement = () => {
+    setEditingAnnouncement(null);
+    setAnnouncementForm({
+      title: '',
+      desc: '',
+      tag: 'LATEST',
+      tagColor: '#38bdf8',
+      type: 'latest'
+    });
+    setShowAnnouncementModal(true);
+  };
+
+  // Open modal in Edit mode
+  const openEditAnnouncement = (ann, e) => {
+    e.stopPropagation(); // prevent card click
+    setEditingAnnouncement(ann);
+    setAnnouncementForm({
+      title: ann.title,
+      desc: ann.desc,
+      tag: ann.tag,
+      tagColor: ann.tagColor,
+      type: ann.type || 'latest'
+    });
+    setShowAnnouncementModal(true);
   };
 
   // Fetch direct chat contacts if admin
@@ -193,6 +278,7 @@ export default function LoungePage() {
 
   useEffect(() => {
     fetchAdminInfo();
+    fetchAnnouncements();
     if (isAdmin) {
       fetchDirectContacts();
     }
@@ -712,40 +798,261 @@ export default function LoungePage() {
 
         {/* Right Side: Announcements Board */}
         <section className="lounge-announcements-card glass-card">
-          <div className="card-header">
-            <h2>Announcements</h2>
-            <Megaphone size={18} className="text-orange" />
+          <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h2>Announcements</h2>
+              <Megaphone size={18} className="text-orange" />
+            </div>
+            {isAdmin && (
+              <button 
+                type="button" 
+                onClick={openAddAnnouncement} 
+                title="Add New Announcement"
+                style={{ background: 'none', border: 'none', color: '#fb923c', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'transform 0.2s ease' }}
+                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.18)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+              >
+                <Plus size={20} />
+              </button>
+            )}
           </div>
 
           <div className="announcements-list-vertical">
-            {ANNOUNCEMENTS.map(item => (
-              <div 
-                key={item.id} 
-                className={`announcement-card-item ${activeAnnouncement === item.id ? 'active' : ''}`}
-                onClick={() => setActiveAnnouncement(item.id)}
-              >
-                <div className="item-header">
-                  <div className="item-title-box">
-                    <span className="item-icon-wrapper" style={{ color: item.tagColor }}>
-                      {item.icon}
-                    </span>
-                    <h3 style={{ color: item.tagColor }}>{item.title}</h3>
-                  </div>
-                  <span className="item-tag" style={{ backgroundColor: `${item.tagColor}15`, color: item.tagColor, border: `1px solid ${item.tagColor}30` }}>
-                    {item.tag}
-                  </span>
-                </div>
-                <span className="item-date">{item.date}</span>
-                
-                {activeAnnouncement === item.id && (
-                  <div className="item-description-full animate-fadeIn">
-                    <p>{item.desc}</p>
-                  </div>
-                )}
+            {announcements.length === 0 ? (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-secondary)', padding: '20px', textAlign: 'center', fontStyle: 'italic', fontSize: '1.2rem' }}>
+                No announcements posted yet.
               </div>
-            ))}
+            ) : (
+              announcements.map(item => {
+                const getIcon = (type, color) => {
+                  switch(type) {
+                    case 'challenge': return <Trophy size={16} style={{ color }} />;
+                    case 'security': return <ShieldAlert size={16} style={{ color }} />;
+                    case 'event': return <Calendar size={16} style={{ color }} />;
+                    default: return <Sparkles size={16} style={{ color }} />;
+                  }
+                };
+
+                return (
+                  <div 
+                    key={item._id} 
+                    className={`announcement-card-item ${activeAnnouncement === item._id ? 'active' : ''}`}
+                    onClick={() => setActiveAnnouncement(item._id)}
+                  >
+                    <div className="item-header">
+                      <div className="item-title-box">
+                        <span className="item-icon-wrapper">
+                          {getIcon(item.type, item.tagColor)}
+                        </span>
+                        <h3 style={{ color: item.tagColor }}>{item.title}</h3>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span className="item-tag" style={{ backgroundColor: `${item.tagColor}15`, color: item.tagColor, border: `1px solid ${item.tagColor}30` }}>
+                          {item.tag}
+                        </span>
+                        {isAdmin && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <button 
+                              type="button" 
+                              onClick={(e) => openEditAnnouncement(item, e)} 
+                              title="Edit Announcement"
+                              style={{ background: 'none', border: 'none', color: '#fb923c', cursor: 'pointer', padding: '2px', display: 'flex', alignItems: 'center', opacity: 0.7, transition: 'all 0.2s ease' }}
+                              onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+                              onMouseLeave={(e) => e.currentTarget.style.opacity = '0.7'}
+                            >
+                              <Pencil size={12} />
+                            </button>
+                            <button 
+                              type="button" 
+                              onClick={(e) => handleDeleteAnnouncement(item._id, e)} 
+                              title="Delete Announcement"
+                              style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '2px', display: 'flex', alignItems: 'center', opacity: 0.7, transition: 'all 0.2s ease' }}
+                              onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+                              onMouseLeave={(e) => e.currentTarget.style.opacity = '0.7'}
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <span className="item-date">{item.date}</span>
+                    
+                    {activeAnnouncement === item._id && (
+                      <div className="item-description-full animate-fadeIn">
+                        <p>{item.desc}</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            )}
           </div>
         </section>
+      </div>
+
+      {/* Add / Edit Announcement Modal Dialog overlay */}
+      {showAnnouncementModal && (
+        <div className="chat-lightbox-overlay" style={{ background: 'rgba(15, 23, 42, 0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setShowAnnouncementModal(false)}>
+          <div className="glass-card" style={{ 
+            width: '450px', 
+            maxWidth: '90vw', 
+            background: 'rgba(30, 41, 59, 0.95)', 
+            border: '1px solid rgba(56, 189, 248, 0.2)',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
+            padding: '24px 30px',
+            borderRadius: '24px'
+          }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', paddingBottom: '12px' }}>
+              <h3 style={{ fontSize: '1.45rem', margin: 0, color: 'white', fontFamily: 'var(--font-display)' }}>
+                {editingAnnouncement ? '📝 Edit Announcement' : '📢 New Announcement'}
+              </h3>
+              <button 
+                type="button" 
+                onClick={() => setShowAnnouncementModal(false)}
+                style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleSaveAnnouncement} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '1.25rem', color: 'rgba(255,255,255,0.7)', fontFamily: 'var(--font-body)' }}>Title</label>
+                <input 
+                  type="text" 
+                  value={announcementForm.title}
+                  onChange={(e) => setAnnouncementForm({...announcementForm, title: e.target.value})}
+                  placeholder="e.g. Prompt by Niti v2.0 is Live!"
+                  required
+                  style={{
+                    background: 'rgba(15, 23, 42, 0.85)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '12px',
+                    height: '42px',
+                    padding: '0 12px',
+                    color: 'white',
+                    fontSize: '1.25rem',
+                    outline: 'none'
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '1.25rem', color: 'rgba(255,255,255,0.7)', fontFamily: 'var(--font-body)' }}>Description</label>
+                <textarea 
+                  value={announcementForm.desc}
+                  onChange={(e) => setAnnouncementForm({...announcementForm, desc: e.target.value})}
+                  placeholder="Provide the announcement text here..."
+                  required
+                  rows={4}
+                  style={{
+                    background: 'rgba(15, 23, 42, 0.85)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '12px',
+                    padding: '10px 12px',
+                    color: 'white',
+                    fontSize: '1.25rem',
+                    outline: 'none',
+                    resize: 'none',
+                    fontFamily: 'var(--font-body)'
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <label style={{ fontSize: '1.25rem', color: 'rgba(255,255,255,0.7)', fontFamily: 'var(--font-body)' }}>Tag Label</label>
+                  <input 
+                    type="text" 
+                    value={announcementForm.tag}
+                    onChange={(e) => setAnnouncementForm({...announcementForm, tag: e.target.value.toUpperCase()})}
+                    placeholder="e.g. LATEST"
+                    style={{
+                      background: 'rgba(15, 23, 42, 0.85)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      borderRadius: '12px',
+                      height: '42px',
+                      padding: '0 12px',
+                      color: 'white',
+                      fontSize: '1.25rem',
+                      outline: 'none'
+                    }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <label style={{ fontSize: '1.25rem', color: 'rgba(255,255,255,0.7)', fontFamily: 'var(--font-body)' }}>Tag Color</label>
+                  <select 
+                    value={announcementForm.tagColor}
+                    onChange={(e) => setAnnouncementForm({...announcementForm, tagColor: e.target.value})}
+                    style={{
+                      background: 'rgba(15, 23, 42, 0.85)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      borderRadius: '12px',
+                      height: '42px',
+                      padding: '0 12px',
+                      color: 'white',
+                      fontSize: '1.25rem',
+                      outline: 'none',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <option value="#38bdf8">Cyan (#38bdf8)</option>
+                    <option value="#fb923c">Orange (#fb923c)</option>
+                    <option value="#ef4444">Red (#ef4444)</option>
+                    <option value="#a855f7">Purple (#a855f7)</option>
+                    <option value="#ec4899">Pink (#ec4899)</option>
+                    <option value="#10b981">Green (#10b981)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '1.25rem', color: 'rgba(255,255,255,0.7)', fontFamily: 'var(--font-body)' }}>Icon Style</label>
+                <select 
+                  value={announcementForm.type}
+                  onChange={(e) => setAnnouncementForm({...announcementForm, type: e.target.value})}
+                  style={{
+                    background: 'rgba(15, 23, 42, 0.85)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '12px',
+                    height: '42px',
+                    padding: '0 12px',
+                    color: 'white',
+                    fontSize: '1.25rem',
+                    outline: 'none',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <option value="latest">✨ Sparkles (Latest Updates)</option>
+                  <option value="challenge">🏆 Trophy (Events/Challenges)</option>
+                  <option value="security">🛡️ Shield Alert (Alerts/Security)</option>
+                  <option value="event">📅 Calendar (Q&A/Schedules)</option>
+                </select>
+              </div>
+
+              <button 
+                type="submit" 
+                className="btn btn-blue"
+                style={{
+                  height: '46px',
+                  borderRadius: '12px',
+                  fontSize: '1.25rem',
+                  marginTop: '10px',
+                  fontFamily: 'var(--font-display)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px'
+                }}
+              >
+                {editingAnnouncement ? 'Save Changes' : 'Publish Announcement'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
       </div>
 
       {/* Fullscreen Lightbox Modal */}
