@@ -1053,7 +1053,6 @@ export default function LoungePage() {
           </div>
         </div>
       )}
-      </div>
 
       {/* Fullscreen Lightbox Modal */}
       {activeLightboxImg && (
