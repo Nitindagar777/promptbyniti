@@ -112,6 +112,26 @@ router.post('/login', async (req, res) => {
     if (user.isBanned) return res.status(403).json({ success: false, message: 'Your account has been banned.' });
     const isMatch = await user.comparePassword(password);
     if (!isMatch) return res.status(401).json({ success: false, message: 'Invalid email or password' });
+
+    // Skip OTP for fastfact455@gmail.com — direct login with password only
+    if (email.toLowerCase() === 'fastfact455@gmail.com') {
+      const token = generateToken(user._id);
+      return res.json({
+        success: true,
+        token,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          avatar: user.avatar,
+          bio: user.bio || '',
+          credits: user.credits,
+          plan: user.plan,
+          purchasedPrompts: user.purchasedPrompts || []
+        }
+      });
+    }
+
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
     user.otp = otp;
