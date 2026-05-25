@@ -6,7 +6,8 @@ import {
   ShoppingBag, Zap, Image, Video,
   Upload, CheckCircle, AlertCircle, Info,
   Wand2, ShieldCheck, DollarSign, Type,
-  Plus, Trash2, ChevronRight, Sparkles, ArrowLeft
+  Plus, Trash2, ChevronRight, Sparkles, ArrowLeft,
+  X
 } from 'lucide-react';
 import SEOHead from '../components/SEOHead';
 import './SellPage.css';
@@ -325,20 +326,43 @@ export default function SellPage() {
             : "Create a listing with 3 samples to prove your prompt's power and start earning tokens."}
         </p>
       </div>
-
       {rules && rules.length > 0 && (
-        <div className={`rules-guidelines-box card reveal ${!showRules ? 'collapsed' : ''}`} style={{ marginBottom: 'var(--space-xl)', border: '1px solid var(--color-purple-faint)' }}>
-          <div className="rules-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }} onClick={() => setShowRules(!showRules)}>
+        <div 
+          className={`rules-guidelines-box reveal ${showRules ? 'expanded' : ''}`}
+          style={{ 
+            width: showRules ? '100%' : '220px', 
+            maxWidth: showRules ? '1200px' : '220px',
+            transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
+          }}
+        >
+          <div 
+            className="rules-header" 
+            onClick={() => setShowRules(!showRules)} 
+            style={{ 
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: showRules ? 'space-between' : 'center',
+              width: '100%',
+              gap: '10px'
+            }}
+          >
             <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--color-purple)', fontSize: '1.2rem' }}>
               <ShieldCheck size={24} /> Seller Guidelines
             </h3>
-            <button type="button" className="collapse-btn" style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', fontSize: '1.5rem' }}>
-              {showRules ? '−' : '+'}
-            </button>
+            {showRules && (
+              <button 
+                type="button" 
+                className="collapse-btn" 
+                onClick={(e) => { e.stopPropagation(); setShowRules(false); }}
+              >
+                <X size={20} />
+              </button>
+            )}
           </div>
 
-          {showRules && (
-            <div className="rules-content mt-md">
+          <div className={`rules-content-wrapper ${showRules ? 'open' : ''}`}>
+            <div style={{ paddingTop: '20px' }}>
               <p className="text-sm text-secondary mb-4">Please ensure your prompt follows these requirements to guarantee a fast approval:</p>
               <br></br>
               <div className="rules-grid-v2" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '15px' }}>
@@ -377,10 +401,9 @@ export default function SellPage() {
                 })}
               </div>
             </div>
-          )}
+          </div>
         </div>
       )}
-
       <form className="sell-form-v2" onSubmit={handleSubmit}>
         <div className="sell-page__grid">
           <div className="sell-section reveal" style={{ animationDelay: '0.1s' }}>
