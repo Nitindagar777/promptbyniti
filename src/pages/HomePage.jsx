@@ -291,7 +291,7 @@ export default function HomePage() {
           <h2 className="h-display" style={{ textAlign: 'center', marginBottom: '24px' }}>
             The Best <span className="text-cyan">AI Prompt</span> Platform — <span className="text-orange">Prompt by Niti</span>
           </h2>
-          <div style={{ color: 'var(--text-secondary)', lineHeight: '1.8', fontSize: '1rem' }}>
+          <div className="seo-caveat-text" style={{ color: 'var(--text-secondary)', lineHeight: '1.8', fontSize: '1.5rem' }}>
             <p>
               <strong>Prompt by Niti</strong> is the ultimate <strong>AI prompt generator</strong> and <strong>prompt marketplace</strong> built for creators, designers, and prompt engineers. Whether you need <strong>Midjourney prompts</strong>, <strong>ChatGPT prompts</strong>, <strong>DALL·E prompts</strong>, <strong>Stable Diffusion prompts</strong>, or <strong>Flux prompts</strong> — our AI-powered platform generates studio-quality results in seconds.
             </p>
