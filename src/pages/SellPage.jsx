@@ -326,6 +326,7 @@ export default function SellPage() {
             : "Create a listing with 3 samples to prove your prompt's power and start earning tokens."}
         </p>
       </div>
+      <br></br>
       {rules && rules.length > 0 && (
         <div 
           className={`rules-guidelines-box reveal ${showRules ? 'expanded' : ''}`}
@@ -404,6 +405,7 @@ export default function SellPage() {
           </div>
         </div>
       )}
+      <br></br>
       <form className="sell-form-v2" onSubmit={handleSubmit}>
         <div className="sell-page__grid">
           <div className="sell-section reveal" style={{ animationDelay: '0.1s' }}>
