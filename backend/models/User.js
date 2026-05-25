@@ -43,7 +43,7 @@ const userSchema = new mongoose.Schema({
   },
   hasUsedFreePrompt: {
     type: Boolean,
-    default: false
+    default: true
   },
   walletTokens: {
     type: Number,

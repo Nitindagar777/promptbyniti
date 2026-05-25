@@ -82,10 +82,12 @@ router.post('/register', async (req, res) => {
       user.password = password;
       user.otp = otp;
       user.otpExpires = otpExpires;
+      user.hasUsedFreePrompt = false; // Brand new local registration, allow first free prompt
       await user.save();
     } else {
       user = await User.create({
-        name, email, password, provider: 'local', otp, otpExpires, isVerified: false
+        name, email, password, provider: 'local', otp, otpExpires, isVerified: false,
+        hasUsedFreePrompt: false // Brand new local registration, allow first free prompt
       });
     }
     await sendOTPEmail(email, otp);
@@ -205,7 +207,8 @@ router.post('/google', async (req, res) => {
     } else {
       user = await User.create({
         name, email, googleId, avatar: picture || 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=100&auto=format&fit=crop&q=60', provider: 'google',
-        credits: 0, plan: 'free', isVerified: true
+        credits: 0, plan: 'free', isVerified: true,
+        hasUsedFreePrompt: false // Brand new Google user, allow first free prompt
       });
     }
     const token = generateToken(user._id);
