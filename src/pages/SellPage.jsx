@@ -356,19 +356,19 @@ export default function SellPage() {
                   const textParts = textStr.split(highlightRegex);
 
                   return (
-                    <div key={idx} className="rule-card-v2" style={{ background: `rgba(255, 255, 255, 0.03)`, padding: '15px', borderRadius: '12px', borderLeft: `4px solid ${themeColor}` }}>
-                      <p style={{ fontWeight: '600', fontSize: '0.95rem', marginBottom: '4px', color: 'var(--text-primary)', lineHeight: '1.5' }}>
-                        <span style={{ color: themeColor, marginRight: '6px', fontSize: '1.2rem', fontFamily: 'var(--font-display)' }}>{numStr}</span>
+                    <div key={idx} className="rule-card-v2" style={{ background: `rgba(255, 255, 255, 0.03)`, padding: '15px', borderRadius: '12px', borderLeft: `4px solid ${themeColor}`, fontFamily: "'Caveat', cursive, sans-serif" }}>
+                      <p style={{ fontWeight: '600', fontSize: '1.35rem', marginBottom: '4px', color: 'var(--text-primary)', lineHeight: '1.3', fontFamily: "'Caveat', cursive, sans-serif" }}>
+                        <span style={{ color: themeColor, marginRight: '6px', fontSize: '1.45rem', fontWeight: '700', fontFamily: "'Caveat', cursive, sans-serif" }}>{numStr}</span>
                         {textParts.map((part, i) => {
                           if (part && part.match(highlightRegex)) {
-                            return <span key={i} style={{ color: themeColor, opacity: 0.9 }}>{part}</span>;
+                            return <span key={i} style={{ color: themeColor, opacity: 0.9, fontWeight: '700', fontFamily: "'Caveat', cursive, sans-serif" }}>{part}</span>;
                           }
                           return part;
                         })}
                       </p>
                       {rule.example && (
-                        <p style={{ fontSize: '0.85rem', color: themeColor, fontStyle: 'italic', opacity: 0.9 }}>
-                          <span style={{ fontWeight: '700', fontSize: '0.75rem', textTransform: 'uppercase', marginRight: '5px' }}>Example:</span>
+                        <p style={{ fontSize: '1.15rem', color: themeColor, fontStyle: 'italic', opacity: 0.9, fontFamily: "'Caveat', cursive, sans-serif" }}>
+                          <span style={{ fontWeight: '700', fontSize: '0.95rem', textTransform: 'uppercase', marginRight: '5px', fontFamily: "'Caveat', cursive, sans-serif" }}>Example:</span>
                           {rule.example}
                         </p>
                       )}
