@@ -58,6 +58,7 @@ export default function Navbar() {
   const logoAngle = useRef(0);
   const logoVelocity = useRef(0);
   const logoAnimRef = useRef(null);
+  const notifRef = useRef(null);
 
   useEffect(() => {
     const animateLogo = () => {
@@ -194,6 +195,20 @@ export default function Navbar() {
       localStorage.setItem('promptniti_notif_count', currentCount.toString());
     }
   };
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (notifRef.current && !notifRef.current.contains(event.target)) {
+        setShowNotifications(false);
+      }
+    }
+    if (showNotifications) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showNotifications]);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -352,7 +367,7 @@ export default function Navbar() {
               </div>
 
               {/* Notification Bell */}
-              <div className="navbar__notifications-wrapper">
+              <div className="navbar__notifications-wrapper" ref={notifRef}>
                 <button 
                   className={`navbar__action-btn ${showNotifications ? 'active' : ''}`} 
                   onClick={handleToggleNotifications}
