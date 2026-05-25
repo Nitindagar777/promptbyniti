@@ -18,6 +18,7 @@ const SESSION_KEY = 'promptgen_session';
 
 export default function GeneratePage() {
   const { state, canGenerate, useCredit, addPrompt, isPremium } = useApp();
+  const isFirstFree = state.user && !state.user.hasUsedFreePrompt;
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -159,7 +160,7 @@ export default function GeneratePage() {
       } catch (e) {}
 
       setResult(promptResult);
-      await useCredit(1);
+      await useCredit(1, null, isFirstFree);
       addPrompt(promptResult);
     } catch (error) {
       console.error('Generation Error:', error);
@@ -699,7 +700,11 @@ export default function GeneratePage() {
                       <>
                         <Sparkles size={18} />
                         Generate {generatorMode === 'example' ? 'Examples' : 'Prompt'}
-                        {state.plan !== 'unlimited' && <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>(-1 credit)</span>}
+                        {state.plan !== 'unlimited' && (
+                          <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>
+                            {isFirstFree ? ' (Free)' : ' (-1 credit)'}
+                          </span>
+                        )}
                       </>
                     )}
                   </button>

@@ -79,7 +79,8 @@ export default function AuthPage() {
           email: data.user.email,
           avatar: data.user.avatar,
           credits: data.user.credits,
-          plan: data.user.plan
+          plan: data.user.plan,
+          hasUsedFreePrompt: data.user.hasUsedFreePrompt
         }, data.token);
         navigate('/');
       } else {
@@ -114,7 +115,8 @@ export default function AuthPage() {
           email: data.user.email,
           avatar: data.user.avatar,
           credits: data.user.credits,
-          plan: data.user.plan
+          plan: data.user.plan,
+          hasUsedFreePrompt: data.user.hasUsedFreePrompt
         }, data.token);
         navigate('/');
       } else {
@@ -297,7 +299,8 @@ export default function AuthPage() {
             email: data.user.email,
             avatar: data.user.avatar,
             credits: data.user.credits,
-            plan: data.user.plan
+            plan: data.user.plan,
+            hasUsedFreePrompt: data.user.hasUsedFreePrompt
           }, data.token);
           navigate('/');
         }

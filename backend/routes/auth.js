@@ -127,6 +127,7 @@ router.post('/login', async (req, res) => {
           bio: user.bio || '',
           credits: user.credits,
           plan: user.plan,
+          hasUsedFreePrompt: user.hasUsedFreePrompt,
           purchasedPrompts: user.purchasedPrompts || []
         }
       });
@@ -170,7 +171,8 @@ router.post('/verify-otp', async (req, res) => {
         avatar: user.avatar,
         bio: user.bio || '',
         credits: user.credits,
-        plan: user.plan
+        plan: user.plan,
+        hasUsedFreePrompt: user.hasUsedFreePrompt
       }
     });
   } catch (err) {
@@ -218,6 +220,7 @@ router.post('/google', async (req, res) => {
         bio: user.bio || '',
         credits: user.credits,
         plan: user.plan,
+        hasUsedFreePrompt: user.hasUsedFreePrompt,
         purchasedPrompts: user.purchasedPrompts || []
       }
     });
@@ -248,6 +251,7 @@ router.get('/me', async (req, res) => {
         bio: user.bio || '',
         credits: user.credits,
         plan: user.plan,
+        hasUsedFreePrompt: user.hasUsedFreePrompt,
         purchasedPrompts: user.purchasedPrompts || []
       }
     });
@@ -287,7 +291,8 @@ router.put('/profile', async (req, res) => {
         avatar: user.avatar,
         bio: user.bio || '',
         credits: user.credits,
-        plan: user.plan
+        plan: user.plan,
+        hasUsedFreePrompt: user.hasUsedFreePrompt
       }
     });
   } catch (err) {
@@ -304,11 +309,20 @@ router.post('/use-credits', async (req, res) => {
     if (!authHeader) return res.status(401).json({ success: false, message: 'Not authenticated' });
     const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const { amount, templateId } = req.body;
+    const { amount, templateId, isFreePrompt } = req.body;
     const Prompt = require('../models/Prompt'); // Import Prompt model
 
     const user = await User.findById(decoded.id);
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+    if (isFreePrompt) {
+      if (user.hasUsedFreePrompt) {
+        return res.status(400).json({ success: false, message: 'Free prompt already used' });
+      }
+      user.hasUsedFreePrompt = true;
+      await user.save();
+      return res.json({ success: true, credits: user.credits, hasUsedFreePrompt: true });
+    }
 
     const totalAmount = amount || 5;
     if (user.credits < totalAmount) {
@@ -424,6 +438,7 @@ router.post('/reset-password', async (req, res) => {
         id: user._id, name: user.name, email: user.email, avatar: user.avatar,
         bio: user.bio || '',
         credits: user.credits, plan: user.plan,
+        hasUsedFreePrompt: user.hasUsedFreePrompt,
         purchasedPrompts: user.purchasedPrompts || []
       }
     });

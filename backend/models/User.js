@@ -41,6 +41,10 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 0 // No free tokens for new users
   },
+  hasUsedFreePrompt: {
+    type: Boolean,
+    default: false
+  },
   walletTokens: {
     type: Number,
     default: 0 // Earned tokens available for withdrawal

@@ -49,6 +49,7 @@ function loadState() {
 const actions = {
   SET_USER: 'SET_USER',
   USE_CREDIT: 'USE_CREDIT',
+  USE_FREE_PROMPT: 'USE_FREE_PROMPT',
   ADD_PROMPT: 'ADD_PROMPT',
   DELETE_PROMPT: 'DELETE_PROMPT',
   TOGGLE_FAVORITE: 'TOGGLE_FAVORITE',
@@ -72,6 +73,16 @@ function appReducer(state, action) {
       if (state.plan === 'unlimited') return state;
       const deductionAmount = action.payload || 1;
       return { ...state, credits: Math.max(0, state.credits - deductionAmount) };
+
+    case actions.USE_FREE_PROMPT:
+      if (!state.user) return state;
+      return {
+        ...state,
+        user: {
+          ...state.user,
+          hasUsedFreePrompt: true
+        }
+      };
 
     case actions.ADD_PURCHASE:
       if (!state.user) return state;
@@ -334,8 +345,12 @@ export function AppProvider({ children }) {
     state,
     dispatch,
     /* Convenience helpers */
-    useCredit: async (amount = 1, templateId = null) => {
-      dispatch({ type: actions.USE_CREDIT, payload: amount });
+    useCredit: async (amount = 1, templateId = null, isFreePrompt = false) => {
+      if (isFreePrompt) {
+        dispatch({ type: actions.USE_FREE_PROMPT });
+      } else {
+        dispatch({ type: actions.USE_CREDIT, payload: amount });
+      }
       if (templateId) {
         dispatch({ type: actions.ADD_PURCHASE, payload: templateId });
       }
@@ -349,7 +364,7 @@ export function AppProvider({ children }) {
               'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ amount, templateId })
+            body: JSON.stringify({ amount, templateId, isFreePrompt })
           });
         } catch (err) {
           console.error('Failed to sync credits:', err);
@@ -368,7 +383,7 @@ export function AppProvider({ children }) {
       localStorage.removeItem(TOKEN_KEY);
       dispatch({ type: actions.LOGOUT });
     },
-    canGenerate: state.plan === 'unlimited' || state.credits > 0,
+    canGenerate: state.plan === 'unlimited' || state.credits > 0 || (state.user && !state.user.hasUsedFreePrompt),
     isPremium: state.plan !== 'free',
     authLoading,
     /* Caching & Scroll helpers */
