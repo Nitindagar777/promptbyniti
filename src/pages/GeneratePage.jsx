@@ -18,7 +18,7 @@ const SESSION_KEY = 'promptgen_session';
 
 export default function GeneratePage() {
   const { state, canGenerate, useCredit, addPrompt, isPremium } = useApp();
-  const isFirstFree = state.user && !state.user.hasUsedFreePrompt;
+  const isFirstFree = state.user && state.user.hasUsedFreePrompt === false;
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -57,6 +57,7 @@ export default function GeneratePage() {
   const [isGenerating, setIsGenerating] = useState(() => sessionStorage.getItem('isGenerating') === 'true');
   const [showPaywall, setShowPaywall] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
+  const [aiPower, setAiPower] = useState('normal'); // 'normal', 'super', 'power'
 
   // Recover state if background generation finished while we were mounted or just navigated back
   useEffect(() => {
@@ -126,7 +127,10 @@ export default function GeneratePage() {
       }
     }
 
-    if (!canGenerate) {
+    const creditCost = aiPower === 'power' ? 5 : aiPower === 'super' ? 3 : 1;
+    const hasEnoughCredits = state.plan === 'unlimited' || state.credits >= creditCost || (isFirstFree && state.credits >= 0);
+
+    if (!canGenerate || !hasEnoughCredits) {
       setShowPaywall(true);
       return;
     }
@@ -134,9 +138,13 @@ export default function GeneratePage() {
     sessionStorage.setItem('isGenerating', 'true');
     setResult(null);
     try {
+      // Resolve human-readable model name for the API
+      const modelEntry = aiModels.find(m => m.id === form.model);
+      const modelLabel = modelEntry ? modelEntry.label : (form.model || 'midjourney');
+
       const payload = generatorMode === 'prompt'
-        ? form
-        : { ...form, mode: 'example', description: exampleTemplate };
+        ? { ...form, aiPower, modelLabel }
+        : { ...form, mode: 'example', description: exampleTemplate, aiPower, modelLabel };
 
       const API_BASE = '/api';
       const response = await fetch(`${API_BASE}/generate`, {
@@ -160,7 +168,7 @@ export default function GeneratePage() {
       } catch (e) {}
 
       setResult(promptResult);
-      await useCredit(1, null, isFirstFree);
+      await useCredit(creditCost, null, isFirstFree);
       addPrompt(promptResult);
     } catch (error) {
       console.error('Generation Error:', error);
@@ -622,6 +630,147 @@ export default function GeneratePage() {
               </div>
             )}
 
+            {/* Power of AI Selection */}
+            {!result && (
+              <div className="gen-section gen-section--expanded gen-section--full" style={{ marginBottom: '24px', animation: 'fadeIn 0.4s ease' }}>
+                <h3 className="gen-section__title mb-3" style={{ color: '#06b6d4', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Zap size={20} className="icon-pulse text-cyan" /> Power of AI
+                </h3>
+                <p className="text-sm text-muted mb-4">
+                  Select the computational strength and creativity depth of the AI generation.
+                  
+                </p>
+                <br></br>
+                <div className="power-selector-container" style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
+                  {/* Top Row: Normal and Super */}
+                  <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', width: '100%' }}>
+                    {[
+                      { id: 'normal', label: 'Normal', credits: 1, color: 'var(--color-green)', desc: 'Standard quality' },
+                      { id: 'super', label: 'Super', credits: 3, color: 'var(--color-cyan)', desc: 'Enhanced details' }
+                    ].map((p) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => setAiPower(p.id)}
+                        style={{
+                          padding: '12px 8px',
+                          borderRadius: '16px',
+                          background: aiPower === p.id ? 'var(--bg-secondary)' : 'rgba(255, 255, 255, 0.02)',
+                          border: aiPower === p.id ? `2px solid ${p.color}` : '2px solid var(--border-color)',
+                          color: aiPower === p.id ? 'white' : 'var(--text-muted)',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          gap: '4px',
+                          boxShadow: aiPower === p.id ? `0 8px 24px rgba(0, 0, 0, 0.3)` : 'none',
+                          position: 'relative',
+                          overflow: 'hidden',
+                          width: 'calc(50% - 8px)',
+                          minWidth: '140px'
+                        }}
+                        className="power-btn"
+                      >
+                        <span style={{ 
+                          fontSize: '1.05rem', 
+                          fontFamily: 'var(--font-display)', 
+                          color: aiPower === p.id ? 'white' : 'var(--text-secondary)',
+                          transition: 'color 0.3s'
+                        }}>
+                          {p.credits} Credit{p.credits > 1 ? 's' : ''} — {p.label}
+                        </span>
+                        <span style={{ 
+                          fontSize: '0.7rem', 
+                          opacity: 0.7, 
+                          textAlign: 'center', 
+                          fontWeight: 'normal',
+                          fontFamily: 'var(--font-body)'
+                        }}>
+                          {p.desc}
+                        </span>
+                        {aiPower === p.id && (
+                          <div style={{
+                            position: 'absolute',
+                            top: 0,
+                            right: 0,
+                            width: '0',
+                            height: '0',
+                            borderStyle: 'solid',
+                            borderWidth: '0 24px 24px 0',
+                            borderColor: `transparent ${p.color} transparent transparent`
+                          }} />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Bottom Row: Power centered */}
+                  <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+                    {[
+                      { id: 'power', label: 'Power', credits: 5, color: 'var(--color-purple)', desc: 'Maximum precision' }
+                    ].map((p) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => setAiPower(p.id)}
+                        style={{
+                          padding: '12px 8px',
+                          borderRadius: '16px',
+                          background: aiPower === p.id ? 'var(--bg-secondary)' : 'rgba(255, 255, 255, 0.02)',
+                          border: aiPower === p.id ? `2px solid ${p.color}` : '2px solid var(--border-color)',
+                          color: aiPower === p.id ? 'white' : 'var(--text-muted)',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          gap: '4px',
+                          boxShadow: aiPower === p.id ? `0 8px 24px rgba(0, 0, 0, 0.3)` : 'none',
+                          position: 'relative',
+                          overflow: 'hidden',
+                          width: 'calc(50% - 8px)',
+                          minWidth: '140px',
+                          margin: '0 auto'
+                        }}
+                        className="power-btn"
+                      >
+                        <span style={{ 
+                          fontSize: '1.05rem', 
+                          fontFamily: 'var(--font-display)', 
+                          color: aiPower === p.id ? 'white' : 'var(--text-secondary)',
+                          transition: 'color 0.3s'
+                        }}>
+                          {p.credits} Credit{p.credits > 1 ? 's' : ''} — {p.label}
+                        </span>
+                        <span style={{ 
+                          fontSize: '0.7rem', 
+                          opacity: 0.7, 
+                          textAlign: 'center', 
+                          fontWeight: 'normal',
+                          fontFamily: 'var(--font-body)'
+                        }}>
+                          {p.desc}
+                        </span>
+                        {aiPower === p.id && (
+                          <div style={{
+                            position: 'absolute',
+                            top: 0,
+                            right: 0,
+                            width: '0',
+                            height: '0',
+                            borderStyle: 'solid',
+                            borderWidth: '0 24px 24px 0',
+                            borderColor: `transparent ${p.color} transparent transparent`
+                          }} />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Action Buttons — change based on state */}
             <div className="gen-actions">
               {result ? (
@@ -637,7 +786,7 @@ export default function GeneratePage() {
                         <ShoppingBag size={18} />
                         <span>Sell Prompt</span>
                       </button>
-
+ 
                       <button
                         className="btn btn-lg gen-action-btn gen-action-btn--save"
                         onClick={handleSavePrompt}
@@ -648,7 +797,7 @@ export default function GeneratePage() {
                       </button>
                     </>
                   )}
-
+ 
                   <button
                     className="btn btn-lg gen-action-btn gen-action-btn--refresh"
                     onClick={handleRefresh}
@@ -657,7 +806,7 @@ export default function GeneratePage() {
                     <RotateCcw size={18} />
                     <span>{generatorMode === 'example' ? 'Clear' : 'New Prompt'}</span>
                   </button>
-
+ 
                   {generatorMode === 'example' && (
                     <button
                       className="btn btn-lg gen-action-btn gen-action-btn--save"
@@ -687,7 +836,7 @@ export default function GeneratePage() {
                       </div>
                     </button>
                   )}
-
+ 
                   <button
                     className={`btn btn-primary btn-lg gen-submit ${isGenerating ? 'gen-submit--loading' : ''} ${form.description.length > 5 ? 'gen-submit--glow' : ''}`}
                     onClick={handleGenerate}
@@ -702,7 +851,7 @@ export default function GeneratePage() {
                         Generate {generatorMode === 'example' ? 'Examples' : 'Prompt'}
                         {state.plan !== 'unlimited' && (
                           <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>
-                            {isFirstFree ? ' (Free)' : ' (-1 credit)'}
+                            {isFirstFree ? ' (Free)' : ` (-${aiPower === 'power' ? 5 : aiPower === 'super' ? 3 : 1} credit${(aiPower === 'power' || aiPower === 'super') ? 's' : ''})`}
                           </span>
                         )}
                       </>

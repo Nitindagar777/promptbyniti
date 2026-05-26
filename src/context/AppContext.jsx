@@ -383,7 +383,7 @@ export function AppProvider({ children }) {
       localStorage.removeItem(TOKEN_KEY);
       dispatch({ type: actions.LOGOUT });
     },
-    canGenerate: state.plan === 'unlimited' || state.credits > 0 || (state.user && !state.user.hasUsedFreePrompt),
+    canGenerate: state.plan === 'unlimited' || state.credits > 0 || (state.user && state.user.hasUsedFreePrompt === false),
     isPremium: state.plan !== 'free',
     authLoading,
     /* Caching & Scroll helpers */

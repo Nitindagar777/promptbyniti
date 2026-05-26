@@ -212,6 +212,7 @@
   flex: 1;
   padding: 12px 32px;
   font-size: 1.1rem;
+  white-space: nowrap;
 }
 
 .gen-submit--glow {

@@ -3,6 +3,59 @@ const router = express.Router();
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const SystemSettings = require('../models/SystemSettings');
 
+/**
+ * Programmatically reduce the number of bracketed variables in promptTemplate to maxVars,
+ * replacing excess variables with their corresponding resolved values from mainPrompt.
+ */
+function limitVariables(promptTemplate, mainPrompt, maxVars = 5) {
+  const varRegex = /\[([^\]]+)\]/g;
+  const variables = [];
+  let match;
+  while ((match = varRegex.exec(promptTemplate)) !== null) {
+    variables.push({
+      full: match[0],
+      name: match[1]
+    });
+  }
+
+  // If variables are within limit, do nothing
+  if (variables.length <= maxVars) {
+    return { promptTemplate, mainPrompt };
+  }
+
+  console.log(`⚠️ Prompt has ${variables.length} variables, which exceeds the max limit of ${maxVars}. Programmatically reducing...`);
+
+  // Escape special regex characters in promptTemplate
+  let escapedTemplate = promptTemplate.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+
+  variables.forEach(v => {
+    // Re-enable the bracketed variable in escaped form as a capture group
+    const escapedVar = '\\\\\\[' + v.name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + '\\\\\\]';
+    escapedTemplate = escapedTemplate.replace(new RegExp(escapedVar, 'g'), '(.*?)');
+  });
+
+  try {
+    const matcher = new RegExp(`^${escapedTemplate}$`, 'i');
+    const matches = mainPrompt.match(matcher);
+
+    if (matches && matches.length === variables.length + 1) {
+      let newTemplate = promptTemplate;
+      
+      for (let i = maxVars; i < variables.length; i++) {
+        const value = matches[i + 1];
+        newTemplate = newTemplate.replace(variables[i].full, value);
+      }
+
+      console.log(`✅ Successfully reduced template variables to ${maxVars}!`);
+      return { promptTemplate: newTemplate, mainPrompt };
+    }
+  } catch (err) {
+    console.warn('⚠️ Programmatic variable reduction failed:', err.message);
+  }
+
+  return { promptTemplate, mainPrompt };
+}
+
 /* ================================================================
    CACHED MODEL INSTANCE
    - systemInstruction (platform rules) is set ONCE at init time
@@ -12,7 +65,7 @@ const SystemSettings = require('../models/SystemSettings');
 let cachedModel = null;
 let cachedRulesHash = null;   // detect when admin edits rules
 let cachedApiKey = null;
-const SYSTEM_PROMPT_VERSION = 'v8-dramatic-samples'; // bump this when system prompt changes
+const SYSTEM_PROMPT_VERSION = 'v20-five-variable-diversity-extreme'; // bump this when system prompt changes
 
 // Fallback chain: try best model first, fall back if unavailable
 const MODEL_CHAIN = ['gemini-3-flash-preview', 'gemini-2.5-flash', 'gemini-2.0-flash'];
@@ -29,7 +82,10 @@ async function getOrCreateModel() {
 
   // Build a hash of current rules + key to detect changes
   const rulesStr = settings.promptCreationRules
-    .map((r, i) => `${i + 1}. ${r.text}${r.example ? ` (Example: ${r.example})` : ''}`)
+    .map((r, i) => {
+      const cleanText = r.text.replace(/^\d+[\s.)-]+\s*/, '');
+      return `${i + 1}. ${cleanText}${r.example ? ` (Example: ${r.example})` : ''}`;
+    })
     .join('\n');
 
   const currentHash = `${SYSTEM_PROMPT_VERSION}::${settings.geminiApiKey}::${settings.paidGeminiApiKey || ''}::${settings.geminiModel}::${rulesStr}`;
@@ -39,8 +95,52 @@ async function getOrCreateModel() {
     return cachedModel;
   }
 
-  // ── Build the system instruction (cached once, never sent per-request) ──
-  const systemInstruction = `You are an expert AI Prompt Engineer for a premium prompt marketplace called "Prompt by Niti".
+  const genAIFree = new GoogleGenerativeAI(settings.geminiApiKey);
+  const genAIPaid = settings.paidGeminiApiKey ? new GoogleGenerativeAI(settings.paidGeminiApiKey) : null;
+
+  // Store both genAI instances and rulesStr
+  cachedModel = { genAIFree, genAIPaid, rulesStr };
+
+  cachedRulesHash = currentHash;
+  cachedApiKey = settings.geminiApiKey;
+
+  console.log(`✅ Gemini initialized. Model chain: ${MODEL_CHAIN.join(' → ')}. Paid key configured: ${!!genAIPaid}`);
+  return cachedModel;
+}
+
+/**
+ * Build a dynamic system instruction based on rules and aiPower tier.
+ */
+function buildSystemInstruction(rulesStr, aiPower) {
+  const power = aiPower || 'normal';
+  
+  let tierGuidelines = '';
+  if (power === 'super') {
+    tierGuidelines = `
+PROMPT DETAIL LEVEL — SUPER TIER (3 CREDITS):
+- You MUST generate a highly detailed, long, and rich prompt text.
+- MORE FIXED DESCRIPTIVE TEXT REQUIRED: Ensure the prompt template is packed with high-quality, fixed descriptive text (e.g. complex scene framing, specific visual elements, lighting terms) that remains unchangeable. There should be a lot of descriptive fixed words and only 1 to 5 bracketed variables.
+- Include advanced visual descriptions: specific textures, camera lens details (e.g. 85mm f/1.4), depth of field, complex color gradations, and rich atmospheric lighting (e.g., volumetric dust motes, soft diffusion, golden hour rim lighting).
+- Add highly specific design/artistic styles and medium descriptors.
+- Ensure the prompt is descriptive enough to paint a vivid, multi-layered visual scene.`;
+  } else if (power === 'power') {
+    tierGuidelines = `
+PROMPT DETAIL LEVEL — POWER TIER (5 CREDITS - MAXIMUM DETAIL & DENSITY):
+- You MUST generate an exceptionally detailed, very long, and highly immersive prompt.
+- MAXIMUM FIXED DESCRIPTIVE TEXT REQUIRED: Ensure the prompt template has the absolute maximum density of fixed, professional prompt-engineering words (such as intricate camera setups, lighting rigs, master-level rendering engines, environmental sensory words, artistic styling direction). The vast majority of the template MUST be solid, high-value, unchangeable text, while still strictly limiting bracketed variables to between 1 and 5. This makes the prompt incredibly valuable and complex.
+- Incorporate professional cinematic and photographic vocabulary: specific focal lengths, precise aperture values, complex framing (e.g., low-angle extreme close-up, rule of thirds, dynamic background depth).
+- Describe intricate sensory and environmental details: volumetric fog, specific humidity/weather, raytraced light reflections, subtle chromatic aberration, realistic fabric weave, and precise skin/surface textures.
+- Use advanced artistic direction keywords: epic scale, highly atmospheric, award-winning cinematography, photorealistic render, breathtaking detailed composition.
+- Leave no detail to chance; build a masterpiece of descriptive prompt engineering.`;
+  } else {
+    tierGuidelines = `
+PROMPT DETAIL LEVEL — NORMAL TIER (1 CREDIT):
+- Generate a professional, clean, and direct prompt.
+- Keep the prompt concise, clear, and focused on the key visual details, style, and lighting.
+- Focus on producing a clean, solid, and high-quality baseline prompt with standard fixed text and 1 to 5 variables.`;
+  }
+
+  return `You are an expert AI Prompt Engineer for a premium prompt marketplace called "Prompt by Niti".
 
 PLATFORM RULES (ALWAYS ENFORCE):
 ${rulesStr}
@@ -51,14 +151,26 @@ YOUR ROLE:
 - For IMAGE prompts: focus on vivid visual details, composition, lighting, style keywords.
 - For VIDEO prompts: include camera movements, motion dynamics, temporal flow, scene transitions.
 - For TEXT prompts: focus on tone, structure, context, audience, formatting guidance.
+${tierGuidelines}
 
 CRITICAL — REFERENCE IMAGE HANDLING:
 When a reference image is provided, you MUST:
-1. FIRST, deeply analyze every visual detail in the image: the exact subject (person, animal, object, character), their appearance (colors, shape, texture, clothing, features, text/logos on it), the pose/action, the background/environment, the art style, the color scheme, and the overall composition.
-2. The generated prompt MUST reproduce the SAME subject/character/object from the reference image. Do NOT invent new random objects. If the image shows a cat, the prompt must be about that cat. If it shows a logo, the prompt must include that logo. If it shows a person, the prompt must describe that exact person.
-3. All 3 sample variations must keep the SAME core subject from the reference image — only vary the scene/environment/style, NEVER the subject itself.
-4. Include specific visual descriptors from the image in the prompt: exact colors, patterns, text visible, distinctive features, pose, expression, etc.
-5. The mainPrompt should be detailed enough that someone who has never seen the reference image could recreate something visually very similar.
+1. FIRST, deeply analyze every visual detail in the image: the exact subject (person, animal, bird, vehicle, logo, product, character, etc.), their appearance (colors, shape, texture, features, text/logos), pose, environment, style, color scheme, and composition.
+2. The mainPrompt MUST describe the EXACT subject/character/object seen in the reference image (e.g., if the image is a blue and yellow bird, the mainPrompt must describe that blue and yellow bird. If it is a black dog, it must describe that black dog. If it is a fairy with purple wings, it must describe that fairy with purple wings).
+3. IDENTIFY ALL 5 CRITICAL VISUAL VARIABLES: You MUST break down the reference image into exactly 5 bracketed variables:
+   - [subject] (e.g. fairy, girl, angel, warrior, explorer, demon, robot)
+   - [pose/action] (e.g. kneeling, reaching, sitting, flying, battle stance, dancing)
+   - [core feature] (e.g. butterfly wings, feathered wings, mechanical wings, dragon wings)
+   - [color palette] (e.g. gold and teal, pastel pink and mint, silver and gold, obsidian and crimson)
+   - [background scenery] (e.g. circular fern arch, cosmic nebula, industrial skyline, volcanic abyss)
+4. DO NOT HARDCODE ANY OF THESE 5 COMPONENT DETAILS IN THE TEMPLATE: In the promptTemplate, you MUST NOT hardcode these specific details (e.g. "fairy", "kneeling", "butterfly wings", "pastel pink", "circular fern arch") as fixed text. You MUST replace all 5 of these components with generalized bracketed variables so the template is 100% reusable. Leaving any of these 5 specific visual components as fixed text in the promptTemplate is a critical failure.
+5. THE 3 SAMPLE VARIATIONS MUST USE COMPLETELY DIFFERENT CATEGORIES FOR ALL 5 VARIABLES (MAXIMUM DIVERSITY): In each of the 3 samples, you MUST replace ALL 5 variables with completely different, creative concepts. DO NOT repeat the reference subject's wings, pose, color, or background in the samples! E.g. for a fairy with butterfly wings:
+   - Sample A: Features a celestial girl with feathered wings in pastel pink/mint kneeling inside a circular leaf arch. (Matches reference image style)
+   - Sample B: Features a steampunk explorer with mechanical wings in copper/gold flying over a smoky industrial skyline. (100% different subject, pose, wings, colors, and background!)
+   - Sample C: Features an angelic warrior with glowing energy wings in silver/gold standing in a battle stance inside a cosmic nebula. (100% different subject, pose, wings, colors, and background!)
+   - This prevents the samples from repeating the same features, demonstrating the supreme flexibility of the prompt template!
+6. Include specific visual descriptors from the reference image in the mainPrompt so it accurately recreates the image.
+7. The mainPrompt should be detailed enough that someone who has never seen the reference image could recreate something visually very similar.
 
 OUTPUT FORMAT:
 You must return a VALID JSON object with these fields:
@@ -79,41 +191,40 @@ You must return a VALID JSON object with these fields:
 }
 
 HOW TO BUILD SAMPLES (FOLLOW THIS EXACTLY):
-1. Write the mainPrompt first. It must be a perfect, real-world example of the prompt being used (NO brackets).
-2. Create promptTemplate: take the mainPrompt and replace AT LEAST 5-7 different changeable parts with [BRACKET] variables.
-3. For each sample (A, B, C, etc.), take the promptTemplate and replace every single [BRACKET] with a COMPLETELY DIFFERENT real value.
-4. ZERO TOLERANCE FOR REPETITION: Every variable MUST be 100% unique across all samples.
-5. ZERO TOLERANCE FOR BRACKETS IN SAMPLES: Samples and mainPrompt MUST NOT contain any [BRACKETS]. Only promptTemplate has brackets.
-6. SAMPLE COUNT: Generate exactly 3 samples for standard generations. Generate exactly 5 samples ONLY when "Example Generator" mode is requested.
+1. Write the mainPrompt first. It must be a perfect, real-world example of the prompt being used (NO brackets). Make it long, detailed, and rich with fixed descriptive text.
+2. Create promptTemplate: take the mainPrompt and replace ONLY the most important changeable parts with [BRACKET] variables. 
+3. STRICT VARIABLE LIMIT — MINIMUM 1, MAXIMUM 5 VARIABLES: The promptTemplate MUST contain a minimum of 1 bracketed variable and a maximum of 5 bracketed variables total. You must NEVER exceed 5 variables (e.g., [subject], [color], [style], [lighting], [location] is 5). Any prompt template with 6 or more variables is REJECTED. Keep all the remaining text of the prompt as rich, high-quality, fixed descriptive text.
+4. GENERAL RULE & PERFECT TEMPLATE EXAMPLE:
+   Here is a perfect example of a general, high-value prompt template that has EXACTLY 4 variables (within the 1-5 limit) and 80% fixed descriptive text:
+   - mainPrompt: "Double exposure photography of a wolf silhouette against a deep pine forest, vibrant night sky filled with aurora borealis, double exposure visual effect, ethereal lighting, sharp details, cinematic rendering --ar 1:1"
+   - promptTemplate: "Double exposure photography of a [subject] silhouette against a [background scenery], vibrant night sky filled with [atmospheric effect], double exposure visual effect, [lighting style] lighting, sharp details, cinematic rendering --ar 1:1"
+   - In this example, ONLY the key items ([subject], [background scenery], [atmospheric effect], [lighting style]) are variables (4 total). All other words like "Double exposure photography", "silhouette against a", "vibrant night sky filled with", "double exposure visual effect", "lighting, sharp details, cinematic rendering" are FIXED descriptive text. This ensures the prompt is highly professional, unique, and valuable!
+5. For each sample (A, B, C, etc.), take the promptTemplate and replace every single [BRACKET] with a COMPLETELY DIFFERENT real value.
+6. ZERO TOLERANCE FOR REPETITION: Every variable MUST be 100% unique across all samples.
+7. ZERO TOLERANCE FOR BRACKETS IN SAMPLES: Samples and mainPrompt MUST NOT contain any [BRACKETS]. Only promptTemplate has brackets.
+8. SAMPLE COUNT: Generate exactly 3 samples for standard generations. Generate exactly 5 samples ONLY when "Example Generator" mode is requested.
 
 - Every prompt and sample MUST end with --ar 1:1
 
 Return ONLY the JSON object. No markdown fences, no explanation.`;
-
-  const genAIFree = new GoogleGenerativeAI(settings.geminiApiKey);
-  const genAIPaid = settings.paidGeminiApiKey ? new GoogleGenerativeAI(settings.paidGeminiApiKey) : null;
-
-  // Store both genAI instances and systemInstruction
-  cachedModel = { genAIFree, genAIPaid, systemInstruction };
-
-  cachedRulesHash = currentHash;
-  cachedApiKey = settings.geminiApiKey;
-
-  console.log(`✅ Gemini initialized. Model chain: ${MODEL_CHAIN.join(' → ')}. Paid key configured: ${!!genAIPaid}`);
-  return cachedModel;
 }
 
 // POST /api/generate
 router.post('/', async (req, res) => {
   try {
-    const { description, characterImage, promptType, model, mode } = req.body;
+    const { description, characterImage, promptType, model, mode, modelLabel, aiPower } = req.body;
+    // Use human-readable model name if available, otherwise fall back to model id
+    const targetModel = modelLabel || model || 'Midjourney';
 
     if (!description || !description.trim()) {
       return res.status(400).json({ message: 'Description or Template is required.' });
     }
 
-    // 1. Get cached model (rules baked in as systemInstruction)
+    // 1. Get cached model (keys and database rules)
     const cached = await getOrCreateModel();
+
+    // Build the system instruction dynamically based on the requested aiPower level
+    const systemInstruction = buildSystemInstruction(cached.rulesStr, aiPower);
 
     // 2. Build lightweight user message (NO rules, NO characteristics repeated)
     const userParts = [];
@@ -148,6 +259,24 @@ router.post('/', async (req, res) => {
 
     // Core user request
     if (mode === 'example') {
+      let exampleLengthInstructions = '';
+      const power = aiPower || 'normal';
+      if (power === 'super') {
+        exampleLengthInstructions = `
+7. VARIABLE REPLACEMENT LENGTH — SUPER TIER (3 CREDITS):
+   - For each [BRACKETED] variable you replace, you MUST generate a highly descriptive and detailed value of exactly 6 to 9 words (e.g., replace "[animal]" with "a fluffy golden retriever puppy playing with a red ball in grass", replace "[style]" with "cinematic dramatic warm studio lighting with dark background shadows").
+   - This ensures all 5 generated samples are highly detailed, rich, and visually descriptive.`;
+      } else if (power === 'power') {
+        exampleLengthInstructions = `
+7. VARIABLE REPLACEMENT LENGTH — POWER TIER (5 CREDITS):
+   - For each [BRACKETED] variable you replace, you MUST generate an exceptionally descriptive, long, and sensory-rich value of exactly 10 to 15 words (e.g., replace "[animal]" with "a fluffy golden retriever puppy playing happily with a red ball in green grass under bright sun", replace "[style]" with "highly detailed cinematic dramatic warm studio lighting with deep shadows and soft volumetric dust particles").
+   - This maximizes the detail level, giving the user exceptionally long, professional, and descriptive visual samples.`;
+      } else {
+        exampleLengthInstructions = `
+7. VARIABLE REPLACEMENT LENGTH — NORMAL TIER (1 CREDIT):
+   - For each [BRACKETED] variable you replace, generate a concise value of exactly 3 to 5 words (e.g., replace "[animal]" with "a fluffy golden retriever puppy", replace "[style]" with "dramatic studio lighting with shadows").`;
+      }
+
       userParts.push({
         text: `OVERRIDE SYSTEM INSTRUCTIONS: DO NOT generate a new prompt from scratch. The user HAS ALREADY provided their own Prompt Template below.
 
@@ -163,7 +292,8 @@ STRICT RULES:
 3. For the "promptTemplate" field in the JSON, return the exact USER TEMPLATE provided above.
 4. For the "mainPrompt" field, return your FIRST generated sample.
 5. For the "samples" array, return all 5 generated samples as strings.
-6. Target AI Model: ${model || 'midjourney'}
+6. Target AI Model: ${targetModel}
+${exampleLengthInstructions}
 
 Return the results in the standard JSON format.`
       });
@@ -183,14 +313,28 @@ You MUST do the following:
    - What are the distinctive visual features?
 
 2. GENERATE A PROMPT that would recreate THIS EXACT subject from the image.
-   - The prompt must describe the SAME subject you see in the image, not something different.
-   - If the image shows a cat logo with text "SPICY", then the prompt must describe a cat logo with text "SPICY".
-   - If the image shows a person wearing a red jacket, then the prompt must describe that exact person in a red jacket.
-   - DO NOT make up a different subject. DO NOT generate prompts about headphones, guitars, or random objects unless that is what the image actually shows.
+   - The mainPrompt must describe the SAME subject you see in the image, not something different.
+   - If the image shows a cat logo with text "SPICY", then the mainPrompt must describe a cat logo with text "SPICY".
+   - If the image shows a blue and yellow bird, then the mainPrompt must describe a blue and yellow bird.
+   - DO NOT make up a different subject for the mainPrompt.
 
-3. All 3 sample variations must feature the SAME subject from the reference image.
+3. MAKE THE MAIN SUBJECT & ALL 5 KEY COMPONENTS VARIABLES IN THE TEMPLATE:
+   - Break down the reference image into exactly 5 components and replace them with bracketed variables in promptTemplate:
+     1. [subject] (e.g., replace "fairy" with [subject])
+     2. [pose/action] (e.g., replace "kneeling" with [pose/action])
+     3. [wing/feature type] (e.g., replace "butterfly wings" with [wing/feature type])
+     4. [color palette] (e.g., replace "pastel pink" with [color palette])
+     5. [background scenery] (e.g., replace "circular fern arch" with [background scenery])
+   - You MUST NOT keep any of these 5 specific components from the reference image as fixed text in promptTemplate.
 
-Target AI Model: ${model || 'midjourney'} — optimize for this model.
+4. THE 3 SAMPLES MUST USE COMPLETELY DIFFERENT CONCEPTS FOR ALL 5 VARIABLES:
+   - In each of the 3 samples, you MUST replace ALL 5 variables with completely different, creative variations (e.g. do NOT repeat "butterfly wings", "fairy", "kneeling", or "circular leaves" in all samples!).
+   - E.g., Sample A features a celestial girl with feathered wings in pastel pink/mint kneeling inside a circular leaf arch.
+   - E.g., Sample B features a steampunk explorer with mechanical wings in copper/gold flying over an industrial city.
+   - E.g., Sample C features an angelic warrior with glowing energy wings in silver/gold standing in a battle stance inside a cosmic nebula.
+   - You MUST show maximum variation for all 5 variables in all 3 samples!
+
+Target AI Model: ${targetModel} — optimize for this model.
 
 User's additional instructions: "${description.trim()}"
 
@@ -204,7 +348,11 @@ Fill in "imageAnalysis" with your detailed description of what you see in the im
 "${description.trim()}"
 
 Prompt Type: ${(promptType || 'image').toUpperCase()}
-Target AI Model: ${model || 'midjourney'} — optimize the prompt syntax and keywords for this specific model.`
+Target AI Model: ${targetModel} — optimize the prompt syntax and keywords for this specific model.
+
+CRITICAL REQUIREMENT FOR VARIABLES:
+The promptTemplate MUST contain a minimum of 1 and a maximum of 5 bracketed variables total (e.g., [subject], [color], [style]). 
+DO NOT exceed 5 bracketed variables under any circumstances. Keep the majority of the prompt template as fixed, high-quality descriptive words.`
       });
     }
 
@@ -229,7 +377,7 @@ Target AI Model: ${model || 'midjourney'} — optimize the prompt syntax and key
             model: modelName,
             systemInstruction: {
               role: 'system',
-              parts: [{ text: cached.systemInstruction }]
+              parts: [{ text: systemInstruction }]
             }
           });
 
@@ -293,10 +441,17 @@ Target AI Model: ${model || 'midjourney'} — optimize the prompt syntax and key
       const jsonStr = text.replace(/```json|```/g, '').trim();
       const promptData = JSON.parse(jsonStr);
 
+      // Enforce strict 5-variable limit programmatically
+      if (promptData.promptTemplate && promptData.mainPrompt) {
+        const reduced = limitVariables(promptData.promptTemplate, promptData.mainPrompt, 5);
+        promptData.promptTemplate = reduced.promptTemplate;
+      }
+
       // Ensure frontend fields
-      promptData.priceTokens = 5;
+      const creditCost = aiPower === 'power' ? 5 : aiPower === 'super' ? 3 : 1;
+      promptData.priceTokens = creditCost;
       promptData.promptType = promptType || 'image';
-      promptData.model = model || 'ai-optimized';
+      promptData.model = targetModel;
 
       // Ensure samples (min 3, max 5)
       if (!Array.isArray(promptData.samples)) promptData.samples = [];
