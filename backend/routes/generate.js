@@ -65,7 +65,7 @@ function limitVariables(promptTemplate, mainPrompt, maxVars = 5) {
 let cachedModel = null;
 let cachedRulesHash = null;   // detect when admin edits rules
 let cachedApiKey = null;
-const SYSTEM_PROMPT_VERSION = 'v20-five-variable-diversity-extreme'; // bump this when system prompt changes
+const SYSTEM_PROMPT_VERSION = 'v21-character-mode-fixed-different'; // bump this when system prompt changes
 
 // Fallback chain: try best model first, fall back if unavailable
 const MODEL_CHAIN = ['gemini-3-flash-preview', 'gemini-2.5-flash', 'gemini-2.0-flash'];
@@ -88,7 +88,7 @@ async function getOrCreateModel() {
     })
     .join('\n');
 
-  const currentHash = `${SYSTEM_PROMPT_VERSION}::${settings.geminiApiKey}::${settings.paidGeminiApiKey || ''}::${settings.geminiModel}::${rulesStr}`;
+  const currentHash = `${SYSTEM_PROMPT_VERSION}::${settings.geminiApiKey}::${settings.paidGeminiApiKey || ''}::${settings.geminiModel}::${rulesStr}::characterMode`;
 
   // Return cached model if nothing changed
   if (cachedModel && cachedRulesHash === currentHash) {
@@ -109,35 +109,273 @@ async function getOrCreateModel() {
 }
 
 /**
- * Build a dynamic system instruction based on rules and aiPower tier.
+ * Build a dynamic system instruction based on rules, aiPower tier, and characterMode.
  */
-function buildSystemInstruction(rulesStr, aiPower) {
+function buildSystemInstruction(rulesStr, aiPower, characterMode) {
   const power = aiPower || 'normal';
+  const charMode = characterMode || 'different';
   
   let tierGuidelines = '';
   if (power === 'super') {
     tierGuidelines = `
 PROMPT DETAIL LEVEL — SUPER TIER (3 CREDITS):
-- You MUST generate a highly detailed, long, and rich prompt text.
+- You MUST generate an exceptionally detailed, perfect, and beautifully described prompt.
+- CHARACTER LENGTH REQUIREMENT: The generated promptTemplate MUST be at least 500 to 600 characters long. Take your time to write a descriptive and perfect prompt that best describes the visual scene.
 - MORE FIXED DESCRIPTIVE TEXT REQUIRED: Ensure the prompt template is packed with high-quality, fixed descriptive text (e.g. complex scene framing, specific visual elements, lighting terms) that remains unchangeable. There should be a lot of descriptive fixed words and only 1 to 5 bracketed variables.
 - Include advanced visual descriptions: specific textures, camera lens details (e.g. 85mm f/1.4), depth of field, complex color gradations, and rich atmospheric lighting (e.g., volumetric dust motes, soft diffusion, golden hour rim lighting).
-- Add highly specific design/artistic styles and medium descriptors.
-- Ensure the prompt is descriptive enough to paint a vivid, multi-layered visual scene.`;
+- Add highly specific design/artistic styles and medium descriptors.`;
   } else if (power === 'power') {
     tierGuidelines = `
 PROMPT DETAIL LEVEL — POWER TIER (5 CREDITS - MAXIMUM DETAIL & DENSITY):
-- You MUST generate an exceptionally detailed, very long, and highly immersive prompt.
-- MAXIMUM FIXED DESCRIPTIVE TEXT REQUIRED: Ensure the prompt template has the absolute maximum density of fixed, professional prompt-engineering words (such as intricate camera setups, lighting rigs, master-level rendering engines, environmental sensory words, artistic styling direction). The vast majority of the template MUST be solid, high-value, unchangeable text, while still strictly limiting bracketed variables to between 1 and 5. This makes the prompt incredibly valuable and complex.
+- You MUST generate an incredibly rich, masterclass, and highly immersive prompt template.
+- CHARACTER LENGTH REQUIREMENT: The generated promptTemplate MUST be at least 600 to 700 characters long. Pack it with the absolute maximum density of visual details, atmosphere, lighting setups, and artistic direction keywords so that it is a masterpiece that perfectly describes the scene.
+- MAXIMUM FIXED DESCRIPTIVE TEXT REQUIRED: Ensure the prompt template has the absolute maximum density of fixed, professional prompt-engineering words (such as intricate camera setups, lighting rigs, master-level rendering engines, environmental sensory words, artistic styling direction). The vast majority of the template MUST be solid, high-value, unchangeable text, while still strictly limiting bracketed variables to between 1 and 5.
 - Incorporate professional cinematic and photographic vocabulary: specific focal lengths, precise aperture values, complex framing (e.g., low-angle extreme close-up, rule of thirds, dynamic background depth).
 - Describe intricate sensory and environmental details: volumetric fog, specific humidity/weather, raytraced light reflections, subtle chromatic aberration, realistic fabric weave, and precise skin/surface textures.
-- Use advanced artistic direction keywords: epic scale, highly atmospheric, award-winning cinematography, photorealistic render, breathtaking detailed composition.
-- Leave no detail to chance; build a masterpiece of descriptive prompt engineering.`;
+- Use advanced artistic direction keywords: epic scale, highly atmospheric, award-winning cinematography, photorealistic render, breathtaking detailed composition.`;
   } else {
     tierGuidelines = `
 PROMPT DETAIL LEVEL — NORMAL TIER (1 CREDIT):
 - Generate a professional, clean, and direct prompt.
-- Keep the prompt concise, clear, and focused on the key visual details, style, and lighting.
+- CHARACTER LENGTH REQUIREMENT: The generated promptTemplate MUST be at least 400 to 500 characters long. It must be highly detailed, perfect, and best describes the visual scene.
+- Keep the prompt clear and focused on key visual details, style, composition, and lighting.
 - Focus on producing a clean, solid, and high-quality baseline prompt with standard fixed text and 1 to 5 variables.`;
+  }
+
+  // ── CHARACTER MODE-SPECIFIC REFERENCE IMAGE RULES ──
+  let referenceImageRules = '';
+
+  if (charMode === 'fixed') {
+    // ═══════════════════════════════════════════════════
+    // FIXED CHARACTER MODE: Same character, same clothes, same scene — only pose/action changes
+    // ═══════════════════════════════════════════════════
+    referenceImageRules = `
+CRITICAL — REFERENCE IMAGE HANDLING (🔒 FIXED CHARACTER MODE):
+The user has selected FIXED CHARACTER mode. This means EVERYTHING from the reference image stays the SAME — the same character, same clothing, same scene, same environment, same style, same color palette, same overall vibe. The ONLY things that change are the POSE, ACTION, GESTURE, and BODY POSITION of the character. Think of it like taking multiple photos of the same model during the same photoshoot — same outfit, same location, just different poses.
+
+When a reference image is provided in FIXED CHARACTER mode, you MUST:
+
+1. DEEPLY ANALYZE EVERYTHING IN THE IMAGE — treat every detail as FIXED:
+   CHARACTER (ALL FIXED — never changes):
+   - Face: structure, features, expression style, age, gender, ethnicity, makeup
+   - Hair: exact color, length, style, texture, bangs, accessories in hair
+   - Body type, proportions, height impression
+   - Clothing: EVERY piece of clothing stays IDENTICAL — exact colors, patterns, materials, layers, fit
+   - Accessories: jewelry, watches, bracelets, bags, hats, sunglasses, shoes — ALL stay the same
+   - Skin tone, distinguishing marks, tattoos
+   - For animals: exact breed/species, fur color & pattern, size, markings — ALL stay the same
+   - For objects: exact shape, colors, text, design elements — ALL stay the same
+
+   SCENE & ENVIRONMENT (ALL FIXED — never changes):
+   - Background setting: the SAME location/environment type
+   - Art style: the SAME photographic/artistic style
+   - Color palette: the SAME overall color scheme and mood
+   - Props and surrounding objects: the SAME props stay in scene
+   - Lighting mood: the SAME general lighting atmosphere
+   - Composition style: the SAME framing approach
+
+2. EVERYTHING IS FIXED TEXT EXCEPT POSE/ACTION — THESE ARE THE ONLY VARIABLES:
+   In the promptTemplate, ALMOST EVERYTHING must be written as FIXED, unchangeable text — the character description, their clothes, the scene, the style, the lighting mood, the color palette. The ONLY things in [brackets] should be the character's POSE, ACTION, GESTURE, or BODY POSITION.
+   
+   CORRECT EXAMPLE (girl in a flower field photoshoot):
+   - promptTemplate: "Creative forced perspective lifestyle photography of a young woman with long wavy brown hair wearing a blue floral crop top, white denim shorts, and canvas sneakers, [pose/action], in a bright sunny daisy and sunflower meadow, playful hand-drawn doodle overlays, vibrant summer colors, whimsical editorial style, natural daylight, full body shot --ar 1:1"
+   - Sample A: "...standing with arms spread wide next to a giant sunflower..."
+   - Sample B: "...jumping joyfully with one arm reaching toward the sky..."  
+   - Sample C: "...crouching down smelling flowers with hands cupping a daisy..."
+   
+   WRONG EXAMPLE: "Photography of a [character] wearing [outfit] in a [location]..." ← FORBIDDEN! Character, outfit, and location must NOT be variables!
+
+3. STRICT VARIABLE RULES — ONLY 1 TO 3 VARIABLES ALLOWED:
+   The promptTemplate should have VERY FEW variables (ideally 1-3, max 5) because almost everything is fixed. The allowed variable types are ONLY:
+   - [pose/action] — the character's body position or physical action (e.g., "arms outstretched making a heart shape", "twirling with one leg up", "sitting cross-legged looking at camera", "hands on hips leaning forward")
+   - [gesture/expression] — hand gesture, facial expression, or small body movement (e.g., "making a peace sign and winking", "blowing a kiss", "laughing with head tilted back")
+   - [creative element] — a small creative prop or visual trick that varies between shots (e.g., "forced perspective with a giant sunflower", "soap bubble overlay", "drawn angel wings doodle")
+   
+   ABSOLUTELY FORBIDDEN as variables: [character], [person], [subject], [clothing], [outfit], [background], [setting], [location], [scene], [style], [color palette], [environment]. These MUST be fixed text.
+
+4. THE mainPrompt MUST RECREATE THE EXACT SAME SCENE from the reference image with one specific pose.
+
+5. ALL 3 SAMPLES MUST LOOK LIKE THEY ARE FROM THE SAME PHOTOSHOOT:
+   - Same character, same clothes, same location, same style — ONLY the pose/action/gesture changes.
+   - If the reference shows two girls in colorful outfits at a theme park, ALL samples show those SAME two girls in those SAME outfits at that SAME theme park — just in different poses (arms spread, making heart shapes, jumping, etc.)
+   - If the reference shows a girl in a flower field with doodle overlays, ALL samples show that SAME girl in that SAME field with those SAME doodle overlays — just doing different actions.
+   - The samples should feel like a photographer telling the model "OK now try this pose... now try this one..."
+
+6. The goal: when someone generates images from these prompts, ALL the output images look like they belong to the SAME photoshoot session — same person, same outfit, same place, just different poses and moments captured.`;
+  } else if (charMode === 'sameScene') {
+    // ═══════════════════════════════════════════════════
+    // SAME SCENE MODE: Everything identical, only pose/gesture/action changes
+    // ═══════════════════════════════════════════════════
+    referenceImageRules = `
+CRITICAL — REFERENCE IMAGE HANDLING (📸 SAME SCENE MODE):
+The user has selected SAME SCENE mode. This means EVERYTHING from the reference image stays EXACTLY THE SAME — the same character(s), same clothing, same scene, same environment, same style, same color palette, same overall vibe. The ONLY things that change are the POSE, ACTION, GESTURE, facial expression, and camera angle. Think of it like taking multiple photos of the same subjects during the same photoshoot at the same location — same outfits, same background, just different poses, expressions, and shot close-ups.
+
+When a reference image is provided in SAME SCENE mode, you MUST strictly enforce these rules:
+
+1. WHAT TO ALWAYS LOCK (FOR ANY REFERENCE IMAGE) — NEVER CHANGE OR VARY:
+   - LOCK Number of subjects: Same count of people, objects, or characters as in the reference — never add or remove.
+   - LOCK Identity of every subject: Same person/character/object — same face, body, skin, hair, species, shape, size.
+   - LOCK Clothing, accessories, and appearance details: Every outfit, color of clothing, accessories, hairstyle, and visual detail stays identical.
+   - LOCK Art style and rendering medium: Whether it's a photo, painting, cartoon, 3D render, sketch — that exact style must carry over.
+   - LOCK Color palette: All dominant colors, tones, saturation level, and overall color mood stay the same.
+   - LOCK Overall composition format: Grid, single panel, collage, split — the structural layout of the image stays identical.
+   - LOCK Background setting / environment: Same type of environment — indoors/outdoors, same general location feel and background elements.
+   - LOCK Lighting and mood: Same light direction, softness, time of day, and emotional atmosphere.
+
+2. WHAT IS ALLOWED TO CHANGE/VARY:
+   - CHANGE Poses and body positions: New stances, gestures, sitting vs standing — but within the same scene logic.
+   - CHANGE Facial expressions: Different emotions per panel or variation — smiling, serious, laughing, winking, surprised, etc.
+   - CHANGE Camera angle or crop per variation: Close-up, wide, low angle, portrait, medium shot — the shot can vary as long as the style is consistent.
+   - CHANGE Small props or held objects: A different item being held or used — as long as it fits the same setting and style.
+   - CHANGE Minor background details: Which part of the same environment is visible — exact trees, walls, or objects in the background can shift slightly.
+
+3. PROMPT FORMULA TO FOLLOW:
+   "Recreate this image with the same [subjects], same [outfits/appearance], same [art style], same [color palette], same [background type], same [lighting] — only change the [poses / expressions / camera angle]."
+
+4. TEMPLATE AND SAMPLES CREATION:
+   - In the promptTemplate, the subjects, outfits, art style, color palette, background, and lighting MUST be written as fixed, detailed text.
+   - ONLY the poses, expressions, or camera angle should be bracketed variables.
+   - Example template format: "Recreate this image with the same young woman with long wavy brown hair, same blue floral crop top and white denim shorts, same lifestyle photography style, same vibrant summer color palette, same bright sunny daisy and sunflower meadow, same natural daylight — only change the [pose / expression / camera angle]."
+   - Sample A: "...only change the [pose to winking and showing peace signs in a medium close-up shot]."
+   - Sample B: "...only change the [pose to jumping joyfully with arms wide open in a full body shot]."
+   - Sample C: "...only change the [pose to sitting peacefully on a blanket smelling a daisy in a low angle shot]."
+
+5. Goal: The output prompts must feel 100% cohesive, like consecutive frames of the same photoshoot session, ensuring the character and location remain perfectly locked.`;
+  } else {
+    // ═══════════════════════════════════════════════════
+    // DIFFERENT CHARACTERS MODE: Same art style/technique, different character entirely
+    // ═══════════════════════════════════════════════════
+    referenceImageRules = `
+CRITICAL — REFERENCE IMAGE HANDLING (🔄 DIFFERENT CHARACTERS MODE):
+The user has selected DIFFERENT CHARACTERS mode. This means the ART STYLE, VISUAL TECHNIQUE, COMPOSITION, and OVERALL AESTHETIC from the reference image must stay EXACTLY THE SAME — but the CHARACTER/SUBJECT changes to a completely different one in each sample. Think of it like an artist creating a series of artworks in the same style but featuring different subjects.
+
+When a reference image is provided in DIFFERENT CHARACTERS mode, you MUST:
+
+1. DEEPLY ANALYZE THE ART STYLE & TECHNIQUE (these are FIXED — never change):
+   - Art style: geometric mosaic, retro illustration, hip-hop graffiti cartoon, watercolor, 3D render, pixel art, etc.
+   - Visual technique: how shapes are used, line work style, shading method, texture approach
+   - Color treatment: the color palette approach (not specific colors, but the style — vibrant, muted, neon, pastel, etc.)
+   - Composition approach: how the subject is framed, centered, positioned
+   - Background style: the type/style of background (solid color, gradient, detailed scene, etc.)
+   - Level of detail: how detailed or simplified the artwork is
+   - Special elements: recurring design motifs, decorative elements, text/typography style, graffiti splashes, doodles, patterns
+   - Medium impression: does it look like digital art, print, sticker design, t-shirt graphic, etc.
+   
+   Also analyze the CHARACTER (this will CHANGE):
+   - What is the character/subject? (dog, cat, leopard, panda, girl, boy, etc.)
+   - What specific features does it have?
+   - What pose is it in?
+   - What props or accessories does it have?
+
+2. THE ART STYLE IS FIXED TEXT — THE CHARACTER IS THE MAIN VARIABLE:
+   In the promptTemplate, the ENTIRE art style description, visual technique, composition approach, background style, and decorative elements must be FIXED, unchangeable text. The CHARACTER/SUBJECT is the primary variable that changes.
+   
+   CORRECT EXAMPLE (geometric mosaic animal art):
+   - promptTemplate: "Geometric low-poly mosaic art of a [subject/character], [pose/action], constructed from interlocking triangles, circles and geometric shapes with metallic gold accent lines, intricate patterned body with [color scheme] tones, standing on a dark background, digital art, sharp edges, symmetrical design --ar 1:1"
+   - Sample A (matches reference): "...a snow leopard, standing regally, icy blue and silver..."
+   - Sample B: "...a red fox, sitting alertly with tail wrapped, warm copper and turquoise..."
+   - Sample C: "...a wise owl, perched forward-facing, deep purple and magenta..."
+   
+   CORRECT EXAMPLE (retro illustration animal with flower):
+   - promptTemplate: "Retro vintage illustration of a [subject/character], [pose/action], beside a [flower type], minimalist flat design with subtle halftone dot texture, [background color] solid background, warm muted color palette, mid-century modern art style, soft rounded shapes --ar 1:1"
+   - Sample A (matches reference): "...a beagle dog, sitting happily, sunflower, dusty pink..."
+   - Sample B: "...a red fox, smiling peacefully, daisy, navy blue..."
+   - Sample C: "...a white rabbit, looking content, lavender sprig, golden yellow..."
+
+   CORRECT EXAMPLE (hip-hop graffiti character):
+   - promptTemplate: "Urban hip-hop graffiti style cartoon character design of a [subject/character] wearing [themed outfit], [action/pose], surrounded by bold [theme text] graffiti typography, spray paint splashes, sticker bomb elements, neon accents, sneakers with detailed lacing, chibi proportions, white background, t-shirt graphic design --ar 1:1"
+   - Sample A: "...a cool panda, purple hoodie and snapback cap, skateboarding, SKATE BOARD..."
+   - Sample B: "...a space boy, astronaut suit with planet patches, reaching upward, REACH FOR THE STARS..."
+   - Sample C: "...a street cat, paint-splattered jacket with chains, spray painting, STREET CAT..."
+
+3. IDENTIFY THE RIGHT VARIABLES (max 5) — CHARACTER IS ALWAYS THE MAIN ONE:
+   - [subject/character] — THE MOST IMPORTANT VARIABLE: the creature, animal, person, or entity (e.g., snow leopard → red fox → owl → eagle)
+   - [pose/action] — what the character is doing (e.g., standing → sitting → perching → flying)
+   - [color scheme] or [themed outfit] — character-specific colors or outfit that fits the new character
+   - [detail/accessory] or [flower type] or [theme text] — a supporting element that changes with the character
+   - [background color] — optional color shift to complement the new character
+   
+   ABSOLUTELY FIXED (never a variable): art style, visual technique, composition, level of detail, decorative motifs, design approach, medium, texture style. These define the "look" and must stay identical.
+
+4. THE mainPrompt MUST DESCRIBE THE EXACT CHARACTER from the reference image as Sample A.
+
+5. ALL 3 SAMPLES MUST LOOK LIKE THEY BELONG TO THE SAME ART SERIES:
+   - The art style, technique, and visual approach are IDENTICAL across all samples.
+   - ONLY the character/subject changes — and each must be a COMPLETELY DIFFERENT character.
+   - If the reference shows a geometric mosaic snow leopard, the samples might show a geometric mosaic fox, a geometric mosaic owl, etc.
+   - If the reference shows a beagle in retro illustration style, the samples might show a fox, rabbit, cat, etc. in that SAME retro style.
+   - If the reference shows a hip-hop panda, the samples might show a hip-hop boy, cat, bunny, monkey, bear, etc.
+   - The series should feel like it was all created by the same artist in the same style.
+
+6. The goal: when someone generates images from these prompts, they get a cohesive art series where every piece has the SAME visual style but features DIFFERENT characters — perfect for collections, sticker sets, t-shirt series, etc.`;
+  }
+
+  let howToBuildSamples = '';
+  if (charMode === 'sameScene') {
+    howToBuildSamples = `HOW TO BUILD SAMPLES (📸 SAME SCENE MODE - FOLLOW THIS EXACTLY):
+1. Write the mainPrompt first. It must be a perfect, highly detailed, real-world example of the prompt being used (NO brackets) describing the reference image exactly.
+   - Describe the exact subject from the reference (e.g. "a young East Asian woman with short dark hair").
+   - Describe the exact clothing from the reference (e.g. "wearing a blue and white checkered wrap and a delicate white lace-strap top").
+   - Describe the exact scene/background setting from the reference (e.g. "in a vast field of bright yellow wildflowers with rolling green hills in the distance").
+   - Describe the exact art style, color palette, and lighting from the reference image.
+   - Include a specific pose/action (e.g. "resting her chin thoughtfully on her hand").
+   - End with "--ar 1:1".
+2. Create promptTemplate: Take the mainPrompt and replace ONLY the pose/action and facial expression with bracketed variables (e.g., [pose/action] and [facial_expression]).
+   - CRITICAL: All other parts of the prompt (the subject description, clothing/outfit, background setting, art style, color palette, lighting) MUST remain as FIXED, detailed, non-variable text in the promptTemplate. DO NOT put them in brackets!
+3. For each of the samples (Sample A, Sample B, Sample C), copy the promptTemplate and replace ONLY the pose/action and facial expression variables.
+   - CRITICAL: The subject, clothing, background setting, art style, color palette, and lighting MUST be 100% IDENTICAL and repeated word-for-word across all samples! DO NOT vary them! E.g., never generate different subjects like a "Nordic fisherman" or "fantasy elf" in any sample! All samples must feature the EXACT SAME young woman in the EXACT SAME outfit and the EXACT SAME yellow wildflower field.
+   - ONLY the poses, actions, gestures, and expressions must vary completely between the samples (e.g., winking and waving vs sitting cross-legged on a blanket vs leaning forward smiling).
+4. ZERO TOLERANCE FOR BRACKETS IN SAMPLES: Samples and mainPrompt MUST NOT contain any [BRACKETS]. Only promptTemplate has brackets.
+5. SAMPLE COUNT: Generate exactly 3 samples for standard generations. Generate exactly 5 samples ONLY when "Example Generator" mode is requested.
+6. CRITICAL CHARACTER LENGTH CONSTRAINT (MANDATORY):
+   The generated promptTemplate MUST strictly comply with these length limits based on the Credit Tier:
+   - 1 Credit (Normal): promptTemplate MUST be at least 400 to 500 characters long (detailed and perfect to best describe the scene).
+   - 3 Credits (Super): promptTemplate MUST be at least 500 to 600 characters long (exceptional photographic details and camera settings).
+   - 5 Credits (Power): promptTemplate MUST be at least 600 to 700 characters long (masterpiece-level visual details, highly detailed and fully descriptive).
+   You MUST write exceptionally detailed, long, and descriptive fixed text around the bracketed variables in promptTemplate to satisfy this length requirement.
+7. Every prompt and sample MUST end with --ar 1:1`;
+  } else if (charMode === 'fixed') {
+    howToBuildSamples = `HOW TO BUILD SAMPLES (🔒 FIXED CHARACTER MODE - FOLLOW THIS EXACTLY):
+1. Write the mainPrompt first. It must be a perfect, highly detailed, real-world example of the prompt being used (NO brackets) describing the reference image exactly.
+   - Describe the exact subject from the reference (e.g. "a young East Asian woman with short dark hair").
+   - Describe the exact clothing from the reference (e.g. "wearing a blue and white checkered wrap and a delicate white lace-strap top").
+   - Describe the scene/background setting, art style, color palette, lighting, and a specific pose/action.
+   - End with "--ar 1:1".
+2. Create promptTemplate: Take the mainPrompt and replace ONLY the pose/action, background setting, and lighting/colors with bracketed variables (e.g., [pose/action], [background_setting], [lighting/colors]).
+   - CRITICAL: The subject description and clothing/outfit MUST remain as FIXED, detailed, non-variable text in the promptTemplate. DO NOT put them in brackets!
+3. For each of the samples (Sample A, Sample B, Sample C), copy the promptTemplate and replace the bracketed variables.
+   - CRITICAL: The subject description and clothing/outfit MUST be 100% IDENTICAL and repeated word-for-word across all samples! DO NOT vary them! E.g., never generate different subjects like a "Nordic fisherman" or "fantasy elf" in any sample! All samples must feature the EXACT SAME young woman in the EXACT SAME outfit.
+   - The pose/action, background setting, and lighting/colors MUST vary completely per sample to show the same character in different locations/scenes (e.g. in a cozy library, in snowy mountains, on a sunny beach).
+4. ZERO TOLERANCE FOR BRACKETS IN SAMPLES: Samples and mainPrompt MUST NOT contain any [BRACKETS]. Only promptTemplate has brackets.
+5. SAMPLE COUNT: Generate exactly 3 samples for standard generations. Generate exactly 5 samples ONLY when "Example Generator" mode is requested.
+6. CRITICAL CHARACTER LENGTH CONSTRAINT (MANDATORY):
+   The generated promptTemplate MUST strictly comply with these length limits based on the Credit Tier:
+   - 1 Credit (Normal): promptTemplate MUST be at least 400 to 500 characters long (detailed and perfect to best describe the scene).
+   - 3 Credits (Super): promptTemplate MUST be at least 500 to 600 characters long (exceptional photographic details and camera settings).
+   - 5 Credits (Power): promptTemplate MUST be at least 600 to 700 characters long (masterpiece-level visual details, highly detailed and fully descriptive).
+   You MUST write exceptionally detailed, long, and descriptive fixed text around the bracketed variables in promptTemplate to satisfy this length requirement.
+7. Every prompt and sample MUST end with --ar 1:1`;
+  } else {
+    howToBuildSamples = `HOW TO BUILD SAMPLES (FOLLOW THIS EXACTLY):
+1. Write the mainPrompt first. It must be a perfect, real-world example of the prompt being used (NO brackets). Make it long, detailed, and rich with fixed descriptive text.
+2. Create promptTemplate: take the mainPrompt and replace ONLY the most important changeable parts with [BRACKET] variables. 
+3. STRICT VARIABLE LIMIT — MINIMUM 1, MAXIMUM 5 VARIABLES: The promptTemplate MUST contain a minimum of 1 bracketed variable and a maximum of 5 bracketed variables total. You must NEVER exceed 5 variables (e.g., [subject], [color], [style], [lighting], [location] is 5). Any prompt template with 6 or more variables is REJECTED. Keep all the remaining text of the prompt as rich, high-quality, fixed descriptive words.
+4. GENERAL RULE & PERFECT TEMPLATE EXAMPLE:
+   Here is a perfect example of a general, high-value prompt template that has EXACTLY 4 variables (within the 1-5 limit) and 80% fixed descriptive text:
+   - mainPrompt: "Double exposure photography of a wolf silhouette against a deep pine forest, vibrant night sky filled with aurora borealis, double exposure visual effect, ethereal lighting, sharp details, cinematic rendering --ar 1:1"
+   - promptTemplate: "Double exposure photography of a [subject] silhouette against a [background scenery], vibrant night sky filled with [atmospheric effect], double exposure visual effect, [lighting style] lighting, sharp details, cinematic rendering --ar 1:1"
+   - In this example, ONLY the key items ([subject], [background scenery], [atmospheric effect], [lighting style]) are variables (4 total). All other words like "Double exposure photography", "silhouette against a", "vibrant night sky filled with", "double exposure visual effect", "lighting, sharp details, cinematic rendering" are FIXED descriptive text. This ensures the prompt is highly professional, unique, and valuable!
+5. For each sample (A, B, C, etc.), take the promptTemplate and replace every [BRACKET] variable.
+6. ZERO TOLERANCE FOR REPETITION: Every variable MUST be 100% unique across all samples.
+7. ZERO TOLERANCE FOR BRACKETS IN SAMPLES: Samples and mainPrompt MUST NOT contain any [BRACKETS]. Only promptTemplate has brackets.
+8. SAMPLE COUNT: Generate exactly 3 samples for standard generations. Generate exactly 5 samples ONLY when "Example Generator" mode is requested.
+9. CRITICAL CHARACTER LENGTH CONSTRAINT (MANDATORY):
+   The generated promptTemplate MUST strictly comply with these length limits based on the Credit Tier:
+   - 1 Credit (Normal): promptTemplate MUST be at least 400 to 500 characters long (detailed and perfect to best describe the scene).
+   - 3 Credits (Super): promptTemplate MUST be at least 500 to 600 characters long (exceptional photographic details and camera settings).
+   - 5 Credits (Power): promptTemplate MUST be at least 600 to 700 characters long (masterpiece-level visual details, highly detailed and fully descriptive).
+   You MUST write exceptionally detailed, long, and descriptive fixed text around the bracketed variables in promptTemplate to satisfy this length requirement.
+10. Every prompt and sample MUST end with --ar 1:1`;
   }
 
   return `You are an expert AI Prompt Engineer for a premium prompt marketplace called "Prompt by Niti".
@@ -153,24 +391,7 @@ YOUR ROLE:
 - For TEXT prompts: focus on tone, structure, context, audience, formatting guidance.
 ${tierGuidelines}
 
-CRITICAL — REFERENCE IMAGE HANDLING:
-When a reference image is provided, you MUST:
-1. FIRST, deeply analyze every visual detail in the image: the exact subject (person, animal, bird, vehicle, logo, product, character, etc.), their appearance (colors, shape, texture, features, text/logos), pose, environment, style, color scheme, and composition.
-2. The mainPrompt MUST describe the EXACT subject/character/object seen in the reference image (e.g., if the image is a blue and yellow bird, the mainPrompt must describe that blue and yellow bird. If it is a black dog, it must describe that black dog. If it is a fairy with purple wings, it must describe that fairy with purple wings).
-3. IDENTIFY ALL 5 CRITICAL VISUAL VARIABLES: You MUST break down the reference image into exactly 5 bracketed variables:
-   - [subject] (e.g. fairy, girl, angel, warrior, explorer, demon, robot)
-   - [pose/action] (e.g. kneeling, reaching, sitting, flying, battle stance, dancing)
-   - [core feature] (e.g. butterfly wings, feathered wings, mechanical wings, dragon wings)
-   - [color palette] (e.g. gold and teal, pastel pink and mint, silver and gold, obsidian and crimson)
-   - [background scenery] (e.g. circular fern arch, cosmic nebula, industrial skyline, volcanic abyss)
-4. DO NOT HARDCODE ANY OF THESE 5 COMPONENT DETAILS IN THE TEMPLATE: In the promptTemplate, you MUST NOT hardcode these specific details (e.g. "fairy", "kneeling", "butterfly wings", "pastel pink", "circular fern arch") as fixed text. You MUST replace all 5 of these components with generalized bracketed variables so the template is 100% reusable. Leaving any of these 5 specific visual components as fixed text in the promptTemplate is a critical failure.
-5. THE 3 SAMPLE VARIATIONS MUST USE COMPLETELY DIFFERENT CATEGORIES FOR ALL 5 VARIABLES (MAXIMUM DIVERSITY): In each of the 3 samples, you MUST replace ALL 5 variables with completely different, creative concepts. DO NOT repeat the reference subject's wings, pose, color, or background in the samples! E.g. for a fairy with butterfly wings:
-   - Sample A: Features a celestial girl with feathered wings in pastel pink/mint kneeling inside a circular leaf arch. (Matches reference image style)
-   - Sample B: Features a steampunk explorer with mechanical wings in copper/gold flying over a smoky industrial skyline. (100% different subject, pose, wings, colors, and background!)
-   - Sample C: Features an angelic warrior with glowing energy wings in silver/gold standing in a battle stance inside a cosmic nebula. (100% different subject, pose, wings, colors, and background!)
-   - This prevents the samples from repeating the same features, demonstrating the supreme flexibility of the prompt template!
-6. Include specific visual descriptors from the reference image in the mainPrompt so it accurately recreates the image.
-7. The mainPrompt should be detailed enough that someone who has never seen the reference image could recreate something visually very similar.
+${referenceImageRules}
 
 OUTPUT FORMAT:
 You must return a VALID JSON object with these fields:
@@ -190,20 +411,6 @@ You must return a VALID JSON object with these fields:
   "instructions": "Step-by-step instructions on how to use this prompt effectively."
 }
 
-HOW TO BUILD SAMPLES (FOLLOW THIS EXACTLY):
-1. Write the mainPrompt first. It must be a perfect, real-world example of the prompt being used (NO brackets). Make it long, detailed, and rich with fixed descriptive text.
-2. Create promptTemplate: take the mainPrompt and replace ONLY the most important changeable parts with [BRACKET] variables. 
-3. STRICT VARIABLE LIMIT — MINIMUM 1, MAXIMUM 5 VARIABLES: The promptTemplate MUST contain a minimum of 1 bracketed variable and a maximum of 5 bracketed variables total. You must NEVER exceed 5 variables (e.g., [subject], [color], [style], [lighting], [location] is 5). Any prompt template with 6 or more variables is REJECTED. Keep all the remaining text of the prompt as rich, high-quality, fixed descriptive text.
-4. GENERAL RULE & PERFECT TEMPLATE EXAMPLE:
-   Here is a perfect example of a general, high-value prompt template that has EXACTLY 4 variables (within the 1-5 limit) and 80% fixed descriptive text:
-   - mainPrompt: "Double exposure photography of a wolf silhouette against a deep pine forest, vibrant night sky filled with aurora borealis, double exposure visual effect, ethereal lighting, sharp details, cinematic rendering --ar 1:1"
-   - promptTemplate: "Double exposure photography of a [subject] silhouette against a [background scenery], vibrant night sky filled with [atmospheric effect], double exposure visual effect, [lighting style] lighting, sharp details, cinematic rendering --ar 1:1"
-   - In this example, ONLY the key items ([subject], [background scenery], [atmospheric effect], [lighting style]) are variables (4 total). All other words like "Double exposure photography", "silhouette against a", "vibrant night sky filled with", "double exposure visual effect", "lighting, sharp details, cinematic rendering" are FIXED descriptive text. This ensures the prompt is highly professional, unique, and valuable!
-5. For each sample (A, B, C, etc.), take the promptTemplate and replace every single [BRACKET] with a COMPLETELY DIFFERENT real value.
-6. ZERO TOLERANCE FOR REPETITION: Every variable MUST be 100% unique across all samples.
-7. ZERO TOLERANCE FOR BRACKETS IN SAMPLES: Samples and mainPrompt MUST NOT contain any [BRACKETS]. Only promptTemplate has brackets.
-8. SAMPLE COUNT: Generate exactly 3 samples for standard generations. Generate exactly 5 samples ONLY when "Example Generator" mode is requested.
-
 - Every prompt and sample MUST end with --ar 1:1
 
 Return ONLY the JSON object. No markdown fences, no explanation.`;
@@ -212,7 +419,7 @@ Return ONLY the JSON object. No markdown fences, no explanation.`;
 // POST /api/generate
 router.post('/', async (req, res) => {
   try {
-    const { description, characterImage, promptType, model, mode, modelLabel, aiPower } = req.body;
+    const { description, characterImage, promptType, model, mode, modelLabel, aiPower, characterMode } = req.body;
     // Use human-readable model name if available, otherwise fall back to model id
     const targetModel = modelLabel || model || 'Midjourney';
 
@@ -224,7 +431,8 @@ router.post('/', async (req, res) => {
     const cached = await getOrCreateModel();
 
     // Build the system instruction dynamically based on the requested aiPower level
-    const systemInstruction = buildSystemInstruction(cached.rulesStr, aiPower);
+    const systemInstruction = buildSystemInstruction(cached.rulesStr, aiPower, characterMode);
+    console.log(`🎭 Character Mode: ${characterMode || 'not set (no image)'}`);
 
     // 2. Build lightweight user message (NO rules, NO characteristics repeated)
     const userParts = [];
@@ -277,14 +485,71 @@ router.post('/', async (req, res) => {
    - For each [BRACKETED] variable you replace, generate a concise value of exactly 3 to 5 words (e.g., replace "[animal]" with "a fluffy golden retriever puppy", replace "[style]" with "dramatic studio lighting with shadows").`;
       }
 
-      userParts.push({
-        text: `OVERRIDE SYSTEM INSTRUCTIONS: DO NOT generate a new prompt from scratch. The user HAS ALREADY provided their own Prompt Template below.
+      if (hasRefImage) {
+        // Special case: example template customization WITH reference image consistency
+        const charMode = characterMode || 'different';
+        console.log(`📸 Customizing template in example mode with reference image. Character Mode: ${charMode}`);
+        
+        let modeSpecificInstructions = '';
+        if (charMode === 'sameScene') {
+          modeSpecificInstructions = `
+🔒 CHARACTER MODE: SAME SCENE (Everything identical, only pose/expression/camera angle changes)
+The user has uploaded a reference image and selected SAME SCENE mode. This means EVERYTHING from the reference image MUST stay 100% identical.
 
-USER TEMPLATE:
-"${description.trim()}"
+CRITICAL ASSIGNMENT OF VARIABLES:
+When replacing the [BRACKETED] variables in the USER TEMPLATE:
 
-YOUR MISSION:
-Take the USER TEMPLATE and generate exactly 5 distinct examples (samples) by replacing the [BRACKETED] variables with creative, high-quality values.
+1. LOCKED VARIABLES (MUST BE 100% IDENTICAL AND REPEATED WORD-FOR-WORD ACROSS ALL 5 SAMPLES):
+   - [subject_description] / [subject/character]: Analyze the reference image and describe the subject EXACTLY (e.g. "a young East Asian woman with shoulder-length dark hair"). You MUST repeat this exact value in ALL 5 generated samples. DO NOT generate different characters (e.g. NEVER generate "Nordic fisherman" or "fantasy elf" under any circumstances!).
+   - [outfit_details] / [core feature]: Describe the clothing and accessories EXACTLY as seen in the reference image (e.g. "wearing a blue and white checkered shirt over a white lace top"). You MUST repeat this exact value in ALL 5 generated samples.
+   - [art_style] / [style]: Carry over the art style exactly (e.g. "candid-style portrait photography / film aesthetic"). You MUST repeat this exact value in ALL 5 generated samples.
+   - [color_palette] / [color palette]: Copy the dominant colors, saturation, and tone (e.g. "vibrant blue and yellow"). You MUST repeat this exact value in ALL 5 generated samples.
+   - [background_setting] / [background scenery]: Copy the exact environment (e.g. "in a blooming field of yellow wildflowers with distant green hills under a bright blue sky"). You MUST repeat this exact value in ALL 5 generated samples.
+   - [lighting]: Copy the exact light quality (e.g. "natural cinematic lighting / high-detail natural sunlight"). You MUST repeat this exact value in ALL 5 generated samples.
+   - [layout_format]: Copy the structural layout exactly. You MUST repeat this exact value in ALL 5 generated samples.
+
+2. CHANGED VARIABLES (MUST BE COMPLETELY DIFFERENT AND UNIQUE PER SAMPLE):
+   - [pose] / [pose/action]: Generate a new pose/body position that fits the photoshoot logically (e.g. Sample A: "resting her chin on her hand", Sample B: "standing and waving happily with both hands", Sample C: "sitting gracefully on a blanket smelling wildflowers").
+   - [expression]: Generate a new facial expression fitting the photoshoot (e.g. Sample A: "looking thoughtfully", Sample B: "smiling warmly", Sample C: "laughing contentedly").
+   - [camera_angle]: Optionally vary the crop or camera setup (e.g. Sample A: "close-up shot", Sample B: "medium shot", Sample C: "low-angle full-body shot").
+   - [small_props]: Optionally swap tiny held elements (e.g. holding a daisy).
+
+3. OVERRIDE Command: Ignore the "zero tolerance for repetition" rule for locked variables. You MUST copy their values word-for-word from Sample A into all other samples. Only pose, expression, and camera angle must change.`;
+        } else if (charMode === 'fixed') {
+          modeSpecificInstructions = `
+🔒 CHARACTER MODE: FIXED CHARACTER (Same character & outfit, different locations & backgrounds)
+The user has uploaded a reference image and selected FIXED CHARACTER mode. This means the character identity and clothing stay identical, but the scene/background changes.
+
+CRITICAL ASSIGNMENT OF VARIABLES:
+When replacing the [BRACKETED] variables in the USER TEMPLATE:
+
+1. LOCKED VARIABLES (MUST BE 100% IDENTICAL AND REPEATED WORD-FOR-WORD ACROSS ALL 5 SAMPLES):
+   - [subject_description] / [subject/character]: Describe the subject EXACTLY as seen in the reference (e.g. "a young East Asian woman with shoulder-length dark hair"). Repeat this exact value in ALL 5 samples. E.g. NEVER generate "Nordic fisherman" or "fantasy elf".
+   - [outfit_details] / [core feature]: Describe the clothing EXACTLY as seen in the reference (e.g. "wearing a blue and white checkered shirt over a white lace top"). Repeat this exact value in ALL 5 samples.
+
+2. CHANGED VARIABLES (MUST BE COMPLETELY DIFFERENT AND UNIQUE PER SAMPLE):
+   - [background_setting] / [background scenery], [color_palette], [pose], [lighting]: Generate completely different visual locations, color schemes, lighting, and poses for each of the 5 samples to show the identical character traveling to different environments (e.g., library, snowy mountains, beach, cafe).
+
+3. OVERRIDE Command: Ignore the "zero tolerance for repetition" rule for locked variables. You MUST copy their values word-for-word from Sample A into all other samples.`;
+        } else {
+          modeSpecificInstructions = `
+🔄 CHARACTER MODE: DIFFERENT CHARACTERS (Same art style/technique, different characters)
+The user has uploaded a reference image and selected DIFFERENT CHARACTERS mode. This means the art style and visual aesthetic from the reference image stay identical, but the character changes.
+Therefore, when replacing the [BRACKETED] variables in the USER TEMPLATE:
+1. Analyze the art style of the reference image (medium, visual technique, composition approach).
+2. The variables describing the subject, clothing, colors, and poses (e.g., [subject/character], [pose/action], [core feature], [color palette]) SHOULD vary completely in each of the 5 samples (e.g., panda, space boy, street cat) while keeping the overall art style described by the fixed text identical.`;
+        }
+
+        userParts.push({
+          text: `OVERRIDE SYSTEM INSTRUCTIONS: DO NOT generate a new prompt from scratch. The user HAS ALREADY provided their own Prompt Template below.
+ 
+ USER TEMPLATE:
+ "${description.trim()}"
+ 
+ YOUR MISSION:
+ Take the USER TEMPLATE and generate exactly 5 distinct examples (samples) by replacing the [BRACKETED] variables with creative, high-quality values, while strictly adhering to the character consistency rules below.
+ 
+${modeSpecificInstructions}
 
 STRICT RULES:
 1. DO NOT change any text outside the brackets. The sentence structure must remain 100% IDENTICAL to the USER TEMPLATE.
@@ -294,51 +559,115 @@ STRICT RULES:
 5. For the "samples" array, return all 5 generated samples as strings.
 6. Target AI Model: ${targetModel}
 ${exampleLengthInstructions}
-
+ 
 Return the results in the standard JSON format.`
-      });
+        });
+      } else {
+        // Example template customization WITHOUT reference image
+        userParts.push({
+          text: `OVERRIDE SYSTEM INSTRUCTIONS: DO NOT generate a new prompt from scratch. The user HAS ALREADY provided their own Prompt Template below.
+ 
+ USER TEMPLATE:
+ "${description.trim()}"
+ 
+ YOUR MISSION:
+ Take the USER TEMPLATE and generate exactly 5 distinct examples (samples) by replacing the [BRACKETED] variables with creative, high-quality values.
+ 
+ STRICT RULES:
+ 1. DO NOT change any text outside the brackets. The sentence structure must remain 100% IDENTICAL to the USER TEMPLATE.
+ 2. Generate exactly 5 unique variations.
+ 3. For the "promptTemplate" field in the JSON, return the exact USER TEMPLATE provided above.
+ 4. For the "mainPrompt" field, return your FIRST generated sample.
+ 5. For the "samples" array, return all 5 generated samples as strings.
+ 6. Target AI Model: ${targetModel}
+ ${exampleLengthInstructions}
+ 
+ Return the results in the standard JSON format.`
+        });
+      }
     } else if (hasRefImage && userParts.length > 0) {
-      // When reference image is provided — force the AI to analyze it deeply
+      // When reference image is provided in PROMPT GENERATOR MODE:
+      // The Power of AI's role is to generate a beautiful, highly detailed prompt template from scratch based on the uploaded reference image.
+      const charMode = characterMode || 'different';
+      console.log(`📸 Generating prompt template from scratch based on uploaded reference image. Character Mode: ${charMode}`);
+
+      let modeSpecificPromptRules = '';
+      if (charMode === 'sameScene') {
+        modeSpecificPromptRules = `
+🔒 REFERENCE MODE: SAME SCENE (Everything identical, only pose/expression/camera angle changes)
+The user has selected SAME SCENE mode. This means EVERYTHING from the reference image MUST stay 100% identical.
+
+CRITICAL INSTRUCTIONS FOR TEMPLATE GENERATION:
+1. DO NOT USE VARIABLES FOR THE SUBJECT, OUTFIT, BACKGROUND, STYLE, COLOR PALETTE, OR LIGHTING.
+   In the promptTemplate, you MUST describe the subject, outfit, background scenery, art style, color palette, and lighting in extreme detail as FIXED, unchangeable text in the template itself.
+   - Analyze the reference image and write its descriptions directly as fixed text in promptTemplate.
+   - For example, if the reference shows a young woman with short dark hair in a blue checkered shirt in a yellow rapeseed flower field, this description MUST be written directly as fixed text in promptTemplate.
+   - You are ABSOLUTELY FORBIDDEN from putting these into brackets (e.g. DO NOT use [subject], [character], [clothing], [outfit], [background], [scenery], [color palette], [style] as variables in promptTemplate).
+2. ONLY POSE, ACTION, GESTURE, AND EXPRESSION ARE ALLOWED AS VARIABLES:
+   The only variables in promptTemplate should be:
+   - [pose/action]
+   - [facial_expression] (optional)
+   - [camera_angle] (optional)
+   
+3. HOW TO GENERATE SAMPLES:
+   Since the subject, outfit, background, style, etc. are written as fixed text in the promptTemplate, they will automatically be 100% identical and repeated word-for-word across all generated samples.
+   You only need to replace the [pose/action] and [facial_expression] variables with unique, diverse, and creative poses and expressions for Sample A, B, and C.
+   E.g.
+   - promptTemplate: "A high-quality lifestyle photograph of a young East Asian woman with short black hair in a [pose/action], wearing a blue checkered wrap, set in a rapeseed flower field under a clear bright sky, soft cinematic lighting, natural skin textures --ar 1:1"
+   - Sample A: "...in a [pose/action: pensive pose resting her chin on her hand]..."
+   - Sample B: "...in a [pose/action: joyful pose laughing with head tilted back]..."
+   - Sample C: "...in a [pose/action: curious pose looking up at the sky with a warm smile]..."
+   
+   Under NO circumstances should any sample change the character description, the clothing description, the background setting, the style, the color palette, or any other fixed text. All samples must feature the EXACT SAME young woman in the EXACT SAME outfit in the EXACT SAME rapeseed field.`;
+      } else if (charMode === 'fixed') {
+        modeSpecificPromptRules = `
+🔒 REFERENCE MODE: FIXED CHARACTER (Same character & outfit, different locations & backgrounds)
+The user has selected FIXED CHARACTER mode. This means the character identity and clothing stay identical, but the scene/background changes.
+
+CRITICAL INSTRUCTIONS FOR TEMPLATE GENERATION:
+1. DO NOT USE VARIABLES FOR THE SUBJECT OR OUTFIT.
+   In the promptTemplate, you MUST describe the character's physical appearance (e.g. face, hair, age, gender) and their clothing/outfit in extreme detail as FIXED, unchangeable text.
+   - You are ABSOLUTELY FORBIDDEN from putting these into brackets (e.g. DO NOT use [subject], [character], [person], [clothing], [outfit] as variables in promptTemplate).
+2. ONLY POSE, BACKGROUND, LIGHTING, AND COLORS ARE ALLOWED AS VARIABLES:
+   The promptTemplate should have variables ONLY for:
+   - [pose/action]
+   - [background_setting]
+   - [color_palette] (optional)
+   - [lighting] (optional)
+   
+3. HOW TO GENERATE SAMPLES:
+   The subject and outfit are written as fixed text in the promptTemplate, so they will automatically be 100% identical and repeated word-for-word across all generated samples.
+   You must replace the [pose/action], [background_setting], [color_palette], and [lighting] variables with completely different environments and poses for each sample (e.g. Sample A in a flower field, Sample B in a cozy library, Sample C in a snowy mountain) while keeping the subject and outfit exactly the same.`;
+      } else {
+        modeSpecificPromptRules = `
+🔄 REFERENCE MODE: DIFFERENT CHARACTERS (Same art style/technique, different characters)
+The user has selected DIFFERENT CHARACTERS mode. This means the art style and visual aesthetic from the reference image stay identical, but the character changes.
+Therefore, when replacing the [BRACKETED] variables:
+1. Analyze the art style of the reference image (medium, visual technique, composition approach).
+2. The variables describing the subject, clothing, colors, and poses (e.g., [subject], [pose], [outfit], [color]) SHOULD vary completely in each of the 3 samples (e.g. generating completely different subjects like a rugged Nordic fisherman, a fantasy elf, a street artist) while keeping the overall art style described by the fixed text identical.`;
+      }
+
       userParts.push({
-        text: `I have attached a REFERENCE IMAGE above. This is the most important input.
+        text: `I have attached a REFERENCE IMAGE above. This is the primary visual source and the most important input.
 
-You MUST do the following:
+YOUR MISSION:
+Deeply analyze the attached reference image (its subject, clothing, style, lighting, composition, colors, medium) and generate a perfect, highly detailed prompt template and 3 distinct samples from scratch, in accordance with the character consistency rules below.
 
-1. LOOK AT THE IMAGE CAREFULLY. Describe in detail what you see:
-   - What is the main subject? (person, animal, object, character, logo, etc.)
-   - What colors does it have?
-   - What text or words are visible on it?
-   - What is the art style? (illustration, photo, 3D render, cartoon, etc.)
-   - What is the background?
-   - What are the distinctive visual features?
+${modeSpecificPromptRules}
 
-2. GENERATE A PROMPT that would recreate THIS EXACT subject from the image.
-   - The mainPrompt must describe the SAME subject you see in the image, not something different.
-   - If the image shows a cat logo with text "SPICY", then the mainPrompt must describe a cat logo with text "SPICY".
-   - If the image shows a blue and yellow bird, then the mainPrompt must describe a blue and yellow bird.
-   - DO NOT make up a different subject for the mainPrompt.
+CRITICAL LENGTH CONSTRAINTS (MANDATORY & STRICTLY ENFORCED):
+You MUST ensure the generated "promptTemplate" satisfies these exact character lengths based on the requested Power level:
+- For 1 Credit (Normal): The promptTemplate MUST have a minimum character length of 400 to 500 characters (exceptionally detailed, perfect, and best describes the scene).
+- For 3 Credits (Super): The promptTemplate MUST have a minimum character length of 500 to 600 characters (enhanced details, camera specs, lighting setups).
+- For 5 Credits (Power): The promptTemplate MUST have a minimum character length of 600 to 700 characters (masterpiece visual complexity, extreme sensory details).
 
-3. MAKE THE MAIN SUBJECT & ALL 5 KEY COMPONENTS VARIABLES IN THE TEMPLATE:
-   - Break down the reference image into exactly 5 components and replace them with bracketed variables in promptTemplate:
-     1. [subject] (e.g., replace "fairy" with [subject])
-     2. [pose/action] (e.g., replace "kneeling" with [pose/action])
-     3. [wing/feature type] (e.g., replace "butterfly wings" with [wing/feature type])
-     4. [color palette] (e.g., replace "pastel pink" with [color palette])
-     5. [background scenery] (e.g., replace "circular fern arch" with [background scenery])
-   - You MUST NOT keep any of these 5 specific components from the reference image as fixed text in promptTemplate.
+To achieve this character length, you MUST write exceptionally detailed, long, and rich fixed descriptive text in the template. The vast majority of the prompt template must be high-value unchangeable words (specifying photographic framing, detailed apparel, volumetric atmosphere, styling and textures) while keeping the bracketed variables strictly between 1 and 5 total. DO NOT generate short, simple templates (e.g., "Photography of a [subject] wearing [outfit]...").
 
-4. THE 3 SAMPLES MUST USE COMPLETELY DIFFERENT CONCEPTS FOR ALL 5 VARIABLES:
-   - In each of the 3 samples, you MUST replace ALL 5 variables with completely different, creative variations (e.g. do NOT repeat "butterfly wings", "fairy", "kneeling", or "circular leaves" in all samples!).
-   - E.g., Sample A features a celestial girl with feathered wings in pastel pink/mint kneeling inside a circular leaf arch.
-   - E.g., Sample B features a steampunk explorer with mechanical wings in copper/gold flying over an industrial city.
-   - E.g., Sample C features an angelic warrior with glowing energy wings in silver/gold standing in a battle stance inside a cosmic nebula.
-   - You MUST show maximum variation for all 5 variables in all 3 samples!
-
-Target AI Model: ${targetModel} — optimize for this model.
+Target AI Model: ${targetModel} — optimize the prompt syntax and keywords for this specific model.
 
 User's additional instructions: "${description.trim()}"
 
-Fill in "imageAnalysis" with your detailed description of what you see in the image.`
+Fill in "imageAnalysis" with your detailed description of everything you see in the reference image (subject details, clothing, scene, background, lighting, and style).`
       });
     } else {
       // No reference image — simple text-only generation
@@ -349,6 +678,14 @@ Fill in "imageAnalysis" with your detailed description of what you see in the im
 
 Prompt Type: ${(promptType || 'image').toUpperCase()}
 Target AI Model: ${targetModel} — optimize the prompt syntax and keywords for this specific model.
+
+CRITICAL LENGTH CONSTRAINTS (MANDATORY & STRICTLY ENFORCED):
+You MUST ensure the generated "promptTemplate" satisfies these exact character lengths based on the requested Power level:
+- For 1 Credit (Normal): The promptTemplate MUST have a minimum character length of 400 to 500 characters (exceptionally detailed, perfect, and best describes the scene).
+- For 3 Credits (Super): The promptTemplate MUST have a minimum character length of 500 to 600 characters (enhanced details, camera specs, lighting setups).
+- For 5 Credits (Power): The promptTemplate MUST have a minimum character length of 600 to 700 characters (masterpiece visual complexity, extreme sensory details).
+
+To achieve this character length, you MUST write exceptionally detailed, long, and rich fixed descriptive text in the template. The vast majority of the prompt template must be high-value unchangeable words describing the scene in extreme visual depth (specifying cinematic lighting, professional photographic parameters, background setting details, textures, and composition) while keeping the bracketed variables strictly between 1 and 5 total. DO NOT generate short, simple templates.
 
 CRITICAL REQUIREMENT FOR VARIABLES:
 The promptTemplate MUST contain a minimum of 1 and a maximum of 5 bracketed variables total (e.g., [subject], [color], [style]). 

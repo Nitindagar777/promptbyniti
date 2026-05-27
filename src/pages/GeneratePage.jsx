@@ -10,7 +10,8 @@ import {
   Sparkles, Info, Image as ImageIcon,
   RefreshCw, AlertTriangle,
   Crown, Dices, Zap, Video, Type, Search, Layers,
-  Save, ShoppingBag, RotateCcw, Check
+  Save, ShoppingBag, RotateCcw, Check,
+  Lock, Repeat, Camera
 } from 'lucide-react';
 import './GeneratePage.css';
 
@@ -34,7 +35,8 @@ export default function GeneratePage() {
           form: parsed.form || { description: '', characterImage: null, promptType: 'image', model: 'midjourney' },
           result: parsed.result || null,
           generatorMode: parsed.generatorMode || 'prompt',
-          exampleTemplate: parsed.exampleTemplate || ''
+          exampleTemplate: parsed.exampleTemplate || '',
+          characterMode: parsed.characterMode || 'fixed'
         };
       }
     } catch { }
@@ -42,7 +44,8 @@ export default function GeneratePage() {
       form: { description: '', characterImage: null, promptType: 'image', model: 'midjourney' },
       result: null,
       generatorMode: 'prompt',
-      exampleTemplate: ''
+      exampleTemplate: '',
+      characterMode: 'fixed'
     };
   };
 
@@ -51,6 +54,8 @@ export default function GeneratePage() {
   const [result, setResult] = useState(initialState.result);
   const [generatorMode, setGeneratorMode] = useState(initialState.generatorMode);
   const [exampleTemplate, setExampleTemplate] = useState(initialState.exampleTemplate);
+  const [characterMode, setCharacterMode] = useState(initialState.characterMode);
+  const [hoveredMode, setHoveredMode] = useState(null);
 
   const [customModel, setCustomModel] = useState('');
   const [showCustomInput, setShowCustomInput] = useState(false);
@@ -95,10 +100,11 @@ export default function GeneratePage() {
         form, 
         result, 
         generatorMode, 
-        exampleTemplate 
+        exampleTemplate,
+        characterMode 
       }));
     } catch { }
-  }, [form, result, generatorMode, exampleTemplate]);
+  }, [form, result, generatorMode, exampleTemplate, characterMode]);
 
   /* Handle incoming state from Home Page */
   useEffect(() => {
@@ -143,8 +149,8 @@ export default function GeneratePage() {
       const modelLabel = modelEntry ? modelEntry.label : (form.model || 'midjourney');
 
       const payload = generatorMode === 'prompt'
-        ? { ...form, aiPower, modelLabel }
-        : { ...form, mode: 'example', description: exampleTemplate, aiPower, modelLabel };
+        ? { ...form, aiPower, modelLabel, characterMode }
+        : { ...form, mode: 'example', description: exampleTemplate, aiPower, modelLabel, characterMode };
 
       const API_BASE = '/api';
       const response = await fetch(`${API_BASE}/generate`, {
@@ -254,6 +260,7 @@ export default function GeneratePage() {
     setCustomModel('');
     setShowCustomInput(false);
     setSaveMessage('');
+    setCharacterMode('fixed');
     sessionStorage.removeItem(SESSION_KEY);
   };
 
@@ -434,6 +441,83 @@ export default function GeneratePage() {
                   </div>
                 </div>
 
+                {/* Character Mode Toggle — only show when reference image is uploaded */}
+                {form.characterImage && (
+                  <div className="gen-section gen-section--expanded gen-section--full character-mode-section" id="gen-character-mode" style={{ animation: 'fadeInUp 0.4s ease' }}>
+                    <h3 className="gen-section__title mb-3" style={{ color: '#a855f7', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Repeat size={20} className="icon-pulse" style={{ color: '#a855f7' }} /> Reference Mode
+                    </h3>
+                    <p className="text-sm text-muted mb-4">
+                      Choose how the AI uses your reference image when generating prompt variations.
+                    </p>
+                    <div className="character-mode-toggle character-mode-toggle--three">
+                      {/* Button 1: Same Scene */}
+                      <button
+                        type="button"
+                        className={`character-mode-btn ${characterMode === 'sameScene' ? 'character-mode-btn--active character-mode-btn--sameScene' : ''}`}
+                        onClick={() => setCharacterMode('sameScene')}
+                        onMouseEnter={() => setHoveredMode('sameScene')}
+                        onMouseLeave={() => setHoveredMode(null)}
+                      >
+                        <div className="character-mode-btn__icon-wrap character-mode-btn__icon-wrap--sameScene">
+                          <Camera size={22} />
+                        </div>
+                        <div className="character-mode-btn__content">
+                          <span className="character-mode-btn__label">Same Scene</span>
+                          <span className="character-mode-btn__desc">Everything identical — only pose & gesture changes</span>
+                        </div>
+                        {characterMode === 'sameScene' && (
+                          <div className="character-mode-btn__check">
+                            <Check size={16} />
+                          </div>
+                        )}
+                      </button>
+                      {/* Button 2: Different Characters */}
+                      <button
+                        type="button"
+                        className={`character-mode-btn ${characterMode === 'different' ? 'character-mode-btn--active character-mode-btn--different' : ''}`}
+                        onClick={() => setCharacterMode('different')}
+                        onMouseEnter={() => setHoveredMode('different')}
+                        onMouseLeave={() => setHoveredMode(null)}
+                      >
+                        <div className="character-mode-btn__icon-wrap character-mode-btn__icon-wrap--different">
+                          <Repeat size={22} />
+                        </div>
+                        <div className="character-mode-btn__content">
+                          <span className="character-mode-btn__label">Different Characters</span>
+                          <span className="character-mode-btn__desc">Same art style & composition, completely different characters</span>
+                        </div>
+                        {characterMode === 'different' && (
+                          <div className="character-mode-btn__check">
+                            <Check size={16} />
+                          </div>
+                        )}
+                      </button>
+                      {/* Button 3: Fixed Character */}
+                      <button
+                        type="button"
+                        className={`character-mode-btn ${characterMode === 'fixed' ? 'character-mode-btn--active character-mode-btn--fixed' : ''}`}
+                        onClick={() => setCharacterMode('fixed')}
+                        onMouseEnter={() => setHoveredMode('fixed')}
+                        onMouseLeave={() => setHoveredMode(null)}
+                      >
+                        <div className="character-mode-btn__icon-wrap character-mode-btn__icon-wrap--fixed">
+                          <Lock size={22} />
+                        </div>
+                        <div className="character-mode-btn__content">
+                          <span className="character-mode-btn__label">Fixed Character</span>
+                          <span className="character-mode-btn__desc">Same character & outfit, different locations & backgrounds</span>
+                        </div>
+                        {characterMode === 'fixed' && (
+                          <div className="character-mode-btn__check">
+                            <Check size={16} />
+                          </div>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {/* Your Description */}
                 <div className={`gen-section gen-section--full ${form.description ? 'gen-section--expanded' : ''}`} id="gen-description">
                   <h3 className="gen-section__title mb-4" style={{ color: '#ff0080', fontSize: '1.2rem' }}>Your Description</h3>
@@ -533,7 +617,8 @@ export default function GeneratePage() {
                 </div>
               </>
             ) : (
-              <div className="gen-section gen-section--expanded gen-section--full" id="gen-example-mode">
+              <>
+                <div className="gen-section gen-section--expanded gen-section--full" id="gen-example-mode">
                 <h3 className="gen-section__title mb-4" style={{ color: 'var(--color-orange)', fontSize: '1.2rem' }}>Example Prompt Generator</h3>
                 <p className="text-sm text-muted mb-4">
                   Enter a prompt template using variables in brackets, and the AI will generate 5 diverse sample variations. <br />
@@ -628,7 +713,88 @@ export default function GeneratePage() {
                   </div>
                 </div>
               </div>
-            )}
+
+              {/* Reference Mode Toggle for Example Generator */}
+              <div className="gen-section gen-section--expanded gen-section--full character-mode-section" id="gen-character-mode-example" style={{ marginTop: '24px', animation: 'fadeInUp 0.4s ease' }}>
+                <h3 className="gen-section__title mb-3" style={{ color: '#a855f7', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Repeat size={20} className="icon-pulse" style={{ color: '#a855f7' }} /> Reference Mode
+                </h3>
+                <p className="text-sm text-muted mb-4">
+                  Choose how the AI handles variables in your template when generating 5 unique variations.
+                </p>
+                <div className="character-mode-toggle character-mode-toggle--three">
+                  {/* Button 1: Same Scene */}
+                  <button
+                    type="button"
+                    className={`character-mode-btn ${characterMode === 'sameScene' ? 'character-mode-btn--active character-mode-btn--sameScene' : ''}`}
+                    onClick={() => setCharacterMode('sameScene')}
+                    onMouseEnter={() => setHoveredMode('sameScene')}
+                    onMouseLeave={() => setHoveredMode(null)}
+                  >
+                    <div className="character-mode-btn__icon-wrap character-mode-btn__icon-wrap--sameScene">
+                      <Camera size={22} />
+                    </div>
+                    <div className="character-mode-btn__content">
+                      <span className="character-mode-btn__label">Same Scene</span>
+                      <span className="character-mode-btn__desc">
+                        Lock subject, outfit, background, and style variables — only vary pose/action variables
+                      </span>
+                    </div>
+                    {characterMode === 'sameScene' && (
+                      <div className="character-mode-btn__check">
+                        <Check size={16} />
+                      </div>
+                    )}
+                  </button>
+                  {/* Button 2: Different Characters */}
+                  <button
+                    type="button"
+                    className={`character-mode-btn ${characterMode === 'different' ? 'character-mode-btn--active character-mode-btn--different' : ''}`}
+                    onClick={() => setCharacterMode('different')}
+                    onMouseEnter={() => setHoveredMode('different')}
+                    onMouseLeave={() => setHoveredMode(null)}
+                  >
+                    <div className="character-mode-btn__icon-wrap character-mode-btn__icon-wrap--different">
+                      <Repeat size={22} />
+                    </div>
+                    <div className="character-mode-btn__content">
+                      <span className="character-mode-btn__label">Different Characters</span>
+                      <span className="character-mode-btn__desc">
+                        Vary all variables (subjects, outfits, backgrounds) completely per sample
+                      </span>
+                    </div>
+                    {characterMode === 'different' && (
+                      <div className="character-mode-btn__check">
+                        <Check size={16} />
+                      </div>
+                    )}
+                  </button>
+                  {/* Button 3: Fixed Character */}
+                  <button
+                    type="button"
+                    className={`character-mode-btn ${characterMode === 'fixed' ? 'character-mode-btn--active character-mode-btn--fixed' : ''}`}
+                    onClick={() => setCharacterMode('fixed')}
+                    onMouseEnter={() => setHoveredMode('fixed')}
+                    onMouseLeave={() => setHoveredMode(null)}
+                  >
+                    <div className="character-mode-btn__icon-wrap character-mode-btn__icon-wrap--fixed">
+                      <Lock size={22} />
+                    </div>
+                    <div className="character-mode-btn__content">
+                      <span className="character-mode-btn__label">Fixed Character</span>
+                      <span className="character-mode-btn__desc">
+                        Lock subject and outfit variables — vary backgrounds, poses, and locations per sample
+                      </span>
+                    </div>
+                    {characterMode === 'fixed' && (
+                      <div className="character-mode-btn__check">
+                        <Check size={16} />
+                      </div>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </>)}
 
             {/* Power of AI Selection */}
             {!result && (
@@ -868,20 +1034,111 @@ export default function GeneratePage() {
               <PromptOutput result={result} mode={generatorMode} />
             ) : (
               <div className="generate-page__preview">
-                {generatorMode === 'prompt' ? (
-                  <>
-                    <h3>
-                      <span className="text-cyan">Your Prompt Will Appear Here</span>
-                    </h3>
-                    <p>Describe your vision and hit Generate to create a professional AI prompt</p>
-                  </>
+                {(form.characterImage || generatorMode === 'example') && !isGenerating ? (
+                  (() => {
+                    const activePreviewMode = hoveredMode || characterMode || 'sameScene';
+                    return (
+                      <div className={`ref-mode-preview ref-mode-preview--${activePreviewMode}`} style={{ animation: 'fadeIn 0.3s ease' }}>
+                        <div className="ref-mode-preview__badge">
+                          <span>Reference Mode Visual Guide</span>
+                        </div>
+                        <h3 className="ref-mode-preview__title">
+                          {activePreviewMode === 'sameScene' && "📸 Same Scene / Photoshoot"}
+                          {activePreviewMode === 'different' && "🔄 Different Characters"}
+                          {activePreviewMode === 'fixed' && "🔒 Fixed Character"}
+                        </h3>
+                        <p className="ref-mode-preview__desc">
+                          {activePreviewMode === 'sameScene' && "Keeps every single detail identical across generations, only modifying the subject's poses, camera angles, or expressions."}
+                          {activePreviewMode === 'different' && "Keeps the exact same artistic style, composition, and visual medium, while swapping the main character or subject completely."}
+                          {activePreviewMode === 'fixed' && "Locks the exact identity, clothing, and details of your character, and places them in entirely new environments and locations."}
+                        </p>
+
+                        <div className="ref-mode-preview__image-container">
+                          <img 
+                            src={
+                              activePreviewMode === 'sameScene' ? '/same_scene_ref.png' :
+                              activePreviewMode === 'different' ? '/diff_characters_ref.png' :
+                              '/fixed_character_ref.png'
+                            } 
+                            alt={activePreviewMode} 
+                            className="ref-mode-preview__img"
+                          />
+                        </div>
+
+                        <div className="ref-mode-preview__rules-grid">
+                          <div className="ref-mode-preview__rules-col ref-mode-preview__rules-col--same">
+                            <h4>🔒 What Stays SAME</h4>
+                            <ul>
+                              {activePreviewMode === 'sameScene' && (
+                                <>
+                                  <li><strong>Subject:</strong> Age, hair, face features, identity</li>
+                                  <li><strong>Outfit:</strong> All clothes, accessories, colors</li>
+                                  <li><strong>Art Style:</strong> Medium & photography composition</li>
+                                  <li><strong>Scene:</strong> Grassy field, overcast lighting</li>
+                                </>
+                              )}
+                              {activePreviewMode === 'different' && (
+                                <>
+                                  <li><strong>Artistic Style:</strong> Geometric, stained-glass line art</li>
+                                  <li><strong>Composition:</strong> Single-subject centered profile layout</li>
+                                  <li><strong>Medium:</strong> Stylized digital vector illustration</li>
+                                </>
+                              )}
+                              {activePreviewMode === 'fixed' && (
+                                <>
+                                  <li><strong>Identity:</strong> Face, hair color, body structure</li>
+                                  <li><strong>Exact Outfit:</strong> Teal sporty jacket, helmet, sunglasses</li>
+                                  <li><strong>Accessories:</strong> Dark pants, black shoes, skateboard</li>
+                                </>
+                              )}
+                            </ul>
+                          </div>
+                          <div className="ref-mode-preview__rules-col ref-mode-preview__rules-col--changes">
+                            <h4>⚡ What CHANGES</h4>
+                            <ul>
+                              {activePreviewMode === 'sameScene' && (
+                                <>
+                                  <li><strong>Body Pose:</strong> Facing front, arms wide, facing away</li>
+                                  <li><strong>Expression:</strong> Direct look vs looking back</li>
+                                  <li><strong>Framing:</strong> Medium shot, full body, camera distance</li>
+                                </>
+                              )}
+                              {activePreviewMode === 'different' && (
+                                <>
+                                  <li><strong>Main Subject:</strong> New animal (Leopard ➔ Fox ➔ Owl)</li>
+                                  <li><strong>Color Palette:</strong> Adapts per character</li>
+                                  <li><strong>Background Tone:</strong> Dark backdrop matching the style</li>
+                                </>
+                              )}
+                              {activePreviewMode === 'fixed' && (
+                                <>
+                                  <li><strong>Background:</strong> Sunny beach, concrete stairs, city streets</li>
+                                  <li><strong>Action & Pose:</strong> Crouched cruising, mid-air jump, standing</li>
+                                  <li><strong>Lighting:</strong> Sunny flare, overcast shadow, urban daylight</li>
+                                </>
+                              )}
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()
                 ) : (
-                  <>
-                    <h3>
-                      <span className="text-orange">Your 5 Sample Variations Will Appear Here</span>
-                    </h3>
-                    <p>Enter your prompt template with variables and hit Generate to create 5 unique examples</p>
-                  </>
+                  generatorMode === 'prompt' ? (
+                    <>
+                      <h3>
+                        <span className="text-cyan">Your Prompt Will Appear Here</span>
+                      </h3>
+                      <p>Describe your vision and hit Generate to create a professional AI prompt</p>
+                    </>
+                  ) : (
+                    <>
+                      <h3>
+                        <span className="text-orange">Your 5 Sample Variations Will Appear Here</span>
+                      </h3>
+                      <p>Enter your prompt template with variables and hit Generate to create 5 unique examples</p>
+                    </>
+                  )
                 )}
               </div>
             )}
