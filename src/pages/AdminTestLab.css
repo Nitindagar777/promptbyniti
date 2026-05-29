@@ -112,4 +112,10 @@
   .admin-lab__form {
     grid-template-columns: 1fr;
   }
+  .admin-lab__actions {
+    flex-direction: column !important;
+  }
+  .admin-lab__actions .gen-random {
+    flex: 1 1 auto !important;
+  }
 }

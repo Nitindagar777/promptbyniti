@@ -253,3 +253,42 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ===== Mobile (max-width: 480px) ===== */
+@media (max-width: 480px) {
+  .prompt-output__header {
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .prompt-output__label {
+    font-size: 0.85rem;
+  }
+
+  .prompt-output__text {
+    padding: var(--space-md);
+    font-size: 0.85rem;
+  }
+
+  .prompt-output__field {
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .prompt-output__meta-badge {
+    font-size: 0.75rem;
+    padding: 6px 12px;
+    gap: 6px;
+  }
+
+  .prompt-output__toggle {
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .prompt-output__copy {
+    font-size: 0.7rem;
+    padding: 5px 10px;
+  }
+
+  .prompt-output__meta-grid {
+    padding: var(--space-sm) var(--space-md);
+  }
+}

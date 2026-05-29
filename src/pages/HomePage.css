@@ -242,16 +242,133 @@
   .p-market-grid { grid-template-columns: 1fr 1fr; }
 }
 
+/* --- HERO RESPONSIVE ADDITIONS --- */
+.p-hero__subtitle--accent {
+  font-size: 2.2rem;
+  font-weight: 700;
+  font-family: var(--font-display);
+  margin-bottom: 10px;
+}
+
+.p-hero__desc {
+  color: white;
+  font-size: 1.8rem;
+  font-family: var(--font-display);
+  margin-bottom: 40px;
+}
+
+.btn-demo-transform {
+  min-width: 320px;
+}
+
+.btn-demo-random {
+  min-width: 220px;
+}
+
+.seo-caveat-text {
+  font-size: 1.4rem;
+}
+
 @media (max-width: 600px) {
-  .btn-xl { width: 100%; padding: 18px 24px; }
-  .p-hero__btns { flex-direction: column; }
+  .btn-xl { 
+    width: auto !important;
+    display: inline-flex !important;
+    padding: 8px 14px !important; 
+    font-size: 0.85rem !important;
+    border-radius: 10px !important;
+  }
+  .p-hero__btns { 
+    flex-direction: column !important; 
+    align-items: center !important;
+    gap: 12px !important;
+  }
   .p-market-grid { grid-template-columns: 1fr; }
   .p-market-header { flex-direction: column; gap: var(--space-md); }
   .p-cta__title { font-size: 2.5rem; }
+  
+  .p-hero__subtitle--accent {
+    font-size: 1.45rem !important;
+  }
+  
+  .p-hero__desc {
+    font-size: 1.15rem !important;
+    margin-bottom: 24px !important;
+  }
+  
+  .btn-demo-transform, .btn-demo-random {
+    min-width: 0 !important;
+    width: 100% !important;
+    font-size: 0.85rem !important;
+    padding: 8px 14px !important;
+    border-radius: 10px !important;
+  }
+  
+  .seo-caveat-text {
+    font-size: 1.1rem !important;
+  }
 }
 
 /* SEO Content Caveat Font Overrides */
 .seo-caveat-text p, 
 .seo-caveat-text strong {
   font-family: 'Caveat', cursive !important;
+}
+
+/* MOBILE — 480px and below */
+@media (max-width: 480px) {
+  /* Hero */
+  .p-hero {
+    padding: 30px 0 60px;
+  }
+
+  .p-hero__title {
+    font-size: clamp(2rem, 10vw, 3rem);
+    line-height: 1;
+  }
+
+  .p-hero__subtitle {
+    font-size: 1rem;
+    margin-bottom: var(--space-lg);
+  }
+
+  /* Display heading */
+  .h-display {
+    font-size: clamp(1.75rem, 6vw, 2.5rem);
+  }
+
+  /* Badge */
+  .p-badge {
+    font-size: 0.78rem;
+    padding: 6px 14px;
+    gap: 8px;
+  }
+
+  /* Section spacing */
+  .section-spacing {
+    padding: var(--space-lg) 0;
+  }
+
+  /* Benefits */
+  .p-benefit h3 {
+    font-size: 1.2rem;
+  }
+
+  /* Playground */
+  .p-playground__textarea {
+    font-size: 1rem;
+    min-height: 140px;
+  }
+
+  /* CTA */
+  .p-cta__subtitle {
+    font-size: 1rem;
+  }
+
+  .p-cta__title {
+    font-size: clamp(1.75rem, 8vw, 2.5rem);
+  }
+
+  .p-cta__inner {
+    padding: var(--space-lg) var(--space-sm);
+  }
 }

@@ -751,3 +751,101 @@
 .metadata-value {
   margin-top: 0 !important;
 }
+
+/* ===== Mobile (max-width: 480px) ===== */
+@media (max-width: 480px) {
+  .purchase-success-page {
+    padding-top: 80px;
+    padding-bottom: 40px;
+  }
+
+  .success-header h1 {
+    font-size: 1.8rem;
+  }
+
+  .success-header p {
+    font-size: 0.95rem;
+  }
+
+  .unlocked-card {
+    padding: 20px !important;
+  }
+
+  .prompt-header-info {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .success-thumb {
+    width: 80px !important;
+    height: 80px !important;
+  }
+
+  .header-text h2 {
+    font-size: 1.3rem;
+  }
+
+  .prompt-box-reveal {
+    font-size: 0.85rem;
+    padding: 16px;
+  }
+
+  .section-title h3 {
+    font-size: 1rem;
+  }
+
+  .success-footer-actions {
+    flex-direction: column;
+  }
+
+  .generator-metadata-reveal {
+    padding: 16px;
+  }
+
+  .review-section-header h3 {
+    font-size: 1.3rem;
+  }
+
+  .review-icon-bg {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+  }
+
+  .review-section-header {
+    gap: 14px;
+  }
+
+  .review-submission-section {
+    padding: 18px;
+    margin-top: 24px;
+  }
+
+  .review-thanks h4 {
+    font-size: 1.4rem;
+  }
+
+  .samples-grid-reveal {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .lightbox-overlay {
+    padding: 16px;
+  }
+
+  .lightbox-close {
+    top: -35px;
+    right: -10px;
+    font-size: 2rem;
+  }
+
+  .container-small {
+    padding: 0 14px;
+  }
+
+  .btn-submit-review {
+    font-size: 1rem;
+    padding: 14px 28px;
+  }
+}

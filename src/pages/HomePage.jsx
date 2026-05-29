@@ -89,15 +89,15 @@ export default function HomePage() {
             The <span className="text-cyan">#1 AI Prompt</span> Generator <br />
             & <span className="text-orange">Marketplace</span>
           </h1>
-          <p className="p-hero__subtitle reveal" style={{ fontSize: '2rem', fontWeight: '700', fontFamily: 'var(--font-display)', animationDelay: '0.2s', marginBottom: '10px' }}>
+          <p className="p-hero__subtitle p-hero__subtitle--accent reveal" style={{ animationDelay: '0.2s' }}>
             <span className="text-orange">Generate.</span> <span className="text-cyan">Customize.</span> <span className="text-purple">Sell.</span>
           </p>
-          <p className="reveal" style={{ color: 'white', fontSize: '1.8rem', fontFamily: 'var(--font-display)', marginBottom: '40px', animationDelay: '0.25s' }}>
+          <p className="p-hero__desc reveal" style={{ animationDelay: '0.25s' }}>
             Best Prompts for Midjourney, ChatGPT, DALL·E & More...
           </p>
           <div className="p-hero__btns reveal" style={{ animationDelay: '0.3s' }}>
             <Link to="/generate" className="btn btn-primary btn-xl">
-              Start Generating <ArrowRight size={20} />
+              Start Generating <ArrowRight size={18} style={{ marginLeft: '4px' }} />
             </Link>
             <Link to="/templates" className="btn btn-secondary btn-xl">
               Explore Archive
@@ -124,18 +124,16 @@ export default function HomePage() {
           </div>
           <div className="p-playground__footer" style={{ display: 'flex', justifyContent: 'center', gap: '15px', marginTop: '20px', flexWrap: 'wrap' }}>
             <button
-              className="btn btn-primary btn-xl"
+              className="btn btn-primary btn-xl btn-demo-transform"
               onClick={handleDemoGenerate}
-              style={{ minWidth: '320px' }}
             >
-              <Wand2 size={24} /> Transform into Professional Prompt
+              <Wand2 size={20} /> Transform into Professional Prompt
             </button>
             <button
-              className="btn btn-sky btn-xl"
+              className="btn btn-sky btn-xl btn-demo-random"
               onClick={handleRandomGenerate}
-              style={{ minWidth: '220px' }}
             >
-              <ZapIcon size={24} /> Randomly Generate
+              <ZapIcon size={20} /> Randomly Generate
             </button>
           </div>
           {demoResult && <div className="mt-2xl"><PromptOutput result={demoResult} /></div>}
@@ -291,7 +289,7 @@ export default function HomePage() {
           <h2 className="h-display" style={{ textAlign: 'center', marginBottom: '24px' }}>
             The Best <span className="text-cyan">AI Prompt</span> Platform — <span className="text-orange">Prompt by Niti</span>
           </h2>
-          <div className="seo-caveat-text" style={{ color: 'var(--text-secondary)', lineHeight: '1.8', fontSize: '1.5rem' }}>
+          <div className="seo-caveat-text" style={{ color: 'var(--text-secondary)', lineHeight: '1.8' }}>
             <p>
               <strong>Prompt by Niti</strong> is the ultimate <strong>AI prompt generator</strong> and <strong>prompt marketplace</strong> built for creators, designers, and prompt engineers. Whether you need <strong>Midjourney prompts</strong>, <strong>ChatGPT prompts</strong>, <strong>DALL·E prompts</strong>, <strong>Stable Diffusion prompts</strong>, or <strong>Flux prompts</strong> — our AI-powered platform generates studio-quality results in seconds.
             </p>

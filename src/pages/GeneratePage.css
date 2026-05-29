@@ -1091,4 +1091,19 @@
   }
 }
 
+@media (max-width: 768px) {
+  .generate-page__form {
+    grid-template-columns: 1fr !important;
+  }
+  .prompt-type-selector {
+    flex-direction: column !important;
+  }
+  .gen-actions {
+    flex-direction: column !important;
+  }
+  .gen-actions .gen-random {
+    flex: 1 1 auto !important;
+  }
+}
+
 

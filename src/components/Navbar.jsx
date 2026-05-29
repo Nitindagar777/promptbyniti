@@ -301,7 +301,7 @@ export default function Navbar() {
           {state?.user ? (
             <>
               {/* Animated Chat Mascot Widget (Available after login) */}
-              <div className="navbar__mascot-wrapper">
+              <div className="navbar__mascot-wrapper hide-on-mobile">
                 <Link
                   to="/lounge"
                   className="navbar__mascot-btn"
@@ -361,13 +361,13 @@ export default function Navbar() {
                 </Link>
               </div>
 
-              <div className="navbar__credits" title="Remaining Credits">
+              <div className="navbar__credits navbar__credits--header" title="Remaining Credits">
                 <Zap size={16} fill="currentColor" />
                 <span>{Math.floor(state?.credits ?? 0)}</span>
               </div>
 
               {/* Notification Bell */}
-              <div className="navbar__notifications-wrapper" ref={notifRef}>
+              <div className="navbar__notifications-wrapper hide-on-mobile" ref={notifRef}>
                 <button 
                   className={`navbar__action-btn ${showNotifications ? 'active' : ''}`} 
                   onClick={handleToggleNotifications}
@@ -399,7 +399,7 @@ export default function Navbar() {
                 )}
               </div>
 
-              <Link to="/settings" className="navbar__avatar" title="Settings">
+              <Link to="/settings" className="navbar__avatar hide-on-mobile" title="Settings">
                 <img 
                   src={state.user?.avatar || 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=100&auto=format&fit=crop&q=60'} 
                   alt="User" 
@@ -409,18 +409,225 @@ export default function Navbar() {
               </Link>
             </>
           ) : (
-            <>
+            <div className="navbar__desktop-auth hide-on-mobile">
               <Link to="/login" className="btn btn-blue" style={{ padding: '8px 16px', fontSize: '0.9rem' }}>
                 Login
               </Link>
               <Link to="/signup" className="btn btn-primary" style={{ padding: '8px 16px', fontSize: '0.9rem', marginLeft: '6px' }}>
                 Register
               </Link>
-            </>
+            </div>
           )}
+
+          {/* Hamburger Menu Toggle */}
+          <button 
+            className={`navbar__hamburger ${mobileMenuOpen ? 'navbar__hamburger--open' : ''}`}
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle navigation menu"
+          >
+            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
         </div>
       </div>
 
+      {/* Mobile Nav Drawer Backdrop */}
+      <div 
+        className={`navbar__mobile-overlay ${mobileMenuOpen ? 'navbar__mobile-overlay--open' : ''}`} 
+        onClick={() => setMobileMenuOpen(false)}
+      />
+
+      {/* Mobile Nav Drawer Panel */}
+      <div className={`navbar__mobile-drawer ${mobileMenuOpen ? 'navbar__mobile-drawer--open' : ''}`}>
+        <div className="mobile-drawer__header">
+          <Link to="/" className="mobile-drawer__logo" onClick={() => setMobileMenuOpen(false)}>
+            <img src="/image1.png" alt="Prompt by Niti" className="navbar__logo-img" />
+            <span className="navbar__logo-text">
+              Prompt <span className="text-secondary" style={{ fontSize: '0.8em' }}>by</span> <span className="text-orange">Niti</span>
+            </span>
+          </Link>
+          <button className="mobile-drawer__close" onClick={() => setMobileMenuOpen(false)} aria-label="Close menu">
+            <X size={24} />
+          </button>
+        </div>
+
+        {state?.user && (
+          <div className="mobile-drawer__user-profile">
+            <div className="mobile-drawer__user-info">
+              <img 
+                src={state.user?.avatar || 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=100&auto=format&fit=crop&q=60'} 
+                alt="User" 
+                className="mobile-drawer__avatar-img" 
+                onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=100&auto=format&fit=crop&q=60' }}
+              />
+              <div className="mobile-drawer__user-details">
+                <span className="mobile-drawer__username">{state.user?.username || 'User'}</span>
+                <span className="mobile-drawer__plan-badge">{state.user?.plan || 'Free'} Plan</span>
+              </div>
+            </div>
+            
+            <div className="mobile-drawer__stats">
+              <div className="mobile-drawer__stat-item">
+                <Zap size={16} className="text-cyan" fill="currentColor" />
+                <span><strong>{Math.floor(state?.credits ?? 0)}</strong> Tokens</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <ul className="mobile-drawer__links">
+          <li>
+            <Link to="/" className={`mobile-drawer__link ${isActive('/') ? 'mobile-drawer__link--active' : ''}`} onClick={() => setMobileMenuOpen(false)}>Home</Link>
+          </li>
+          <li>
+            <Link to="/generate" className={`mobile-drawer__link ${isActive('/generate') ? 'mobile-drawer__link--active' : ''}`} onClick={() => setMobileMenuOpen(false)}>Generate</Link>
+          </li>
+          <li>
+            <Link to="/templates" className={`mobile-drawer__link ${isActive('/templates') ? 'mobile-drawer__link--active' : ''}`} onClick={() => setMobileMenuOpen(false)}>Store</Link>
+          </li>
+          <li>
+            <Link to="/sell" className={`mobile-drawer__link ${isActive('/sell') ? 'mobile-drawer__link--active' : ''}`} onClick={() => setMobileMenuOpen(false)}>Sell</Link>
+          </li>
+          <li>
+            <Link to="/library" className={`mobile-drawer__link ${isActive('/library') ? 'mobile-drawer__link--active' : ''}`} onClick={() => setMobileMenuOpen(false)}>Free</Link>
+          </li>
+          <li>
+            <Link to="/pricing" className={`mobile-drawer__link ${isActive('/pricing') ? 'mobile-drawer__link--active' : ''}`} onClick={() => setMobileMenuOpen(false)}>Pricing</Link>
+          </li>
+          {isAdmin && (
+            <li>
+              <Link to="/admin-lab" className={`mobile-drawer__link mobile-drawer__link--admin ${isActive('/admin-lab') ? 'mobile-drawer__link--active' : ''}`} onClick={() => setMobileMenuOpen(false)}>
+                <FlaskConical size={14} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />
+                Test Lab
+              </Link>
+            </li>
+          )}
+        </ul>
+
+        <div className="mobile-drawer__footer">
+          {state?.user ? (
+            <div className="mobile-drawer__actions">
+              {/* Mascot Option */}
+              <div className="mobile-drawer__action-row">
+                <span className="mobile-drawer__action-label">Lounge Chat:</span>
+                <div className="navbar__mascot-wrapper">
+                  <Link
+                    to="/lounge"
+                    className="navbar__mascot-btn"
+                    onClick={() => setMobileMenuOpen(false)}
+                    onMouseEnter={() => setIsMascotHovered(true)}
+                    onMouseLeave={() => setIsMascotHovered(false)}
+                    title="Group Discussion & Announcement"
+                  >
+                    <svg 
+                      width="38" 
+                      height="38" 
+                      viewBox="0 0 36 36" 
+                      fill="none" 
+                      xmlns="http://www.w3.org/2000/svg"
+                      className={`navbar__mascot-svg alien ${isMascotHovered ? 'hovered' : ''}`}
+                    >
+                      {/* Alien Head */}
+                      <path 
+                        d="M8 17 C 8 8, 28 8, 28 17 C 28 23, 23 27, 18 27 C 13 27, 8 23, 8 17 Z" 
+                        fill="#10b981" 
+                        stroke="#059669" 
+                        strokeWidth="2" 
+                      />
+                      
+                      {/* Antennas */}
+                      <path d="M12 9 L 8 3" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" className="antenna-left" />
+                      <circle cx="8" cy="2" r="2.5" fill="#fb923c" className="antenna-bulb-left" />
+                      
+                      <path d="M24 9 L 28 3" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" className="antenna-right" />
+                      <circle cx="28" cy="2" r="2.5" fill="#fb923c" className="antenna-bulb-right" />
+                      
+                      {/* Cute Big Alien Eyes (Glossy/Interactive) */}
+                      <ellipse cx="13.5" cy="15.5" rx="3.5" ry="5.5" fill="#0f172a" />
+                      <ellipse cx="22.5" cy="15.5" rx="3.5" ry="5.5" fill="#0f172a" />
+                      
+                      {/* Eye shines */}
+                      <circle cx="14.5" cy="13.5" r="1.2" fill="#ffffff" className="eye-shine" />
+                      <circle cx="23.5" cy="13.5" r="1.2" fill="#ffffff" className="eye-shine" />
+                      <circle cx="12.5" cy="17" r="0.6" fill="#ffffff" className="eye-shine-sub" />
+                      <circle cx="21.5" cy="17" r="0.6" fill="#ffffff" className="eye-shine-sub" />
+                      
+                      {/* Smiling Mouth */}
+                      <path d="M15 20.5 Q18 22.5 21 20.5" stroke="#0f172a" strokeWidth="2" strokeLinecap="round" fill="none" className="mouth" />
+                      
+                      {/* Rosy Cheeks */}
+                      <ellipse cx="9.5" cy="18.5" rx="1.5" ry="1" fill="#ec4899" opacity="0.6" />
+                      <ellipse cx="26.5" cy="18.5" rx="1.5" ry="1" fill="#ec4899" opacity="0.6" />
+
+                      {/* Sparkles around Alien */}
+                      <circle cx="5" cy="10" r="1" fill="#fb923c" className="sparkle sparkle-1" />
+                      <circle cx="31" cy="10" r="1" fill="#38bdf8" className="sparkle sparkle-2" />
+                    </svg>
+
+                    {chatNotificationsCount > 0 && (
+                      <span className="navbar__mascot-hollow-circle"></span>
+                    )}
+                  </Link>
+                </div>
+              </div>
+
+              {/* Notification Bell Option */}
+              <div className="mobile-drawer__action-row">
+                <span className="mobile-drawer__action-label">Notifications:</span>
+                <div className="navbar__notifications-wrapper" ref={notifRef}>
+                  <button 
+                    className={`navbar__action-btn ${showNotifications ? 'active' : ''}`} 
+                    onClick={handleToggleNotifications}
+                    title="Notifications"
+                  >
+                    <Bell size={20} />
+                    {hasUnread && <span className="navbar__notification-dot"></span>}
+                  </button>
+
+                  {showNotifications && (
+                    <div className="navbar__notifications-dropdown glass-effect" style={{ right: '0', top: '45px', left: 'auto', width: '280px', position: 'absolute' }}>
+                      <div className="notifications-header">
+                        <h3>Notifications</h3>
+                      </div>
+                      <div className="notifications-list">
+                        {notifications.length > 0 ? (
+                          notifications.map(notif => (
+                            <div key={notif.id} className="notification-item">
+                              <div className="notification-icon-box">
+                                {notif.icon}
+                              </div>
+                              <div className="notification-content">
+                                <p style={{ fontSize: '0.8rem' }}>{notif.text}</p>
+                                <span style={{ fontSize: '0.7rem' }}>{notif.time}</span>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                            No notifications
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <Link to="/settings" className="btn btn-blue" style={{ width: '100%', display: 'block', textAlign: 'center', marginTop: '15px' }} onClick={() => setMobileMenuOpen(false)}>
+                Settings
+              </Link>
+            </div>
+          ) : (
+            <div className="mobile-drawer__auth-buttons">
+              <Link to="/login" className="btn btn-blue" style={{ width: '100%', display: 'block', textAlign: 'center', marginBottom: '10px' }} onClick={() => setMobileMenuOpen(false)}>
+                Login
+              </Link>
+              <Link to="/signup" className="btn btn-primary" style={{ width: '100%', display: 'block', textAlign: 'center' }} onClick={() => setMobileMenuOpen(false)}>
+                Register
+              </Link>
+            </div>
+          )}
+        </div>
+      </div>
     </nav>
   );
 }
