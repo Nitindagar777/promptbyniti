@@ -1055,13 +1055,19 @@ export default function GeneratePage() {
 
                         <div className="ref-mode-preview__image-container">
                           <img 
-                            src={
-                              activePreviewMode === 'sameScene' ? '/same_scene_ref.png' :
-                              activePreviewMode === 'different' ? '/diff_characters_ref.png' :
-                              '/fixed_character_ref.png'
-                            } 
-                            alt={activePreviewMode} 
-                            className="ref-mode-preview__img"
+                            src="/same_scene_ref.png" 
+                            alt="Same Scene" 
+                            className={`ref-mode-preview__img ${activePreviewMode === 'sameScene' ? 'ref-mode-preview__img--active' : ''}`}
+                          />
+                          <img 
+                            src="/diff_characters_ref.png" 
+                            alt="Different Characters" 
+                            className={`ref-mode-preview__img ${activePreviewMode === 'different' ? 'ref-mode-preview__img--active' : ''}`}
+                          />
+                          <img 
+                            src="/fixed_character_ref.png" 
+                            alt="Fixed Character" 
+                            className={`ref-mode-preview__img ${activePreviewMode === 'fixed' ? 'ref-mode-preview__img--active' : ''}`}
                           />
                         </div>
 
