@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import PromptThumbnail from '../components/PromptThumbnail';
+import SEOHead from '../components/SEOHead';
 import './DashboardPage.css';
 
 export default function DashboardPage() {
@@ -206,6 +207,7 @@ export default function DashboardPage() {
 
   return (
     <div className="dashboard-page" id="seller-dashboard">
+      <SEOHead title="Seller Dashboard" noIndex={true} />
       {/* Toast Notification */}
       {toast && (
         <div style={{

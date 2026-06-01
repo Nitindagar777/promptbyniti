@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { useNavigate } from 'react-router-dom';
 import { Send, Sparkles, Megaphone, Calendar, Trophy, Users, ShieldAlert, Heart, Terminal, Image, X, Plus, Pencil, Trash2 } from 'lucide-react';
+import SEOHead from '../components/SEOHead';
 import './LoungePage.css';
 
 
@@ -512,6 +513,7 @@ export default function LoungePage() {
 
   return (
     <div className="lounge-page container">
+      <SEOHead title="Cosmic Lounge — Community Chat" noIndex={true} />
       {/* Lounge Header */}
       <header className="lounge-header-clean">
         <h1>Cosmic Lounge</h1>

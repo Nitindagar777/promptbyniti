@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { aiModels } from '../data/promptData';
 import PromptThumbnail from '../components/PromptThumbnail';
+import SEOHead from '../components/SEOHead';
 import './PurchaseSuccess.css';
 
 const StarRating = ({ value, onChange }) => {
@@ -173,6 +174,7 @@ const PurchaseSuccess = () => {
 
   return (
     <div className="purchase-success-page">
+      <SEOHead title="Purchase Complete" noIndex={true} />
       <div className="container-small">
         <div className="success-header animate-fade-in">
           <h1>Purchase Successful!</h1>

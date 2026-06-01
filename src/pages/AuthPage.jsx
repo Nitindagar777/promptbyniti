@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, ArrowRight, Sparkles } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import SEOHead from '../components/SEOHead';
 import './AuthPage.css';
 
 const API_URL = '/api';
@@ -316,6 +317,7 @@ export default function AuthPage() {
 
   return (
     <div className="auth-page">
+      <SEOHead title={isForgotMode ? "Reset Password" : mode === 'login' ? "Login" : "Sign Up"} noIndex={true} />
       <div className="auth-container">
         <div className={`auth-card ${mode === 'signup' ? 'auth-card--signup' : ''}`}>
           

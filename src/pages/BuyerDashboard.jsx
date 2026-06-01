@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import PromptThumbnail from '../components/PromptThumbnail';
+import SEOHead from '../components/SEOHead';
 import './BuyerDashboard.css';
 
 export default function BuyerDashboard() {
@@ -81,6 +82,7 @@ export default function BuyerDashboard() {
 
   return (
     <div className="buyer-dashboard" id="buyer-dashboard">
+      <SEOHead title="My Purchases" noIndex={true} />
       {/* Toast */}
       {toast && (
         <div className={`dash-toast animate-slide-up ${toast.type}`}>

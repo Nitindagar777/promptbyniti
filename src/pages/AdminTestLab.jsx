@@ -7,6 +7,7 @@ import {
   Sparkles, ChevronDown, ChevronUp,
   RefreshCw, Dices, Zap, Shield, FlaskConical
 } from 'lucide-react';
+import SEOHead from '../components/SEOHead';
 import './AdminTestLab.css';
 
 export default function AdminTestLab() {
@@ -211,6 +212,7 @@ export default function AdminTestLab() {
 
   return (
     <div className="admin-lab" id="admin-test-lab">
+      <SEOHead title="Admin Lab" noIndex={true} />
       <div className="container">
         {/* Header */}
         <div className="admin-lab__header">

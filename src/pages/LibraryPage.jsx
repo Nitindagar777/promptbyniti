@@ -70,7 +70,7 @@ export default function LibraryPage() {
         title="Free Prompt Library — AI Prompt Templates & Examples"
         description="Access free AI prompt templates and examples from Prompt by Niti's community library. Download free prompts for Midjourney, ChatGPT, DALL·E, and Stable Diffusion. Start creating with professional prompt formulas."
         keywords="free prompts, free AI prompts, prompt library, prompt templates free, free prompt examples, Midjourney free prompts, ChatGPT free prompts, prompt collection, prompt database"
-        noIndex={true}
+        noIndex={false}
       />
       <div className="container">
         {/* Header */}

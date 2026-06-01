@@ -127,7 +127,7 @@ export default function PricingPage() {
         title="Pricing — Prompt Packs & Token Plans"
         description="Get prompt packs and token plans for Prompt by Niti. Unlock unlimited AI prompt generation, premium marketplace access, and professional prompt engineering tools. Affordable plans for every creator."
         keywords="prompt pricing, AI prompt plans, buy tokens, prompt credits, prompt packs, AI marketplace pricing, prompt by niti pricing"
-        noIndex={true}
+        noIndex={false}
       />
       <div className="container">
         {/* Header */}

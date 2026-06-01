@@ -4,6 +4,7 @@ import { useApp } from '../context/AppContext';
 import { aiModels } from '../data/promptData';
 import { Shield, CreditCard, User, Moon, Lock, LogOut, Camera, Check, AlertCircle, Loader2, LayoutGrid, ShoppingBag, TrendingUp, Bookmark, Trash2, Eye, ChevronLeft, Sparkles, Copy, Tag } from 'lucide-react';
 import AdminDashboard from '../components/AdminDashboard';
+import SEOHead from '../components/SEOHead';
 import './SettingsPage.css';
 
 /* ── Saved Prompts Tab Component ── */
@@ -520,6 +521,7 @@ export default function SettingsPage() {
 
   return (
     <div className="settings-page" id="settings-page">
+      <SEOHead title="Account Settings" noIndex={true} />
       <div className="container">
         <div className="settings-header">
           <h1 className="settings-title">Settings</h1>

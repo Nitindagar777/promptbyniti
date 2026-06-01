@@ -3,28 +3,10 @@
 
 User-agent: *
 Allow: /
-Allow: /generate
-Allow: /templates
-Allow: /library
-Allow: /pricing
-Allow: /sell
-Allow: /about
-Allow: /help
-Allow: /privacy
-Allow: /terms
-Allow: /prompt/
 
-# Block internal/admin pages
+# Block internal/admin pages (these use noindex meta tags for proper de-indexing)
 Disallow: /admin-lab
-Disallow: /dashboard
-Disallow: /buyer-dashboard
-Disallow: /settings
-Disallow: /login
-Disallow: /signup
 Disallow: /purchase-success/
-
-# Crawl-delay for respectful crawling
-Crawl-delay: 1
 
 # Sitemaps
 Sitemap: https://promptbyniti.in/sitemap.xml
