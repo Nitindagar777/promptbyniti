@@ -15,12 +15,6 @@ export default function PricingPage() {
   const [loadingPlan, setLoadingPlan] = useState(null);
 
   const handleSelectPlan = async (planId) => {
-    // Free plan — just set it
-    if (planId === 'free') {
-      setPlan('free');
-      return;
-    }
-
     // Must be logged in
     if (!state.user) {
       alert('Please login first to upgrade your plan.');
@@ -56,7 +50,7 @@ export default function PricingPage() {
         amount: orderData.amount,
         currency: orderData.currency,
         name: 'Prompt by Niti',
-        description: `${planId === 'pro' ? 'Creator' : 'Studio'} One-time Pack`,
+        description: `${planId === 'starter' ? 'Starter' : planId === 'pro' ? 'Creator' : 'Studio'} One-time Pack`,
         image: '/image1.png',
         order_id: orderData.orderId,
         handler: async function (response) {
@@ -143,7 +137,7 @@ export default function PricingPage() {
           {pricingPlans.map(plan => (
             <div
               key={plan.id}
-              className={`pricing-card card ${plan.popular ? 'pricing-card--popular' : ''} ${state.plan === plan.id ? 'pricing-card--current' : ''}`}
+              className={`pricing-card card pricing-card--${plan.id} ${plan.popular ? 'pricing-card--popular' : ''} ${state.plan === plan.id ? 'pricing-card--current' : ''}`}
             >
               {plan.popular && (
                 <div className="pricing-card__popular-tag">
@@ -160,15 +154,9 @@ export default function PricingPage() {
                 <span className="pricing-card__currency">$</span>
                 <span className="pricing-card__amount">{plan.price}</span>
               </div>
-              {plan.id === 'free' ? (
-                <p className="pricing-card__credits" style={{ fontWeight: 'bold' }}>
-                  <span className="text-orange">0</span> tokens included
-                </p>
-              ) : (
-                <p className="pricing-card__credits">
-                  <span className="text-orange">{plan.credits}</span> Complete Prompt Packs ({plan.credits} Tokens)
-                </p>
-              )}
+              <p className="pricing-card__credits">
+                <span className="text-orange">{plan.credits}</span> Complete Prompt Packs ({plan.credits} Tokens)
+              </p>
               
               <ul className="pricing-card__features">
                 {plan.features.map((feat, i) => (

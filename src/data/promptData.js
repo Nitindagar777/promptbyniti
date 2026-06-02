@@ -830,20 +830,20 @@ export const promptTemplates = [
 
 export const pricingPlans = [
   {
-    id: 'free',
-    name: 'Starter',
-    price: 0,
-    credits: 0,
-    period: 'forever',
-    description: 'Try the platform with <span class="text-secondary">limited access</span>',
+    id: 'starter',
+    name: '<span class="text-green">Starter</span>',
+    price: 2,
+    credits: 3,
+    period: 'one-time',
+    description: 'Perfect to <span class="text-green">explore & get started</span>',
     features: [
-      '<span class="text-orange">0</span> tokens included (Top-up to use)',
+      '<span class="text-green">3</span> Complete Prompt Packs (3 Tokens)',
+      'Full pack: title, description & prompts',
       'Public prompt library access',
       'Basic styles & moods',
-      'Standard AI format',
-      'Community access',
+      'Standard AI format support',
     ],
-    cta: 'Get Started Free',
+    cta: 'Get Started',
     popular: false,
   },
   {

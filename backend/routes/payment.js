@@ -20,7 +20,7 @@ const razorpay = new Razorpay({
 });
 
 const PLANS = {
-  free: { name: 'Starter', priceUSD: 0, priceINR: 0, credits: 0 },
+  starter: { name: 'Starter', priceUSD: 2, priceINR: 169, credits: 3 },
   pro: { name: 'Creator', priceUSD: 10, priceINR: 849, credits: 20 },
   unlimited: { name: 'Studio', priceUSD: 29, priceINR: 2449, credits: 70 }
 };
@@ -52,7 +52,7 @@ router.post('/create-order', auth, async (req, res) => {
     const { planId } = req.body;
     const plan = PLANS[planId];
 
-    if (!plan || planId === 'free') {
+    if (!plan) {
       return res.status(400).json({ success: false, message: 'Invalid plan selected' });
     }
 

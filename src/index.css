@@ -49,9 +49,9 @@
   --radius-lg: 24px;
   --radius-full: 9999px;
 
-  /* Typography - Only using Chewy for a unique human brand */
+  /* Typography - Unique human brand */
   --font-display: 'Chewy', cursive;
-  --font-body: 'Chewy', cursive;
+  --font-body: 'Caveat', cursive;
 
   /* Transitions */
   --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -69,11 +69,18 @@ body {
   background: var(--bg-primary);
   color: var(--text-primary);
   line-height: 1.5;
+  font-size: 1.35rem;
   -webkit-font-smoothing: antialiased;
   padding-top: 64px; /* Offset for fixed navbar */
-  letter-spacing: 0.02em; /* Chewy needs a bit of breathing room */
+  letter-spacing: 0.03em;
   max-width: 100vw;
   overflow-x: hidden;
+}
+
+#root {
+  zoom: 90%;
+  margin: 0 auto;
+  width: 100%;
 }
 
 /* --- TYPOGRAPHY --- */

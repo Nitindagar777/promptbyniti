@@ -100,7 +100,7 @@ function App() {
             <Route path="/admin-lab" element={<AdminRoute><AdminTestLab /></AdminRoute>} />
             <Route path="/purchase-success/:id" element={<ProtectedRoute><PurchaseSuccess /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
-            <Route path="/lounge" element={<LoungePage />} />
+            <Route path="/lounge" element={<ProtectedRoute><LoungePage /></ProtectedRoute>} />
 
             
             {/* Public Legal Pages */}

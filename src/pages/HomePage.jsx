@@ -4,7 +4,7 @@ import { useApp } from '../context/AppContext';
 import { generatePrompt } from '../data/promptEngine';
 import { randomDescriptions } from '../data/promptData';
 import PromptOutput from '../components/PromptOutput';
-import { ArrowRight, Sparkles, Zap, Image, Layers, Heart, Wand2, Rocket, Star, Palette, MessageSquare, ShieldCheck, Zap as ZapIcon, ShoppingBag, Coins, DollarSign, Eye } from 'lucide-react';
+import { ArrowRight, Sparkles, Zap, Image, Layers, Heart, Wand2, Rocket, Star, Palette, MessageSquare, ShieldCheck, Zap as ZapIcon, ShoppingBag, Coins, DollarSign, Eye, Camera, Lock, Check, Repeat } from 'lucide-react';
 import PreviewModal from '../components/PreviewModal';
 import { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -24,6 +24,7 @@ export default function HomePage() {
   const inputRef = useRef(null);
   const navigate = useNavigate();
   const [previewPrompt, setPreviewPrompt] = useState(null);
+  const [activeMode, setActiveMode] = useState('sameScene');
 
   useEffect(() => {
     if (state.marketplace && state.marketplace.length > 0) {
@@ -37,6 +38,19 @@ export default function HomePage() {
       setScroll(location.pathname, window.scrollY);
     };
   }, [state.marketplace]);
+
+  // Auto-switch modes every 2 seconds smoothly
+  useEffect(() => {
+    const modes = ['sameScene', 'different', 'fixed'];
+    const timer = setTimeout(() => {
+      setActiveMode(current => {
+        const currentIndex = modes.indexOf(current);
+        const nextIndex = (currentIndex + 1) % modes.length;
+        return modes[nextIndex];
+      });
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [activeMode]);
 
   const fetchPrompts = async () => {
     try {
@@ -82,26 +96,173 @@ export default function HomePage() {
         keywords="prompt, prompts, AI prompt, prompt generator, prompt ideas, prompt marketplace, prompt engineering, prompt templates, prompt examples, best prompts, free prompts, buy prompts, sell prompts, PromptBase alternative, promptbase, promptbyniti, Midjourney prompts, ChatGPT prompts, DALL-E prompts, Stable Diffusion prompts, Flux prompts, AI art prompts, AI image prompts, prompt store, prompt library, prompt builder, prompt creator, AI tools"
       />
       {/* 01. HERO */}
-      <section className="p-hero container">
-        <div className="p-hero__inner">
-          <div><br /><br /><br /></div>
-          <h1 className="p-hero__title reveal" style={{ animationDelay: '0.1s' }}>
-            The <span className="text-cyan">#1 AI Prompt</span> Generator <br />
-            & <span className="text-orange">Marketplace</span>
-          </h1>
-          <p className="p-hero__subtitle p-hero__subtitle--accent reveal" style={{ animationDelay: '0.2s' }}>
-            <span className="text-orange">Generate.</span> <span className="text-cyan">Customize.</span> <span className="text-purple">Sell.</span>
-          </p>
-          <p className="p-hero__desc reveal" style={{ animationDelay: '0.25s' }}>
-            Best Prompts for Midjourney, ChatGPT, DALL·E & More...
-          </p>
-          <div className="p-hero__btns reveal" style={{ animationDelay: '0.3s' }}>
-            <Link to="/generate" className="btn btn-primary btn-xl">
-              Start Generating <ArrowRight size={18} style={{ marginLeft: '4px' }} />
-            </Link>
-            <Link to="/templates" className="btn btn-secondary btn-xl">
-              Explore Archive
-            </Link>
+      <section className="p-hero">
+        <div className="container">
+          <div className="p-hero__split-grid">
+            {/* Left Hero Content */}
+            <div className="p-hero__content-col reveal" style={{ animationDelay: '0.1s' }}>
+              
+              <h1 className="p-hero__title">
+                The <span className="text-cyan">#1 AI Prompt</span> Generator & <span className="text-orange">Marketplace</span>
+              </h1>
+              
+              <p className="p-hero__pitch">
+                Traditional prompt makers only guess. Our generator uses state-of-the-art <strong>Reference Mode</strong> & <strong>Character Consistency</strong> locking to replicate poses, maintain style coherence, and freeze character details across multiple scenes with absolute precision.
+              </p>
+              
+              <p className="p-hero__subtitle p-hero__subtitle--accent">
+                <span className="text-orange">Generate.</span> <span className="text-cyan">Customize.</span> <span className="text-purple">Sell.</span>
+              </p>
+              
+              <div className="p-hero__btns">
+                <Link to="/generate" className="btn btn-primary btn-xl">
+                  Start Generating <ArrowRight size={18} style={{ marginLeft: '4px' }} />
+                </Link>
+                <Link to="/templates" className="btn btn-secondary btn-xl">
+                  Explore Archive
+                </Link>
+              </div>
+              
+              {/* Feature Pills */}
+              <div className="p-hero__features">
+                <div className="p-hero__feature-item">
+                  <Sparkles size={16} className="text-pink" />
+                  <span>Pixel-Perfect Consistency</span>
+                </div>
+                <div className="p-hero__feature-item">
+                  <ZapIcon size={16} className="text-orange" />
+                  <span>3 Reference Lock Modes</span>
+                </div>
+                <div className="p-hero__feature-item">
+                  <Layers size={16} className="text-cyan" />
+                  <span>12+ AI Models Supported</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Right Hero Showcase (Interactive Showcase Card) */}
+            <div className="p-hero__showcase-col reveal" style={{ animationDelay: '0.2s' }}>
+              <div className="hero-showcase__card">
+                <div className="hero-showcase__header">
+                  <div className="hero-showcase__badge">Interactive Reference Mode Guide</div>
+                  <h3 className="hero-showcase__headline">See how our generator works</h3>
+                </div>
+                
+                {/* Toggles */}
+                <div className="hero-showcase__toggles">
+                  <button 
+                    className={`hero-showcase__toggle-btn ${activeMode === 'sameScene' ? 'active active--sameScene' : ''}`}
+                    onClick={() => setActiveMode('sameScene')}
+                  >
+                    <Camera size={16} />
+                    <span>Same Scene</span>
+                  </button>
+                  <button 
+                    className={`hero-showcase__toggle-btn ${activeMode === 'different' ? 'active active--different' : ''}`}
+                    onClick={() => setActiveMode('different')}
+                  >
+                    <Repeat size={16} />
+                    <span>Diff Subjects</span>
+                  </button>
+                  <button 
+                    className={`hero-showcase__toggle-btn ${activeMode === 'fixed' ? 'active active--fixed' : ''}`}
+                    onClick={() => setActiveMode('fixed')}
+                  >
+                    <Lock size={16} />
+                    <span>Fixed Character</span>
+                  </button>
+                </div>
+                
+                {/* Showcase Image & Template Preview */}
+                <div className="hero-showcase__preview-area">
+                  <div className="hero-showcase__image-wrap">
+                    <img 
+                      src="/same_scene_ref.png" 
+                      alt="Same Scene Reference Guide" 
+                      className={`hero-showcase__img ${activeMode === 'sameScene' ? 'active' : ''}`}
+                    />
+                    <img 
+                      src="/diff_characters_ref.png" 
+                      alt="Different Characters Reference Guide" 
+                      className={`hero-showcase__img ${activeMode === 'different' ? 'active' : ''}`}
+                    />
+                    <img 
+                      src="/fixed_character_ref.png" 
+                      alt="Fixed Character Reference Guide" 
+                      className={`hero-showcase__img ${activeMode === 'fixed' ? 'active' : ''}`}
+                    />
+                  </div>
+                  
+                  {/* Template Overlay */}
+                  <div className="hero-showcase__template-bar">
+                    <span className="hero-showcase__template-label">Prompt Template:</span>
+                    <div className="hero-showcase__template-wrapper">
+                      <code className={`hero-showcase__template-code ${activeMode === 'sameScene' ? 'active' : ''}`}>
+                        A [camera_angle] photoshoot of [subject] posing in [setting] --cref [url] --cw 100
+                      </code>
+                      <code className={`hero-showcase__template-code ${activeMode === 'different' ? 'active' : ''}`}>
+                        A stylized [medium] illustration of a [animal_subject], [color] palette, geometric vector style
+                      </code>
+                      <code className={`hero-showcase__template-code ${activeMode === 'fixed' ? 'active' : ''}`}>
+                        A close-up shot of [character] performing [action] at [new_background] --cref [url] --cw 100
+                      </code>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Bullet differences */}
+                <div className="hero-showcase__rules">
+                  <div className="hero-showcase__rules-col hero-showcase__rules-col--same">
+                    <h4>🟢 What Stays SAME</h4>
+                    <div className="hero-showcase__rules-list-wrapper">
+                      <ul className={`hero-showcase__rules-list ${activeMode === 'sameScene' ? 'active' : ''}`}>
+                        <li><strong>Subject details:</strong> Face, hair, age, and identity</li>
+                        <li><strong>Outfit elements:</strong> Clothing style, accessories, and colors</li>
+                        <li><strong>Lighting:</strong> Soft overcast natural daylight</li>
+                      </ul>
+                      <ul className={`hero-showcase__rules-list ${activeMode === 'different' ? 'active' : ''}`}>
+                        <li><strong>Artistic Medium:</strong> Stained-glass vector illustration</li>
+                        <li><strong>Composition:</strong> Single-subject centered layout</li>
+                        <li><strong>Style:</strong> Stylized line art & geometric contours</li>
+                      </ul>
+                      <ul className={`hero-showcase__rules-list ${activeMode === 'fixed' ? 'active' : ''}`}>
+                        <li><strong>Character Identity:</strong> Face structure, hair, and body type</li>
+                        <li><strong>Exact Outfit:</strong> Teal sporty windbreaker, sunglasses, helmet</li>
+                        <li><strong>Accessories:</strong> Skateboard, dark trousers</li>
+                      </ul>
+                    </div>
+                  </div>
+                  
+                  <div className="hero-showcase__rules-col hero-showcase__rules-col--changes">
+                    <h4>⚡ What CHANGES</h4>
+                    <div className="hero-showcase__rules-list-wrapper">
+                      <ul className={`hero-showcase__rules-list ${activeMode === 'sameScene' ? 'active' : ''}`}>
+                        <li><strong>Pose & Gesture:</strong> Standing front vs looking back over shoulder</li>
+                        <li><strong>Camera Framing:</strong> Medium close-up vs full-body perspective</li>
+                        <li><strong>Subject Expression:</strong> Face expression adjusts naturally</li>
+                      </ul>
+                      <ul className={`hero-showcase__rules-list ${activeMode === 'different' ? 'active' : ''}`}>
+                        <li><strong>Main Subject:</strong> Swaps the animal (Leopard ➔ Fox ➔ Owl)</li>
+                        <li><strong>Colors:</strong> Palette matches character's natural tones</li>
+                        <li><strong>Details:</strong> Fine shading adapts to the new subject shape</li>
+                      </ul>
+                      <ul className={`hero-showcase__rules-list ${activeMode === 'fixed' ? 'active' : ''}`}>
+                        <li><strong>Setting:</strong> Sunny beach ➔ urban concrete stairs ➔ streets</li>
+                        <li><strong>Action/Pose:</strong> Skateboard cruising ➔ high-air jumping ➔ standing</li>
+                        <li><strong>Lighting/Vibe:</strong> Bright sunlight ➔ overcast daylight</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="hero-showcase__footer">
+                  <Link to="/generate" className="hero-showcase__cta-link">
+                    <span>Try Reference Mode in the Generator</span>
+                    <ArrowRight size={14} />
+                  </Link>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>

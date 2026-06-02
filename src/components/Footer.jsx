@@ -2,9 +2,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail } from 'lucide-react';
+import { useApp } from '../context/AppContext';
 import './Footer.css';
 
 export default function Footer() {
+  const { state } = useApp();
   const currentYear = new Date().getFullYear();
   const [isHovered, setIsHovered] = useState(false);
   const logoRef = useRef(null);
@@ -75,10 +77,14 @@ export default function Footer() {
         <div className="footer__links">
           <div className="footer__column">
             <h4 className="text-cyan">Platform</h4>
-            <Link to="/generate">Prompt Generator</Link>
+            {state?.user && <Link to="/generate">Prompt Generator</Link>}
             <Link to="/templates">Marketplace</Link>
-            <Link to="/library">Free Library</Link>
-            <Link to="/pricing">Pricing</Link>
+            {state?.user && (
+              <>
+                <Link to="/library">Free Library</Link>
+                <Link to="/pricing">Pricing</Link>
+              </>
+            )}
           </div>
           <div className="footer__column">
             <h4 className="text-purple">Resources</h4>

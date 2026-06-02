@@ -272,21 +272,27 @@ export default function Navbar() {
           <li>
             <Link to="/" className={`navbar__link ${isActive('/') ? 'navbar__link--active' : ''}`}>Home</Link>
           </li>
-          <li>
-            <Link to="/generate" className={`navbar__link ${isActive('/generate') ? 'navbar__link--active' : ''}`}>Generate</Link>
-          </li>
+          {state?.user && (
+            <li>
+              <Link to="/generate" className={`navbar__link ${isActive('/generate') ? 'navbar__link--active' : ''}`}>Generate</Link>
+            </li>
+          )}
           <li>
             <Link to="/templates" className={`navbar__link ${isActive('/templates') ? 'navbar__link--active' : ''}`}>Store</Link>
           </li>
-          <li>
-            <Link to="/sell" className={`navbar__link ${isActive('/sell') ? 'navbar__link--active' : ''}`}>Sell</Link>
-          </li>
-          <li>
-            <Link to="/library" className={`navbar__link ${isActive('/library') ? 'navbar__link--active' : ''}`}>Free</Link>
-          </li>
-          <li>
-            <Link to="/pricing" className={`navbar__link ${isActive('/pricing') ? 'navbar__link--active' : ''}`}>Pricing</Link>
-          </li>
+          {state?.user && (
+            <>
+              <li>
+                <Link to="/sell" className={`navbar__link ${isActive('/sell') ? 'navbar__link--active' : ''}`}>Sell</Link>
+              </li>
+              <li>
+                <Link to="/library" className={`navbar__link ${isActive('/library') ? 'navbar__link--active' : ''}`}>Free</Link>
+              </li>
+              <li>
+                <Link to="/pricing" className={`navbar__link ${isActive('/pricing') ? 'navbar__link--active' : ''}`}>Pricing</Link>
+              </li>
+            </>
+          )}
           {isAdmin && (
             <li>
               <Link to="/admin-lab" className={`navbar__link navbar__link--admin ${isActive('/admin-lab') ? 'navbar__link--active' : ''}`}>
@@ -478,21 +484,27 @@ export default function Navbar() {
           <li>
             <Link to="/" className={`mobile-drawer__link ${isActive('/') ? 'mobile-drawer__link--active' : ''}`} onClick={() => setMobileMenuOpen(false)}>Home</Link>
           </li>
-          <li>
-            <Link to="/generate" className={`mobile-drawer__link ${isActive('/generate') ? 'mobile-drawer__link--active' : ''}`} onClick={() => setMobileMenuOpen(false)}>Generate</Link>
-          </li>
+          {state?.user && (
+            <li>
+              <Link to="/generate" className={`mobile-drawer__link ${isActive('/generate') ? 'mobile-drawer__link--active' : ''}`} onClick={() => setMobileMenuOpen(false)}>Generate</Link>
+            </li>
+          )}
           <li>
             <Link to="/templates" className={`mobile-drawer__link ${isActive('/templates') ? 'mobile-drawer__link--active' : ''}`} onClick={() => setMobileMenuOpen(false)}>Store</Link>
           </li>
-          <li>
-            <Link to="/sell" className={`mobile-drawer__link ${isActive('/sell') ? 'mobile-drawer__link--active' : ''}`} onClick={() => setMobileMenuOpen(false)}>Sell</Link>
-          </li>
-          <li>
-            <Link to="/library" className={`mobile-drawer__link ${isActive('/library') ? 'mobile-drawer__link--active' : ''}`} onClick={() => setMobileMenuOpen(false)}>Free</Link>
-          </li>
-          <li>
-            <Link to="/pricing" className={`mobile-drawer__link ${isActive('/pricing') ? 'mobile-drawer__link--active' : ''}`} onClick={() => setMobileMenuOpen(false)}>Pricing</Link>
-          </li>
+          {state?.user && (
+            <>
+              <li>
+                <Link to="/sell" className={`mobile-drawer__link ${isActive('/sell') ? 'mobile-drawer__link--active' : ''}`} onClick={() => setMobileMenuOpen(false)}>Sell</Link>
+              </li>
+              <li>
+                <Link to="/library" className={`mobile-drawer__link ${isActive('/library') ? 'mobile-drawer__link--active' : ''}`} onClick={() => setMobileMenuOpen(false)}>Free</Link>
+              </li>
+              <li>
+                <Link to="/pricing" className={`mobile-drawer__link ${isActive('/pricing') ? 'mobile-drawer__link--active' : ''}`} onClick={() => setMobileMenuOpen(false)}>Pricing</Link>
+              </li>
+            </>
+          )}
           {isAdmin && (
             <li>
               <Link to="/admin-lab" className={`mobile-drawer__link mobile-drawer__link--admin ${isActive('/admin-lab') ? 'mobile-drawer__link--active' : ''}`} onClick={() => setMobileMenuOpen(false)}>

@@ -162,28 +162,33 @@ export default function AuthPage() {
   const googleCallbackRef = useRef(handleGoogleResponse);
   googleCallbackRef.current = handleGoogleResponse;
 
-  // Initialize Google Sign-In — only runs ONCE (module-level guard)
+  // Initialize Google Sign-In & Render button on mount/mode switch
   useEffect(() => {
-    const initGoogle = () => {
-      if (window.__googleInitialized) return;
+    const initAndRenderGoogle = () => {
+      if (!window.google?.accounts?.id) return;
 
-      if (window.google?.accounts?.id) {
+      // 1. Initialize Google client (only once)
+      if (!window.__googleInitialized) {
         window.__googleInitialized = true;
         window.google.accounts.id.initialize({
           client_id: GOOGLE_CLIENT_ID,
           callback: (response) => googleCallbackRef.current(response),
           auto_select: false,
           cancel_on_tap_outside: true,
-          use_fedcm_for_prompt: true,
+          use_fedcm_for_prompt: false, // Avoid FedCM error on localhost
         });
-        window.google.accounts.id.prompt(); // Auto-show One Tap
-        renderGoogleButton();
       }
-    };
 
-    const renderGoogleButton = () => {
+      // 2. Prompt One Tap (with a callback to catch display skips or cool-down issues)
+      window.google.accounts.id.prompt((notification) => {
+        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+          console.log('One Tap dismissed/cooldown triggered. Displaying native button as fallback.');
+        }
+      });
+
+      // 3. Render the native button container (must render on every container change/remount)
       const container = document.getElementById('google-btn-container');
-      if (container && window.google?.accounts?.id) {
+      if (container) {
         window.google.accounts.id.renderButton(container, {
           theme: 'outline',
           size: 'large',
@@ -195,11 +200,11 @@ export default function AuthPage() {
 
     // Try immediately, or wait for the script to load
     if (window.google?.accounts?.id) {
-      initGoogle();
+      initAndRenderGoogle();
     } else {
       const checkInterval = setInterval(() => {
         if (window.google?.accounts?.id) {
-          initGoogle();
+          initAndRenderGoogle();
           clearInterval(checkInterval);
         }
       }, 100);
@@ -210,7 +215,7 @@ export default function AuthPage() {
         clearTimeout(timeoutId);
       };
     }
-  }, []); // Empty deps — runs only once
+  }, [mode, isForgotMode]); // Re-run when toggling form modes to re-render in newly mounted DOM containers
 
   // Trigger Google Sign-In (Manual Fallback removed, handled by native button)
 
