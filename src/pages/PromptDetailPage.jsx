@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { aiModels } from '../data/promptData';
@@ -31,6 +31,39 @@ export default function PromptDetailPage() {
   const [replyText, setReplyText] = useState('');
   const [isPromptPurchased, setIsPromptPurchased] = useState(false);
   const [reviews, setReviews] = useState([]);
+
+  // Title expansion states for titles longer than 5 lines
+  const [isTitleExpanded, setIsTitleExpanded] = useState(false);
+  const [canExpandTitle, setCanExpandTitle] = useState(false);
+  const titleRef = useRef(null);
+
+  // Reset expansion state when prompt template changes
+  useEffect(() => {
+    setIsTitleExpanded(false);
+  }, [id]);
+
+  useEffect(() => {
+    if (!template) return;
+
+    const checkOverflow = () => {
+      if (titleRef.current) {
+        const el = titleRef.current;
+        if (!isTitleExpanded) {
+          const hasOverflow = el.scrollHeight > el.clientHeight;
+          setCanExpandTitle(hasOverflow);
+        }
+      }
+    };
+
+    // Check height after DOM has settled
+    const timer = setTimeout(checkOverflow, 50);
+
+    window.addEventListener('resize', checkOverflow);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', checkOverflow);
+    };
+  }, [template, isTitleExpanded]);
 
   const API_BASE = '/api';
 
@@ -294,7 +327,19 @@ export default function PromptDetailPage() {
           <div className="p-detail__info-section">
             <div className="p-detail__header-info">
               <span className="p-detail__category-tag">{category.replace('-', ' ')}</span>
-              <h1 className="p-detail__title">{template.title || template.name}</h1>
+              <h1 
+                ref={titleRef}
+                className={`p-detail__title ${canExpandTitle ? 'p-detail__title--expandable' : ''} ${(!isTitleExpanded && canExpandTitle) ? 'p-detail__title--clamped' : ''}`}
+                onClick={() => {
+                  if (canExpandTitle) {
+                    setIsTitleExpanded(!isTitleExpanded);
+                  }
+                }}
+                style={{ cursor: canExpandTitle ? 'pointer' : 'default' }}
+                title={canExpandTitle ? (isTitleExpanded ? "Click to collapse" : "Click to expand") : undefined}
+              >
+                {template.title || template.name}
+              </h1>
               <p className="p-detail__desc">{template.description || "A professional high-end prompt optimized for creative production."}</p>
 
               {/* Keywords Section */}

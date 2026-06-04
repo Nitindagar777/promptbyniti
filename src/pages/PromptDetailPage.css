@@ -324,6 +324,22 @@
   line-height: 1.1;
 }
 
+.p-detail__title--clamped {
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.p-detail__title--expandable {
+  transition: color 0.2s ease;
+}
+
+.p-detail__title--expandable:hover {
+  color: var(--color-cyan);
+}
+
 .p-detail__desc {
   font-size: 1.1rem;
   color: var(--text-secondary);
