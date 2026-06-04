@@ -78,35 +78,40 @@ export default function HomePage() {
     }
   ];
 
-  const [testimonials, setTestimonials] = useState(() => {
-    const saved = localStorage.getItem('promptbyniti_testimonials');
-    let allReviews = [];
-    if (saved) {
-      try {
-        allReviews = JSON.parse(saved);
-      } catch (e) {
-        allReviews = DEFAULT_TESTIMONIALS;
-      }
-    } else {
-      allReviews = DEFAULT_TESTIMONIALS;
-    }
-    // Filter visible list to only contain 4, 4.5, and 5 star reviews
-    const filtered = allReviews.filter(t => t.stars >= 4);
-    
-    if (filtered.length >= 5) return filtered;
-    const merged = [...filtered];
-    for (const item of DEFAULT_TESTIMONIALS) {
-      if (merged.length >= 5) break;
-      if (!merged.some(m => m.name === item.name) && item.stars >= 4) {
-        merged.push(item);
-      }
-    }
-    return merged;
-  });
+  const [testimonials, setTestimonials] = useState(DEFAULT_TESTIMONIALS);
 
   const [activeTestimonialIndex, setActiveTestimonialIndex] = useState(0);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [newReview, setNewReview] = useState({ quote: '', stars: 5 });
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+
+  // Fetch global reviews from API on mount
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const res = await fetch(`${API_URL}/reviews`);
+        const data = await res.json();
+        if (data.success && data.reviews && data.reviews.length > 0) {
+          // Only show 4+ star reviews in the carousel, limit to 20
+          const filtered = data.reviews.filter(r => r.stars >= 4).slice(0, 20);
+          if (filtered.length > 0) {
+            // Merge API reviews (newest first) with defaults as fallback
+            const merged = [...filtered];
+            for (const item of DEFAULT_TESTIMONIALS) {
+              if (merged.length >= 20) break;
+              if (!merged.some(m => m.name === item.name)) {
+                merged.push(item);
+              }
+            }
+            setTestimonials(merged);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch reviews:', err);
+      }
+    };
+    fetchReviews();
+  }, []);
 
   const getCardClass = useCallback((idx) => {
     const total = testimonials.length;
@@ -137,46 +142,52 @@ export default function HomePage() {
     return () => clearInterval(timer);
   }, [handleNextTestimonial]);
 
-  const handleReviewSubmit = (e) => {
+  const handleReviewSubmit = async (e) => {
     e.preventDefault();
     if (!state.user) return;
     if (!newReview.quote.trim()) return;
+    if (reviewSubmitting) return;
 
-    const reviewToSubmit = {
-      quote: newReview.quote,
-      stars: newReview.stars,
-      name: state.user.name || state.user.username || 'AI Artist',
-      avatar: state.user.avatar || 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=150&auto=format&fit=crop&q=80'
-    };
+    setReviewSubmitting(true);
 
-    // Get current stored items
-    const saved = localStorage.getItem('promptbyniti_testimonials');
-    let allReviews = [];
-    if (saved) {
-      try {
-        allReviews = JSON.parse(saved);
-      } catch (err) {
-        allReviews = [];
+    try {
+      const token = localStorage.getItem('promptbyniti_token');
+      const res = await fetch(`${API_URL}/reviews`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          quote: newReview.quote,
+          stars: newReview.stars
+        })
+      });
+      const data = await res.json();
+
+      if (data.success && data.review) {
+        // If the new review is 4+ stars, add it to the visible carousel
+        if (data.review.stars >= 4) {
+          setTestimonials(prev => {
+            const updated = [data.review, ...prev].slice(0, 20);
+            return updated;
+          });
+          setActiveTestimonialIndex(0);
+        }
+
+        setNewReview({ quote: '', stars: 5 });
+        setShowReviewForm(false);
+      } else {
+        alert(data.message || 'Failed to submit review');
       }
+    } catch (err) {
+      console.error('Failed to submit review:', err);
+      alert('Failed to submit review. Please try again.');
+    } finally {
+      setReviewSubmitting(false);
     }
-    if (allReviews.length === 0) {
-      allReviews = [...DEFAULT_TESTIMONIALS];
-    }
-    
-    // Add new review to absolute storage list
-    const updatedAll = [reviewToSubmit, ...allReviews];
-    localStorage.setItem('promptbyniti_testimonials', JSON.stringify(updatedAll));
-
-    // Update active UI testimonials only if rating is 4, 4.5, or 5 stars
-    if (reviewToSubmit.stars >= 4) {
-      const updatedVisible = [reviewToSubmit, ...testimonials];
-      setTestimonials(updatedVisible);
-      setActiveTestimonialIndex(0);
-    }
-
-    setNewReview({ quote: '', stars: 5 });
-    setShowReviewForm(false);
   };
+
 
   useEffect(() => {
     if (state.marketplace && state.marketplace.length > 0) {
@@ -824,7 +835,7 @@ export default function HomePage() {
                       onChange={e => setNewReview({ ...newReview, quote: e.target.value })}
                     />
                   </div>
-                  <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '8px' }}>Submit Review</button>
+                  <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '8px' }} disabled={reviewSubmitting}>{reviewSubmitting ? 'Submitting...' : 'Submit Review'}</button>
                 </form>
               </>
             )}

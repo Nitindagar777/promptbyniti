@@ -67,6 +67,7 @@ const sellerNewRoutes = require('./routes/seller_new');
 const buyerRoutes = require('./routes/buyer');
 const generateRoutes = require('./routes/generate');
 const loungeRoutes = require('./routes/lounge');
+const reviewRoutes = require('./routes/reviews');
 
 // Mount Routes
 app.use('/api/auth', authRoutes);
@@ -77,6 +78,7 @@ app.use('/api/seller', sellerNewRoutes);
 app.use('/api/buyer', buyerRoutes);
 app.use('/api/generate', generateRoutes);
 app.use('/api/lounge', loungeRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 // Health check
 app.get('/', async (req, res) => {
