@@ -184,6 +184,27 @@ export default function PricingPage() {
           ))}
         </div>
 
+        {/* Seller Earnings Callout */}
+        <div className="seller-earnings-box">
+          <h3>💰 Earn by Selling Prompts</h3>
+          <p>List your AI prompts in our marketplace and earn on every sale.</p>
+          <div className="seller-earnings-example">
+            <div className="seller-earnings-row">
+              <span>You sell a prompt for</span>
+              <strong>20 tokens</strong>
+            </div>
+            <div className="seller-earnings-row">
+              <span>You earn (80%)</span>
+              <strong className="text-green">16 tokens</strong>
+            </div>
+            <div className="seller-earnings-row seller-earnings-row--fee">
+              <span>Platform fee (20%)</span>
+              <span>4 tokens</span>
+            </div>
+          </div>
+          <p className="seller-earnings-note">Your first prompt generation is always free — no purchase needed.</p>
+        </div>
+
         {/* Trust Badges */}
         <div className="pricing-trust">
           <div className="trust-badge">

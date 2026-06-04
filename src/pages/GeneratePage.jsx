@@ -19,6 +19,12 @@ const SESSION_KEY = 'promptgen_session';
 
 export default function GeneratePage() {
   const { state, canGenerate, useCredit, addPrompt, isPremium } = useApp();
+  const isGuest = !state.user;
+  const [guestCount, setGuestCount] = useState(() => {
+    return parseInt(localStorage.getItem('guestGenerations') || '0', 10);
+  });
+  const GUEST_LIMIT = 3;
+  const [showDemoLimitModal, setShowDemoLimitModal] = useState(false);
   const isFirstFree = state.user && state.user.hasUsedFreePrompt === false;
   const [searchParams] = useSearchParams();
   const location = useLocation();
@@ -133,12 +139,20 @@ export default function GeneratePage() {
       }
     }
 
-    const creditCost = aiPower === 'power' ? 5 : aiPower === 'super' ? 3 : 1;
-    const hasEnoughCredits = state.plan === 'unlimited' || state.credits >= creditCost || (isFirstFree && state.credits >= 0);
+    // Guest demo mode: check limit before proceeding
+    if (isGuest) {
+      if (guestCount >= GUEST_LIMIT) {
+        setShowDemoLimitModal(true);
+        return;
+      }
+    } else {
+      const creditCost = aiPower === 'power' ? 5 : aiPower === 'super' ? 3 : 1;
+      const hasEnoughCredits = state.plan === 'unlimited' || state.credits >= creditCost || (isFirstFree && state.credits >= 0);
 
-    if (!canGenerate || !hasEnoughCredits) {
-      setShowPaywall(true);
-      return;
+      if (!canGenerate || !hasEnoughCredits) {
+        setShowPaywall(true);
+        return;
+      }
     }
     setIsGenerating(true);
     sessionStorage.setItem('isGenerating', 'true');
@@ -174,8 +188,15 @@ export default function GeneratePage() {
       } catch (e) {}
 
       setResult(promptResult);
-      await useCredit(creditCost, null, isFirstFree);
-      addPrompt(promptResult);
+      if (isGuest) {
+        const newCount = guestCount + 1;
+        setGuestCount(newCount);
+        localStorage.setItem('guestGenerations', String(newCount));
+      } else {
+        const creditCost = aiPower === 'power' ? 5 : aiPower === 'super' ? 3 : 1;
+        await useCredit(creditCost, null, isFirstFree);
+        addPrompt(promptResult);
+      }
     } catch (error) {
       console.error('Generation Error:', error);
       alert(error.message || 'Failed to generate prompt. Please try again.');
@@ -273,6 +294,16 @@ export default function GeneratePage() {
         noIndex={false}
       />
       <div className="container">
+        {/* Demo Banner for Guests */}
+        {isGuest && (
+          <div className="demo-banner">
+            <span className="demo-banner__icon">🎁</span>
+            <span className="demo-banner__text">
+              Free Demo Mode — <strong>{GUEST_LIMIT - guestCount} of {GUEST_LIMIT} free generations remaining</strong>
+            </span>
+            <a href="/login" className="demo-banner__cta">Create Free Account →</a>
+          </div>
+        )}
         {/* Header */}
         <div className="generate-page__header">
           <h1 className="generate-page__title">
@@ -281,14 +312,16 @@ export default function GeneratePage() {
           <p className="generate-page__subtitle">
             Describe your vision and our AI will craft the perfect prompt for you
           </p>
-          <div className="generate-page__credits-bar">
-            <Zap size={16} />
-            <span>
-              {state.plan === 'unlimited'
-                ? 'Unlimited credits'
-                : `${state.credits} credits remaining`}
-            </span>
-          </div>
+          {!isGuest && (
+            <div className="generate-page__credits-bar">
+              <Zap size={16} />
+              <span>
+                {state.plan === 'unlimited'
+                  ? 'Unlimited credits'
+                  : `${state.credits} credits remaining`}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Generator Form */}
@@ -812,12 +845,14 @@ export default function GeneratePage() {
                   <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', width: '100%' }}>
                     {[
                       { id: 'normal', label: 'Normal', credits: 1, color: 'var(--color-green)', desc: 'Standard quality' },
-                      { id: 'super', label: 'Super', credits: 3, color: 'var(--color-cyan)', desc: 'Enhanced details' }
+                      { id: 'super', label: 'Super', credits: 3, color: 'var(--color-cyan)', desc: 'Enhanced details', locked: isGuest }
                     ].map((p) => (
                       <button
                         key={p.id}
                         type="button"
-                        onClick={() => setAiPower(p.id)}
+                        disabled={p.locked}
+                        title={p.locked ? 'Sign up to unlock' : undefined}
+                        onClick={() => !p.locked && setAiPower(p.id)}
                         style={{
                           padding: '12px 8px',
                           borderRadius: '16px',
@@ -874,12 +909,14 @@ export default function GeneratePage() {
                   {/* Bottom Row: Power centered */}
                   <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
                     {[
-                      { id: 'power', label: 'Power', credits: 5, color: 'var(--color-purple)', desc: 'Maximum precision' }
+                      { id: 'power', label: 'Power', credits: 5, color: 'var(--color-purple)', desc: 'Maximum precision', locked: isGuest }
                     ].map((p) => (
                       <button
                         key={p.id}
                         type="button"
-                        onClick={() => setAiPower(p.id)}
+                        disabled={p.locked}
+                        title={p.locked ? 'Sign up to unlock' : undefined}
+                        onClick={() => !p.locked && setAiPower(p.id)}
                         style={{
                           padding: '12px 8px',
                           borderRadius: '16px',
@@ -942,7 +979,7 @@ export default function GeneratePage() {
               {result ? (
                 /* ── Post-generation buttons ── */
                 <>
-                  {generatorMode !== 'example' && (
+                  {generatorMode !== 'example' && !isGuest && (
                     <>
                       <button
                         className="btn btn-lg gen-action-btn gen-action-btn--sell"
@@ -1015,7 +1052,11 @@ export default function GeneratePage() {
                       <>
                         <Sparkles size={18} />
                         Generate {generatorMode === 'example' ? 'Examples' : 'Prompt'}
-                        {state.plan !== 'unlimited' && (
+                        {isGuest ? (
+                          <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>
+                            {' '}(Demo)
+                          </span>
+                        ) : state.plan !== 'unlimited' && (
                           <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>
                             {isFirstFree ? ' (Free)' : ` (-${aiPower === 'power' ? 5 : aiPower === 'super' ? 3 : 1} credit${(aiPower === 'power' || aiPower === 'super') ? 's' : ''})`}
                           </span>
@@ -1175,6 +1216,25 @@ export default function GeneratePage() {
                 Maybe Later
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Demo Limit Modal */}
+      {showDemoLimitModal && (
+        <div className="demo-limit-overlay" onClick={() => setShowDemoLimitModal(false)}>
+          <div className="demo-limit-modal" onClick={e => e.stopPropagation()}>
+            <div className="demo-limit-modal__icon">🚀</div>
+            <h2>You've Used All Free Demos!</h2>
+            <p>Create a free account to continue generating prompts. You'll get your first generation free plus access to all features.</p>
+            <div className="demo-limit-modal__benefits">
+              <div>✅ First prompt generation free</div>
+              <div>✅ Save prompts to your library</div>
+              <div>✅ Sell prompts & earn 80%</div>
+              <div>✅ Access all AI models</div>
+            </div>
+            <a href="/login" className="btn btn--primary demo-limit-modal__cta">Create Free Account</a>
+            <button onClick={() => setShowDemoLimitModal(false)} className="demo-limit-modal__close">Maybe Later</button>
           </div>
         </div>
       )}

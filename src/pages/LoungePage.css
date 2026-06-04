@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400..700&display=swap');
+
 
 /* Lounge Page — Premium Aesthetics */
 
@@ -6,7 +6,7 @@
   padding-top: 75px;
   padding-bottom: 60px;
   min-height: 100vh;
-  font-family: 'Caveat', cursive, sans-serif !important;
+  font-family: 'Inter', sans-serif !important;
 }
 
 /* Ensure all small texts / copy use Caveat */
@@ -17,7 +17,7 @@
 .lounge-page a,
 .lounge-page li,
 .lounge-page div:not(.card-header):not(.lounge-header__content):not(.item-title-box) {
-  font-family: 'Caveat', cursive, sans-serif !important;
+  font-family: 'Inter', sans-serif !important;
 }
 
 /* Ensure all headings use the platform's premium display font */
@@ -54,7 +54,7 @@
   color: var(--text-secondary);
   margin: 0;
   font-size: 1.55rem;
-  font-family: 'Caveat', cursive, sans-serif !important;
+  font-family: 'Inter', sans-serif !important;
   max-width: 100%;
   white-space: nowrap;
   line-height: 1.2;
@@ -483,7 +483,7 @@
   padding: 8px 18px;
   border-radius: var(--radius-full);
   color: white;
-  font-family: 'Caveat', cursive, sans-serif !important;
+  font-family: 'Inter', sans-serif !important;
   font-size: 1.2rem;
   font-weight: bold;
   cursor: pointer;
