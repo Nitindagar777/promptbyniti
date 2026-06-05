@@ -160,9 +160,7 @@ export default function PromptDetailPage() {
         if (data.success) {
           setTemplate(data.prompt);
           setReviews(data.prompt.reviews || []);
-          if (data.isPurchased) {
-            setIsPromptPurchased(true);
-          }
+          setIsPromptPurchased(!!data.isPurchased);
         } else {
           setError("Prompt not found");
         }

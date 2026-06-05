@@ -174,7 +174,8 @@ router.post('/verify-otp', async (req, res) => {
         bio: user.bio || '',
         credits: user.credits,
         plan: user.plan,
-        hasUsedFreePrompt: user.hasUsedFreePrompt
+        hasUsedFreePrompt: user.hasUsedFreePrompt,
+        purchasedPrompts: user.purchasedPrompts || []
       }
     });
   } catch (err) {
@@ -295,7 +296,8 @@ router.put('/profile', async (req, res) => {
         bio: user.bio || '',
         credits: user.credits,
         plan: user.plan,
-        hasUsedFreePrompt: user.hasUsedFreePrompt
+        hasUsedFreePrompt: user.hasUsedFreePrompt,
+        purchasedPrompts: user.purchasedPrompts || []
       }
     });
   } catch (err) {
@@ -327,59 +329,81 @@ router.post('/use-credits', async (req, res) => {
       return res.json({ success: true, credits: user.credits, hasUsedFreePrompt: true });
     }
 
-    const totalAmount = amount || 5;
-    if (user.credits < totalAmount) {
-      return res.status(400).json({ success: false, message: 'Insufficient tokens' });
-    }
-
-    let finalPrice = totalAmount;
+    let finalPrice = amount || 5;
     let sellerId = null;
 
-    // If a template was used, fetch its real price from DB for security
+    // If a template/prompt is being purchased, apply purchase-specific logic
     if (templateId) {
+      // ── DUPLICATE PURCHASE CHECK ──
+      // Block if user already owns this prompt
+      const alreadyOwned = user.purchasedPrompts.some(
+        pId => pId.toString() === templateId.toString()
+      );
+      if (alreadyOwned) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'You have already purchased this prompt' 
+        });
+      }
+
       try {
         const prompt = await Prompt.findById(templateId);
-        if (prompt) {
-          finalPrice = prompt.priceTokens || prompt.tokens || 5;
-          sellerId = prompt.seller;
-          
-          // Increment prompt sales
-          prompt.sales = (prompt.sales || 0) + 1;
-          await prompt.save();
+        if (!prompt) {
+          return res.status(404).json({ success: false, message: 'Prompt not found' });
+        }
+
+        // ── SELF-PURCHASE CHECK ──
+        // Prevent buying your own prompt
+        if (prompt.seller && prompt.seller.toString() === decoded.id.toString()) {
+          return res.status(400).json({ 
+            success: false, 
+            message: 'You cannot purchase your own prompt' 
+          });
+        }
+
+        finalPrice = prompt.priceTokens || prompt.tokens || 5;
+        sellerId = prompt.seller;
+
+        // Check credits BEFORE making any changes
+        if (user.credits < finalPrice) {
+          return res.status(400).json({ success: false, message: 'Insufficient tokens' });
+        }
+
+        // Deduct credits from buyer
+        user.credits -= finalPrice;
+        user.purchasedPrompts.push(templateId);
+        await user.save();
+
+        // Increment prompt sales counter ONLY after successful credit deduction
+        prompt.sales = (prompt.sales || 0) + 1;
+        await prompt.save();
+
+        // Handle 80/20 revenue split with seller
+        if (sellerId) {
+          try {
+            const sellerShare = Math.floor(finalPrice * 0.8);
+            await User.findByIdAndUpdate(sellerId, {
+              $inc: { 
+                walletTokens: sellerShare,
+                credits: sellerShare 
+              }
+            });
+            console.log(`💰 Sale: Buyer paid ${finalPrice} tokens, Seller received ${sellerShare} tokens (80%)`);
+          } catch (err) {
+            console.error('Error rewarding seller:', err);
+          }
         }
       } catch (err) {
-        console.error('Error fetching prompt for price:', err);
+        console.error('Error processing prompt purchase:', err);
+        return res.status(500).json({ success: false, message: 'Purchase failed' });
       }
-    }
-
-    if (user.credits < finalPrice) {
-      return res.status(400).json({ success: false, message: 'Insufficient tokens' });
-    }
-
-    user.credits -= finalPrice;
-    
-    // Add to buyer's library if not already there
-    if (templateId && !user.purchasedPrompts.includes(templateId)) {
-      user.purchasedPrompts.push(templateId);
-    }
-    await user.save();
-
-    // Handle 80/20 split if there's a seller
-    if (sellerId) {
-      try {
-        // 80/20 Split Calculation
-        const sellerShare = Math.floor(finalPrice * 0.8);
-        
-        // Increment seller's wallet and usable credits
-        await User.findByIdAndUpdate(sellerId, {
-          $inc: { 
-            walletTokens: sellerShare,
-            credits: sellerShare 
-          }
-        });
-      } catch (err) {
-        console.error('Error rewarding seller:', err);
+    } else {
+      // No templateId — this is a generation credit deduction (not a purchase)
+      if (user.credits < finalPrice) {
+        return res.status(400).json({ success: false, message: 'Insufficient tokens' });
       }
+      user.credits -= finalPrice;
+      await user.save();
     }
 
     res.json({ success: true, credits: user.credits });

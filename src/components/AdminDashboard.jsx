@@ -332,6 +332,7 @@ const AdminDashboard = () => {
             <th>Name</th>
             <th>Email</th>
             <th>Credits</th>
+            <th>Purchases</th>
             <th>Joined</th>
             <th>Status</th>
             <th>Actions</th>
@@ -343,6 +344,18 @@ const AdminDashboard = () => {
               <td>{user.name}</td>
               <td>{user.email}</td>
               <td>{user.credits}</td>
+              <td>
+                <span style={{
+                  padding: '3px 8px',
+                  borderRadius: '6px',
+                  fontSize: '0.8rem',
+                  fontWeight: 'bold',
+                  background: (user.purchasedPrompts?.length || 0) > 0 ? 'rgba(168, 85, 247, 0.15)' : 'rgba(255,255,255,0.05)',
+                  color: (user.purchasedPrompts?.length || 0) > 0 ? '#a855f7' : 'var(--text-secondary)',
+                }}>
+                  {user.purchasedPrompts?.length || 0}
+                </span>
+              </td>
               <td>{new Date(user.createdAt).toLocaleDateString()}</td>
               <td>
                 <span className={`status-badge ${user.isBanned ? 'rejected' : 'approved'}`}>
@@ -386,6 +399,7 @@ const AdminDashboard = () => {
                 <th>Title</th>
                 <th>Seller</th>
                 <th>Price</th>
+                <th>Sales</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -408,7 +422,23 @@ const AdminDashboard = () => {
                     </div>
                   </td>
                   <td>{prompt.seller?.name || 'Unknown'}</td>
-                  <td>{prompt.tokens || 5} Tokens</td>
+                  <td>{prompt.priceTokens || prompt.tokens || 5} Tokens</td>
+                  <td>
+                    <span style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      padding: '4px 10px',
+                      borderRadius: '8px',
+                      fontSize: '0.85rem',
+                      fontWeight: 'bold',
+                      background: (prompt.sales || 0) > 0 ? 'rgba(34, 197, 94, 0.15)' : 'rgba(255,255,255,0.05)',
+                      color: (prompt.sales || 0) > 0 ? '#22c55e' : 'var(--text-secondary)',
+                      border: (prompt.sales || 0) > 0 ? '1px solid rgba(34, 197, 94, 0.3)' : '1px solid rgba(255,255,255,0.1)'
+                    }}>
+                      {prompt.sales || 0}
+                    </span>
+                  </td>
                   <td>
                     <span className={`status-badge ${prompt.status}`}>
                       {prompt.status}

@@ -358,7 +358,7 @@ export function AppProvider({ children }) {
       const token = localStorage.getItem(TOKEN_KEY);
       if (token) {
         try {
-          await fetch(`/api/auth/use-credits`, {
+          const res = await fetch(`/api/auth/use-credits`, {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -366,8 +366,29 @@ export function AppProvider({ children }) {
             },
             body: JSON.stringify({ amount, templateId, isFreePrompt })
           });
+          const data = await res.json();
+          if (!res.ok || !data.success) {
+            // Revert optimistic updates on failure
+            console.error('Credit deduction failed:', data.message);
+            // Re-fetch user to get accurate state
+            try {
+              const meRes = await fetch(`/api/auth/me`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+              });
+              const meData = await meRes.json();
+              if (meData.success) {
+                dispatch({ type: actions.LOGIN, payload: meData.user });
+              }
+            } catch (e) { /* ignore */ }
+            throw new Error(data.message || 'Transaction failed');
+          }
+          // Sync credits with server response
+          if (data.credits !== undefined) {
+            dispatch({ type: actions.SET_USER, payload: { ...state.user, credits: data.credits } });
+          }
         } catch (err) {
           console.error('Failed to sync credits:', err);
+          throw err; // Re-throw so calling code can handle it
         }
       }
     },
