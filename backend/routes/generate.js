@@ -104,19 +104,65 @@ async function getOrCreateModel() {
   cachedRulesHash = currentHash;
   cachedApiKey = settings.geminiApiKey;
 
-  console.log(`✅ Gemini initialized. Model chain: ${MODEL_CHAIN.join(' → ')}. Paid key configured: ${!!genAIPaid}`);
   return cachedModel;
 }
 
 /**
- * Build a dynamic system instruction based on rules, aiPower tier, and characterMode.
+ * Build a dynamic system instruction based on rules, aiPower tier, characterMode, promptType, and duration.
  */
-function buildSystemInstruction(rulesStr, aiPower, characterMode) {
+function buildSystemInstruction(rulesStr, aiPower, characterMode, promptType, duration, hasRefImage, aspectRatio) {
   const power = aiPower || 'normal';
-  const charMode = characterMode || 'different';
+  const isVideo = promptType === 'video';
+  const resolvedAR = aspectRatio ? aspectRatio.trim() : (isVideo ? '16:9' : '1:1');
   
+  // Resolve characterMode dynamically for video/image compatibility
+  const resolvedCharMode = isVideo 
+    ? (characterMode === 'sameScene' || characterMode === 'sameSceneLoop' ? 'sameSceneLoop' :
+       characterMode === 'different' || characterMode === 'differentScenes' ? 'differentScenes' :
+       'fixedCharacterMotion')
+    : (characterMode === 'sameSceneLoop' ? 'sameScene' :
+       characterMode === 'differentScenes' ? 'different' :
+       characterMode || 'different');
+
   let tierGuidelines = '';
-  if (power === 'super') {
+  if (isVideo) {
+    const dur = duration || (power === 'power' ? '20s' : power === 'super' ? '10s' : '5s');
+    let sceneDivisionText = '';
+    if (dur === '5s') {
+      sceneDivisionText = `Divide the video prompt into exactly 2 scenes:
+Scene 1 (0 to 2.5 seconds): description of first scene half
+Scene 2 (2.5 to 5 seconds): description of second scene half`;
+    } else if (dur === '10s') {
+      sceneDivisionText = `Divide the video prompt into exactly 3 scenes:
+Scene 1 (0 to 3.3 seconds): description of first scene part
+Scene 2 (3.3 to 6.6 seconds): description of second scene part
+Scene 3 (6.6 to 10 seconds): description of third scene part`;
+    } else {
+      sceneDivisionText = `Divide the video prompt into exactly 5 scenes:
+Scene 1 (0 to 4 seconds): description of first scene part
+Scene 2 (4 to 8 seconds): description of second scene part
+Scene 3 (8 to 12 seconds): description of third scene part
+Scene 4 (12 to 16 seconds): description of fourth scene part
+Scene 5 (16 to 20 seconds): description of fifth scene part`;
+    }
+
+    tierGuidelines = `
+VIDEO DURATION & DETAIL LEVEL — ${dur.toUpperCase()} TIER (${power === 'power' ? 5 : power === 'super' ? 3 : 1} CREDITS):
+- You MUST generate a detailed, professional video prompt.
+- The target duration of the video is ${dur}.
+- You MUST format the prompt and every sample scene-by-scene using the following structure (do NOT use bullet points, hyphens, en-dashes, or brackets for scene headers):
+${sceneDivisionText}
+- CRITICAL: Every video prompt (mainPrompt) and video sample (in samples array) MUST start with "Generate a video of: " or "Generate a video of " and MUST end with "--ar ${resolvedAR}".
+- You are STRICTLY FORBIDDEN from generating square brackets like "[" or "]" in mainPrompt or samples. Write camera pans or motion details as natural English prose (e.g. "with the camera slowly panning" instead of "[CAMERA: Pan]").
+- Adjust the visual description density and movement details suitable for each scene:
+  - For 5s: Focus on short, looping actions or subtle transitions (e.g. wind blowing, blinking).
+  - For 10s: Describe a standard cinematic sequence with a continuous camera motion (e.g. slow pan, dolly zoom) and clear character action.
+  - For 20s: Include a rich, multi-part camera sequence with progressive environmental detail and temporal motion instructions.
+- Ensure the promptTemplate length complies with:
+  - 5s (Normal): Min 400-500 characters.
+  - 10s (Super): Min 500-600 characters.
+  - 20s (Power): Min 600-700 characters.`;
+  } else if (power === 'super') {
     tierGuidelines = `
 PROMPT DETAIL LEVEL — SUPER TIER (3 CREDITS):
 - You MUST generate an exceptionally detailed, perfect, and beautifully described prompt.
@@ -144,12 +190,142 @@ PROMPT DETAIL LEVEL — NORMAL TIER (1 CREDIT):
 
   // ── CHARACTER MODE-SPECIFIC REFERENCE IMAGE RULES ──
   let referenceImageRules = '';
+  let howToBuildSamples = '';
 
-  if (charMode === 'fixed') {
-    // ═══════════════════════════════════════════════════
-    // FIXED CHARACTER MODE: Same character, same clothes, same scene — only pose/action changes
-    // ═══════════════════════════════════════════════════
-    referenceImageRules = `
+  if (isVideo) {
+    if (hasRefImage) {
+      if (resolvedCharMode === 'sameSceneLoop') {
+        referenceImageRules = `
+CRITICAL — REFERENCE IMAGE HANDLING (🎥 SAME SCENE LOOP MODE - VIDEO):
+The user has selected SAME SCENE LOOP mode for a video prompt. This means the video MUST keep the background, characters, composition, and layout absolutely identical to the reference image, with only the motion, animation, and timing varying.
+
+When a reference image is provided in SAME SCENE LOOP mode, you MUST strictly enforce these rules:
+1. LOCK EVERYTHING EXCEPT MOTION:
+   - Describe the exact character from the reference image, including face, hair, clothing, and accessories as FIXED text.
+   - Describe the exact scene/background environment as FIXED text.
+   - You are ABSOLUTELY FORBIDDEN from putting these into brackets (e.g. DO NOT use [subject], [character], [clothing], [outfit], [background], [scenery] as variables in promptTemplate).
+2. ONLY MOTION & ANIMATION ARE ALLOWED AS VARIABLES:
+   - The ONLY bracketed variable allowed in promptTemplate must be: [motion_dynamics] or [animation/motion].
+3. SCENE DIVISION:
+   - For 5s: exactly 2 scenes:
+     Scene 1 (0 to 2.5 seconds): Establish static frame. Description of character and background. Motion: subtle motion 1
+     Scene 2 (2.5 to 5 seconds): Same static frame. Same character and background. Motion: subtle motion 2
+   - For 10s: exactly 3 scenes:
+     Scene 1 (0 to 3.3 seconds): Establish static frame. ...
+     Scene 2 (3.3 to 6.6 seconds): ...
+     Scene 3 (6.6 to 10 seconds): ...
+   - For 20s: exactly 5 scenes:
+     Scene 1 (0 to 4 seconds): ...
+     Scene 2 (4 to 8 seconds): ...
+     Scene 3 (8 to 12 seconds): ...
+     Scene 4 (12 to 16 seconds): ...
+     Scene 5 (16 to 20 seconds): ...
+4. Camera is completely locked/static — no panning, no zoom.`;
+
+        howToBuildSamples = `HOW TO BUILD SAMPLES (🎥 SAME SCENE LOOP MODE - FOLLOW THIS EXACTLY):
+1. Write the mainPrompt first. It must start with "Generate a video of: " and be structured scene-by-scene based on the duration (e.g. Scene 1 (0 to 2.5 seconds) and Scene 2 (2.5 to 5 seconds) for 5s).
+   - Describe the exact character, clothing, scene, background, art style, color palette, and lighting from the reference image.
+   - Include a specific subtle motion/animation per scene (NO brackets).
+2. Create promptTemplate: Take the mainPrompt and replace ONLY the motion/animation in each scene with a bracketed variable (e.g., [animation/motion_1], [animation/motion_2]).
+   - CRITICAL: All other parts of the prompt (subject, clothing, background, style, colors, lighting) MUST remain as FIXED, detailed, non-variable text in the promptTemplate. DO NOT put them in brackets!
+3. For each of the samples (Sample A, Sample B, Sample C), copy the promptTemplate and replace ONLY the motion variables.
+   - CRITICAL: The subject, clothing, background, style, etc. MUST be 100% IDENTICAL and repeated word-for-word across all samples! Only the animations must vary.
+4. ZERO TOLERANCE FOR BRACKETS IN SAMPLES: Samples and mainPrompt MUST NOT contain any [BRACKETS]. Only promptTemplate has brackets.
+5. Every prompt and sample MUST end with "--ar ${resolvedAR}".`;
+      } else if (resolvedCharMode === 'differentScenes') {
+        referenceImageRules = `
+CRITICAL — REFERENCE IMAGE HANDLING (🔄 DIFFERENT SCENES MODE - VIDEO):
+The user has selected DIFFERENT SCENES mode for a video prompt. This means the character's identity (face, hair, clothing, styling) and the overall video/art style must remain identical, but they are placed in completely different locations/settings and perform different actions per scene.
+
+When a reference image is provided in DIFFERENT SCENES mode, you MUST:
+1. LOCK CHARACTER & STYLE:
+   - Describe the exact character and outfit from the reference image in high detail as FIXED text.
+   - LOCK the art/cinematic style as FIXED text.
+   - You are ABSOLUTELY FORBIDDEN from putting character or clothing into brackets (e.g. DO NOT use [subject], [character], [clothing], [outfit] as variables in promptTemplate).
+2. ONLY LOCATION, ACTION & CAMERA ARE ALLOWED AS VARIABLES:
+   - The bracketed variables in promptTemplate should be: [location_1/action_1] and [camera_movement_1] per scene.
+3. SCENE DIVISION:
+   - For 5s: exactly 2 scenes:
+     Scene 1 (0 to 2.5 seconds): same character description, outfit, and art style. Location 1/action 1. Camera movement 1
+     Scene 2 (2.5 to 5 seconds): same character description, outfit, and art style. Location 2/action 2. Camera movement 2
+   - For 10s: exactly 4 scenes (2.5s each):
+     Scene 1 (0 to 2.5 seconds): ...
+     Scene 2 (2.5 to 5 seconds): ...
+     Scene 3 (5 to 7.5 seconds): ...
+     Scene 4 (7.5 to 10 seconds): ...
+   - For 20s: exactly 8 scenes (2.5s each):
+     Scene 1 (0 to 2.5 seconds) to Scene 8 (17.5 to 20 seconds).`;
+
+        howToBuildSamples = `HOW TO BUILD SAMPLES (🔄 DIFFERENT SCENES MODE - FOLLOW THIS EXACTLY):
+1. Write the mainPrompt first. It must start with "Generate a video of: " and be structured scene-by-scene based on the duration (e.g. Scene 1 to Scene 4 for 10s).
+   - Describe the exact character and outfit from the reference image.
+   - Describe a completely different scene/background setting, camera movement, and action per scene.
+2. Create promptTemplate: Take the mainPrompt and replace ONLY the background setting and camera/action in each scene with bracketed variables (e.g., [location_1/action_1], [camera_movement_1]).
+   - CRITICAL: The subject description and clothing/outfit MUST remain as FIXED, detailed, non-variable text in the promptTemplate. DO NOT put them in brackets!
+3. For each of the samples (Sample A, Sample B, Sample C), copy the promptTemplate and replace the bracketed variables.
+   - CRITICAL: The subject description and clothing/outfit MUST be 100% IDENTICAL and repeated word-for-word across all samples!
+   - The location/action and camera movement MUST vary completely per sample to show the same character in different video scenes.
+4. ZERO TOLERANCE FOR BRACKETS IN SAMPLES: Samples and mainPrompt MUST NOT contain any [BRACKETS]. Only promptTemplate has brackets.
+5. Every prompt and sample MUST end with "--ar ${resolvedAR}".`;
+      } else {
+        referenceImageRules = `
+CRITICAL — REFERENCE IMAGE HANDLING (📽️ FIXED CHARACTER + MOTION MODE - VIDEO):
+The user has selected FIXED CHARACTER + MOTION mode for a video prompt. This means the character stays fixed in the same look, pose, and background as the reference, but the camera moves around them dynamically per scene.
+
+When a reference image is provided in FIXED CHARACTER + MOTION mode, you MUST:
+1. LOCK CHARACTER, OUTFIT & SCENE:
+   - Describe the exact character, outfit, and setting/environment from the reference image in detail as FIXED text.
+   - You are ABSOLUTELY FORBIDDEN from putting character, clothing, or environment into brackets.
+2. ONLY CAMERA MOVEMENT IS ALLOWED AS A VARIABLE:
+   - The ONLY bracketed variable allowed in promptTemplate must be: [camera_movement] or [motion_effect].
+3. CAMERA MOVEMENT LIBRARY:
+   - Orbit: "slow 180° orbit left to right"
+   - Zoom In: "slow push-in to face"
+   - Zoom Out: "pull-back reveal shot"
+   - Low Angle Rise: "camera rises from ground to eye level"
+   - Top Down: "aerial top-down slowly rotating"
+   - Side Pan: "lateral pan left to right"
+4. SCENE DIVISION:
+   - For 5s: exactly 2 scenes (2.5s each, 2 moves)
+     Scene 1 (0 to 2.5 seconds): camera move 1. Character description, outfit, background. Character does not move.
+     Scene 2 (2.5 to 5 seconds): camera move 2. Same character, outfit, background. Character does not move.
+   - For 10s: exactly 3 scenes (~3.3s each, 3 moves)
+   - For 20s: exactly 5 scenes (4s each, 5 moves)
+5. FORBIDDEN: No character body movement (not even blinking), no location change, no sudden jump cuts.`;
+
+        howToBuildSamples = `HOW TO BUILD SAMPLES (📽️ FIXED CHARACTER + MOTION MODE - FOLLOW THIS EXACTLY):
+1. Write the mainPrompt first. It must start with "Generate a video of: " and be structured scene-by-scene based on the duration (e.g. Scene 1 and Scene 2 for 5s).
+   - Each scene must start with a camera instruction from the Camera Movement Library (do not use bracketed tags like [CAMERA:], just describe it in plain English, e.g. "with a camera orbit left to right").
+   - Describe the exact character, clothing, background, and lighting from the reference, followed by "Character does not move."
+2. Create promptTemplate: Take the mainPrompt and replace ONLY the camera movement in each scene with a bracketed variable (e.g. [camera_movement_1]).
+   - CRITICAL: The subject, clothing, background, style, colors, and lighting MUST remain as FIXED, detailed, non-variable text in the promptTemplate. DO NOT put them in brackets!
+3. For each of the samples (Sample A, Sample B, Sample C), copy the promptTemplate and replace ONLY the camera movement variables.
+   - CRITICAL: The subject, clothing, background, style, etc. MUST be 100% IDENTICAL and repeated word-for-word across all samples! Only the camera movement varies.
+4. ZERO TOLERANCE FOR BRACKETS IN SAMPLES: Samples and mainPrompt MUST NOT contain any [BRACKETS]. Only promptTemplate has brackets.
+5. Every prompt and sample MUST end with "--ar ${resolvedAR}".`;
+      }
+    } else {
+      referenceImageRules = `
+CRITICAL — VIDEO PROMPT RULES:
+The user is generating a video prompt. You MUST format the prompt and all samples in a scene-by-scene structure matching the duration.
+Each scene must describe the continuous video progression (action, camera movement, environment, lighting).
+Every prompt and sample MUST start with "Generate a video of: " or "Generate a video of " and MUST end with "--ar ${resolvedAR}".`;
+
+      howToBuildSamples = `HOW TO BUILD SAMPLES (VIDEO PROMPT - GENERAL - FOLLOW THIS EXACTLY):
+1. Write the mainPrompt first. It must start with "Generate a video of: " and be structured scene-by-scene based on the duration:
+   - For 5s: Scene 1 (0 to 2.5 seconds) and Scene 2 (2.5 to 5 seconds).
+   - For 10s: Scene 1 (0 to 3.3 seconds), Scene 2 (3.3 to 6.6 seconds), Scene 3 (6.6 to 10 seconds).
+   - For 20s: Scene 1 (0 to 4 seconds), Scene 2 (4 to 8 seconds), Scene 3 (8 to 12 seconds), Scene 4 (12 to 16 seconds), Scene 5 (16 to 20 seconds).
+   - Describe a detailed, continuous video progression with scene actions, lighting, and camera.
+2. Create promptTemplate: Take the mainPrompt and replace only the key action, environment, or camera movement in each scene with a bracketed variable (e.g., [action_1], [camera_1]).
+3. For each of the samples (Sample A, Sample B, Sample C), copy the promptTemplate and replace the bracketed variables with unique creative details.
+4. ZERO TOLERANCE FOR BRACKETS IN SAMPLES: Samples and mainPrompt MUST NOT contain any [BRACKETS]. Only promptTemplate has brackets.
+5. Every prompt and sample MUST end with "--ar ${resolvedAR}".`;
+    }
+  } else {
+    // Image reference rules
+    if (resolvedCharMode === 'fixed') {
+      referenceImageRules = `
 CRITICAL — REFERENCE IMAGE HANDLING (🔒 FIXED CHARACTER MODE):
 The user has selected FIXED CHARACTER mode. This means EVERYTHING from the reference image stays the SAME — the same character, same clothing, same scene, same environment, same style, same color palette, same overall vibe. The ONLY things that change are the POSE, ACTION, GESTURE, and BODY POSITION of the character. Think of it like taking multiple photos of the same model during the same photoshoot — same outfit, same location, just different poses.
 
@@ -202,11 +378,29 @@ When a reference image is provided in FIXED CHARACTER mode, you MUST:
    - The samples should feel like a photographer telling the model "OK now try this pose... now try this one..."
 
 6. The goal: when someone generates images from these prompts, ALL the output images look like they belong to the SAME photoshoot session — same person, same outfit, same place, just different poses and moments captured.`;
-  } else if (charMode === 'sameScene') {
-    // ═══════════════════════════════════════════════════
-    // SAME SCENE MODE: Everything identical, only pose/gesture/action changes
-    // ═══════════════════════════════════════════════════
-    referenceImageRules = `
+
+      howToBuildSamples = `HOW TO BUILD SAMPLES (🔒 FIXED CHARACTER MODE - FOLLOW THIS EXACTLY):
+1. Write the mainPrompt first. It must be a perfect, highly detailed, real-world example of the prompt being used (NO brackets) describing the reference image exactly.
+   - Describe the exact subject from the reference (e.g. "a young East Asian woman with short dark hair").
+   - Describe the exact clothing from the reference (e.g. "wearing a blue and white checkered wrap and a delicate white lace-strap top").
+   - Describe the scene/background setting, art style, color palette, lighting, and a specific pose/action.
+   - End with "--ar ${resolvedAR}".
+2. Create promptTemplate: Take the mainPrompt and replace ONLY the pose/action, background setting, and lighting/colors with bracketed variables (e.g., [pose/action], [background_setting], [lighting/colors]).
+   - CRITICAL: The subject description and clothing/outfit MUST remain as FIXED, detailed, non-variable text in the promptTemplate. DO NOT put them in brackets!
+3. For each of the samples (Sample A, Sample B, Sample C), copy the promptTemplate and replace the bracketed variables.
+   - CRITICAL: The subject description and clothing/outfit MUST be 100% IDENTICAL and repeated word-for-word across all samples! DO NOT vary them! E.g., never generate different subjects like a "Nordic fisherman" or "fantasy elf" in any sample! All samples must feature the EXACT SAME young woman in the EXACT SAME outfit.
+   - The pose/action, background setting, and lighting/colors MUST vary completely per sample to show the same character in different locations/scenes (e.g. in a cozy library, in snowy mountains, on a sunny beach).
+4. ZERO TOLERANCE FOR BRACKETS IN SAMPLES: Samples and mainPrompt MUST NOT contain any [BRACKETS]. Only promptTemplate has brackets.
+5. SAMPLE COUNT: Generate exactly 3 samples for standard generations. Generate exactly 5 samples ONLY when "Example Generator" mode is requested.
+6. CRITICAL CHARACTER LENGTH CONSTRAINT (MANDATORY):
+   The generated promptTemplate MUST strictly comply with these length limits based on the Credit Tier:
+   - 1 Credit (Normal): promptTemplate MUST be at least 400 to 500 characters long (detailed and perfect to best describe the scene).
+   - 3 Credits (Super): promptTemplate MUST be at least 500 to 600 characters long (exceptional photographic details and camera settings).
+   - 5 Credits (Power): promptTemplate MUST be at least 600 to 700 characters long (masterpiece-level visual details, highly detailed and fully descriptive).
+   You MUST write exceptionally detailed, long, and descriptive fixed text around the bracketed variables in promptTemplate to satisfy this length requirement.
+7. Every prompt and sample MUST end with --ar ${resolvedAR}`;
+    } else if (resolvedCharMode === 'sameScene') {
+      referenceImageRules = `
 CRITICAL — REFERENCE IMAGE HANDLING (📸 SAME SCENE MODE):
 The user has selected SAME SCENE mode. This means EVERYTHING from the reference image stays EXACTLY THE SAME — the same character(s), same clothing, same scene, same environment, same style, same color palette, same overall vibe. The ONLY things that change are the POSE, ACTION, GESTURE, facial expression, and camera angle. Think of it like taking multiple photos of the same subjects during the same photoshoot at the same location — same outfits, same background, just different poses, expressions, and shot close-ups.
 
@@ -241,11 +435,31 @@ When a reference image is provided in SAME SCENE mode, you MUST strictly enforce
    - Sample C: "...only change the [pose to sitting peacefully on a blanket smelling a daisy in a low angle shot]."
 
 5. Goal: The output prompts must feel 100% cohesive, like consecutive frames of the same photoshoot session, ensuring the character and location remain perfectly locked.`;
-  } else {
-    // ═══════════════════════════════════════════════════
-    // DIFFERENT CHARACTERS MODE: Same art style/technique, different character entirely
-    // ═══════════════════════════════════════════════════
-    referenceImageRules = `
+
+      howToBuildSamples = `HOW TO BUILD SAMPLES (📸 SAME SCENE MODE - FOLLOW THIS EXACTLY):
+1. Write the mainPrompt first. It must be a perfect, highly detailed, real-world example of the prompt being used (NO brackets) describing the reference image exactly.
+   - Describe the exact subject from the reference (e.g. "a young East Asian woman with short dark hair").
+   - Describe the exact clothing from the reference (e.g. "wearing a blue and white checkered wrap and a delicate white lace-strap top").
+   - Describe the exact scene/background setting from the reference (e.g. "in a vast field of bright yellow wildflowers with rolling green hills in the distance").
+   - Describe the exact art style, color palette, and lighting from the reference image.
+   - Include a specific pose/action (e.g. "resting her chin thoughtfully on her hand").
+   - End with "--ar ${resolvedAR}".
+2. Create promptTemplate: Take the mainPrompt and replace ONLY the pose/action and facial expression with bracketed variables (e.g., [pose/action] and [facial_expression]).
+   - CRITICAL: All other parts of the prompt (the subject description, clothing/outfit, background setting, art style, color palette, lighting) MUST remain as FIXED, detailed, non-variable text in the promptTemplate. DO NOT put them in brackets!
+3. For each of the samples (Sample A, Sample B, Sample C), copy the promptTemplate and replace ONLY the pose/action and facial expression variables.
+   - CRITICAL: The subject, clothing, background setting, art style, color palette, and lighting MUST be 100% IDENTICAL and repeated word-for-word across all samples! DO NOT vary them! E.g., never generate different subjects like a "Nordic fisherman" or "fantasy elf" in any sample! All samples must feature the EXACT SAME young woman in the EXACT SAME outfit and the EXACT SAME yellow wildflower field.
+   - ONLY the poses, actions, gestures, and expressions must vary completely between the samples (e.g., winking and waving vs sitting cross-legged on a blanket vs leaning forward smiling).
+4. ZERO TOLERANCE FOR BRACKETS IN SAMPLES: Samples and mainPrompt MUST NOT contain any [BRACKETS]. Only promptTemplate has brackets.
+5. SAMPLE COUNT: Generate exactly 3 samples for standard generations. Generate exactly 5 samples ONLY when "Example Generator" mode is requested.
+6. CRITICAL CHARACTER LENGTH CONSTRAINT (MANDATORY):
+   The generated promptTemplate MUST strictly comply with these length limits based on the Credit Tier:
+   - 1 Credit (Normal): promptTemplate MUST be at least 400 to 500 characters long (detailed and perfect to best describe the scene).
+   - 3 Credits (Super): promptTemplate MUST be at least 500 to 600 characters long (exceptional photographic details and camera settings).
+   - 5 Credits (Power): promptTemplate MUST be at least 600 to 700 characters long (masterpiece-level visual details, highly detailed and fully descriptive).
+   You MUST write exceptionally detailed, long, and descriptive fixed text around the bracketed variables in promptTemplate to satisfy this length requirement.
+7. Every prompt and sample MUST end with --ar ${resolvedAR}`;
+    } else {
+      referenceImageRules = `
 CRITICAL — REFERENCE IMAGE HANDLING (🔄 DIFFERENT CHARACTERS MODE):
 The user has selected DIFFERENT CHARACTERS mode. This means the ART STYLE, VISUAL TECHNIQUE, COMPOSITION, and OVERALL AESTHETIC from the reference image must stay EXACTLY THE SAME — but the CHARACTER/SUBJECT changes to a completely different one in each sample. Think of it like an artist creating a series of artworks in the same style but featuring different subjects.
 
@@ -308,62 +522,15 @@ When a reference image is provided in DIFFERENT CHARACTERS mode, you MUST:
    - The series should feel like it was all created by the same artist in the same style.
 
 6. The goal: when someone generates images from these prompts, they get a cohesive art series where every piece has the SAME visual style but features DIFFERENT characters — perfect for collections, sticker sets, t-shirt series, etc.`;
-  }
 
-  let howToBuildSamples = '';
-  if (charMode === 'sameScene') {
-    howToBuildSamples = `HOW TO BUILD SAMPLES (📸 SAME SCENE MODE - FOLLOW THIS EXACTLY):
-1. Write the mainPrompt first. It must be a perfect, highly detailed, real-world example of the prompt being used (NO brackets) describing the reference image exactly.
-   - Describe the exact subject from the reference (e.g. "a young East Asian woman with short dark hair").
-   - Describe the exact clothing from the reference (e.g. "wearing a blue and white checkered wrap and a delicate white lace-strap top").
-   - Describe the exact scene/background setting from the reference (e.g. "in a vast field of bright yellow wildflowers with rolling green hills in the distance").
-   - Describe the exact art style, color palette, and lighting from the reference image.
-   - Include a specific pose/action (e.g. "resting her chin thoughtfully on her hand").
-   - End with "--ar 1:1".
-2. Create promptTemplate: Take the mainPrompt and replace ONLY the pose/action and facial expression with bracketed variables (e.g., [pose/action] and [facial_expression]).
-   - CRITICAL: All other parts of the prompt (the subject description, clothing/outfit, background setting, art style, color palette, lighting) MUST remain as FIXED, detailed, non-variable text in the promptTemplate. DO NOT put them in brackets!
-3. For each of the samples (Sample A, Sample B, Sample C), copy the promptTemplate and replace ONLY the pose/action and facial expression variables.
-   - CRITICAL: The subject, clothing, background setting, art style, color palette, and lighting MUST be 100% IDENTICAL and repeated word-for-word across all samples! DO NOT vary them! E.g., never generate different subjects like a "Nordic fisherman" or "fantasy elf" in any sample! All samples must feature the EXACT SAME young woman in the EXACT SAME outfit and the EXACT SAME yellow wildflower field.
-   - ONLY the poses, actions, gestures, and expressions must vary completely between the samples (e.g., winking and waving vs sitting cross-legged on a blanket vs leaning forward smiling).
-4. ZERO TOLERANCE FOR BRACKETS IN SAMPLES: Samples and mainPrompt MUST NOT contain any [BRACKETS]. Only promptTemplate has brackets.
-5. SAMPLE COUNT: Generate exactly 3 samples for standard generations. Generate exactly 5 samples ONLY when "Example Generator" mode is requested.
-6. CRITICAL CHARACTER LENGTH CONSTRAINT (MANDATORY):
-   The generated promptTemplate MUST strictly comply with these length limits based on the Credit Tier:
-   - 1 Credit (Normal): promptTemplate MUST be at least 400 to 500 characters long (detailed and perfect to best describe the scene).
-   - 3 Credits (Super): promptTemplate MUST be at least 500 to 600 characters long (exceptional photographic details and camera settings).
-   - 5 Credits (Power): promptTemplate MUST be at least 600 to 700 characters long (masterpiece-level visual details, highly detailed and fully descriptive).
-   You MUST write exceptionally detailed, long, and descriptive fixed text around the bracketed variables in promptTemplate to satisfy this length requirement.
-7. Every prompt and sample MUST end with --ar 1:1`;
-  } else if (charMode === 'fixed') {
-    howToBuildSamples = `HOW TO BUILD SAMPLES (🔒 FIXED CHARACTER MODE - FOLLOW THIS EXACTLY):
-1. Write the mainPrompt first. It must be a perfect, highly detailed, real-world example of the prompt being used (NO brackets) describing the reference image exactly.
-   - Describe the exact subject from the reference (e.g. "a young East Asian woman with short dark hair").
-   - Describe the exact clothing from the reference (e.g. "wearing a blue and white checkered wrap and a delicate white lace-strap top").
-   - Describe the scene/background setting, art style, color palette, lighting, and a specific pose/action.
-   - End with "--ar 1:1".
-2. Create promptTemplate: Take the mainPrompt and replace ONLY the pose/action, background setting, and lighting/colors with bracketed variables (e.g., [pose/action], [background_setting], [lighting/colors]).
-   - CRITICAL: The subject description and clothing/outfit MUST remain as FIXED, detailed, non-variable text in the promptTemplate. DO NOT put them in brackets!
-3. For each of the samples (Sample A, Sample B, Sample C), copy the promptTemplate and replace the bracketed variables.
-   - CRITICAL: The subject description and clothing/outfit MUST be 100% IDENTICAL and repeated word-for-word across all samples! DO NOT vary them! E.g., never generate different subjects like a "Nordic fisherman" or "fantasy elf" in any sample! All samples must feature the EXACT SAME young woman in the EXACT SAME outfit.
-   - The pose/action, background setting, and lighting/colors MUST vary completely per sample to show the same character in different locations/scenes (e.g. in a cozy library, in snowy mountains, on a sunny beach).
-4. ZERO TOLERANCE FOR BRACKETS IN SAMPLES: Samples and mainPrompt MUST NOT contain any [BRACKETS]. Only promptTemplate has brackets.
-5. SAMPLE COUNT: Generate exactly 3 samples for standard generations. Generate exactly 5 samples ONLY when "Example Generator" mode is requested.
-6. CRITICAL CHARACTER LENGTH CONSTRAINT (MANDATORY):
-   The generated promptTemplate MUST strictly comply with these length limits based on the Credit Tier:
-   - 1 Credit (Normal): promptTemplate MUST be at least 400 to 500 characters long (detailed and perfect to best describe the scene).
-   - 3 Credits (Super): promptTemplate MUST be at least 500 to 600 characters long (exceptional photographic details and camera settings).
-   - 5 Credits (Power): promptTemplate MUST be at least 600 to 700 characters long (masterpiece-level visual details, highly detailed and fully descriptive).
-   You MUST write exceptionally detailed, long, and descriptive fixed text around the bracketed variables in promptTemplate to satisfy this length requirement.
-7. Every prompt and sample MUST end with --ar 1:1`;
-  } else {
-    howToBuildSamples = `HOW TO BUILD SAMPLES (FOLLOW THIS EXACTLY):
+      howToBuildSamples = `HOW TO BUILD SAMPLES (FOLLOW THIS EXACTLY):
 1. Write the mainPrompt first. It must be a perfect, real-world example of the prompt being used (NO brackets). Make it long, detailed, and rich with fixed descriptive text.
 2. Create promptTemplate: take the mainPrompt and replace ONLY the most important changeable parts with [BRACKET] variables. 
 3. STRICT VARIABLE LIMIT — MINIMUM 1, MAXIMUM 5 VARIABLES: The promptTemplate MUST contain a minimum of 1 bracketed variable and a maximum of 5 bracketed variables total. You must NEVER exceed 5 variables (e.g., [subject], [color], [style], [lighting], [location] is 5). Any prompt template with 6 or more variables is REJECTED. Keep all the remaining text of the prompt as rich, high-quality, fixed descriptive words.
 4. GENERAL RULE & PERFECT TEMPLATE EXAMPLE:
    Here is a perfect example of a general, high-value prompt template that has EXACTLY 4 variables (within the 1-5 limit) and 80% fixed descriptive text:
-   - mainPrompt: "Double exposure photography of a wolf silhouette against a deep pine forest, vibrant night sky filled with aurora borealis, double exposure visual effect, ethereal lighting, sharp details, cinematic rendering --ar 1:1"
-   - promptTemplate: "Double exposure photography of a [subject] silhouette against a [background scenery], vibrant night sky filled with [atmospheric effect], double exposure visual effect, [lighting style] lighting, sharp details, cinematic rendering --ar 1:1"
+   - mainPrompt: "Double exposure photography of a wolf silhouette against a deep pine forest, vibrant night sky filled with aurora borealis, double exposure visual effect, ethereal lighting, sharp details, cinematic rendering --ar ${resolvedAR}"
+   - promptTemplate: "Double exposure photography of a [subject] silhouette against a [background scenery], vibrant night sky filled with [atmospheric effect], double exposure visual effect, [lighting style] lighting, sharp details, cinematic rendering --ar ${resolvedAR}"
    - In this example, ONLY the key items ([subject], [background scenery], [atmospheric effect], [lighting style]) are variables (4 total). All other words like "Double exposure photography", "silhouette against a", "vibrant night sky filled with", "double exposure visual effect", "lighting, sharp details, cinematic rendering" are FIXED descriptive text. This ensures the prompt is highly professional, unique, and valuable!
 5. For each sample (A, B, C, etc.), take the promptTemplate and replace every [BRACKET] variable.
 6. ZERO TOLERANCE FOR REPETITION: Every variable MUST be 100% unique across all samples.
@@ -375,7 +542,8 @@ When a reference image is provided in DIFFERENT CHARACTERS mode, you MUST:
    - 3 Credits (Super): promptTemplate MUST be at least 500 to 600 characters long (exceptional photographic details and camera settings).
    - 5 Credits (Power): promptTemplate MUST be at least 600 to 700 characters long (masterpiece-level visual details, highly detailed and fully descriptive).
    You MUST write exceptionally detailed, long, and descriptive fixed text around the bracketed variables in promptTemplate to satisfy this length requirement.
-10. Every prompt and sample MUST end with --ar 1:1`;
+10. Every prompt and sample MUST end with --ar ${resolvedAR}`;
+    }
   }
 
   return `You are an expert AI Prompt Engineer for a premium prompt marketplace called "Prompt by Niti".
@@ -393,13 +561,15 @@ ${tierGuidelines}
 
 ${referenceImageRules}
 
+${howToBuildSamples}
+
 OUTPUT FORMAT:
 You must return a VALID JSON object with these fields:
 {
   "title": "A catchy 3-5 word title for the prompt",
   "description": "A professional 1-2 sentence description of what this prompt achieves",
   "imageAnalysis": "If a reference image was provided, describe what you see in detail. If no image, set to empty string.",
-  "mainPrompt": "A COMPLETE, READY-TO-USE SAMPLE PROMPT with ALL bracketed variables replaced by real, creative values. This MUST NOT contain any [BRACKETS]. End with --ar 1:1",
+  "mainPrompt": "A COMPLETE, READY-TO-USE SAMPLE PROMPT with ALL bracketed variables replaced by real, creative values. This MUST NOT contain any [BRACKETS]. End with --ar ${resolvedAR}",
   "negativePrompt": "A comprehensive negative prompt (things to avoid/exclude)",
   "promptTemplate": "The skeleton version of the prompt using [BRACKETED] variables for changeable parts. THIS IS THE ONLY FIELD THAT SHOULD HAVE BRACKETS.",
   "samples": [
@@ -411,7 +581,7 @@ You must return a VALID JSON object with these fields:
   "instructions": "Step-by-step instructions on how to use this prompt effectively."
 }
 
-- Every prompt and sample MUST end with --ar 1:1
+- Every prompt and sample MUST end with --ar ${resolvedAR}
 
 Return ONLY the JSON object. No markdown fences, no explanation.`;
 }
@@ -419,7 +589,7 @@ Return ONLY the JSON object. No markdown fences, no explanation.`;
 // POST /api/generate
 router.post('/', async (req, res) => {
   try {
-    const { description, characterImage, promptType, model, mode, modelLabel, aiPower, characterMode } = req.body;
+    const { description, characterImage, promptType, model, mode, modelLabel, aiPower, characterMode, aspectRatio } = req.body;
     // Use human-readable model name if available, otherwise fall back to model id
     const targetModel = modelLabel || model || 'Midjourney';
 
@@ -430,13 +600,14 @@ router.post('/', async (req, res) => {
     // 1. Get cached model (keys and database rules)
     const cached = await getOrCreateModel();
 
+    const hasRefImage = characterImage && characterImage.startsWith('data:image');
+
     // Build the system instruction dynamically based on the requested aiPower level
-    const systemInstruction = buildSystemInstruction(cached.rulesStr, aiPower, characterMode);
+    const systemInstruction = buildSystemInstruction(cached.rulesStr, aiPower, characterMode, promptType, req.body.duration, hasRefImage, aspectRatio);
     console.log(`🎭 Character Mode: ${characterMode || 'not set (no image)'}`);
 
     // 2. Build lightweight user message (NO rules, NO characteristics repeated)
     const userParts = [];
-    const hasRefImage = characterImage && characterImage.startsWith('data:image');
 
     // If user uploaded a reference image, include it FIRST so the AI sees it before the text
     if (hasRefImage) {
@@ -487,12 +658,32 @@ router.post('/', async (req, res) => {
 
       if (hasRefImage) {
         // Special case: example template customization WITH reference image consistency
-        const charMode = characterMode || 'different';
-        console.log(`📸 Customizing template in example mode with reference image. Character Mode: ${charMode}`);
+        const isVideo = req.body.promptType === 'video';
+        const resolvedCharMode = isVideo 
+          ? (characterMode === 'sameScene' || characterMode === 'sameSceneLoop' ? 'sameSceneLoop' :
+             characterMode === 'different' || characterMode === 'differentScenes' ? 'differentScenes' :
+             'fixedCharacterMotion')
+          : (characterMode === 'sameSceneLoop' ? 'sameScene' :
+             characterMode === 'differentScenes' ? 'different' :
+             characterMode || 'different');
+             
+        console.log(`📸 Customizing template in example mode with reference image. Character Mode: ${resolvedCharMode}`);
         
         let modeSpecificInstructions = '';
-        if (charMode === 'sameScene') {
-          modeSpecificInstructions = `
+        if (resolvedCharMode === 'sameScene' || resolvedCharMode === 'sameSceneLoop') {
+          modeSpecificInstructions = isVideo ? `
+🔒 CHARACTER MODE: SAME SCENE LOOP (Everything identical, only motion & timing changes)
+The user has uploaded a reference image and selected SAME SCENE LOOP mode. This means EVERYTHING from the reference image MUST stay 100% identical.
+
+CRITICAL ASSIGNMENT OF VARIABLES:
+When replacing the [BRACKETED] variables in the USER TEMPLATE:
+1. LOCKED VARIABLES (MUST BE 100% IDENTICAL AND REPEATED WORD-FOR-WORD ACROSS ALL 5 SAMPLES):
+   - [subject_description] / [subject/character] / [outfit_details]: Analyze reference and describe them exactly, repeat word-for-word in ALL 5 samples.
+   - [background_setting] / [art_style] / [lighting]: Repeat word-for-word in ALL 5 samples.
+2. CHANGED VARIABLES (MUST BE COMPLETELY DIFFERENT AND UNIQUE PER SAMPLE):
+   - [animation/motion] / [motion_dynamics]: Generate different subtle motion variations (e.g. winking, blowing a kiss, hair swaying).
+3. OVERRIDE Command: Repeat locked variables word-for-word across all 5 samples.`
+          : `
 🔒 CHARACTER MODE: SAME SCENE (Everything identical, only pose/expression/camera angle changes)
 The user has uploaded a reference image and selected SAME SCENE mode. This means EVERYTHING from the reference image MUST stay 100% identical.
 
@@ -515,8 +706,20 @@ When replacing the [BRACKETED] variables in the USER TEMPLATE:
    - [small_props]: Optionally swap tiny held elements (e.g. holding a daisy).
 
 3. OVERRIDE Command: Ignore the "zero tolerance for repetition" rule for locked variables. You MUST copy their values word-for-word from Sample A into all other samples. Only pose, expression, and camera angle must change.`;
-        } else if (charMode === 'fixed') {
-          modeSpecificInstructions = `
+        } else if (resolvedCharMode === 'fixed' || resolvedCharMode === 'fixedCharacterMotion') {
+          modeSpecificInstructions = isVideo ? `
+🔒 CHARACTER MODE: FIXED CHARACTER + MOTION (Same character & outfit, camera moves around them)
+The user has uploaded a reference image and selected FIXED CHARACTER + MOTION mode. This means the character identity, outfit, and background stay identical, only the camera moves.
+
+CRITICAL ASSIGNMENT OF VARIABLES:
+When replacing the [BRACKETED] variables in the USER TEMPLATE:
+1. LOCKED VARIABLES (MUST BE 100% IDENTICAL AND REPEATED WORD-FOR-WORD ACROSS ALL 5 SAMPLES):
+   - [subject_description] / [subject/character] / [outfit_details]: Repeat word-for-word in ALL 5 samples.
+   - [background_setting] / [art_style]: Repeat word-for-word in ALL 5 samples.
+2. CHANGED VARIABLES (MUST BE COMPLETELY DIFFERENT AND UNIQUE PER SAMPLE):
+   - [camera_movement] / [motion_effect]: Generate different camera moves (e.g. pan, orbit, zoom).
+3. OVERRIDE Command: Repeat locked variables word-for-word across all 5 samples.`
+          : `
 🔒 CHARACTER MODE: FIXED CHARACTER (Same character & outfit, different locations & backgrounds)
 The user has uploaded a reference image and selected FIXED CHARACTER mode. This means the character identity and clothing stay identical, but the scene/background changes.
 
@@ -532,7 +735,19 @@ When replacing the [BRACKETED] variables in the USER TEMPLATE:
 
 3. OVERRIDE Command: Ignore the "zero tolerance for repetition" rule for locked variables. You MUST copy their values word-for-word from Sample A into all other samples.`;
         } else {
-          modeSpecificInstructions = `
+          modeSpecificInstructions = isVideo ? `
+🔄 CHARACTER MODE: DIFFERENT SCENES (Same art style & character, completely different locations/actions)
+The user has uploaded a reference image and selected DIFFERENT SCENES mode. This means the character identity and style stay identical, but they are in completely different environments and actions.
+
+CRITICAL ASSIGNMENT OF VARIABLES:
+When replacing the [BRACKETED] variables in the USER TEMPLATE:
+1. LOCKED VARIABLES (MUST BE 100% IDENTICAL AND REPEATED WORD-FOR-WORD ACROSS ALL 5 SAMPLES):
+   - [subject_description] / [subject/character] / [outfit_details]: Repeat word-for-word in ALL 5 samples.
+   - [art_style]: Repeat word-for-word in ALL 5 samples.
+2. CHANGED VARIABLES (MUST BE COMPLETELY DIFFERENT AND UNIQUE PER SAMPLE):
+   - [background_setting] / [location/action] / [camera_movement]: Vary location and camera moves completely per sample.
+3. OVERRIDE Command: Repeat locked variables word-for-word across all 5 samples.`
+          : `
 🔄 CHARACTER MODE: DIFFERENT CHARACTERS (Same art style/technique, different characters)
 The user has uploaded a reference image and selected DIFFERENT CHARACTERS mode. This means the art style and visual aesthetic from the reference image stay identical, but the character changes.
 Therefore, when replacing the [BRACKETED] variables in the USER TEMPLATE:
@@ -588,12 +803,31 @@ Return the results in the standard JSON format.`
     } else if (hasRefImage && userParts.length > 0) {
       // When reference image is provided in PROMPT GENERATOR MODE:
       // The Power of AI's role is to generate a beautiful, highly detailed prompt template from scratch based on the uploaded reference image.
-      const charMode = characterMode || 'different';
-      console.log(`📸 Generating prompt template from scratch based on uploaded reference image. Character Mode: ${charMode}`);
+      const isVideo = promptType === 'video';
+      const resolvedCharMode = isVideo 
+        ? (characterMode === 'sameScene' || characterMode === 'sameSceneLoop' ? 'sameSceneLoop' :
+           characterMode === 'different' || characterMode === 'differentScenes' ? 'differentScenes' :
+           'fixedCharacterMotion')
+        : (characterMode === 'sameSceneLoop' ? 'sameScene' :
+           characterMode === 'differentScenes' ? 'different' :
+           characterMode || 'different');
+           
+      console.log(`📸 Generating prompt template from scratch based on uploaded reference image. Character Mode: ${resolvedCharMode}`);
 
       let modeSpecificPromptRules = '';
-      if (charMode === 'sameScene') {
-        modeSpecificPromptRules = `
+      if (resolvedCharMode === 'sameScene' || resolvedCharMode === 'sameSceneLoop') {
+        modeSpecificPromptRules = isVideo ? `
+🔒 REFERENCE MODE: SAME SCENE LOOP (Everything identical, only motion & timing changes)
+The user has selected SAME SCENE LOOP mode for a video prompt. This means EVERYTHING from the reference image MUST stay 100% identical.
+
+CRITICAL INSTRUCTIONS FOR TEMPLATE GENERATION:
+1. DO NOT USE VARIABLES FOR CHARACTER, OUTFIT, BACKGROUND, STYLE, OR LIGHTING.
+   In the promptTemplate, you MUST describe the subject, outfit, background scenery, art style, and lighting in detail as FIXED, unchangeable text in the template itself.
+2. ONLY MOTION & ANIMATION ARE ALLOWED AS VARIABLES:
+   The ONLY variables in promptTemplate should be [animation/motion] or [motion_dynamics].
+3. HOW TO GENERATE SAMPLES:
+   All samples must feature the EXACT SAME character in the EXACT SAME outfit and scene, and vary ONLY the motion.`
+        : `
 🔒 REFERENCE MODE: SAME SCENE (Everything identical, only pose/expression/camera angle changes)
 The user has selected SAME SCENE mode. This means EVERYTHING from the reference image MUST stay 100% identical.
 
@@ -619,8 +853,19 @@ CRITICAL INSTRUCTIONS FOR TEMPLATE GENERATION:
    - Sample C: "...in a [pose/action: curious pose looking up at the sky with a warm smile]..."
    
    Under NO circumstances should any sample change the character description, the clothing description, the background setting, the style, the color palette, or any other fixed text. All samples must feature the EXACT SAME young woman in the EXACT SAME outfit in the EXACT SAME rapeseed field.`;
-      } else if (charMode === 'fixed') {
-        modeSpecificPromptRules = `
+      } else if (resolvedCharMode === 'fixed' || resolvedCharMode === 'fixedCharacterMotion') {
+        modeSpecificPromptRules = isVideo ? `
+🔒 REFERENCE MODE: FIXED CHARACTER + MOTION (Same character & outfit, camera moves around them)
+The user has selected FIXED CHARACTER + MOTION mode for a video prompt. This means the character identity, outfit, and background stay identical, only the camera moves.
+
+CRITICAL INSTRUCTIONS FOR TEMPLATE GENERATION:
+1. DO NOT USE VARIABLES FOR THE SUBJECT OR OUTFIT.
+   Describe the character and outfit as FIXED text.
+2. ONLY CAMERA MOVEMENT IS ALLOWED AS A VARIABLE:
+   The only variable should be [camera_movement] or [motion_effect].
+3. HOW TO GENERATE SAMPLES:
+   Keep character, clothes, and scene completely identical, and vary ONLY the camera motion.`
+        : `
 🔒 REFERENCE MODE: FIXED CHARACTER (Same character & outfit, different locations & backgrounds)
 The user has selected FIXED CHARACTER mode. This means the character identity and clothing stay identical, but the scene/background changes.
 
@@ -639,7 +884,18 @@ CRITICAL INSTRUCTIONS FOR TEMPLATE GENERATION:
    The subject and outfit are written as fixed text in the promptTemplate, so they will automatically be 100% identical and repeated word-for-word across all generated samples.
    You must replace the [pose/action], [background_setting], [color_palette], and [lighting] variables with completely different environments and poses for each sample (e.g. Sample A in a flower field, Sample B in a cozy library, Sample C in a snowy mountain) while keeping the subject and outfit exactly the same.`;
       } else {
-        modeSpecificPromptRules = `
+        modeSpecificPromptRules = isVideo ? `
+🔄 REFERENCE MODE: DIFFERENT SCENES (Same art style & character, completely different locations/actions)
+The user has selected DIFFERENT SCENES mode. This means the character identity and style stay identical, but they are in completely different environments and actions.
+
+CRITICAL INSTRUCTIONS FOR TEMPLATE GENERATION:
+1. LOCK CHARACTER & STYLE:
+   Describe character and style as FIXED text.
+2. LOCATION, ACTION & CAMERA ARE ALLOWED AS VARIABLES:
+   The variables should be [location/action] and [camera_movement].
+3. HOW TO GENERATE SAMPLES:
+   Keep character and style identical, vary location, action, and camera motion per sample.`
+        : `
 🔄 REFERENCE MODE: DIFFERENT CHARACTERS (Same art style/technique, different characters)
 The user has selected DIFFERENT CHARACTERS mode. This means the art style and visual aesthetic from the reference image stay identical, but the character changes.
 Therefore, when replacing the [BRACKETED] variables:
@@ -801,15 +1057,70 @@ DO NOT exceed 5 bracketed variables under any circumstances. Keep the majority o
         promptData.samples = promptData.samples.slice(0, 5);
       }
 
-      // ── Post-processing: strip labels & enforce --ar 1:1 ──
+      // ── Post-processing: strip labels & enforce custom aspect ratio ──
       const stripLabel = (s) => s.replace(/^(Variation\s*\d*[:.\-]\s*|Example\s*\d*[:.\-]\s*|Sample\s*[A-C\d]*[:.\-]\s*|Version\s*\d*[:.\-]\s*|\d+[:.)\-]\s*)/i, '').trim();
-      const ensureAR = (s) => {
+      const resolvedAR = aspectRatio ? aspectRatio.trim() : (promptType === 'video' ? '16:9' : '1:1');
+      const ensureCustomAR = (s) => {
         const cleaned = s.replace(/\s*--ar\s+\S+/g, '').trim();
-        return cleaned + ' --ar 1:1';
+        return cleaned + ' --ar ' + resolvedAR;
       };
 
-      promptData.mainPrompt = ensureAR(stripLabel(promptData.mainPrompt || ''));
-      promptData.samples = promptData.samples.map(s => ensureAR(stripLabel(s)));
+      const cleanVideoPrompt = (s) => {
+        if (!s) return '';
+        let cleaned = stripLabel(s).trim();
+        
+        // 1. Remove all square brackets [] to prevent metadata safety blockages, keeping text inside if there's any.
+        cleaned = cleaned.replace(/[\[\]]/g, '');
+
+        // 2. Ensure it starts with "Generate a video of" or "A cinematic video of"
+        const startsWithVideo = /^\s*(generate\s+a\s+video|a\s+cinematic\s+video)/i.test(cleaned);
+        if (!startsWithVideo) {
+          if (/^\s*scene\s*1/i.test(cleaned)) {
+            cleaned = 'Generate a video of: ' + cleaned;
+          } else {
+            cleaned = 'Generate a video of ' + cleaned;
+          }
+        }
+
+        // 3. Normalize scene timing structures to avoid mathematical hyphens (e.g. 0s-2.5s -> 0 to 2.5 seconds)
+        cleaned = cleaned.replace(/scene\s*(\d+)\s*\(\s*(\d+(\.\d+)?)\s*s?\s*-\s*(\d+(\.\d+)?)\s*s?\s*\)/gi, 'Scene $1 ($2 to $4 seconds)');
+        
+        // Normalize any leftover uppercase SCENE to Scene
+        cleaned = cleaned.replace(/\bSCENE\b/g, 'Scene');
+
+        return cleaned;
+      };
+
+      if (promptType === 'video') {
+        promptData.mainPrompt = ensureCustomAR(cleanVideoPrompt(promptData.mainPrompt || ''));
+        promptData.samples = promptData.samples.map(s => ensureCustomAR(cleanVideoPrompt(s || '')));
+        if (promptData.promptTemplate) {
+          // For template, we only normalize the scene timestamps and ensure video prefix and ar resolvedAR,
+          // but we do NOT strip variable brackets like [animation_1].
+          let temp = promptData.promptTemplate.trim();
+          const startsWithVideo = /^\s*(generate\s+a\s+video|a\s+cinematic\s+video)/i.test(temp);
+          if (!startsWithVideo) {
+            if (/^\s*scene\s*1/i.test(temp)) {
+              temp = 'Generate a video of: ' + temp;
+            } else {
+              temp = 'Generate a video of ' + temp;
+            }
+          }
+          temp = temp.replace(/scene\s*(\d+)\s*\(\s*(\d+(\.\d+)?)\s*s?\s*-\s*(\d+(\.\d+)?)\s*s?\s*\)/gi, 'Scene $1 ($2 to $4 seconds)');
+          temp = temp.replace(/\bSCENE\b/g, 'Scene');
+          promptData.promptTemplate = ensureCustomAR(temp);
+        }
+      } else if (promptType === 'text') {
+        promptData.mainPrompt = stripLabel(promptData.mainPrompt || '');
+        promptData.samples = promptData.samples.map(s => stripLabel(s || ''));
+      } else {
+        // default to image prompt rules
+        promptData.mainPrompt = ensureCustomAR(stripLabel(promptData.mainPrompt || ''));
+        promptData.samples = promptData.samples.map(s => ensureCustomAR(stripLabel(s || '')));
+        if (promptData.promptTemplate) {
+          promptData.promptTemplate = ensureCustomAR(promptData.promptTemplate);
+        }
+      }
 
       // Ensure keywords and instructions
       if (!Array.isArray(promptData.keywords) || promptData.keywords.length === 0) {
@@ -846,5 +1157,6 @@ DO NOT exceed 5 bracketed variables under any circumstances. Keep the majority o
   }
 });
 
+router.buildSystemInstruction = buildSystemInstruction;
 module.exports = router;
 

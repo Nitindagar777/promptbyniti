@@ -4,12 +4,13 @@ import { useApp } from '../context/AppContext';
 import { generatePrompt } from '../data/promptEngine';
 import { randomDescriptions } from '../data/promptData';
 import PromptOutput from '../components/PromptOutput';
-import { ArrowRight, Sparkles, Zap, Image, Layers, Heart, Wand2, Rocket, Star, Palette, MessageSquare, ShieldCheck, Zap as ZapIcon, ShoppingBag, Coins, DollarSign, Eye, Camera, Lock, Check, Repeat } from 'lucide-react';
+import { ArrowRight, Sparkles, Zap, Image, Layers, Heart, Wand2, Rocket, Star, Palette, MessageSquare, ShieldCheck, Zap as ZapIcon, ShoppingBag, Coins, DollarSign, Eye, Camera, Lock, Check, Repeat, Video, Info, Copy, ChevronDown } from 'lucide-react';
 import PreviewModal from '../components/PreviewModal';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import PromptThumbnail from '../components/PromptThumbnail';
 import SEOHead from '../components/SEOHead';
+import QuantumReactor from '../components/QuantumReactor';
 import './HomePage.css';
 
 const API_URL = '/api';
@@ -37,7 +38,21 @@ export default function HomePage() {
   const inputRef = useRef(null);
   const navigate = useNavigate();
   const [previewPrompt, setPreviewPrompt] = useState(null);
-  const [activeMode, setActiveMode] = useState('sameScene');
+
+
+
+  // Reference Modes Showcase Section States
+  const [activeImageMode, setActiveImageMode] = useState('sameScene'); // 'sameScene' | 'different' | 'fixed'
+  const [activeVideoMode, setActiveVideoMode] = useState('sameSceneLoop'); // 'sameSceneLoop' | 'differentScenes' | 'fixedCharacterMotion'
+
+  // Video Reference Refs for play/pause control
+  const videoRefs = {
+    sameSceneLoop: useRef(null),
+    differentScenes: useRef(null),
+    fixedCharacterMotion: useRef(null)
+  };
+
+
 
   // Testimonials & Reviews State
   const DEFAULT_TESTIMONIALS = [
@@ -202,18 +217,50 @@ export default function HomePage() {
     };
   }, [state.marketplace]);
 
-  // Auto-switch modes every 2 seconds smoothly
+
+  // Auto-switch Image Reference Modes every 3 seconds smoothly
   useEffect(() => {
     const modes = ['sameScene', 'different', 'fixed'];
     const timer = setTimeout(() => {
-      setActiveMode(current => {
+      setActiveImageMode(current => {
         const currentIndex = modes.indexOf(current);
         const nextIndex = (currentIndex + 1) % modes.length;
         return modes[nextIndex];
       });
-    }, 2000);
+    }, 3000);
     return () => clearTimeout(timer);
-  }, [activeMode]);
+  }, [activeImageMode]);
+
+  // Handler to auto-switch Video Reference Modes when the active video ends
+  const handleVideoEnded = useCallback(() => {
+    const videoModes = ['sameSceneLoop', 'differentScenes', 'fixedCharacterMotion'];
+    setActiveVideoMode(current => {
+      const currentIndex = videoModes.indexOf(current);
+      const nextIndex = (currentIndex + 1) % videoModes.length;
+      return videoModes[nextIndex];
+    });
+  }, []);
+
+  // Effect to control playing/pausing of reference videos based on active video mode
+  useEffect(() => {
+    Object.entries(videoRefs).forEach(([key, ref]) => {
+      const videoEl = ref.current;
+      if (videoEl) {
+        if (key === activeVideoMode) {
+          videoEl.currentTime = 0;
+          videoEl.play().catch(err => {
+            // Silence AbortError due to quick tab switching
+            if (err.name !== 'AbortError') {
+              console.log(`Video play interrupted for ${key}:`, err);
+            }
+          });
+        } else {
+          videoEl.pause();
+        }
+      }
+    });
+  }, [activeVideoMode]);
+
 
   const fetchPrompts = async () => {
     try {
@@ -254,9 +301,9 @@ export default function HomePage() {
   return (
     <div className="p-home" id="home-page">
       <SEOHead
-        title="AI Prompt Generator & Marketplace — Free Prompt Ideas, Templates & Examples"
-        description="Prompt by Niti is the #1 AI prompt generator, marketplace, and prompt engineering platform. Generate, buy, sell, and discover the best prompts for Midjourney, ChatGPT, DALL·E 3, Stable Diffusion, Flux, Sora, and more. Free prompt ideas, prompt templates, and prompt examples. Best PromptBase alternative."
-        keywords="prompt, prompts, AI prompt, prompt generator, prompt ideas, prompt marketplace, prompt engineering, prompt templates, prompt examples, best prompts, free prompts, buy prompts, sell prompts, PromptBase alternative, promptbase, promptbyniti, Midjourney prompts, ChatGPT prompts, DALL-E prompts, Stable Diffusion prompts, Flux prompts, AI art prompts, AI image prompts, prompt store, prompt library, prompt builder, prompt creator, AI tools"
+        title="AI Prompt Generator & Consistent Reference Prompt Marketplace — Prompt by Niti"
+        description="Prompt by Niti is the #1 AI prompt generator and marketplace for Midjourney, Flux, Sora, Luma, and Llama. Craft consistent character prompts for text-to-image generation and cinematic image-to-video generation. Buy, sell, and discover prompt templates, blueprints, and examples."
+        keywords="text to image generation prompts, image to video generation prompts, consistent character prompts, Midjourney cref prompts, Sora video prompts, Flux consistency prompts, AI art prompt marketplace, prompt engineering templates, buy sell prompts, PromptBase alternative, promptbase, promptbyniti"
       />
       {/* 01. HERO */}
       <section className="p-hero">
@@ -270,7 +317,7 @@ export default function HomePage() {
               </h1>
               
               <p className="p-hero__pitch">
-                Traditional prompt makers only guess. Our generator uses state-of-the-art <strong>Reference Mode</strong> & <strong>Character Consistency</strong> locking to replicate poses, maintain style coherence, and freeze character details across multiple scenes with absolute precision.
+                Traditional prompt makers only guess. Our generator supports both <strong>Image</strong> & <strong>Video</strong> outputs, using state-of-the-art <strong>Reference Mode</strong> & <strong>Character Consistency</strong> locking to replicate poses, maintain style coherence, and freeze details across multiple scenes and clips with absolute precision.
               </p>
               
               <p className="p-hero__subtitle p-hero__subtitle--accent">
@@ -290,140 +337,445 @@ export default function HomePage() {
               <div className="p-hero__features">
                 <div className="p-hero__feature-item">
                   <Sparkles size={16} className="text-pink" />
-                  <span>Pixel-Perfect Consistency</span>
+                  <span>Image & Video Consistency</span>
                 </div>
                 <div className="p-hero__feature-item">
                   <ZapIcon size={16} className="text-orange" />
-                  <span>3 Reference Lock Modes</span>
+                  <span>3 Advanced Reference Modes</span>
                 </div>
                 <div className="p-hero__feature-item">
                   <Layers size={16} className="text-cyan" />
-                  <span>12+ AI Models Supported</span>
+                  <span>Midjourney, Sora, Flux & More</span>
                 </div>
               </div>
             </div>
             
-            {/* Right Hero Showcase (Interactive Showcase Card) */}
+            {/* Right Hero Showcase (Interactive Quantum Prompt Reactor) */}
             <div className="p-hero__showcase-col reveal" style={{ animationDelay: '0.2s' }}>
-              <div className="hero-showcase__card">
-                <div className="hero-showcase__header">
-                  <div className="hero-showcase__badge">Interactive Reference Mode Guide</div>
-                  <h3 className="hero-showcase__headline">See how our generator works</h3>
-                </div>
-                
-                {/* Toggles */}
-                <div className="hero-showcase__toggles">
-                  <button 
-                    className={`hero-showcase__toggle-btn ${activeMode === 'sameScene' ? 'active active--sameScene' : ''}`}
-                    onClick={() => setActiveMode('sameScene')}
-                  >
-                    <Camera size={16} />
-                    <span>Same Scene</span>
-                  </button>
-                  <button 
-                    className={`hero-showcase__toggle-btn ${activeMode === 'different' ? 'active active--different' : ''}`}
-                    onClick={() => setActiveMode('different')}
-                  >
-                    <Repeat size={16} />
-                    <span>Diff Subjects</span>
-                  </button>
-                  <button 
-                    className={`hero-showcase__toggle-btn ${activeMode === 'fixed' ? 'active active--fixed' : ''}`}
-                    onClick={() => setActiveMode('fixed')}
-                  >
-                    <Lock size={16} />
-                    <span>Fixed Character</span>
-                  </button>
-                </div>
-                
-                {/* Showcase Image & Template Preview */}
-                <div className="hero-showcase__preview-area">
-                  <div className="hero-showcase__image-wrap">
-                    <img 
-                      src="/same_scene_ref.png" 
-                      alt="Same Scene Reference Guide" 
-                      className={`hero-showcase__img ${activeMode === 'sameScene' ? 'active' : ''}`}
-                    />
-                    <img 
-                      src="/diff_characters_ref.png" 
-                      alt="Different Characters Reference Guide" 
-                      className={`hero-showcase__img ${activeMode === 'different' ? 'active' : ''}`}
-                    />
-                    <img 
-                      src="/fixed_character_ref.png" 
-                      alt="Fixed Character Reference Guide" 
-                      className={`hero-showcase__img ${activeMode === 'fixed' ? 'active' : ''}`}
-                    />
+              <QuantumReactor />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* IMAGE REFERENCE MODES SECTION */}
+      <section className="p-ref-modes section-spacing" id="image-ref-modes">
+        <div className="container">
+          <div className="p-ref-modes__header reveal">
+            <h2 className="h-display text-center">Consistent Character & Style <span className="text-cyan">Image Reference Modes</span></h2>
+            <p className="text-center p-ref-modes__subtitle">
+              Learn how our advanced image prompt templates maintain consistency across characters, styles, and settings.
+            </p>
+          </div>
+
+          <div className="p-ref-modes__showcase-grid reveal">
+            {/* Left Column: Media Preview */}
+            <div className="p-ref-modes__left-pane">
+              <div className="p-ref-modes__sub-toggles">
+                <button 
+                  className={`p-ref-modes__sub-btn ${activeImageMode === 'sameScene' ? 'active active--sameScene' : ''}`}
+                  onClick={() => setActiveImageMode('sameScene')}
+                >
+                  <Camera size={16} />
+                  <span>Same Scene</span>
+                </button>
+                <button 
+                  className={`p-ref-modes__sub-btn ${activeImageMode === 'different' ? 'active active--different' : ''}`}
+                  onClick={() => setActiveImageMode('different')}
+                >
+                  <Repeat size={16} />
+                  <span>Diff Subjects</span>
+                </button>
+                <button 
+                  className={`p-ref-modes__sub-btn ${activeImageMode === 'fixed' ? 'active active--fixed' : ''}`}
+                  onClick={() => setActiveImageMode('fixed')}
+                >
+                  <Lock size={16} />
+                  <span>Fixed Character</span>
+                </button>
+              </div>
+
+              <div className="p-ref-modes__media-wrap">
+                <img 
+                  src="/same_scene_ref.png" 
+                  alt="Same Scene Image Reference Guide" 
+                  className={`p-ref-modes__showcase-media ${activeImageMode === 'sameScene' ? 'active' : ''}`}
+                />
+                <img 
+                  src="/diff_characters_ref.png" 
+                  alt="Different Characters Image Reference Guide" 
+                  className={`p-ref-modes__showcase-media ${activeImageMode === 'different' ? 'active' : ''}`}
+                />
+                <img 
+                  src="/fixed_character_ref.png" 
+                  alt="Fixed Character Image Reference Guide" 
+                  className={`p-ref-modes__showcase-media ${activeImageMode === 'fixed' ? 'active' : ''}`}
+                />
+              </div>
+            </div>
+
+            {/* Right Column: Data Card */}
+            <div className="p-ref-modes__right-pane">
+              <div className="p-ref-modes__info-card glass-effect">
+                {/* Same Scene Mode Content */}
+                <div className={`p-ref-modes__info-card-content ${activeImageMode === 'sameScene' ? 'active' : ''}`}>
+                  <div className="p-ref-modes__info-header">
+                    <span className="p-ref-modes__badge p-ref-modes__badge--sameScene">
+                      Same Scene / Photoshoot
+                    </span>
+                    <h3>Maintain Identical Background & Composition</h3>
                   </div>
-                  
-                  {/* Template Overlay */}
-                  <div className="hero-showcase__template-bar">
-                    <span className="hero-showcase__template-label">Prompt Template:</span>
-                    <div className="hero-showcase__template-wrapper">
-                      <code className={`hero-showcase__template-code ${activeMode === 'sameScene' ? 'active' : ''}`}>
-                        A [camera_angle] photoshoot of [subject] posing in [setting] --cref [url] --cw 100
-                      </code>
-                      <code className={`hero-showcase__template-code ${activeMode === 'different' ? 'active' : ''}`}>
-                        A stylized [medium] illustration of a [animal_subject], [color] palette, geometric vector style
-                      </code>
-                      <code className={`hero-showcase__template-code ${activeMode === 'fixed' ? 'active' : ''}`}>
-                        A close-up shot of [character] performing [action] at [new_background] --cref [url] --cw 100
-                      </code>
+
+                  <div className="p-ref-modes__template-box">
+                    <span className="p-ref-modes__template-label">Prompt Template</span>
+                    <pre className="p-ref-modes__template-code">
+                      {'A [camera_angle] photoshoot of [subject] posing in [setting] --cref [url] --cw 100 ......'}
+                    </pre>
+                  </div>
+
+                  <div className="p-ref-modes__comparison-grid">
+                    <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--same">
+                      <h4>🟢 What Stays SAME</h4>
+                      <ul>
+                        <li><strong>Subject Identity:</strong> Face shape, eyes, hair color, and basic features</li>
+                        <li><strong>Outfit Details:</strong> Dress style, clothing texture, and accessory colors</li>
+                        <li><strong>Lighting & Setting:</strong> The ambient illumination and background scenery</li>
+                      </ul>
+                    </div>
+
+                    <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--changes">
+                      <h4>⚡ What CHANGES</h4>
+                      <ul>
+                        <li><strong>Pose & Angle:</strong> Standing front-facing vs looking back over shoulder</li>
+                        <li><strong>Framing:</strong> Close-up zoom vs full-body frame length</li>
+                        <li><strong>Expression:</strong> Smiles, natural gaze changes, head tilt</li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className="p-ref-modes__tip-banner">
+                    <div className="p-ref-modes__tip-icon">
+                      <Info size={18} />
+                    </div>
+                    <div className="p-ref-modes__tip-text">
+                      <strong>Text-to-Image Consistency:</strong> You can upload any reference image (such as a character profile or style reference) and use these image reference modes to generate consistent characters in new poses, settings, or expressions!
                     </div>
                   </div>
                 </div>
-                
-                {/* Bullet differences */}
-                <div className="hero-showcase__rules">
-                  <div className="hero-showcase__rules-col hero-showcase__rules-col--same">
-                    <h4>🟢 What Stays SAME</h4>
-                    <div className="hero-showcase__rules-list-wrapper">
-                      <ul className={`hero-showcase__rules-list ${activeMode === 'sameScene' ? 'active' : ''}`}>
-                        <li><strong>Subject details:</strong> Face, hair, age, and identity</li>
-                        <li><strong>Outfit elements:</strong> Clothing style, accessories, and colors</li>
-                        <li><strong>Lighting:</strong> Soft overcast natural daylight</li>
-                      </ul>
-                      <ul className={`hero-showcase__rules-list ${activeMode === 'different' ? 'active' : ''}`}>
+
+                {/* Different Subjects Mode Content */}
+                <div className={`p-ref-modes__info-card-content ${activeImageMode === 'different' ? 'active' : ''}`}>
+                  <div className="p-ref-modes__info-header">
+                    <span className="p-ref-modes__badge p-ref-modes__badge--different">
+                      Different Subjects / Medium Match
+                    </span>
+                    <h3>Maintain Artistic Style & Medium Coherence</h3>
+                  </div>
+
+                  <div className="p-ref-modes__template-box">
+                    <span className="p-ref-modes__template-label">Prompt Template</span>
+                    <pre className="p-ref-modes__template-code">
+                      {'A stylized [medium] illustration of a [animal_subject], [color] palette, geometric vector style ......'}
+                    </pre>
+                  </div>
+
+                  <div className="p-ref-modes__comparison-grid">
+                    <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--same">
+                      <h4>🟢 What Stays SAME</h4>
+                      <ul>
                         <li><strong>Artistic Medium:</strong> Stained-glass vector illustration</li>
-                        <li><strong>Composition:</strong> Single-subject centered layout</li>
-                        <li><strong>Style:</strong> Stylized line art & geometric contours</li>
-                      </ul>
-                      <ul className={`hero-showcase__rules-list ${activeMode === 'fixed' ? 'active' : ''}`}>
-                        <li><strong>Character Identity:</strong> Face structure, hair, and body type</li>
-                        <li><strong>Exact Outfit:</strong> Teal sporty windbreaker, sunglasses, helmet</li>
-                        <li><strong>Accessories:</strong> Skateboard, dark trousers</li>
+                        <li><strong>Composition:</strong> Single-subject centered profile layout</li>
+                        <li><strong>Rendering Style:</strong> Geometric contours and stylized line art</li>
                       </ul>
                     </div>
-                  </div>
-                  
-                  <div className="hero-showcase__rules-col hero-showcase__rules-col--changes">
-                    <h4>⚡ What CHANGES</h4>
-                    <div className="hero-showcase__rules-list-wrapper">
-                      <ul className={`hero-showcase__rules-list ${activeMode === 'sameScene' ? 'active' : ''}`}>
-                        <li><strong>Pose & Gesture:</strong> Standing front vs looking back over shoulder</li>
-                        <li><strong>Camera Framing:</strong> Medium close-up vs full-body perspective</li>
-                        <li><strong>Subject Expression:</strong> Face expression adjusts naturally</li>
-                      </ul>
-                      <ul className={`hero-showcase__rules-list ${activeMode === 'different' ? 'active' : ''}`}>
+
+                    <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--changes">
+                      <h4>⚡ What CHANGES</h4>
+                      <ul>
                         <li><strong>Main Subject:</strong> Swaps the animal (Leopard ➔ Fox ➔ Owl)</li>
-                        <li><strong>Colors:</strong> Palette matches character's natural tones</li>
-                        <li><strong>Details:</strong> Fine shading adapts to the new subject shape</li>
-                      </ul>
-                      <ul className={`hero-showcase__rules-list ${activeMode === 'fixed' ? 'active' : ''}`}>
-                        <li><strong>Setting:</strong> Sunny beach ➔ urban concrete stairs ➔ streets</li>
-                        <li><strong>Action/Pose:</strong> Skateboard cruising ➔ high-air jumping ➔ standing</li>
-                        <li><strong>Lighting/Vibe:</strong> Bright sunlight ➔ overcast daylight</li>
+                        <li><strong>Colors:</strong> Hue matches the natural coloration of the new subject</li>
+                        <li><strong>Details:</strong> Contours adapt to the physical shape of the animal</li>
                       </ul>
                     </div>
                   </div>
+
+                  <div className="p-ref-modes__tip-banner">
+                    <div className="p-ref-modes__tip-icon">
+                      <Info size={18} />
+                    </div>
+                    <div className="p-ref-modes__tip-text">
+                      <strong>Text-to-Image Consistency:</strong> You can upload any reference image (such as a character profile or style reference) and use these image reference modes to generate consistent characters in new poses, settings, or expressions!
+                    </div>
+                  </div>
                 </div>
-                
-                <div className="hero-showcase__footer">
-                  <Link to="/generate" className="hero-showcase__cta-link">
-                    <span>Try Reference Mode in the Generator</span>
-                    <ArrowRight size={14} />
-                  </Link>
+
+                {/* Fixed Character Mode Content */}
+                <div className={`p-ref-modes__info-card-content ${activeImageMode === 'fixed' ? 'active' : ''}`}>
+                  <div className="p-ref-modes__info-header">
+                    <span className="p-ref-modes__badge p-ref-modes__badge--fixed">
+                      Fixed Character / Consistency
+                    </span>
+                    <h3>Lock Character Details & Move Settings</h3>
+                  </div>
+
+                  <div className="p-ref-modes__template-box">
+                    <span className="p-ref-modes__template-label">Prompt Template</span>
+                    <pre className="p-ref-modes__template-code">
+                      {'A close-up shot of [character] performing [action] at [new_background] --cref [url] --cw 100 ......'}
+                    </pre>
+                  </div>
+
+                  <div className="p-ref-modes__comparison-grid">
+                    <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--same">
+                      <h4>🟢 What Stays SAME</h4>
+                      <ul>
+                        <li><strong>Character Identity:</strong> Hair cut/color, facial features, body structure</li>
+                        <li><strong>Exact Outfit:</strong> Teal sporty windbreaker, sunglasses, helmet</li>
+                        <li><strong>Key Accessories:</strong> Black skateboard, trousers</li>
+                      </ul>
+                    </div>
+
+                    <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--changes">
+                      <h4>⚡ What CHANGES</h4>
+                      <ul>
+                        <li><strong>Scenery:</strong> Sunny beach ➔ concrete city stairs ➔ urban streets</li>
+                        <li><strong>Action:</strong> Cruising ➔ jumping high in air ➔ standing post-ride</li>
+                        <li><strong>Lighting Vibe:</strong> Direct warm sunlight ➔ overcast soft day glow</li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className="p-ref-modes__tip-banner">
+                    <div className="p-ref-modes__tip-icon">
+                      <Info size={18} />
+                    </div>
+                    <div className="p-ref-modes__tip-text">
+                      <strong>Text-to-Image Consistency:</strong> You can upload any reference image (such as a character profile or style reference) and use these image reference modes to generate consistent characters in new poses, settings, or expressions!
+                    </div>
+                  </div>
                 </div>
+              </div>
+              
+              <div className="p-ref-modes__footer-actions">
+                <Link to="/generate" className="btn btn-primary btn-xl">
+                  Try image reference mode <ArrowRight size={18} style={{ marginLeft: '4px' }} />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* VIDEO REFERENCE MODES SECTION */}
+      <section className="p-ref-modes section-spacing" id="video-ref-modes">
+        <div className="container">
+          <div className="p-ref-modes__header reveal">
+            <h2 className="h-display text-center">Consistent Motion & Actor <span className="text-purple">Video Reference Modes</span></h2>
+            <p className="text-center p-ref-modes__subtitle">
+              Learn how our advanced video prompt templates animate characters with stable details across frames.
+            </p>
+          </div>
+
+          <div className="p-ref-modes__showcase-grid p-ref-modes__showcase-grid--reversed reveal">
+            {/* Left Column: Data Card */}
+            <div className="p-ref-modes__right-pane">
+              <div className="p-ref-modes__info-card glass-effect">
+                {/* Same Scene Video Content */}
+                <div className={`p-ref-modes__info-card-content ${activeVideoMode === 'sameSceneLoop' ? 'active' : ''}`}>
+                  <div className="p-ref-modes__info-header">
+                    <span className="p-ref-modes__badge p-ref-modes__badge--sameSceneLoop">
+                      🎥 Same Scene Video
+                    </span>
+                    <h3>Animate Details Within A Stationary Frame</h3>
+                  </div>
+
+                  <div className="p-ref-modes__template-box">
+                    <span className="p-ref-modes__template-label">Video Prompt Template</span>
+                    <pre className="p-ref-modes__template-code">
+                      {'Generate a video of: Scene 1 (0 to 2.5 seconds): [subject] posing in [setting], slow zoom --ar 16:9 ......'}
+                    </pre>
+                  </div>
+
+                  <div className="p-ref-modes__comparison-grid">
+                    <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--same">
+                      <h4>🟢 What Stays SAME</h4>
+                      <ul>
+                        <li><strong>Character Details:</strong> Face, hair, age, and identity details remain static</li>
+                        <li><strong>Background & Frame:</strong> The background set, composition, and props do not shift</li>
+                        <li><strong>Art Style:</strong> Cinematic resolution, color depth, lighting levels</li>
+                      </ul>
+                    </div>
+
+                    <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--changes">
+                      <h4>⚡ What CHANGES</h4>
+                      <ul>
+                        <li><strong>Micro-movement:</strong> Gentle breathing, hair blowing in breeze, blinking</li>
+                        <li><strong>Atmosphere:</strong> Tree leaves swaying, wind blowing, minor shadows moving</li>
+                        <li><strong>Timing:</strong> Continuous fluid loop across the timeline</li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className="p-ref-modes__tip-banner">
+                    <div className="p-ref-modes__tip-icon">
+                      <Info size={18} />
+                    </div>
+                    <div className="p-ref-modes__tip-text">
+                      <strong>Image-to-Video Generation:</strong> You can upload any static reference image (such as a character sheet or portrait) and select these video reference modes to bring that exact character to life with smooth, consistent motion!
+                    </div>
+                  </div>
+                </div>
+
+                {/* Different Scenes Content */}
+                <div className={`p-ref-modes__info-card-content ${activeVideoMode === 'differentScenes' ? 'active' : ''}`}>
+                  <div className="p-ref-modes__info-header">
+                    <span className="p-ref-modes__badge p-ref-modes__badge--differentScenes">
+                      🎬 Different Scenes (Continuity)
+                    </span>
+                    <h3>Follow a Consistent Character Across Locations</h3>
+                  </div>
+
+                  <div className="p-ref-modes__template-box">
+                    <span className="p-ref-modes__template-label">Video Prompt Template</span>
+                    <pre className="p-ref-modes__template-code">
+                      {'Generate a video of: Scene 1 (0 to 2.5 seconds): [character] walking in [location_1] --ar 16:9. Scene 2 (2.5 to 5.0 seconds): [character] sitting in [location_2] --ar 16:9 ......'}
+                    </pre>
+                  </div>
+
+                  <div className="p-ref-modes__comparison-grid">
+                    <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--same">
+                      <h4>🟢 What Stays SAME</h4>
+                      <ul>
+                        <li><strong>Character Identity:</strong> Hair style, facial contours, eyes, skin tone</li>
+                        <li><strong>Outfit Consistency:</strong> Specific clothes, colours, and accessories</li>
+                        <li><strong>Visual Tone:</strong> Consistent camera lenses, color grade, and grading</li>
+                      </ul>
+                    </div>
+
+                    <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--changes">
+                      <h4>⚡ What CHANGES</h4>
+                      <ul>
+                        <li><strong>Environment:</strong> Swaps backgrounds (e.g. library ➔ cafeteria ➔ outdoors)</li>
+                        <li><strong>Action/Activity:</strong> Walking ➔ sitting down ➔ reading ➔ talking</li>
+                        <li><strong>Camera Angle:</strong> Transitioning between close-ups and medium pans</li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className="p-ref-modes__tip-banner">
+                    <div className="p-ref-modes__tip-icon">
+                      <Info size={18} />
+                    </div>
+                    <div className="p-ref-modes__tip-text">
+                      <strong>Image-to-Video Generation:</strong> You can upload any static reference image (such as a character sheet or portrait) and select these video reference modes to bring that exact character to life with smooth, consistent motion!
+                    </div>
+                  </div>
+                </div>
+
+                {/* Fixed Character + Motion Content */}
+                <div className={`p-ref-modes__info-card-content ${activeVideoMode === 'fixedCharacterMotion' ? 'active' : ''}`}>
+                  <div className="p-ref-modes__info-header">
+                    <span className="p-ref-modes__badge p-ref-modes__badge--fixedCharacterMotion">
+                      📽️ Fixed Character + Motion
+                    </span>
+                    <h3>Maintain Character Poses & Rotate Camera</h3>
+                  </div>
+
+                  <div className="p-ref-modes__template-box">
+                    <span className="p-ref-modes__template-label">Video Prompt Template</span>
+                    <pre className="p-ref-modes__template-code">
+                      {'Generate a video of: Scene 1 (0 to 2.5 seconds): orbital camera rotation around [character] performing [motion] --ar 16:9 ......'}
+                    </pre>
+                  </div>
+
+                  <div className="p-ref-modes__comparison-grid">
+                    <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--same">
+                      <h4>🟢 What Stays SAME</h4>
+                      <ul>
+                        <li><strong>Character Identity:</strong> Face features, build, and key traits</li>
+                        <li><strong>Outfit:</strong> The specific teal jacket, sunglasses, and helmet</li>
+                        <li><strong>Relative Stance:</strong> The subject remains center-frame as camera moves</li>
+                      </ul>
+                    </div>
+
+                    <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--changes">
+                      <h4>⚡ What CHANGES</h4>
+                      <ul>
+                        <li><strong>Camera Angle:</strong> Orbital rotating camera pan (360 orbit) around subject</li>
+                        <li><strong>Dynamic Lighting:</strong> Reflections and shadows shift along with camera rotation</li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className="p-ref-modes__tip-banner">
+                    <div className="p-ref-modes__tip-icon">
+                      <Info size={18} />
+                    </div>
+                    <div className="p-ref-modes__tip-text">
+                      <strong>Image-to-Video Generation:</strong> You can upload any static reference image (such as a character sheet or portrait) and select these video reference modes to bring that exact character to life with smooth, consistent motion!
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="p-ref-modes__footer-actions">
+                <Link to="/generate" className="btn btn-sky btn-xl">
+                  Try video reference mode <ArrowRight size={18} style={{ marginLeft: '4px' }} />
+                </Link>
+              </div>
+            </div>
+
+            {/* Right Column: Media Preview */}
+            <div className="p-ref-modes__left-pane">
+              <div className="p-ref-modes__sub-toggles">
+                <button 
+                  className={`p-ref-modes__sub-btn ${activeVideoMode === 'sameSceneLoop' ? 'active active--sameScene' : ''}`}
+                  onClick={() => setActiveVideoMode('sameSceneLoop')}
+                >
+                  <Camera size={16} />
+                  <span>Same Scene Video</span>
+                </button>
+                <button 
+                  className={`p-ref-modes__sub-btn ${activeVideoMode === 'differentScenes' ? 'active active--different' : ''}`}
+                  onClick={() => setActiveVideoMode('differentScenes')}
+                >
+                  <Repeat size={16} />
+                  <span>Different Scenes</span>
+                </button>
+                <button 
+                  className={`p-ref-modes__sub-btn ${activeVideoMode === 'fixedCharacterMotion' ? 'active active--fixed' : ''}`}
+                  onClick={() => setActiveVideoMode('fixedCharacterMotion')}
+                >
+                  <Lock size={16} />
+                  <span>Fixed Character + Motion</span>
+                </button>
+              </div>
+
+              <div className="p-ref-modes__media-wrap p-ref-modes__media-wrap--video">
+                <video 
+                  ref={videoRefs.sameSceneLoop}
+                  src="/Same_Scene_Video_ref.mp4" 
+                  className={`p-ref-modes__showcase-media ${activeVideoMode === 'sameSceneLoop' ? 'active' : ''}`}
+                  muted 
+                  playsInline
+                  onEnded={handleVideoEnded}
+                />
+                <video 
+                  ref={videoRefs.differentScenes}
+                  src="/Different_Character_Video_ref.mp4" 
+                  className={`p-ref-modes__showcase-media ${activeVideoMode === 'differentScenes' ? 'active' : ''}`}
+                  muted 
+                  playsInline
+                  onEnded={handleVideoEnded}
+                />
+                <video 
+                  ref={videoRefs.fixedCharacterMotion}
+                  src="/Fixed_Character_Motion_Video_ref.mp4" 
+                  className={`p-ref-modes__showcase-media ${activeVideoMode === 'fixedCharacterMotion' ? 'active' : ''}`}
+                  muted 
+                  playsInline
+                  onEnded={handleVideoEnded}
+                />
               </div>
             </div>
           </div>
@@ -741,6 +1093,99 @@ export default function HomePage() {
             <p style={{ marginTop: '16px' }}>
               Start generating <strong>professional AI prompts</strong> today — for free. No credit card required. Join thousands of creators who trust <strong>Prompt by Niti</strong> as their go-to <strong>prompt builder</strong> and <strong>prompt creator</strong> platform.
             </p>
+          </div>
+        </div>
+      </section>
+
+      {/* 05.5 RICH SEO HUB & FAQ SECTION */}
+      <section className="p-seo-hub section-spacing" id="seo-hub">
+        <div className="container">
+          <div className="p-seo-hub__header reveal">
+            <h2 className="h-display text-center">Ultimate AI Prompt Guide: <span className="text-cyan">Text-to-Image</span> & <span className="text-orange">Image-to-Video</span></h2>
+            <p className="text-center p-seo-hub__subtitle">
+              Learn how to master character consistency, style referencing, and multi-scene narrative prompt engineering.
+            </p>
+          </div>
+
+          <div className="p-seo-hub__articles-grid reveal">
+            <article className="p-seo-article glass-effect">
+              <div className="p-seo-article__icon text-cyan">
+                <Image size={28} />
+              </div>
+              <h3>Text-to-Image Generation & Consistent Characters</h3>
+              <p>
+                Creating consistent characters in text-to-image generators like Midjourney (v6), Stable Diffusion, and Flux has historically been a challenge. By utilizing specialized prompt formats and style/character reference anchors (like Midjourney's <code>--cref</code> and <code>--sref</code> parameters), creators can lock facial features, clothing, and environment.
+              </p>
+              <p>
+                Our AI Prompt Generator automates this by structure-formatting references, allowing you to generate seamless photoshoots, different camera angles, and alternate clothing configurations without losing character identity.
+              </p>
+              <ul className="p-seo-article__bullets">
+                <li><strong>Cref (Character Reference):</strong> Focuses on face, hair, body shape, and attire.</li>
+                <li><strong>Sref (Style Reference):</strong> Focuses on color scheme, lighting, texture, and artistic medium.</li>
+                <li><strong>Weighting (Cw):</strong> Dynamically control reference strength from 0 (face only) to 100 (full costume/pose lock).</li>
+              </ul>
+            </article>
+
+            <article className="p-seo-article glass-effect">
+              <div className="p-seo-article__icon text-orange">
+                <Video size={28} />
+              </div>
+              <h3>Image-to-Video Generation Prompts & Motion Anchors</h3>
+              <p>
+                Converting a static character sheet or image into a fluid movie clip requires motion anchor prompting. AI video models such as Sora, Kling, Luma Dream Machine, and Runway Gen-3 utilize reference frames to guide video diffusion.
+              </p>
+              <p>
+                Writing an effective image-to-video consistency prompt requires defining the camera movement (e.g., pan, dolly zoom, orbit) along with the character's secondary actions (e.g., hair blowing in wind, walking under streetlights). Our engine creates templates specifically tailored to match these motion demands.
+              </p>
+              <ul className="p-seo-article__bullets">
+                <li><strong>Same Scene Loops:</strong> Seamlessly transition static images into cinematic 4K video clips.</li>
+                <li><strong>Subject-to-Subject Action:</strong> Maintain character features while performing complex tasks or motions.</li>
+                <li><strong>Fixed Character Motion:</strong> Lock the camera's focus on a subject while changing perspective or speed.</li>
+              </ul>
+            </article>
+          </div>
+
+          {/* FAQ ACCORDION */}
+          <div className="p-seo-faq reveal">
+            <h3 className="text-center p-seo-faq__title">Frequently Asked Questions</h3>
+            
+            <div className="p-seo-faq__list">
+              <details className="p-seo-faq__item glass-effect">
+                <summary>How does text-to-image character consistency work?</summary>
+                <div className="p-seo-faq__content">
+                  <p>
+                    Text-to-image consistency relies on providing the model with a reference image URL and specialized parameters (such as <code>--cref URL</code> in Midjourney or LoRA nodes in Stable Diffusion). The generator parses the character features and injects them alongside the new scene prompt, allowing the character to appear in multiple settings and poses.
+                  </p>
+                </div>
+              </details>
+
+              <details className="p-seo-faq__item glass-effect">
+                <summary>How do I write prompts for image-to-video generation?</summary>
+                <div className="p-seo-faq__content">
+                  <p>
+                    When doing image-to-video (I2V) prompting, you upload a source image and write a prompt describing the action rather than the details. Since the video model gets the details from the image, your text should focus on camera instructions (e.g., "slow tracking shot, camera dollying left") and motion details ("dust motes drifting in sunbeams, hair blowing softly in wind").
+                  </p>
+                </div>
+              </details>
+
+              <details className="p-seo-faq__item glass-effect">
+                <summary>Can I use these prompts on Midjourney, Sora, Luma, and Runway?</summary>
+                <div className="p-seo-faq__content">
+                  <p>
+                    Yes! Our generated prompts are built using standard syntax and engineering patterns designed to be copy-pasted directly into popular AI systems. Midjourney, Flux, Stable Diffusion, Sora, Kling, Runway Gen-3, and Luma Dream Machine are all fully supported.
+                  </p>
+                </div>
+              </details>
+
+              <details className="p-seo-faq__item glass-effect">
+                <summary>Can I sell my optimized prompt templates on the marketplace?</summary>
+                <div className="p-seo-faq__content">
+                  <p>
+                    Absolutely! Prompt by Niti is a marketplace where prompt engineers sell high-quality, verified prompt templates. You earn 80% royalties on every sale, with payments processed securely. Head over to the <a href="/sell">Sell Prompts</a> page to list your prompts.
+                  </p>
+                </div>
+              </details>
+            </div>
           </div>
         </div>
       </section>

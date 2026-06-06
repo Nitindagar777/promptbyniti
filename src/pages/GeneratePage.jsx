@@ -11,7 +11,7 @@ import {
   RefreshCw, AlertTriangle,
   Crown, Dices, Zap, Video, Type, Search, Layers,
   Save, ShoppingBag, RotateCcw, Check,
-  Lock, Repeat, Camera
+  Lock, Repeat, Camera, LayoutGrid
 } from 'lucide-react';
 import './GeneratePage.css';
 
@@ -38,7 +38,14 @@ export default function GeneratePage() {
       if (saved) {
         const parsed = JSON.parse(saved);
         return {
-          form: parsed.form || { description: '', characterImage: null, promptType: 'image', model: 'midjourney' },
+          form: {
+            description: '',
+            characterImage: null,
+            promptType: 'image',
+            model: 'midjourney',
+            aspectRatio: '1:1',
+            ...(parsed.form || {})
+          },
           result: parsed.result || null,
           generatorMode: parsed.generatorMode || 'prompt',
           exampleTemplate: parsed.exampleTemplate || '',
@@ -47,7 +54,7 @@ export default function GeneratePage() {
       }
     } catch { }
     return {
-      form: { description: '', characterImage: null, promptType: 'image', model: 'midjourney' },
+      form: { description: '', characterImage: null, promptType: 'image', model: 'midjourney', aspectRatio: '1:1' },
       result: null,
       generatorMode: 'prompt',
       exampleTemplate: '',
@@ -94,9 +101,43 @@ export default function GeneratePage() {
   // When prompt type changes, auto-select first model of that type
   const handlePromptTypeChange = (type) => {
     const firstModel = aiModels.find(m => m.type === typeMap[type]);
-    setForm(prev => ({ ...prev, promptType: type, model: firstModel?.id || '' }));
+    setForm(prev => {
+      let nextAR = prev.aspectRatio;
+      if (type === 'video') {
+        if (nextAR !== '9:16' && nextAR !== '16:9') {
+          nextAR = '16:9';
+        }
+      } else if (type === 'image') {
+        const validImageRatios = ['16:9', '4:3', '1:1', '3:4', '9:16'];
+        if (!validImageRatios.includes(nextAR)) {
+          nextAR = '1:1';
+        }
+      } else {
+        nextAR = '';
+      }
+      return {
+        ...prev,
+        promptType: type,
+        model: firstModel?.id || '',
+        aspectRatio: nextAR
+      };
+    });
     setCustomModel('');
     setShowCustomInput(false);
+
+    // Map characterMode between image and video modes dynamically
+    setCharacterMode(prev => {
+      if (type === 'video') {
+        if (prev === 'sameScene') return 'sameSceneLoop';
+        if (prev === 'different') return 'differentScenes';
+        if (prev === 'fixed') return 'fixedCharacterMotion';
+      } else {
+        if (prev === 'sameSceneLoop') return 'sameScene';
+        if (prev === 'differentScenes') return 'different';
+        if (prev === 'fixedCharacterMotion') return 'fixed';
+      }
+      return prev;
+    });
   };
 
   // Persist everything to sessionStorage
@@ -162,9 +203,13 @@ export default function GeneratePage() {
       const modelEntry = aiModels.find(m => m.id === form.model);
       const modelLabel = modelEntry ? modelEntry.label : (form.model || 'midjourney');
 
+      const duration = form.promptType === 'video' 
+        ? (aiPower === 'power' ? '20s' : aiPower === 'super' ? '10s' : '5s') 
+        : undefined;
+
       const payload = generatorMode === 'prompt'
-        ? { ...form, aiPower, modelLabel, characterMode }
-        : { ...form, mode: 'example', description: exampleTemplate, aiPower, modelLabel, characterMode };
+        ? { ...form, aiPower, modelLabel, characterMode, duration }
+        : { ...form, mode: 'example', description: exampleTemplate, aiPower, modelLabel, characterMode, duration };
 
       const API_BASE = '/api';
       const response = await fetch(`${API_BASE}/generate`, {
@@ -275,7 +320,7 @@ export default function GeneratePage() {
 
   // ── Refresh: clear everything ──
   const handleRefresh = () => {
-    setForm({ description: '', characterImage: null, promptType: 'image', model: 'midjourney' });
+    setForm({ description: '', characterImage: null, promptType: 'image', model: 'midjourney', aspectRatio: '1:1' });
     setResult(null);
     setExampleTemplate('');
     setCustomModel('');
@@ -285,12 +330,183 @@ export default function GeneratePage() {
     sessionStorage.removeItem(SESSION_KEY);
   };
 
+  const renderVisualGuide = () => {
+    if (result || isGenerating) return null;
+    const activePreviewMode = hoveredMode || characterMode || (form.promptType === 'video' ? 'sameSceneLoop' : 'sameScene');
+    return (
+      <div className={`ref-mode-preview ref-mode-preview-side-by-side ref-mode-preview--${activePreviewMode}`} style={{ border: '1px solid rgba(255, 255, 255, 0.05)', background: 'rgba(15, 23, 42, 0.3)' }}>
+        <div className="ref-mode-preview__badge">
+          <span>Reference Mode Visual Guide {form.promptType === 'video' ? '(Video)' : ''}</span>
+        </div>
+        <h3 className="ref-mode-preview__title">
+          {(activePreviewMode === 'sameScene' || activePreviewMode === 'sameSceneLoop') && (form.promptType === 'video' ? "🎥 Same Scene Loop" : "📸 Same Scene / Photoshoot")}
+          {(activePreviewMode === 'different' || activePreviewMode === 'differentScenes') && (form.promptType === 'video' ? "🔄 Different Scenes" : "🔄 Different Characters")}
+          {(activePreviewMode === 'fixed' || activePreviewMode === 'fixedCharacterMotion') && (form.promptType === 'video' ? "📽️ Fixed Character + Motion" : "🔒 Fixed Character")}
+        </h3>
+        <p className="ref-mode-preview__desc">
+          {activePreviewMode === 'sameScene' && "Keeps every single detail identical across generations, only modifying the subject's poses, camera angles, or expressions."}
+          {activePreviewMode === 'sameSceneLoop' && "Keeps the background, character(s), and composition completely identical; only the motion, animation, and timing vary."}
+          {activePreviewMode === 'different' && "Keeps the exact same artistic style, composition, and visual medium, while swapping the main character or subject completely."}
+          {activePreviewMode === 'differentScenes' && "Maintains character identity and art style across completely different locations, camera angles, and actions."}
+          {activePreviewMode === 'fixed' && "Locks the exact identity, clothing, and details of your character, and places them in entirely new environments and locations."}
+          {activePreviewMode === 'fixedCharacterMotion' && "Locks the character look and outfit while moving the camera dynamically around them (pan, zoom, orbit)."}
+        </p>
+
+        <div className="ref-mode-preview__image-container">
+          {form.promptType === 'video' ? (
+            <>
+              <video 
+                src="/Same_Scene_Video_ref.mp4" 
+                className={`ref-mode-preview__img ${activePreviewMode === 'sameSceneLoop' ? 'ref-mode-preview__img--active' : ''}`}
+                autoPlay 
+                muted 
+                loop 
+                playsInline
+              />
+              <video 
+                src="/Different_Character_Video_ref.mp4" 
+                className={`ref-mode-preview__img ${activePreviewMode === 'differentScenes' ? 'ref-mode-preview__img--active' : ''}`}
+                autoPlay 
+                muted 
+                loop 
+                playsInline
+              />
+              <video 
+                src="/Fixed_Character_Motion_Video_ref.mp4" 
+                className={`ref-mode-preview__img ${activePreviewMode === 'fixedCharacterMotion' ? 'ref-mode-preview__img--active' : ''}`}
+                autoPlay 
+                muted 
+                loop 
+                playsInline
+              />
+            </>
+          ) : (
+            <>
+              <img 
+                src="/same_scene_ref.png" 
+                alt="Same Scene" 
+                className={`ref-mode-preview__img ${activePreviewMode === 'sameScene' ? 'ref-mode-preview__img--active' : ''}`}
+              />
+              <img 
+                src="/diff_characters_ref.png" 
+                alt="Different Characters" 
+                className={`ref-mode-preview__img ${activePreviewMode === 'different' ? 'ref-mode-preview__img--active' : ''}`}
+              />
+              <img 
+                src="/fixed_character_ref.png" 
+                alt="Fixed Character" 
+                className={`ref-mode-preview__img ${activePreviewMode === 'fixed' ? 'ref-mode-preview__img--active' : ''}`}
+              />
+            </>
+          )}
+        </div>
+
+        <div className="ref-mode-preview__rules-grid">
+          <div className="ref-mode-preview__rules-col ref-mode-preview__rules-col--same">
+            <h4>🔒 What Stays SAME</h4>
+            <ul>
+              {(activePreviewMode === 'sameScene' || activePreviewMode === 'sameSceneLoop') && (
+                <>
+                  <li><strong>Subject:</strong> Age, hair, face features, identity</li>
+                  <li><strong>Outfit:</strong> All clothes, accessories, colors</li>
+                  <li><strong>Art Style:</strong> Medium & photography composition</li>
+                  <li><strong>Scene:</strong> Background details, scenery elements</li>
+                </>
+              )}
+              {(activePreviewMode === 'different' || activePreviewMode === 'differentScenes') && (
+                <>
+                  {activePreviewMode === 'differentScenes' ? (
+                    <>
+                      <li><strong>Identity:</strong> Face, hair style/color, facial features</li>
+                      <li><strong>Art Style:</strong> Same cinematic/artistic style, visual style</li>
+                    </>
+                  ) : (
+                    <>
+                      <li><strong>Artistic Style:</strong> Geometric, stained-glass line art</li>
+                      <li><strong>Composition:</strong> Single-subject centered profile layout</li>
+                      <li><strong>Medium:</strong> Stylized digital vector illustration</li>
+                    </>
+                  )}
+                </>
+              )}
+              {(activePreviewMode === 'fixed' || activePreviewMode === 'fixedCharacterMotion') && (
+                <>
+                  <li><strong>Identity:</strong> Face, hair color, body structure</li>
+                  <li><strong>Exact Outfit:</strong> Teal sporty jacket, helmet, sunglasses</li>
+                  {activePreviewMode === 'fixed' ? (
+                    <li><strong>Accessories:</strong> Dark pants, black shoes, skateboard</li>
+                  ) : (
+                    <li><strong>Pose/Stance:</strong> Stays in same relative position</li>
+                  )}
+                </>
+              )}
+            </ul>
+          </div>
+          <div className="ref-mode-preview__rules-col ref-mode-preview__rules-col--changes">
+            <h4>⚡ What CHANGES</h4>
+            <ul>
+              {(activePreviewMode === 'sameScene' || activePreviewMode === 'sameSceneLoop') && (
+                <>
+                  {activePreviewMode === 'sameSceneLoop' ? (
+                    <>
+                      <li><strong>Animation:</strong> Motion, gestures, blinking, wind blowing</li>
+                      <li><strong>Timing:</strong> Pace, velocity, frame consistency</li>
+                    </>
+                  ) : (
+                    <>
+                      <li><strong>Pose:</strong> Stand, sit, look back, hands in pocket</li>
+                      <li><strong>Expression:</strong> Smile, serious, looking side, laughing</li>
+                      <li><strong>Framing:</strong> Medium shot, full body, camera distance</li>
+                    </>
+                  )}
+                </>
+              )}
+              {(activePreviewMode === 'different' || activePreviewMode === 'differentScenes') && (
+                <>
+                  {activePreviewMode === 'differentScenes' ? (
+                    <>
+                      <li><strong>Location:</strong> Completely different backgrounds/scenery</li>
+                      <li><strong>Action:</strong> Running, sitting, talking, different activities</li>
+                      <li><strong>Camera:</strong> Lenses, camera angles, panning</li>
+                    </>
+                  ) : (
+                    <>
+                      <li><strong>Main Subject:</strong> New animal (Leopard ➔ Fox ➔ Owl)</li>
+                      <li><strong>Color Palette:</strong> Adapts per character</li>
+                      <li><strong>Background Tone:</strong> Dark backdrop matching the style</li>
+                    </>
+                  )}
+                </>
+              )}
+              {(activePreviewMode === 'fixed' || activePreviewMode === 'fixedCharacterMotion') && (
+                <>
+                  {activePreviewMode === 'fixedCharacterMotion' ? (
+                    <>
+                      <li><strong>Camera:</strong> Orbital rotation, dynamic pan, zoom-in/out</li>
+                      <li><strong>Lighting:</strong> Shifts naturally around the moving camera</li>
+                    </>
+                  ) : (
+                    <>
+                      <li><strong>Background:</strong> Sunny beach, concrete stairs, city streets</li>
+                      <li><strong>Action & Pose:</strong> Crouched cruising, mid-air jump, standing</li>
+                      <li><strong>Lighting:</strong> Sunny flare, overcast shadow, urban daylight</li>
+                    </>
+                  )}
+                </>
+              )}
+            </ul>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="generate-page" id="generate-page">
       <SEOHead
-        title="Free AI Prompt Generator — Create Prompts for Midjourney, ChatGPT, DALL·E"
-        description="Free AI prompt generator by Prompt by Niti. Transform your ideas into professional, studio-quality prompts for Midjourney, ChatGPT, DALL·E, Stable Diffusion, Flux, and more. Get prompt ideas and examples instantly."
-        keywords="prompt generator, AI prompt generator, free prompt generator, prompt creator, prompt builder, prompt ideas, Midjourney prompt generator, ChatGPT prompt generator, AI prompt maker, generate prompts, prompt engineering tool"
+        title="Free AI Prompt Generator (Text-to-Image & Image-to-Video) — Prompt by Niti"
+        description="Free prompt engineering tool to generate consistent character prompts for Midjourney, Flux, and DALL-E, and motion templates for Sora, Kling, Luma, and Runway. Instantly generate consistent text-to-image and image-to-video prompts."
+        keywords="free AI prompt generator, consistent character prompts generator, text to image prompt builder, image to video prompt generator, Midjourney prompt creator, Sora video prompt builder, Flux prompt maker, prompt engineering tool"
         noIndex={false}
       />
       <div className="container">
@@ -416,7 +632,31 @@ export default function GeneratePage() {
 
             {generatorMode === 'prompt' ? (
               <>
-                {/* Character Consistency */}
+                {/* 1. Which kind of prompt do you want? */}
+                <div className="gen-section gen-section--expanded" id="gen-prompt-type">
+                  <h3 className="gen-section__title mb-4" style={{ color: '#ff0080', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Zap size={20} color="#ff0080" /> Which kind of prompt do you want?
+                  </h3>
+                  <div className="prompt-type-selector">
+                    {['image', 'video', 'text'].map((type) => (
+                      <button
+                        key={type}
+                        className={`prompt-type-btn ${form.promptType === type ? 'active' : ''}`}
+                        onClick={() => handlePromptTypeChange(type)}
+                      >
+                        <div className="prompt-type-btn__icon">
+                          {type === 'image' && <ImageIcon size={20} />}
+                          {type === 'video' && <Video size={20} />}
+                          {type === 'text' && <Type size={20} />}
+                        </div>
+                        <span className="capitalize">{type} Prompt</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+
+                {/* 2. Character Consistency */}
                 <div className="gen-section gen-section--expanded" id="gen-consistency">
                   <h3 className="gen-section__title mb-4" style={{ color: '#ff0080', fontSize: '1.2rem' }}>Character Consistency</h3>
                   <div className="consistency-upload">
@@ -484,74 +724,79 @@ export default function GeneratePage() {
                       Choose how the AI uses your reference image when generating prompt variations.
                     </p>
                     <div className="character-mode-toggle character-mode-toggle--three">
-                      {/* Button 1: Same Scene */}
-                      <button
-                        type="button"
-                        className={`character-mode-btn ${characterMode === 'sameScene' ? 'character-mode-btn--active character-mode-btn--sameScene' : ''}`}
-                        onClick={() => setCharacterMode('sameScene')}
-                        onMouseEnter={() => setHoveredMode('sameScene')}
-                        onMouseLeave={() => setHoveredMode(null)}
-                      >
-                        <div className="character-mode-btn__icon-wrap character-mode-btn__icon-wrap--sameScene">
-                          <Camera size={22} />
-                        </div>
-                        <div className="character-mode-btn__content">
-                          <span className="character-mode-btn__label">Same Scene</span>
-                          <span className="character-mode-btn__desc">Everything identical — only pose & gesture changes</span>
-                        </div>
-                        {characterMode === 'sameScene' && (
-                          <div className="character-mode-btn__check">
-                            <Check size={16} />
+                      {(form.promptType === 'video' ? [
+                        {
+                          id: 'sameSceneLoop',
+                          styleClass: 'sameScene',
+                          icon: <Video size={22} />,
+                          label: 'Same Scene Loop',
+                          desc: 'Everything identical — only motion & timing changes'
+                        },
+                        {
+                          id: 'differentScenes',
+                          styleClass: 'different',
+                          icon: <Repeat size={22} />,
+                          label: 'Different Scenes',
+                          desc: 'Same art style & character, completely different locations/actions'
+                        },
+                        {
+                          id: 'fixedCharacterMotion',
+                          styleClass: 'fixed',
+                          icon: <Lock size={22} />,
+                          label: 'Fixed Character + Motion',
+                          desc: 'Same character & outfit, camera moves around them'
+                        }
+                      ] : [
+                        {
+                          id: 'sameScene',
+                          styleClass: 'sameScene',
+                          icon: <Camera size={22} />,
+                          label: 'Same Scene',
+                          desc: 'Everything identical — only pose & gesture changes'
+                        },
+                        {
+                          id: 'different',
+                          styleClass: 'different',
+                          icon: <Repeat size={22} />,
+                          label: 'Different Characters',
+                          desc: 'Same art style & composition, completely different characters'
+                        },
+                        {
+                          id: 'fixed',
+                          styleClass: 'fixed',
+                          icon: <Lock size={22} />,
+                          label: 'Fixed Character',
+                          desc: 'Same character & outfit, different locations & backgrounds'
+                        }
+                      ]).map((mode) => (
+                        <button
+                          key={mode.id}
+                          type="button"
+                          className={`character-mode-btn ${characterMode === mode.id ? `character-mode-btn--active character-mode-btn--${mode.styleClass}` : ''}`}
+                          onClick={() => setCharacterMode(mode.id)}
+                          onMouseEnter={() => setHoveredMode(mode.id)}
+                          onMouseLeave={() => setHoveredMode(null)}
+                        >
+                          <div className={`character-mode-btn__icon-wrap character-mode-btn__icon-wrap--${mode.styleClass}`}>
+                            {mode.icon}
                           </div>
-                        )}
-                      </button>
-                      {/* Button 2: Different Characters */}
-                      <button
-                        type="button"
-                        className={`character-mode-btn ${characterMode === 'different' ? 'character-mode-btn--active character-mode-btn--different' : ''}`}
-                        onClick={() => setCharacterMode('different')}
-                        onMouseEnter={() => setHoveredMode('different')}
-                        onMouseLeave={() => setHoveredMode(null)}
-                      >
-                        <div className="character-mode-btn__icon-wrap character-mode-btn__icon-wrap--different">
-                          <Repeat size={22} />
-                        </div>
-                        <div className="character-mode-btn__content">
-                          <span className="character-mode-btn__label">Different Characters</span>
-                          <span className="character-mode-btn__desc">Same art style & composition, completely different characters</span>
-                        </div>
-                        {characterMode === 'different' && (
-                          <div className="character-mode-btn__check">
-                            <Check size={16} />
+                          <div className="character-mode-btn__content">
+                            <span className="character-mode-btn__label">{mode.label}</span>
+                            <span className="character-mode-btn__desc">{mode.desc}</span>
                           </div>
-                        )}
-                      </button>
-                      {/* Button 3: Fixed Character */}
-                      <button
-                        type="button"
-                        className={`character-mode-btn ${characterMode === 'fixed' ? 'character-mode-btn--active character-mode-btn--fixed' : ''}`}
-                        onClick={() => setCharacterMode('fixed')}
-                        onMouseEnter={() => setHoveredMode('fixed')}
-                        onMouseLeave={() => setHoveredMode(null)}
-                      >
-                        <div className="character-mode-btn__icon-wrap character-mode-btn__icon-wrap--fixed">
-                          <Lock size={22} />
-                        </div>
-                        <div className="character-mode-btn__content">
-                          <span className="character-mode-btn__label">Fixed Character</span>
-                          <span className="character-mode-btn__desc">Same character & outfit, different locations & backgrounds</span>
-                        </div>
-                        {characterMode === 'fixed' && (
-                          <div className="character-mode-btn__check">
-                            <Check size={16} />
-                          </div>
-                        )}
-                      </button>
+                          {characterMode === mode.id && (
+                            <div className="character-mode-btn__check">
+                              <Check size={16} />
+                            </div>
+                          )}
+                        </button>
+                      ))}
                     </div>
+                    {renderVisualGuide()}
                   </div>
                 )}
 
-                {/* Your Description */}
+                {/* 3. Description */}
                 <div className={`gen-section gen-section--full ${form.description ? 'gen-section--expanded' : ''}`} id="gen-description">
                   <h3 className="gen-section__title mb-4" style={{ color: '#ff0080', fontSize: '1.2rem' }}>Your Description</h3>
                   <div style={{ position: 'relative' }}>
@@ -578,75 +823,74 @@ export default function GeneratePage() {
                       {form.description.length}/450
                     </div>
                   </div>
+                </div>
 
-                  {/* Prompt Type Selector */}
-                  <div className="mt-6">
-                    <h4 className="text-xs uppercase text-muted mb-3 font-bold tracking-widest flex items-center gap-2">
-                      <Zap size={14} color="#ff0080" /> Which kind of prompt do you want?
-                    </h4>
-                    <div className="prompt-type-selector">
-                      {['image', 'video', 'text'].map((type) => (
+                {/* Aspect Ratio */}
+                {form.promptType !== 'text' && (
+                  <div className="gen-section gen-section--expanded" id="gen-aspect-ratio" style={{ animation: 'fadeInUp 0.3s ease' }}>
+                    <h3 className="gen-section__title mb-4" style={{ color: '#ff0080', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <LayoutGrid size={20} color="#ff0080" /> Aspect Ratio
+                    </h3>
+                    <div className="aspect-ratio-selector">
+                      {(form.promptType === 'video' ? ['9:16', '16:9'] : ['16:9', '4:3', '1:1', '3:4', '9:16']).map((ratio) => (
                         <button
-                          key={type}
-                          className={`prompt-type-btn ${form.promptType === type ? 'active' : ''}`}
-                          onClick={() => handlePromptTypeChange(type)}
+                          key={ratio}
+                          className={`aspect-ratio-btn ${form.aspectRatio === ratio ? 'active' : ''}`}
+                          onClick={() => updateForm('aspectRatio', ratio)}
+                          type="button"
                         >
-                          <div className="prompt-type-btn__icon">
-                            {type === 'image' && <ImageIcon size={20} />}
-                            {type === 'video' && <Video size={20} />}
-                            {type === 'text' && <Type size={20} />}
-                          </div>
-                          <span className="capitalize">{type} Prompt</span>
+                          <div className={`aspect-ratio-icon ratio-${ratio.replace(':', '-')}`} />
+                          <span className="aspect-ratio-label">{ratio}</span>
                         </button>
                       ))}
                     </div>
                   </div>
-                  <br></br>
-                  {/* Target Model Selector */}
-                  <div className="mt-6">
-                    <h4 className="text-xs uppercase text-muted mb-3 font-bold tracking-widest flex items-center gap-2">
-                      <Zap size={14} color="#a855f7" /> Select target AI model
-                    </h4>
-                    <div className="model-selector">
-                      {filteredModels.map((m) => (
-                        <button
-                          key={m.id}
-                          className={`model-chip ${form.model === m.id && !showCustomInput ? 'model-chip--active' : ''}`}
-                          onClick={() => {
-                            updateForm('model', m.id);
-                            setShowCustomInput(false);
-                            setCustomModel('');
-                          }}
-                        >
-                          <span>{m.icon}</span>
-                          <span>{m.label}</span>
-                        </button>
-                      ))}
+                )}
+
+                {/* 4. Select target AI model */}
+                <div className="gen-section gen-section--expanded gen-section--full" id="gen-target-model">
+                  <h3 className="gen-section__title mb-4" style={{ color: '#a855f7', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Zap size={20} color="#a855f7" /> Select target AI model
+                  </h3>
+                  <div className="model-selector">
+                    {filteredModels.map((m) => (
                       <button
-                        className={`model-chip model-chip--custom ${showCustomInput ? 'model-chip--active' : ''}`}
+                        key={m.id}
+                        className={`model-chip ${form.model === m.id && !showCustomInput ? 'model-chip--active' : ''}`}
                         onClick={() => {
-                          setShowCustomInput(true);
-                          updateForm('model', customModel || '');
+                          updateForm('model', m.id);
+                          setShowCustomInput(false);
+                          setCustomModel('');
                         }}
                       >
-                        <Search size={14} />
-                        <span>Other</span>
+                        <span>{m.icon}</span>
+                        <span>{m.label}</span>
                       </button>
-                    </div>
-                    {showCustomInput && (
-                      <input
-                        className="model-custom-input"
-                        type="text"
-                        placeholder="Type your model name... (e.g., Pixart-α, SDXL Turbo)"
-                        value={customModel}
-                        onChange={(e) => {
-                          setCustomModel(e.target.value);
-                          updateForm('model', e.target.value);
-                        }}
-                        autoFocus
-                      />
-                    )}
+                    ))}
+                    <button
+                      className={`model-chip model-chip--custom ${showCustomInput ? 'model-chip--active' : ''}`}
+                      onClick={() => {
+                        setShowCustomInput(true);
+                        updateForm('model', customModel || '');
+                      }}
+                    >
+                      <Search size={14} />
+                      <span>Other</span>
+                    </button>
                   </div>
+                  {showCustomInput && (
+                    <input
+                      className="model-custom-input"
+                      type="text"
+                      placeholder="Type your model name... (e.g., Pixart-α, SDXL Turbo)"
+                      value={customModel}
+                      onChange={(e) => {
+                        setCustomModel(e.target.value);
+                        updateForm('model', e.target.value);
+                      }}
+                      autoFocus
+                    />
+                  )}
                 </div>
               </>
             ) : (
@@ -826,151 +1070,296 @@ export default function GeneratePage() {
                     )}
                   </button>
                 </div>
+                {renderVisualGuide()}
               </div>
             </>)}
 
             {/* Power of AI Selection */}
             {!result && (
               <div className="gen-section gen-section--expanded gen-section--full" style={{ marginBottom: '24px', animation: 'fadeIn 0.4s ease' }}>
-                <h3 className="gen-section__title mb-3" style={{ color: '#06b6d4', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Zap size={20} className="icon-pulse text-cyan" /> Power of AI
-                </h3>
-                <p className="text-sm text-muted mb-4">
-                  Select the computational strength and creativity depth of the AI generation.
-                  
-                </p>
-                <br></br>
-                <div className="power-selector-container" style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
-                  {/* Top Row: Normal and Super */}
-                  <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', width: '100%' }}>
-                    {[
-                      { id: 'normal', label: 'Normal', credits: 1, color: 'var(--color-green)', desc: 'Standard quality' },
-                      { id: 'super', label: 'Super', credits: 3, color: 'var(--color-cyan)', desc: 'Enhanced details', locked: isGuest }
-                    ].map((p) => (
-                      <button
-                        key={p.id}
-                        type="button"
-                        disabled={p.locked}
-                        title={p.locked ? 'Sign up to unlock' : undefined}
-                        onClick={() => !p.locked && setAiPower(p.id)}
-                        style={{
-                          padding: '12px 8px',
-                          borderRadius: '16px',
-                          background: aiPower === p.id ? 'var(--bg-secondary)' : 'rgba(255, 255, 255, 0.02)',
-                          border: aiPower === p.id ? `2px solid ${p.color}` : '2px solid var(--border-color)',
-                          color: aiPower === p.id ? 'white' : 'var(--text-muted)',
-                          cursor: 'pointer',
-                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: 'center',
-                          gap: '4px',
-                          boxShadow: aiPower === p.id ? `0 8px 24px rgba(0, 0, 0, 0.3)` : 'none',
-                          position: 'relative',
-                          overflow: 'hidden',
-                          width: 'calc(50% - 8px)',
-                          minWidth: '140px'
-                        }}
-                        className="power-btn"
-                      >
-                        <span style={{ 
-                          fontSize: '1.05rem', 
-                          fontFamily: 'var(--font-display)', 
-                          color: aiPower === p.id ? 'white' : 'var(--text-secondary)',
-                          transition: 'color 0.3s'
-                        }}>
-                          {p.credits} Credit{p.credits > 1 ? 's' : ''} — {p.label}
-                        </span>
-                        <span style={{ 
-                          fontSize: '0.7rem', 
-                          opacity: 0.7, 
-                          textAlign: 'center', 
-                          fontWeight: 'normal',
-                          fontFamily: 'var(--font-body)'
-                        }}>
-                          {p.desc}
-                        </span>
-                        {aiPower === p.id && (
-                          <div style={{
-                            position: 'absolute',
-                            top: 0,
-                            right: 0,
-                            width: '0',
-                            height: '0',
-                            borderStyle: 'solid',
-                            borderWidth: '0 24px 24px 0',
-                            borderColor: `transparent ${p.color} transparent transparent`
-                          }} />
-                        )}
-                      </button>
-                    ))}
-                  </div>
+                {form.promptType === 'video' ? (
+                  <>
+                    <h3 className="gen-section__title mb-3" style={{ color: '#06b6d4', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Video size={20} className="icon-pulse text-cyan" /> Power of AI (Duration)
+                    </h3>
+                    <p className="text-sm text-muted mb-4">
+                      Select the video duration. Longer duration requires more credit computational power.
+                    </p>
+                    <br></br>
+                    <div className="power-selector-container" style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
+                      {/* Top Row: 5s and 10s */}
+                      <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', width: '100%' }}>
+                        {[
+                          { id: 'normal', label: '5s', credits: 1, color: 'var(--color-green)', desc: '1 credit' },
+                          { id: 'super', label: '10s', credits: 3, color: 'var(--color-cyan)', desc: '3 credits', locked: isGuest }
+                        ].map((p) => (
+                          <button
+                            key={p.id}
+                            type="button"
+                            disabled={p.locked}
+                            title={p.locked ? 'Sign up to unlock' : undefined}
+                            onClick={() => !p.locked && setAiPower(p.id)}
+                            style={{
+                              padding: '12px 8px',
+                              borderRadius: '16px',
+                              background: aiPower === p.id ? 'var(--bg-secondary)' : 'rgba(255, 255, 255, 0.02)',
+                              border: aiPower === p.id ? `2px solid ${p.color}` : '2px solid var(--border-color)',
+                              color: aiPower === p.id ? 'white' : 'var(--text-muted)',
+                              cursor: 'pointer',
+                              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              gap: '4px',
+                              boxShadow: aiPower === p.id ? `0 8px 24px rgba(0, 0, 0, 0.3)` : 'none',
+                              position: 'relative',
+                              overflow: 'hidden',
+                              width: 'calc(50% - 8px)',
+                              minWidth: '140px'
+                            }}
+                            className="power-btn"
+                          >
+                            <span style={{ 
+                              fontSize: '1.05rem', 
+                              fontFamily: 'var(--font-display)', 
+                              color: aiPower === p.id ? 'white' : 'var(--text-secondary)',
+                              transition: 'color 0.3s'
+                            }}>
+                              Duration — {p.label}
+                            </span>
+                            <span style={{ 
+                              fontSize: '0.7rem', 
+                              opacity: 0.7, 
+                              textAlign: 'center', 
+                              fontWeight: 'normal',
+                              fontFamily: 'var(--font-body)'
+                            }}>
+                              {p.desc}
+                            </span>
+                            {aiPower === p.id && (
+                              <div style={{
+                                position: 'absolute',
+                                top: 0,
+                                right: 0,
+                                width: '0',
+                                height: '0',
+                                borderStyle: 'solid',
+                                borderWidth: '0 24px 24px 0',
+                                borderColor: `transparent ${p.color} transparent transparent`
+                              }} />
+                            )}
+                          </button>
+                        ))}
+                      </div>
 
-                  {/* Bottom Row: Power centered */}
-                  <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-                    {[
-                      { id: 'power', label: 'Power', credits: 5, color: 'var(--color-purple)', desc: 'Maximum precision', locked: isGuest }
-                    ].map((p) => (
-                      <button
-                        key={p.id}
-                        type="button"
-                        disabled={p.locked}
-                        title={p.locked ? 'Sign up to unlock' : undefined}
-                        onClick={() => !p.locked && setAiPower(p.id)}
-                        style={{
-                          padding: '12px 8px',
-                          borderRadius: '16px',
-                          background: aiPower === p.id ? 'var(--bg-secondary)' : 'rgba(255, 255, 255, 0.02)',
-                          border: aiPower === p.id ? `2px solid ${p.color}` : '2px solid var(--border-color)',
-                          color: aiPower === p.id ? 'white' : 'var(--text-muted)',
-                          cursor: 'pointer',
-                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: 'center',
-                          gap: '4px',
-                          boxShadow: aiPower === p.id ? `0 8px 24px rgba(0, 0, 0, 0.3)` : 'none',
-                          position: 'relative',
-                          overflow: 'hidden',
-                          width: 'calc(50% - 8px)',
-                          minWidth: '140px',
-                          margin: '0 auto'
-                        }}
-                        className="power-btn"
-                      >
-                        <span style={{ 
-                          fontSize: '1.05rem', 
-                          fontFamily: 'var(--font-display)', 
-                          color: aiPower === p.id ? 'white' : 'var(--text-secondary)',
-                          transition: 'color 0.3s'
-                        }}>
-                          {p.credits} Credit{p.credits > 1 ? 's' : ''} — {p.label}
-                        </span>
-                        <span style={{ 
-                          fontSize: '0.7rem', 
-                          opacity: 0.7, 
-                          textAlign: 'center', 
-                          fontWeight: 'normal',
-                          fontFamily: 'var(--font-body)'
-                        }}>
-                          {p.desc}
-                        </span>
-                        {aiPower === p.id && (
-                          <div style={{
-                            position: 'absolute',
-                            top: 0,
-                            right: 0,
-                            width: '0',
-                            height: '0',
-                            borderStyle: 'solid',
-                            borderWidth: '0 24px 24px 0',
-                            borderColor: `transparent ${p.color} transparent transparent`
-                          }} />
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                      {/* Bottom Row: 20s centered */}
+                      <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+                        {[
+                          { id: 'power', label: '20s', credits: 5, color: 'var(--color-purple)', desc: '5 credits', locked: isGuest }
+                        ].map((p) => (
+                          <button
+                            key={p.id}
+                            type="button"
+                            disabled={p.locked}
+                            title={p.locked ? 'Sign up to unlock' : undefined}
+                            onClick={() => !p.locked && setAiPower(p.id)}
+                            style={{
+                              padding: '12px 8px',
+                              borderRadius: '16px',
+                              background: aiPower === p.id ? 'var(--bg-secondary)' : 'rgba(255, 255, 255, 0.02)',
+                              border: aiPower === p.id ? `2px solid ${p.color}` : '2px solid var(--border-color)',
+                              color: aiPower === p.id ? 'white' : 'var(--text-muted)',
+                              cursor: 'pointer',
+                              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              gap: '4px',
+                              boxShadow: aiPower === p.id ? `0 8px 24px rgba(0, 0, 0, 0.3)` : 'none',
+                              position: 'relative',
+                              overflow: 'hidden',
+                              width: 'calc(50% - 8px)',
+                              minWidth: '140px',
+                              margin: '0 auto'
+                            }}
+                            className="power-btn"
+                          >
+                            <span style={{ 
+                              fontSize: '1.05rem', 
+                              fontFamily: 'var(--font-display)', 
+                              color: aiPower === p.id ? 'white' : 'var(--text-secondary)',
+                              transition: 'color 0.3s'
+                            }}>
+                              Duration — {p.label}
+                            </span>
+                            <span style={{ 
+                              fontSize: '0.7rem', 
+                              opacity: 0.7, 
+                              textAlign: 'center', 
+                              fontWeight: 'normal',
+                              fontFamily: 'var(--font-body)'
+                            }}>
+                              {p.desc}
+                            </span>
+                            {aiPower === p.id && (
+                              <div style={{
+                                position: 'absolute',
+                                top: 0,
+                                right: 0,
+                                width: '0',
+                                height: '0',
+                                borderStyle: 'solid',
+                                borderWidth: '0 24px 24px 0',
+                                borderColor: `transparent ${p.color} transparent transparent`
+                              }} />
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <h3 className="gen-section__title mb-3" style={{ color: '#06b6d4', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Zap size={20} className="icon-pulse text-cyan" /> Power of AI
+                    </h3>
+                    <p className="text-sm text-muted mb-4">
+                      Select the computational strength and creativity depth of the AI generation.
+                    </p>
+                    <br></br>
+                    <div className="power-selector-container" style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
+                      {/* Top Row: Normal and Super */}
+                      <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', width: '100%' }}>
+                        {[
+                          { id: 'normal', label: 'Normal', credits: 1, color: 'var(--color-green)', desc: 'Standard quality' },
+                          { id: 'super', label: 'Super', credits: 3, color: 'var(--color-cyan)', desc: 'Enhanced details', locked: isGuest }
+                        ].map((p) => (
+                          <button
+                            key={p.id}
+                            type="button"
+                            disabled={p.locked}
+                            title={p.locked ? 'Sign up to unlock' : undefined}
+                            onClick={() => !p.locked && setAiPower(p.id)}
+                            style={{
+                              padding: '12px 8px',
+                              borderRadius: '16px',
+                              background: aiPower === p.id ? 'var(--bg-secondary)' : 'rgba(255, 255, 255, 0.02)',
+                              border: aiPower === p.id ? `2px solid ${p.color}` : '2px solid var(--border-color)',
+                              color: aiPower === p.id ? 'white' : 'var(--text-muted)',
+                              cursor: 'pointer',
+                              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              gap: '4px',
+                              boxShadow: aiPower === p.id ? `0 8px 24px rgba(0, 0, 0, 0.3)` : 'none',
+                              position: 'relative',
+                              overflow: 'hidden',
+                              width: 'calc(50% - 8px)',
+                              minWidth: '140px'
+                            }}
+                            className="power-btn"
+                          >
+                            <span style={{ 
+                              fontSize: '1.05rem', 
+                              fontFamily: 'var(--font-display)', 
+                              color: aiPower === p.id ? 'white' : 'var(--text-secondary)',
+                              transition: 'color 0.3s'
+                            }}>
+                              {p.credits} Credit{p.credits > 1 ? 's' : ''} — {p.label}
+                            </span>
+                            <span style={{ 
+                              fontSize: '0.7rem', 
+                              opacity: 0.7, 
+                              textAlign: 'center', 
+                              fontWeight: 'normal',
+                              fontFamily: 'var(--font-body)'
+                            }}>
+                              {p.desc}
+                            </span>
+                            {aiPower === p.id && (
+                              <div style={{
+                                position: 'absolute',
+                                top: 0,
+                                right: 0,
+                                width: '0',
+                                height: '0',
+                                borderStyle: 'solid',
+                                borderWidth: '0 24px 24px 0',
+                                borderColor: `transparent ${p.color} transparent transparent`
+                              }} />
+                            )}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Bottom Row: Power centered */}
+                      <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+                        {[
+                          { id: 'power', label: 'Power', credits: 5, color: 'var(--color-purple)', desc: 'Maximum precision', locked: isGuest }
+                        ].map((p) => (
+                          <button
+                            key={p.id}
+                            type="button"
+                            disabled={p.locked}
+                            title={p.locked ? 'Sign up to unlock' : undefined}
+                            onClick={() => !p.locked && setAiPower(p.id)}
+                            style={{
+                              padding: '12px 8px',
+                              borderRadius: '16px',
+                              background: aiPower === p.id ? 'var(--bg-secondary)' : 'rgba(255, 255, 255, 0.02)',
+                              border: aiPower === p.id ? `2px solid ${p.color}` : '2px solid var(--border-color)',
+                              color: aiPower === p.id ? 'white' : 'var(--text-muted)',
+                              cursor: 'pointer',
+                              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              gap: '4px',
+                              boxShadow: aiPower === p.id ? `0 8px 24px rgba(0, 0, 0, 0.3)` : 'none',
+                              position: 'relative',
+                              overflow: 'hidden',
+                              width: 'calc(50% - 8px)',
+                              minWidth: '140px',
+                              margin: '0 auto'
+                            }}
+                            className="power-btn"
+                          >
+                            <span style={{ 
+                              fontSize: '1.05rem', 
+                              fontFamily: 'var(--font-display)', 
+                              color: aiPower === p.id ? 'white' : 'var(--text-secondary)',
+                              transition: 'color 0.3s'
+                            }}>
+                              {p.credits} Credit{p.credits > 1 ? 's' : ''} — {p.label}
+                            </span>
+                            <span style={{ 
+                              fontSize: '0.7rem', 
+                              opacity: 0.7, 
+                              textAlign: 'center', 
+                              fontWeight: 'normal',
+                              fontFamily: 'var(--font-body)'
+                            }}>
+                              {p.desc}
+                            </span>
+                            {aiPower === p.id && (
+                              <div style={{
+                                position: 'absolute',
+                                top: 0,
+                                right: 0,
+                                width: '0',
+                                height: '0',
+                                borderStyle: 'solid',
+                                borderWidth: '0 24px 24px 0',
+                                borderColor: `transparent ${p.color} transparent transparent`
+                              }} />
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             )}
 
@@ -1075,117 +1464,20 @@ export default function GeneratePage() {
               <PromptOutput result={result} mode={generatorMode} />
             ) : (
               <div className="generate-page__preview">
-                {(form.characterImage || generatorMode === 'example') && !isGenerating ? (
-                  (() => {
-                    const activePreviewMode = hoveredMode || characterMode || 'sameScene';
-                    return (
-                      <div className={`ref-mode-preview ref-mode-preview--${activePreviewMode}`} style={{ animation: 'fadeIn 0.3s ease' }}>
-                        <div className="ref-mode-preview__badge">
-                          <span>Reference Mode Visual Guide</span>
-                        </div>
-                        <h3 className="ref-mode-preview__title">
-                          {activePreviewMode === 'sameScene' && "📸 Same Scene / Photoshoot"}
-                          {activePreviewMode === 'different' && "🔄 Different Characters"}
-                          {activePreviewMode === 'fixed' && "🔒 Fixed Character"}
-                        </h3>
-                        <p className="ref-mode-preview__desc">
-                          {activePreviewMode === 'sameScene' && "Keeps every single detail identical across generations, only modifying the subject's poses, camera angles, or expressions."}
-                          {activePreviewMode === 'different' && "Keeps the exact same artistic style, composition, and visual medium, while swapping the main character or subject completely."}
-                          {activePreviewMode === 'fixed' && "Locks the exact identity, clothing, and details of your character, and places them in entirely new environments and locations."}
-                        </p>
-
-                        <div className="ref-mode-preview__image-container">
-                          <img 
-                            src="/same_scene_ref.png" 
-                            alt="Same Scene" 
-                            className={`ref-mode-preview__img ${activePreviewMode === 'sameScene' ? 'ref-mode-preview__img--active' : ''}`}
-                          />
-                          <img 
-                            src="/diff_characters_ref.png" 
-                            alt="Different Characters" 
-                            className={`ref-mode-preview__img ${activePreviewMode === 'different' ? 'ref-mode-preview__img--active' : ''}`}
-                          />
-                          <img 
-                            src="/fixed_character_ref.png" 
-                            alt="Fixed Character" 
-                            className={`ref-mode-preview__img ${activePreviewMode === 'fixed' ? 'ref-mode-preview__img--active' : ''}`}
-                          />
-                        </div>
-
-                        <div className="ref-mode-preview__rules-grid">
-                          <div className="ref-mode-preview__rules-col ref-mode-preview__rules-col--same">
-                            <h4>🔒 What Stays SAME</h4>
-                            <ul>
-                              {activePreviewMode === 'sameScene' && (
-                                <>
-                                  <li><strong>Subject:</strong> Age, hair, face features, identity</li>
-                                  <li><strong>Outfit:</strong> All clothes, accessories, colors</li>
-                                  <li><strong>Art Style:</strong> Medium & photography composition</li>
-                                  <li><strong>Scene:</strong> Grassy field, overcast lighting</li>
-                                </>
-                              )}
-                              {activePreviewMode === 'different' && (
-                                <>
-                                  <li><strong>Artistic Style:</strong> Geometric, stained-glass line art</li>
-                                  <li><strong>Composition:</strong> Single-subject centered profile layout</li>
-                                  <li><strong>Medium:</strong> Stylized digital vector illustration</li>
-                                </>
-                              )}
-                              {activePreviewMode === 'fixed' && (
-                                <>
-                                  <li><strong>Identity:</strong> Face, hair color, body structure</li>
-                                  <li><strong>Exact Outfit:</strong> Teal sporty jacket, helmet, sunglasses</li>
-                                  <li><strong>Accessories:</strong> Dark pants, black shoes, skateboard</li>
-                                </>
-                              )}
-                            </ul>
-                          </div>
-                          <div className="ref-mode-preview__rules-col ref-mode-preview__rules-col--changes">
-                            <h4>⚡ What CHANGES</h4>
-                            <ul>
-                              {activePreviewMode === 'sameScene' && (
-                                <>
-                                  <li><strong>Body Pose:</strong> Facing front, arms wide, facing away</li>
-                                  <li><strong>Expression:</strong> Direct look vs looking back</li>
-                                  <li><strong>Framing:</strong> Medium shot, full body, camera distance</li>
-                                </>
-                              )}
-                              {activePreviewMode === 'different' && (
-                                <>
-                                  <li><strong>Main Subject:</strong> New animal (Leopard ➔ Fox ➔ Owl)</li>
-                                  <li><strong>Color Palette:</strong> Adapts per character</li>
-                                  <li><strong>Background Tone:</strong> Dark backdrop matching the style</li>
-                                </>
-                              )}
-                              {activePreviewMode === 'fixed' && (
-                                <>
-                                  <li><strong>Background:</strong> Sunny beach, concrete stairs, city streets</li>
-                                  <li><strong>Action & Pose:</strong> Crouched cruising, mid-air jump, standing</li>
-                                  <li><strong>Lighting:</strong> Sunny flare, overcast shadow, urban daylight</li>
-                                </>
-                              )}
-                            </ul>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })()
+                {generatorMode === 'prompt' ? (
+                  <>
+                    <h3>
+                      <span className="text-cyan">Your Prompt Will Appear Here</span>
+                    </h3>
+                    <p>Describe your vision and hit Generate to create a professional AI prompt</p>
+                  </>
                 ) : (
-                  generatorMode === 'prompt' ? (
-                    <>
-                      <h3>
-                        <span className="text-cyan">Your Prompt Will Appear Here</span>
-                      </h3>
-                      <p>Describe your vision and hit Generate to create a professional AI prompt</p>
-                    </>
-                  ) : (
-                    <>
-                      <h3>
-                        <span className="text-orange">Your 5 Sample Variations Will Appear Here</span>
-                      </h3>
-                      <p>Enter your prompt template with variables and hit Generate to create 5 unique examples</p>
-                    </>
-                  )
+                  <>
+                    <h3>
+                      <span className="text-orange">Your 5 Sample Variations Will Appear Here</span>
+                    </h3>
+                    <p>Enter your prompt template with variables and hit Generate to create 5 unique examples</p>
+                  </>
                 )}
               </div>
             )}

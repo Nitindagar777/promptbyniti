@@ -654,7 +654,7 @@
   background: rgba(30, 41, 59, 0.9) !important;
   border: 1px solid rgba(168, 85, 247, 0.25) !important;
   position: relative;
-  overflow: hidden;
+  z-index: 5;
 }
 
 .character-mode-section::before {
@@ -901,6 +901,26 @@
   position: relative;
   overflow: hidden;
 }
+
+.ref-mode-preview-side-by-side {
+  margin-top: 20px;
+}
+
+@media (min-width: 1025px) {
+  .ref-mode-preview-side-by-side {
+    position: absolute;
+    left: calc(100% + var(--space-2xl));
+    top: 0;
+    width: 100%;
+    margin: 0;
+  }
+
+  /* Hide the preview placeholder on desktop when Reference Mode is active and displaying the visual guide */
+  .generate-page__grid:has(.ref-mode-preview-side-by-side) .generate-page__preview {
+    display: none;
+  }
+}
+
 
 /* Dynamically color borders and add shadow glows depending on selected mode */
 .ref-mode-preview--sameScene {
@@ -1222,4 +1242,82 @@
 .power-btn:disabled:hover {
   transform: none;
   box-shadow: none;
+}
+
+/* Aspect Ratio Selector styles */
+.aspect-ratio-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: var(--space-sm, 12px);
+}
+
+.aspect-ratio-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  color: var(--text-secondary);
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  min-width: 80px;
+  flex: 0 1 auto;
+}
+
+.aspect-ratio-btn:hover {
+  border-color: rgba(236, 72, 153, 0.4);
+  background: rgba(236, 72, 153, 0.03);
+  transform: translateY(-2px);
+  color: #fff;
+}
+
+.aspect-ratio-btn.active {
+  background: rgba(236, 72, 153, 0.08);
+  border-color: var(--color-pink);
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(236, 72, 153, 0.15);
+}
+
+.aspect-ratio-icon {
+  border: 2px solid currentColor;
+  border-radius: 2px;
+  transition: all var(--transition-normal);
+  background: transparent;
+  display: block;
+}
+
+.aspect-ratio-btn.active .aspect-ratio-icon {
+  background: transparent;
+}
+
+.ratio-16-9 {
+  width: 24px;
+  height: 13.5px;
+}
+
+.ratio-4-3 {
+  width: 20px;
+  height: 15px;
+}
+
+.ratio-1-1 {
+  width: 16px;
+  height: 16px;
+}
+
+.ratio-3-4 {
+  width: 15px;
+  height: 20px;
+}
+
+.ratio-9-16 {
+  width: 13.5px;
+  height: 24px;
 }
