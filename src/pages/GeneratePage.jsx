@@ -353,52 +353,54 @@ export default function GeneratePage() {
         </p>
 
         <div className="ref-mode-preview__image-container">
-          {form.promptType === 'video' ? (
-            <>
-              <video 
-                src="/Same_Scene_Video_ref.mp4" 
-                className={`ref-mode-preview__img ${activePreviewMode === 'sameSceneLoop' ? 'ref-mode-preview__img--active' : ''}`}
-                autoPlay 
-                muted 
-                loop 
-                playsInline
-              />
-              <video 
-                src="/Different_Character_Video_ref.mp4" 
-                className={`ref-mode-preview__img ${activePreviewMode === 'differentScenes' ? 'ref-mode-preview__img--active' : ''}`}
-                autoPlay 
-                muted 
-                loop 
-                playsInline
-              />
-              <video 
-                src="/Fixed_Character_Motion_Video_ref.mp4" 
-                className={`ref-mode-preview__img ${activePreviewMode === 'fixedCharacterMotion' ? 'ref-mode-preview__img--active' : ''}`}
-                autoPlay 
-                muted 
-                loop 
-                playsInline
-              />
-            </>
-          ) : (
-            <>
-              <img 
-                src="/same_scene_ref.png" 
-                alt="Same Scene" 
-                className={`ref-mode-preview__img ${activePreviewMode === 'sameScene' ? 'ref-mode-preview__img--active' : ''}`}
-              />
-              <img 
-                src="/diff_characters_ref.png" 
-                alt="Different Characters" 
-                className={`ref-mode-preview__img ${activePreviewMode === 'different' ? 'ref-mode-preview__img--active' : ''}`}
-              />
-              <img 
-                src="/fixed_character_ref.png" 
-                alt="Fixed Character" 
-                className={`ref-mode-preview__img ${activePreviewMode === 'fixed' ? 'ref-mode-preview__img--active' : ''}`}
-              />
-            </>
-          )}
+          {/* Always render videos in DOM for preloading/instant show */}
+          <div className={`ref-mode-preview__media-group ${form.promptType === 'video' ? 'ref-mode-preview__media-group--visible' : 'ref-mode-preview__media-group--hidden'}`}>
+            <video 
+              src="/Same_Scene_Video_ref.mp4" 
+              className={`ref-mode-preview__img ${activePreviewMode === 'sameSceneLoop' ? 'ref-mode-preview__img--active' : ''}`}
+              autoPlay 
+              muted 
+              loop 
+              playsInline
+              preload="auto"
+            />
+            <video 
+              src="/Different_Character_Video_ref.mp4" 
+              className={`ref-mode-preview__img ${activePreviewMode === 'differentScenes' ? 'ref-mode-preview__img--active' : ''}`}
+              autoPlay 
+              muted 
+              loop 
+              playsInline
+              preload="auto"
+            />
+            <video 
+              src="/Fixed_Character_Motion_Video_ref.mp4" 
+              className={`ref-mode-preview__img ${activePreviewMode === 'fixedCharacterMotion' ? 'ref-mode-preview__img--active' : ''}`}
+              autoPlay 
+              muted 
+              loop 
+              playsInline
+              preload="auto"
+            />
+          </div>
+          {/* Always render images in DOM for preloading/instant show */}
+          <div className={`ref-mode-preview__media-group ${form.promptType !== 'video' ? 'ref-mode-preview__media-group--visible' : 'ref-mode-preview__media-group--hidden'}`}>
+            <img 
+              src="/same_scene_ref.png" 
+              alt="Same Scene" 
+              className={`ref-mode-preview__img ${activePreviewMode === 'sameScene' ? 'ref-mode-preview__img--active' : ''}`}
+            />
+            <img 
+              src="/diff_characters_ref.png" 
+              alt="Different Characters" 
+              className={`ref-mode-preview__img ${activePreviewMode === 'different' ? 'ref-mode-preview__img--active' : ''}`}
+            />
+            <img 
+              src="/fixed_character_ref.png" 
+              alt="Fixed Character" 
+              className={`ref-mode-preview__img ${activePreviewMode === 'fixed' ? 'ref-mode-preview__img--active' : ''}`}
+            />
+          </div>
         </div>
 
         <div className="ref-mode-preview__rules-grid">

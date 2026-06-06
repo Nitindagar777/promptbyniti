@@ -758,6 +758,7 @@ export default function HomePage() {
                   className={`p-ref-modes__showcase-media ${activeVideoMode === 'sameSceneLoop' ? 'active' : ''}`}
                   muted 
                   playsInline
+                  preload="auto"
                   onEnded={handleVideoEnded}
                 />
                 <video 
@@ -766,6 +767,7 @@ export default function HomePage() {
                   className={`p-ref-modes__showcase-media ${activeVideoMode === 'differentScenes' ? 'active' : ''}`}
                   muted 
                   playsInline
+                  preload="auto"
                   onEnded={handleVideoEnded}
                 />
                 <video 
@@ -774,6 +776,7 @@ export default function HomePage() {
                   className={`p-ref-modes__showcase-media ${activeVideoMode === 'fixedCharacterMotion' ? 'active' : ''}`}
                   muted 
                   playsInline
+                  preload="auto"
                   onEnded={handleVideoEnded}
                 />
               </div>
