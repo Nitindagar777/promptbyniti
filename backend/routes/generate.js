@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const SystemSettings = require('../models/SystemSettings');
+const { CREATIVE_RULES, SOCIAL_MEDIA_RULES, ECOMMERCE_RULES, OTHER_RULES } = require('./rules');
 
 /**
  * Programmatically reduce the number of bracketed variables in promptTemplate to maxVars,
@@ -110,9 +111,10 @@ async function getOrCreateModel() {
 /**
  * Build a dynamic system instruction based on rules, aiPower tier, characterMode, promptType, and duration.
  */
-function buildSystemInstruction(rulesStr, aiPower, characterMode, promptType, duration, hasRefImage, aspectRatio) {
+function buildSystemInstruction(rulesStr, aiPower, characterMode, promptType, duration, hasRefImage, aspectRatio, category, subcategory) {
   const power = aiPower || 'normal';
   const isVideo = promptType === 'video';
+  const isText = promptType === 'text';
   const resolvedAR = aspectRatio ? aspectRatio.trim() : (isVideo ? '16:9' : '1:1');
   
   // Resolve characterMode dynamically for video/image compatibility
@@ -162,6 +164,29 @@ ${sceneDivisionText}
   - 5s (Normal): Min 400-500 characters.
   - 10s (Super): Min 500-600 characters.
   - 20s (Power): Min 600-700 characters.`;
+  } else if (isText) {
+    if (power === 'super') {
+      tierGuidelines = `
+PROMPT DETAIL LEVEL — SUPER TIER (3 CREDITS):
+- You MUST generate an exceptionally detailed, structured, and deep text prompt template.
+- CHARACTER LENGTH REQUIREMENT: The generated promptTemplate MUST be at least 800 to 1000 characters long. Take your time to write a highly descriptive and structured template.
+- Ensure the prompt template is packed with high-quality, fixed descriptive guidelines, frameworks, and instructions.
+- Strictly limit bracketed variables to between 1 and 5. The rest of the text MUST be detailed and comprehensive.`;
+    } else if (power === 'power') {
+      tierGuidelines = `
+PROMPT DETAIL LEVEL — POWER TIER (5 CREDITS - MAXIMUM DETAIL & DENSITY):
+- You MUST generate an incredibly rich, masterclass, and highly immersive text prompt template.
+- CHARACTER LENGTH REQUIREMENT: The generated promptTemplate MUST be at least 1200 to 1500 characters long. Pack it with the absolute maximum density of guidelines, phases, frameworks, and step-by-step instructions.
+- Ensure the template has the absolute maximum density of fixed, professional instructions and guidelines.
+- Strictly limit bracketed variables to between 1 and 5. The rest of the text MUST be detailed and comprehensive.`;
+    } else {
+      tierGuidelines = `
+PROMPT DETAIL LEVEL — NORMAL TIER (1 CREDIT):
+- Generate a professional, clean, and direct text prompt.
+- CHARACTER LENGTH REQUIREMENT: The generated promptTemplate MUST be at least 500 to 700 characters long.
+- Keep the prompt clear, focused on structure, context, tone, and step-by-step directions.
+- Focus on producing a clean, solid, and high-quality baseline prompt with standard fixed text and 1 to 5 variables.`;
+    }
   } else if (power === 'super') {
     tierGuidelines = `
 PROMPT DETAIL LEVEL — SUPER TIER (3 CREDITS):
@@ -322,6 +347,20 @@ Every prompt and sample MUST start with "Generate a video of: " or "Generate a v
 4. ZERO TOLERANCE FOR BRACKETS IN SAMPLES: Samples and mainPrompt MUST NOT contain any [BRACKETS]. Only promptTemplate has brackets.
 5. Every prompt and sample MUST end with "--ar ${resolvedAR}".`;
     }
+  } else if (isText) {
+    referenceImageRules = `
+CRITICAL — TEXT PROMPT RULES:
+- You are generating a text prompt for an LLM/AI writer. Focus on structure, copywriting framework (like AIDA, PAS, story structures), target tone, and context.
+- You are STRICTLY FORBIDDEN from including Midjourney parameter suffixes (like "--ar") or camera/lighting keywords (like "aperture", "lens", "camera pan").
+- The output must be optimized for text generation (copywriting, brainstorming, planning, etc.).`;
+
+    howToBuildSamples = `HOW TO BUILD SAMPLES (TEXT PROMPT - GENERAL - FOLLOW THIS EXACTLY):
+1. Write the mainPrompt first. It must be a complete, ready-to-use sample prompt with all bracketed variables replaced by real, creative copywriting values (e.g. following AIDA or problem-solution structures).
+   - CRITICAL: Do NOT append any camera settings, lens details, or Midjourney "--ar" suffixes to text prompts.
+2. Create promptTemplate: Take the mainPrompt and replace 1 to 5 key parameters with bracketed variables (e.g. [brand_name], [target_audience], [tone], etc.).
+3. For each of the samples (Sample A, Sample B, Sample C), copy the promptTemplate and replace the bracketed variables with unique creative details.
+4. ZERO TOLERANCE FOR BRACKETS IN SAMPLES: Samples and mainPrompt MUST NOT contain any [BRACKETS]. Only promptTemplate has brackets.
+5. SAMPLE COUNT: Generate exactly 3 samples for standard generations. Generate exactly 5 samples ONLY when "Example Generator" mode is requested.`;
   } else {
     // Image reference rules
     if (resolvedCharMode === 'fixed') {
@@ -546,24 +585,71 @@ When a reference image is provided in DIFFERENT CHARACTERS mode, you MUST:
     }
   }
 
-  return `You are an expert AI Prompt Engineer for a premium prompt marketplace called "Prompt by Niti".
+  let subcategoryInstruction = '';
+  if (isText && category && subcategory) {
+    let rulesDict = null;
+    const catUpper = category.toUpperCase();
+    if (catUpper === 'CREATIVE') rulesDict = CREATIVE_RULES;
+    else if (catUpper === 'SOCIAL MEDIA') rulesDict = SOCIAL_MEDIA_RULES;
+    else if (catUpper === 'ECOMMERCE') rulesDict = ECOMMERCE_RULES;
+    else if (catUpper === 'OTHER') rulesDict = OTHER_RULES;
 
-PLATFORM RULES (ALWAYS ENFORCE):
-${rulesStr}
+    if (rulesDict && rulesDict[subcategory]) {
+      const rule = rulesDict[subcategory];
+      
+      let subcategoryGuidelines = '';
+      if (subcategory === 'Personal Development') {
+        subcategoryGuidelines = `\nCustom Subcategory Guidelines:
+- Student: identity formation is the work
+- Early Career: skill acquisition > salary
+- Mid-Career: leverage and delegation
+- Parent: time boundaries are essential`;
+      } else if (subcategory === 'Content Creation') {
+        subcategoryGuidelines = `\nCustom Subcategory Guidelines:
+- TikTok: authenticity over production
+- Instagram: aesthetic consistency
+- LinkedIn: professional storytelling
+- YouTube: click-worthy hook`;
+      } else if (subcategory === 'Product Research') {
+        subcategoryGuidelines = `\nCustom Subcategory Guidelines:
+- Dropshipping: shipping time is critical
+- Private Label: branding and differentiation
+- Wholesale: margin and volume`;
+      }
 
-YOUR ROLE:
-- Generate professional, high-quality AI prompts based on user descriptions.
-- Optimize prompts for the specific format the user selects (image, video, or text).
-- For IMAGE prompts: focus on vivid visual details, composition, lighting, style keywords.
-- For VIDEO prompts: include camera movements, motion dynamics, temporal flow, scene transitions.
-- For TEXT prompts: focus on tone, structure, context, audience, formatting guidance.
-${tierGuidelines}
+      subcategoryInstruction = `
+SUBCATEGORY SPECIFIC TEMPLATE & DETAILS — ${rule.name}:
+- Template to follow:
+${rule.promptTemplate}
+${subcategoryGuidelines}
+`;
+    }
+  }
 
-${referenceImageRules}
+  let outputFormatInstruction = '';
+  if (isText) {
+    outputFormatInstruction = `OUTPUT FORMAT:
+You must return a VALID JSON object with these fields:
+{
+  "title": "A catchy 3-5 word title for the prompt",
+  "description": "A professional 1-2 sentence description of what this prompt achieves",
+  "imageAnalysis": "",
+  "mainPrompt": "A COMPLETE, READY-TO-USE SAMPLE PROMPT with ALL bracketed variables replaced by real, creative values. This MUST NOT contain any [BRACKETS]. Do NOT append any --ar or visual settings.",
+  "negativePrompt": "Things to avoid/exclude in the text output structure",
+  "promptTemplate": "The skeleton version of the prompt using [BRACKETED] variables for changeable parts. THIS IS THE ONLY FIELD THAT SHOULD HAVE BRACKETS. Limit variables to between 1 and 5.",
+  "samples": [
+    "Sample A: unique variation...",
+    "Sample B: unique variation...",
+    "Sample C: unique variation..."
+  ],
+  "keywords": ["keyword1", "keyword2", "keyword3", "keyword4"],
+  "instructions": "Step-by-step instructions on how to use this prompt effectively."
+}
 
-${howToBuildSamples}
-
-OUTPUT FORMAT:
+- Do NOT append any --ar suffix to text prompts or samples.
+- Return ONLY the JSON object. No markdown fences, no explanation.`;
+  } else {
+    outputFormatInstruction = `OUTPUT FORMAT:
 You must return a VALID JSON object with these fields:
 {
   "title": "A catchy 3-5 word title for the prompt",
@@ -584,12 +670,34 @@ You must return a VALID JSON object with these fields:
 - Every prompt and sample MUST end with --ar ${resolvedAR}
 
 Return ONLY the JSON object. No markdown fences, no explanation.`;
+  }
+
+  return `You are an expert AI Prompt Engineer for a premium prompt marketplace called "Prompt by Niti".
+
+PLATFORM RULES (ALWAYS ENFORCE):
+${rulesStr}
+
+YOUR ROLE:
+- Generate professional, high-quality AI prompts based on user descriptions.
+- Optimize prompts for the specific format the user selects (image, video, or text).
+- For IMAGE prompts: focus on vivid visual details, composition, lighting, style keywords.
+- For VIDEO prompts: include camera movements, motion dynamics, temporal flow, scene transitions.
+- For TEXT prompts: focus on tone, structure, context, audience, formatting guidance.
+${tierGuidelines}
+
+${referenceImageRules}
+
+${howToBuildSamples}
+
+${subcategoryInstruction}
+
+${outputFormatInstruction}`;
 }
 
 // POST /api/generate
 router.post('/', async (req, res) => {
   try {
-    const { description, characterImage, promptType, model, mode, modelLabel, aiPower, characterMode, aspectRatio } = req.body;
+    const { description, characterImage, promptType, model, mode, modelLabel, aiPower, characterMode, aspectRatio, category, subcategory } = req.body;
     // Use human-readable model name if available, otherwise fall back to model id
     const targetModel = modelLabel || model || 'Midjourney';
 
@@ -603,7 +711,7 @@ router.post('/', async (req, res) => {
     const hasRefImage = characterImage && characterImage.startsWith('data:image');
 
     // Build the system instruction dynamically based on the requested aiPower level
-    const systemInstruction = buildSystemInstruction(cached.rulesStr, aiPower, characterMode, promptType, req.body.duration, hasRefImage, aspectRatio);
+    const systemInstruction = buildSystemInstruction(cached.rulesStr, aiPower, characterMode, promptType, req.body.duration, hasRefImage, aspectRatio, category, subcategory);
     console.log(`🎭 Character Mode: ${characterMode || 'not set (no image)'}`);
 
     // 2. Build lightweight user message (NO rules, NO characteristics repeated)
@@ -1113,6 +1221,9 @@ DO NOT exceed 5 bracketed variables under any circumstances. Keep the majority o
       } else if (promptType === 'text') {
         promptData.mainPrompt = stripLabel(promptData.mainPrompt || '');
         promptData.samples = promptData.samples.map(s => stripLabel(s || ''));
+        if (promptData.promptTemplate) {
+          promptData.promptTemplate = stripLabel(promptData.promptTemplate);
+        }
       } else {
         // default to image prompt rules
         promptData.mainPrompt = ensureCustomAR(stripLabel(promptData.mainPrompt || ''));

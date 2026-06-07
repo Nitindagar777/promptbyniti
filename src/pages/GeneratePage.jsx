@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { randomDescriptions, aiModels } from '../data/promptData';
+import { randomDescriptions, aiModels, textCategories } from '../data/promptData';
 import PromptOutput from '../components/PromptOutput';
 import PromptThumbnail from '../components/PromptThumbnail';
 import SEOHead from '../components/SEOHead';
@@ -11,11 +11,28 @@ import {
   RefreshCw, AlertTriangle,
   Crown, Dices, Zap, Video, Type, Search, Layers,
   Save, ShoppingBag, RotateCcw, Check,
-  Lock, Repeat, Camera, LayoutGrid
+  Lock, Repeat, Camera, LayoutGrid,
+  Bot, Code, PenTool, Megaphone, Briefcase, Microscope,
+  GraduationCap, Palette, MessageSquare, ShoppingCart, Settings
 } from 'lucide-react';
 import './GeneratePage.css';
 
 const SESSION_KEY = 'promptgen_session';
+
+const categoryIconMap = {
+  'bot': Bot,
+  'code': Code,
+  'pen-tool': PenTool,
+  'megaphone': Megaphone,
+  'briefcase': Briefcase,
+  'microscope': Microscope,
+  'graduation-cap': GraduationCap,
+  'zap': Zap,
+  'palette': Palette,
+  'message-square': MessageSquare,
+  'shopping-cart': ShoppingCart,
+  'settings': Settings
+};
 
 export default function GeneratePage() {
   const { state, canGenerate, useCredit, addPrompt, isPremium } = useApp();
@@ -49,7 +66,9 @@ export default function GeneratePage() {
           result: parsed.result || null,
           generatorMode: parsed.generatorMode || 'prompt',
           exampleTemplate: parsed.exampleTemplate || '',
-          characterMode: parsed.characterMode || 'fixed'
+          characterMode: parsed.characterMode || 'fixed',
+          activeCategory: parsed.activeCategory || null,
+          selectedSubcategory: parsed.selectedSubcategory || null
         };
       }
     } catch { }
@@ -58,7 +77,9 @@ export default function GeneratePage() {
       result: null,
       generatorMode: 'prompt',
       exampleTemplate: '',
-      characterMode: 'fixed'
+      characterMode: 'fixed',
+      activeCategory: null,
+      selectedSubcategory: null
     };
   };
 
@@ -69,6 +90,8 @@ export default function GeneratePage() {
   const [exampleTemplate, setExampleTemplate] = useState(initialState.exampleTemplate);
   const [characterMode, setCharacterMode] = useState(initialState.characterMode);
   const [hoveredMode, setHoveredMode] = useState(null);
+  const [activeCategory, setActiveCategory] = useState(initialState.activeCategory);
+  const [selectedSubcategory, setSelectedSubcategory] = useState(initialState.selectedSubcategory);
 
   const [customModel, setCustomModel] = useState('');
   const [showCustomInput, setShowCustomInput] = useState(false);
@@ -138,6 +161,8 @@ export default function GeneratePage() {
       }
       return prev;
     });
+    setActiveCategory(null);
+    setSelectedSubcategory(null);
   };
 
   // Persist everything to sessionStorage
@@ -148,10 +173,12 @@ export default function GeneratePage() {
         result, 
         generatorMode, 
         exampleTemplate,
-        characterMode 
+        characterMode,
+        activeCategory,
+        selectedSubcategory
       }));
     } catch { }
-  }, [form, result, generatorMode, exampleTemplate, characterMode]);
+  }, [form, result, generatorMode, exampleTemplate, characterMode, activeCategory, selectedSubcategory]);
 
   /* Handle incoming state from Home Page */
   useEffect(() => {
@@ -170,7 +197,9 @@ export default function GeneratePage() {
 
   const handleGenerate = async () => {
     if (generatorMode === 'prompt') {
-      if (!form.description || !form.description.trim()) {
+      const hasDescription = form.description && form.description.trim();
+      const hasSelection = !!selectedSubcategory;
+      if (!hasDescription && !hasSelection) {
         descriptionRef.current?.focus();
         return;
       }
@@ -207,9 +236,21 @@ export default function GeneratePage() {
         ? (aiPower === 'power' ? '20s' : aiPower === 'super' ? '10s' : '5s') 
         : undefined;
 
-      const payload = generatorMode === 'prompt'
-        ? { ...form, aiPower, modelLabel, characterMode, duration }
-        : { ...form, mode: 'example', description: exampleTemplate, aiPower, modelLabel, characterMode, duration };
+      const payload = {
+        ...form,
+        aiPower,
+        modelLabel,
+        characterMode,
+        duration,
+        selectedCategory: selectedSubcategory ? selectedSubcategory.category : null,
+        selectedSubcategory: selectedSubcategory ? selectedSubcategory.name : null,
+        selectedTemplate: selectedSubcategory ? selectedSubcategory.template : null
+      };
+
+      if (generatorMode !== 'prompt') {
+        payload.mode = 'example';
+        payload.description = exampleTemplate;
+      }
 
       const API_BASE = '/api';
       const response = await fetch(`${API_BASE}/generate`, {
@@ -327,6 +368,8 @@ export default function GeneratePage() {
     setShowCustomInput(false);
     setSaveMessage('');
     setCharacterMode('fixed');
+    setActiveCategory(null);
+    setSelectedSubcategory(null);
     sessionStorage.removeItem(SESSION_KEY);
   };
 
@@ -658,9 +701,9 @@ export default function GeneratePage() {
                 </div>
 
 
-                {/* 2. Character Consistency */}
+                {/* 2. Upload Image */}
                 <div className="gen-section gen-section--expanded" id="gen-consistency">
-                  <h3 className="gen-section__title mb-4" style={{ color: '#ff0080', fontSize: '1.2rem' }}>Character Consistency</h3>
+                  <h3 className="gen-section__title mb-4" style={{ color: '#ff0080', fontSize: '1.2rem' }}>Upload Image</h3>
                   <div className="consistency-upload">
                     <label className="upload-placeholder" style={{ cursor: 'pointer' }}>
                       <input
@@ -716,8 +759,8 @@ export default function GeneratePage() {
                   </div>
                 </div>
 
-                {/* Character Mode Toggle — only show when reference image is uploaded */}
-                {form.characterImage && (
+                {/* Character Mode Toggle — only show when reference image is uploaded and prompt type is not text */}
+                {form.characterImage && form.promptType !== 'text' && (
                   <div className="gen-section gen-section--expanded gen-section--full character-mode-section" id="gen-character-mode" style={{ animation: 'fadeInUp 0.4s ease' }}>
                     <h3 className="gen-section__title mb-3" style={{ color: '#a855f7', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <Repeat size={20} className="icon-pulse" style={{ color: '#a855f7' }} /> Reference Mode
@@ -805,7 +848,13 @@ export default function GeneratePage() {
                     <textarea
                       ref={descriptionRef}
                       className="gen-textarea"
-                      placeholder="Describe your scene here... (e.g., A futuristic cyberpunk city with neon rainy streets, cinematic lighting)"
+                      placeholder={
+                        form.promptType === 'text' 
+                          ? "Describe the role, task, or prompt you want to build... (e.g., A customer support agent that handles refund requests, or a Python script that automates backups)"
+                          : form.promptType === 'video'
+                            ? "Describe your video scene here... (e.g., A drone shot soaring over a volcanic eruption, realistic motion)"
+                            : "Describe your image scene here... (e.g., A futuristic cyberpunk city with neon rainy streets, cinematic lighting)"
+                      }
                       value={form.description}
                       onChange={(e) => {
                         if (e.target.value.length <= 450) {
@@ -1464,6 +1513,134 @@ export default function GeneratePage() {
           <div className="generate-page__output">
             {result ? (
               <PromptOutput result={result} mode={generatorMode} />
+            ) : form.promptType === 'text' && generatorMode === 'prompt' && !isGenerating ? (
+              /* ── Text Prompt Categories Browser ── */
+              <div className="text-cat-panel">
+                <div className="text-cat-panel__header">
+                  <h3 className="text-cat-panel__title">
+                    <Type size={20} /> Text Prompt <span style={{ color: '#a855f7' }}>Categories</span>
+                  </h3>
+                  <p className="text-cat-panel__subtitle">Choose any working type of prompt you want, choose it</p>
+                </div>
+                <div className="text-cat-panel__list custom-scrollbar">
+                  {!activeCategory ? (
+                    <div className="text-cat-grid">
+                      {Object.entries(textCategories).map(([catName, catData]) => {
+                        const hasSelection = selectedSubcategory && selectedSubcategory.category === catName;
+                        return (
+                          <div
+                            key={catName}
+                            className={`text-cat-card ${hasSelection ? 'text-cat-card--selected' : ''}`}
+                            style={{ '--cat-color': catData.color }}
+                            onClick={() => setActiveCategory(catName)}
+                          >
+                            <div className="text-cat-card__icon-wrap">
+                              {(() => {
+                                const IconComponent = categoryIconMap[catData.icon];
+                                return IconComponent ? <IconComponent size={20} /> : null;
+                              })()}
+                            </div>
+                            <span className="text-cat-card__name">
+                              {catName}
+                              {hasSelection && <span className="text-cat-card__select-dot" />}
+                            </span>
+                            <span className="text-cat-card__count">
+                              {hasSelection ? 'Selected' : `${catData.items.length} Prompts`}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    (() => {
+                      const activeCatData = textCategories[activeCategory];
+                      if (!activeCatData) return null;
+                      return (
+                        <div className="text-cat-detail-view" style={{ '--cat-color': activeCatData.color }}>
+                          <div className="text-cat-detail-header-row">
+                            {!selectedSubcategory && (
+                              <button
+                                type="button"
+                                className="text-cat-back-btn"
+                                onClick={() => setActiveCategory(null)}
+                              >
+                                <span className="text-cat-back-btn__text">← Back to Categories</span>
+                                <span className="text-cat-back-btn__arrow">←</span>
+                              </button>
+                            )}
+                            <div className="text-cat-detail-header">
+                              <span className="text-cat-detail-icon">
+                                {(() => {
+                                  const IconComponent = categoryIconMap[activeCatData.icon];
+                                  return IconComponent ? <IconComponent size={20} /> : null;
+                                })()}
+                              </span>
+                              <h4 className="text-cat-detail-title">{activeCategory}</h4>
+                            </div>
+                          </div>
+                          <div className="text-cat-item-list">
+                            {activeCatData.items
+                              .filter((item) => {
+                                const isSelectionActiveInThisCat = selectedSubcategory && selectedSubcategory.category === activeCategory;
+                                if (isSelectionActiveInThisCat) {
+                                  return selectedSubcategory.name === item.name;
+                                }
+                                return true;
+                              })
+                              .map((item) => {
+                                const isSelected = selectedSubcategory && 
+                                                   selectedSubcategory.category === activeCategory && 
+                                                   selectedSubcategory.name === item.name;
+                                if (isSelected) {
+                                  return (
+                                    <div key={item.name} className="text-cat-selected-container">
+                                      <span className="text-cat-selected-label">Selected:</span>
+                                      <div className="text-cat-selected-wrapper">
+                                        <button
+                                          type="button"
+                                          className="text-cat-item text-cat-item--selected"
+                                          onClick={() => setSelectedSubcategory(null)}
+                                        >
+                                          <span className="text-cat-item__dot" />
+                                          <span className="text-cat-item__name">{item.name}</span>
+                                        </button>
+                                        <button
+                                          type="button"
+                                          className="text-cat-item-clear-btn"
+                                          onClick={() => setSelectedSubcategory(null)}
+                                          title="Clear selection"
+                                        >
+                                          ✕
+                                        </button>
+                                      </div>
+                                    </div>
+                                  );
+                                }
+                                return (
+                                  <button
+                                    key={item.name}
+                                    type="button"
+                                    className="text-cat-item"
+                                    onClick={() => {
+                                      setSelectedSubcategory({
+                                        category: activeCategory,
+                                        name: item.name,
+                                        template: item.template
+                                      });
+                                    }}
+                                  >
+                                    <span className="text-cat-item__dot" />
+                                    <span className="text-cat-item__name">{item.name}</span>
+                                  </button>
+                                );
+                              })}
+                          </div>
+                        </div>
+                      );
+                    })()
+                  )}
+                </div>
+              </div>
             ) : (
               <div className="generate-page__preview">
                 {generatorMode === 'prompt' ? (
