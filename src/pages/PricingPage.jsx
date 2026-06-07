@@ -118,9 +118,13 @@ export default function PricingPage() {
   return (
     <div className="pricing-page" id="pricing-page">
       <SEOHead
-        title="Pricing — Prompt Packs & Token Plans"
-        description="Get prompt packs and token plans for Prompt by Niti. Unlock unlimited AI prompt generation, premium marketplace access, and professional prompt engineering tools. Affordable plans for every creator."
-        keywords="prompt pricing, AI prompt plans, buy tokens, prompt credits, prompt packs, AI marketplace pricing, prompt by niti pricing"
+        title="Pricing — AI Prompt Token Packs & Plans"
+        description="Get prompt packs and token plans for Prompt by Niti. Unlock AI prompt generation for Midjourney, Sora, Flux, ChatGPT & more. Affordable one-time plans with 80% seller royalties. Free tier available."
+        keywords="prompt pricing, AI prompt plans, buy tokens, prompt credits, prompt packs, AI marketplace pricing, prompt by niti pricing, AI prompt subscription, prompt token packs, free AI prompts"
+        breadcrumbs={[
+          { name: 'Home', url: '/' },
+          { name: 'Pricing', url: '/pricing' }
+        ]}
         noIndex={false}
       />
       <div className="container">

@@ -12,9 +12,13 @@ export default function HelpPage() {
   return (
     <div className="legal-page help-page">
       <SEOHead
-        title="Help Center — Prompt by Niti Support & FAQ"
-        description="Get help with Prompt by Niti. Find answers to frequently asked questions about AI prompt generation, buying and selling prompts, token purchases, and more. Contact our support team."
-        keywords="prompt by niti help, prompt support, AI prompt FAQ, how to use prompts, prompt marketplace help, prompt generator help"
+        title="Help Center — Support & FAQ"
+        description="Get help with Prompt by Niti. FAQ about AI prompt generation, buying and selling prompts, token purchases, image-to-video prompts, text-to-code prompts & more. Contact our support team via email or Discord."
+        keywords="prompt by niti help, prompt support, AI prompt FAQ, how to use prompts, prompt marketplace help, prompt generator help, AI prompt tutorial, prompt engineering guide"
+        breadcrumbs={[
+          { name: 'Home', url: '/' },
+          { name: 'Help Center', url: '/help' }
+        ]}
       />
       <div className="container">
         {/* Hero Section */}

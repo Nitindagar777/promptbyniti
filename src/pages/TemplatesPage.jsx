@@ -97,9 +97,13 @@ export default function TemplatesPage() {
   return (
     <div className="templates-page" id="templates-page">
       <SEOHead
-        title="Prompt Marketplace — Buy & Sell AI Prompts for Midjourney, ChatGPT, DALL·E"
-        description="Browse and buy premium AI prompts for Midjourney, ChatGPT, DALL·E, Stable Diffusion, Flux, and more. The best prompt store and PromptBase alternative. Discover prompt ideas, templates, and examples."
-        keywords="prompt marketplace, buy prompts, sell prompts, prompt store, AI prompts, Midjourney prompts, ChatGPT prompts, DALL-E prompts, prompt templates, prompt ideas, PromptBase alternative, prompt shop, AI art prompts, premium prompts"
+        title="AI Prompt Marketplace — Buy & Sell Prompts for Midjourney, Sora, ChatGPT"
+        description="Browse, buy, and sell premium AI prompts for Midjourney, ChatGPT, DALL·E, Stable Diffusion, Flux, Sora, Kling & more. Verified prompt templates with sample outputs. The best prompt store and PromptBase alternative. Earn 80% royalties selling your prompts."
+        keywords="prompt marketplace, buy prompts, sell prompts, prompt store, AI prompts, Midjourney prompts, ChatGPT prompts, DALL-E prompts, Sora video prompts, Flux prompts, prompt templates, prompt ideas, PromptBase alternative, prompt shop, AI art prompts, premium prompts, image prompts, video prompts, text prompts, code prompts, prompt pack, verified prompts, prompt catalog, buy AI prompts online"
+        breadcrumbs={[
+          { name: 'Home', url: '/' },
+          { name: 'Prompt Marketplace', url: '/templates' }
+        ]}
       />
       <div className="container">
         {/* Header */}

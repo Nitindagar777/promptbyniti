@@ -8,9 +8,13 @@ export default function AboutPage() {
   return (
     <div className="legal-page about-page">
       <SEOHead
-        title="About Prompt by Niti — AI Prompt Engineering Platform"
-        description="Learn about Prompt by Niti, an advanced AI prompt generator and marketplace. Founded by Nitin Dagar, we help creators generate, buy, and sell professional prompts for Midjourney, ChatGPT, DALL·E, and more."
-        keywords="about prompt by niti, promptbyniti, Nitin Dagar, AI prompt platform, prompt engineering, prompt marketplace creator, AI tools company"
+        title="About — AI Prompt Engineering Platform by Nitin Dagar"
+        description="Learn about Prompt by Niti, the advanced AI prompt generator and marketplace with 3 consistency engines. Founded by Nitin Dagar. Generate, buy & sell professional prompts for Midjourney, Sora, Flux, ChatGPT & more."
+        keywords="about prompt by niti, promptbyniti, Nitin Dagar, AI prompt platform, prompt engineering, prompt marketplace creator, AI tools company, who made prompt by niti"
+        breadcrumbs={[
+          { name: 'Home', url: '/' },
+          { name: 'About', url: '/about' }
+        ]}
       />
       <div className="container">
         {/* Hero Section */}

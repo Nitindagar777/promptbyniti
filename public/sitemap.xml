@@ -5,52 +5,62 @@
   <!-- Homepage — Highest priority -->
   <url>
     <loc>https://promptbyniti.in/</loc>
-    <lastmod>2026-06-01</lastmod>
+    <lastmod>2026-06-08</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
     <image:image>
       <image:loc>https://promptbyniti.in/image1.png</image:loc>
-      <image:title>Prompt by Niti — AI Prompt Generator and Marketplace</image:title>
-      <image:caption>The #1 AI prompt generator and marketplace for Midjourney, ChatGPT, DALL-E, Stable Diffusion and more</image:caption>
+      <image:title>Prompt by Niti — #1 AI Prompt Generator and Marketplace</image:title>
+      <image:caption>AI prompt generator with 3 consistency engines for text-to-image, image-to-video, and text-to-code prompts. Supports Midjourney, Sora, Flux, ChatGPT and more.</image:caption>
     </image:image>
   </url>
 
   <!-- AI Prompt Generator -->
   <url>
     <loc>https://promptbyniti.in/generate</loc>
-    <lastmod>2026-06-01</lastmod>
+    <lastmod>2026-06-08</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.95</priority>
+    <image:image>
+      <image:loc>https://promptbyniti.in/image1.png</image:loc>
+      <image:title>Free AI Prompt Generator — Image, Video and Code Prompts</image:title>
+      <image:caption>Generate consistent text-to-image, image-to-video, and text-to-code prompts with Midjourney cref/sref, Sora motion anchors, AIDA copywriting, and AI agent personas.</image:caption>
+    </image:image>
   </url>
 
   <!-- Prompt Marketplace / Store -->
   <url>
     <loc>https://promptbyniti.in/templates</loc>
-    <lastmod>2026-06-01</lastmod>
+    <lastmod>2026-06-08</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.95</priority>
+    <image:image>
+      <image:loc>https://promptbyniti.in/image1.png</image:loc>
+      <image:title>AI Prompt Marketplace — Buy and Sell Premium Prompts</image:title>
+      <image:caption>Browse, buy, and sell verified AI prompt templates for Midjourney, Sora, ChatGPT, Flux, DALL-E and Stable Diffusion. Best PromptBase alternative.</image:caption>
+    </image:image>
   </url>
 
   <!-- Free Prompt Library -->
   <url>
     <loc>https://promptbyniti.in/library</loc>
-    <lastmod>2026-06-01</lastmod>
+    <lastmod>2026-06-08</lastmod>
     <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <!-- Sell Prompts -->
+  <url>
+    <loc>https://promptbyniti.in/sell</loc>
+    <lastmod>2026-06-08</lastmod>
+    <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
 
   <!-- Pricing -->
   <url>
     <loc>https://promptbyniti.in/pricing</loc>
-    <lastmod>2026-06-01</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.80</priority>
-  </url>
-
-  <!-- Sell Prompts -->
-  <url>
-    <loc>https://promptbyniti.in/sell</loc>
-    <lastmod>2026-06-01</lastmod>
+    <lastmod>2026-06-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.80</priority>
   </url>
@@ -58,7 +68,7 @@
   <!-- Help Center -->
   <url>
     <loc>https://promptbyniti.in/help</loc>
-    <lastmod>2026-06-01</lastmod>
+    <lastmod>2026-06-08</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.65</priority>
   </url>
@@ -66,7 +76,7 @@
   <!-- About Page -->
   <url>
     <loc>https://promptbyniti.in/about</loc>
-    <lastmod>2026-06-01</lastmod>
+    <lastmod>2026-06-08</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.65</priority>
   </url>
@@ -74,7 +84,7 @@
   <!-- Privacy Policy -->
   <url>
     <loc>https://promptbyniti.in/privacy</loc>
-    <lastmod>2026-06-01</lastmod>
+    <lastmod>2026-06-08</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.40</priority>
   </url>
@@ -82,7 +92,7 @@
   <!-- Terms of Service -->
   <url>
     <loc>https://promptbyniti.in/terms</loc>
-    <lastmod>2026-06-01</lastmod>
+    <lastmod>2026-06-08</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.40</priority>
   </url>

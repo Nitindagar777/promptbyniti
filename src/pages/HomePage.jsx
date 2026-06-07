@@ -4,7 +4,7 @@ import { useApp } from '../context/AppContext';
 import { generatePrompt } from '../data/promptEngine';
 import { randomDescriptions } from '../data/promptData';
 import PromptOutput from '../components/PromptOutput';
-import { ArrowRight, Sparkles, Zap, Image, Layers, Heart, Wand2, Rocket, Star, Palette, MessageSquare, ShieldCheck, Zap as ZapIcon, ShoppingBag, Coins, DollarSign, Eye, Camera, Lock, Check, Repeat, Video, Info, Copy, ChevronDown } from 'lucide-react';
+import { ArrowRight, Sparkles, Zap, Image, Layers, Heart, Wand2, Rocket, Star, Palette, MessageSquare, ShieldCheck, Zap as ZapIcon, ShoppingBag, Coins, DollarSign, Eye, Camera, Lock, Check, Repeat, Video, Info, Copy, ChevronDown, Code, FileText, Bot, Clock, RotateCw, ZoomIn, Activity, Film, Package } from 'lucide-react';
 import PreviewModal from '../components/PreviewModal';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -31,11 +31,8 @@ const renderStars = (rating) => {
 export default function HomePage() {
   const { state, dispatch, canGenerate, useCredit, addPrompt, cache, setCachedData, setScroll, getScroll } = useApp();
   const location = useLocation();
-  const [demoInput, setDemoInput] = useState('');
-  const [demoResult, setDemoResult] = useState(null);
   const [prompts, setPrompts] = useState(state.marketplace ? state.marketplace.slice(0, 8) : []);
   const [loadingPrompts, setLoadingPrompts] = useState(!state.marketplace || state.marketplace.length === 0);
-  const inputRef = useRef(null);
   const navigate = useNavigate();
   const [previewPrompt, setPreviewPrompt] = useState(null);
 
@@ -44,6 +41,7 @@ export default function HomePage() {
   // Reference Modes Showcase Section States
   const [activeImageMode, setActiveImageMode] = useState('sameScene'); // 'sameScene' | 'different' | 'fixed'
   const [activeVideoMode, setActiveVideoMode] = useState('sameSceneLoop'); // 'sameSceneLoop' | 'differentScenes' | 'fixedCharacterMotion'
+  const [activeTextMode, setActiveTextMode] = useState('code'); // 'code' | 'copywriting' | 'agents'
 
   // Video Reference Refs for play/pause control
   const videoRefs = {
@@ -231,6 +229,19 @@ export default function HomePage() {
     return () => clearTimeout(timer);
   }, [activeImageMode]);
 
+  // Auto-switch Text Reference Modes every 3 seconds smoothly
+  useEffect(() => {
+    const modes = ['code', 'copywriting', 'agents'];
+    const timer = setTimeout(() => {
+      setActiveTextMode(current => {
+        const currentIndex = modes.indexOf(current);
+        const nextIndex = (currentIndex + 1) % modes.length;
+        return modes[nextIndex];
+      });
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [activeTextMode]);
+
   // Handler to auto-switch Video Reference Modes when the active video ends
   const handleVideoEnded = useCallback(() => {
     const videoModes = ['sameSceneLoop', 'differentScenes', 'fixedCharacterMotion'];
@@ -281,29 +292,15 @@ export default function HomePage() {
     }
   };
 
-  const handleDemoGenerate = () => {
-    if (!demoInput.trim()) {
-      inputRef.current?.focus();
-      return;
-    }
-    navigate('/generate', { state: { initialInput: demoInput } });
-  };
-
-  const handleRandomGenerate = () => {
-    const randomIndex = Math.floor(Math.random() * randomDescriptions.length);
-    const selected = randomDescriptions[randomIndex];
-    setDemoInput(selected);
-    setTimeout(() => {
-      navigate('/generate', { state: { initialInput: selected, isRandom: true } });
-    }, 500);
-  };
-
   return (
     <div className="p-home" id="home-page">
       <SEOHead
-        title="AI Prompt Generator & Consistent Reference Prompt Marketplace — Prompt by Niti"
-        description="Prompt by Niti is the #1 AI prompt generator and marketplace for Midjourney, Flux, Sora, Luma, and Llama. Craft consistent character prompts for text-to-image generation and cinematic image-to-video generation. Buy, sell, and discover prompt templates, blueprints, and examples."
-        keywords="text to image generation prompts, image to video generation prompts, consistent character prompts, Midjourney cref prompts, Sora video prompts, Flux consistency prompts, AI art prompt marketplace, prompt engineering templates, buy sell prompts, PromptBase alternative, promptbase, promptbyniti"
+        title="#1 AI Prompt Generator & Marketplace — Image, Video & Code"
+        description="Prompt by Niti is the leading AI prompt generator and marketplace with 3 consistency engines. Craft consistent character prompts (cref/sref) for Midjourney & Flux, cinematic motion anchors for Sora & Kling videos, and structured code/text blueprints (AIDA, PAS, agent personas). Generate, buy & sell premium prompt templates."
+        keywords="ai prompt generator, prompt generator, prompt marketplace, buy prompts, sell prompts, midjourney prompt generator, chatgpt prompt generator, consistent character prompts, midjourney cref, midjourney sref, image to video prompts, sora video prompts, flux prompt generator, text to code prompts, AIDA copywriting prompts, react code prompts, AI agent personas, prompt templates, prompt engineering, promptbase alternative, promptbyniti, free prompt generator, prompt builder, prompt ideas, best AI prompts 2026"
+        breadcrumbs={[
+          { name: 'Home', url: '/' }
+        ]}
       />
       {/* 01. HERO */}
       <section className="p-hero">
@@ -317,7 +314,7 @@ export default function HomePage() {
               </h1>
               
               <p className="p-hero__pitch">
-                Traditional prompt makers only guess. Our generator supports both <strong>Image</strong> & <strong>Video</strong> outputs, using state-of-the-art <strong>Reference Mode</strong> & <strong>Character Consistency</strong> locking to replicate poses, maintain style coherence, and freeze details across multiple scenes and clips with absolute precision.
+                Traditional prompt makers only guess. Our generator supports <strong>Image</strong>, <strong>Video</strong>, & <strong>Text</strong> prompts, using advanced <strong>Reference Consistency Engines</strong> to lock character profiles, synchronize camera motion, structure syntax-perfect code, and align copywriting frameworks.
               </p>
               
               <p className="p-hero__subtitle p-hero__subtitle--accent">
@@ -337,15 +334,15 @@ export default function HomePage() {
               <div className="p-hero__features">
                 <div className="p-hero__feature-item">
                   <Sparkles size={16} className="text-pink" />
-                  <span>Image & Video Consistency</span>
+                  <span>Image, Video & Text Consistency</span>
                 </div>
                 <div className="p-hero__feature-item">
                   <ZapIcon size={16} className="text-orange" />
-                  <span>3 Advanced Reference Modes</span>
+                  <span>3 Advanced Consistency Engines</span>
                 </div>
                 <div className="p-hero__feature-item">
                   <Layers size={16} className="text-cyan" />
-                  <span>Midjourney, Sora, Flux & More</span>
+                  <span>Midjourney, Sora, ChatGPT, Flux & More</span>
                 </div>
               </div>
             </div>
@@ -411,6 +408,25 @@ export default function HomePage() {
                   alt="Fixed Character Image Reference Guide" 
                   className={`p-ref-modes__showcase-media ${activeImageMode === 'fixed' ? 'active' : ''}`}
                 />
+              </div>
+
+              {/* Supported Image Styles & Presets */}
+              <div className="p-ref-modes__text-categories-list">
+                <span className="p-ref-modes__text-list-label">Supported Image Styles & Presets</span>
+                <div className="p-ref-modes__text-list-chips">
+                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--cyan"><Camera size={12} /> Portraits</span>
+                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--cyan"><Eye size={12} /> Cinematic Shots</span>
+                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--cyan"><Heart size={12} /> Anime & Manga</span>
+                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--cyan"><Layers size={12} /> 3D Concept Art</span>
+                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--cyan"><Palette size={12} /> Vector Art</span>
+                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--cyan"><Image size={12} /> Comic Book Style</span>
+                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--cyan"><Palette size={12} /> Watercolor</span>
+                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--cyan"><Layers size={12} /> Pixel Art</span>
+                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--cyan"><Package size={12} /> Product Design</span>
+                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--cyan"><Zap size={12} /> Logo Design</span>
+                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--cyan"><Palette size={12} /> Oil Painting</span>
+                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--cyan"><Wand2 size={12} /> Lineart & Sketch</span>
+                </div>
               </div>
             </div>
 
@@ -780,42 +796,361 @@ export default function HomePage() {
                   onEnded={handleVideoEnded}
                 />
               </div>
+
+              {/* Supported Cinematic Movements */}
+              <div className="p-ref-modes__text-categories-list">
+                <span className="p-ref-modes__text-list-label">Supported Camera Movements & Motions</span>
+                <div className="p-ref-modes__text-list-chips">
+                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--sky"><ZoomIn size={12} /> Slow Zoom</span>
+                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--sky"><RotateCw size={12} /> Orbital Rotation</span>
+                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--sky"><Film size={12} /> Tracking Shot</span>
+                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--sky"><Rocket size={12} /> Drone Flyby</span>
+                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--sky"><Clock size={12} /> Timelapse</span>
+                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--sky"><ArrowRight size={12} /> Panning Shot</span>
+                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--sky"><ChevronDown size={12} /> Dynamic Tilt</span>
+                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--sky"><Eye size={12} /> Subject Follow</span>
+                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--sky"><Activity size={12} /> Handheld Shake</span>
+                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--sky"><Zap size={12} /> Slow Motion</span>
+                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--sky"><Repeat size={12} /> 360 Rotation</span>
+                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--sky"><Sparkles size={12} /> Cinematic Focus</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 02. LIVE PLAYGROUND (No more hidden text) */}
-      <section className="p-playground container">
-        <div className="p-playground__card card reveal">
-          <div className="p-playground__header">
-            <h2 className="text-center h-display">Try it <span className="text-purple">right now!</span></h2>
-            <p className="text-center">Describe your mental image below.</p>
+      {/* TEXT REFERENCE MODES SECTION */}
+      <section className="p-ref-modes section-spacing" id="text-ref-modes">
+        <div className="container">
+          <div className="p-ref-modes__header reveal">
+            <h2 className="h-display text-center">Structured Copy & Code <span className="text-orange">Text Reference Modes</span></h2>
+            <p className="text-center p-ref-modes__subtitle">
+              Learn how our advanced text reference blueprints generate syntax-perfect code, structured copy, and customized agent personas.
+            </p>
           </div>
-          <div className="p-playground__input">
-            <textarea
-              ref={inputRef}
-              className="p-playground__textarea"
-              placeholder="e.g., A majestic white lion sitting on a throne made of flowers..."
-              value={demoInput}
-              onChange={e => setDemoInput(e.target.value)}
-            />
+
+          <div className="p-ref-modes__showcase-grid reveal">
+            {/* Left Column: Interactive IDE Mockup */}
+            <div className="p-ref-modes__left-pane">
+              <div className="p-ref-modes__sub-toggles">
+                <button 
+                  className={`p-ref-modes__sub-btn ${activeTextMode === 'code' ? 'active active--sameScene' : ''}`}
+                  onClick={() => setActiveTextMode('code')}
+                >
+                  <Code size={16} />
+                  <span>Structured Code</span>
+                </button>
+                <button 
+                  className={`p-ref-modes__sub-btn ${activeTextMode === 'copywriting' ? 'active active--different' : ''}`}
+                  onClick={() => setActiveTextMode('copywriting')}
+                >
+                  <FileText size={16} />
+                  <span>Copywriting</span>
+                </button>
+                <button 
+                  className={`p-ref-modes__sub-btn ${activeTextMode === 'agents' ? 'active active--fixed' : ''}`}
+                  onClick={() => setActiveTextMode('agents')}
+                >
+                  <Bot size={16} />
+                  <span>AI Agent Personas</span>
+                </button>
+              </div>
+
+              <div className="p-ref-modes__media-wrap p-ref-modes__media-wrap--text">
+                {/* Code Window */}
+                <div className={`p-ref-modes__editor-mock ${activeTextMode === 'code' ? 'active' : ''}`}>
+                  <div className="p-ref-modes__editor-header">
+                    <div className="p-ref-modes__editor-dots">
+                      <span className="dot dot--red"></span>
+                      <span className="dot dot--yellow"></span>
+                      <span className="dot dot--green"></span>
+                    </div>
+                    <span className="p-ref-modes__editor-title">PromptReactor.jsx</span>
+                  </div>
+                  <div className="p-ref-modes__editor-body">
+                    <div className="p-ref-modes__code-content">
+                      <div className="code-line">
+                        <span className="code-keyword">import</span> React, &#123; useState, useEffect &#125; <span className="code-keyword">from</span> <span className="code-string">'react'</span>;
+                      </div>
+                      <div className="code-line">
+                        <span className="code-keyword">import</span> &#123; Sparkles &#125; <span className="code-keyword">from</span> <span className="code-string">'lucide-react'</span>;
+                      </div>
+                      <div className="code-line code-line--empty"></div>
+                      <div className="code-line">
+                        <span className="code-keyword">export default function</span> <span className="code-function">PromptReactor</span>() &#123;
+                      </div>
+                      <div className="code-line code-line--indent-1">
+                        <span className="code-keyword">const</span> [state, setState] = <span className="code-function">useState</span>(<span className="code-string">'idle'</span>);
+                      </div>
+                      <div className="code-line code-line--empty"></div>
+                      <div className="code-line code-line--indent-1">
+                        <span className="code-function">useEffect</span>(() =&gt; &#123;
+                      </div>
+                      <div className="code-line code-line--indent-2">
+                        <span className="code-comment">// Initialize quantum sequence</span>
+                      </div>
+                      <div className="code-line code-line--indent-2">
+                        <span className="code-keyword">const</span> system = <span className="code-function">connectToAgent</span>();
+                      </div>
+                      <div className="code-line code-line--indent-2">
+                        system.<span className="code-function">setPrecision</span>(<span className="code-string">'maximum'</span>);
+                      </div>
+                      <div className="code-line code-line--indent-1">
+                        &#125;, []);
+                      </div>
+                      <div className="code-line code-line--empty"></div>
+                      <div className="code-line code-line--indent-1">
+                        <span className="code-keyword">return</span> (
+                      </div>
+                      <div className="code-line code-line--indent-2">
+                        <span className="code-tag">&lt;div</span> <span className="code-attr">className</span>=<span className="code-string">"reactor-core"</span><span className="code-tag">&gt;</span>
+                      </div>
+                      <div className="code-line code-line--indent-3">
+                        <span className="code-tag">&lt;Sparkles</span> <span className="code-attr">className</span>=<span className="code-string">"animated-spark"</span> <span className="code-tag">/&gt;</span>
+                      </div>
+                      <div className="code-line code-line--indent-3">
+                        <span className="code-tag">&lt;h2&gt;</span>Prompt Reactor Activated<span className="code-tag">&lt;/h2&gt;</span>
+                      </div>
+                      <div className="code-line code-line--indent-2">
+                        <span className="code-tag">&lt;/div&gt;</span>
+                      </div>
+                      <div className="code-line code-line--indent-1">
+                        );
+                      </div>
+                      <div className="code-line">
+                        &#125;
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Copywriting Window */}
+                <div className={`p-ref-modes__editor-mock ${activeTextMode === 'copywriting' ? 'active' : ''}`}>
+                  <div className="p-ref-modes__editor-header">
+                    <div className="p-ref-modes__editor-dots">
+                      <span className="dot dot--red"></span>
+                      <span className="dot dot--yellow"></span>
+                      <span className="dot dot--green"></span>
+                    </div>
+                    <span className="p-ref-modes__editor-title">AIDA_Sales_Pitch.md</span>
+                  </div>
+                  <div className="p-ref-modes__editor-body">
+                    <div className="p-ref-modes__doc-content">
+                      <p><strong>[ATTENTION]</strong><br />
+                      Stop burning hours on manual prompt adjustments that yield subpar results.</p>
+                      
+                      <p><strong>[INTEREST]</strong><br />
+                      Our revolutionary text reference engine locks in your desired framework structures, outputting consistent templates that execute perfectly on first try, every single time.</p>
+                      
+                      <p><strong>[DESIRE]</strong><br />
+                      Imagine generating high-converting sales letters, clean codebase files, or custom agent personas without manual adjustments or endless copy-pasting iterations.</p>
+                      
+                      <p><strong>[ACTION]</strong><br />
+                      Click "Start Generating" below to unlock premium text reference modes and boost your workflow efficiency by 10x today!</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* AI Agent Chat Window */}
+                <div className={`p-ref-modes__editor-mock ${activeTextMode === 'agents' ? 'active' : ''}`}>
+                  <div className="p-ref-modes__editor-header">
+                    <div className="p-ref-modes__editor-dots">
+                      <span className="dot dot--red"></span>
+                      <span className="dot dot--yellow"></span>
+                      <span className="dot dot--green"></span>
+                    </div>
+                    <span className="p-ref-modes__editor-title">System Persona Log</span>
+                  </div>
+                  <div className="p-ref-modes__editor-body">
+                    <div className="p-ref-modes__chat-content">
+                      <div className="chat-bubble chat-bubble--system">
+                        <span className="bubble-label">SYSTEM INSTRUCTION</span>
+                        <p>You are Antigravity, a professional Senior Developer AI. Focus heavily on production-ready, clean, well-documented code. Maintain a concise and helpful tone.</p>
+                      </div>
+                      <div className="chat-bubble chat-bubble--user">
+                        <span className="bubble-label">USER</span>
+                        <p>Explain how reference prompts optimize prompt styling.</p>
+                      </div>
+                      <div className="chat-bubble chat-bubble--agent">
+                        <span className="bubble-label">AGENT (ANTIGRAVITY)</span>
+                        <p>Reference prompts lock variables, styles, and structural frameworks into system layers. This forces the model's latent weights to prioritize consistency constraints over generic text outputs.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Supported Text Prompt Categories List */}
+              <div className="p-ref-modes__text-categories-list">
+                <span className="p-ref-modes__text-list-label">Supported Prompt Categories</span>
+                <div className="p-ref-modes__text-list-chips">
+                  <span className="p-ref-modes__text-chip"><Bot size={12} /> AI Agents</span>
+                  <span className="p-ref-modes__text-chip"><Code size={12} /> Code</span>
+                  <span className="p-ref-modes__text-chip"><FileText size={12} /> Writing</span>
+                  <span className="p-ref-modes__text-chip"><ShoppingBag size={12} /> Marketing</span>
+                  <span className="p-ref-modes__text-chip"><Coins size={12} /> Business</span>
+                  <span className="p-ref-modes__text-chip"><Sparkles size={12} /> Research</span>
+                  <span className="p-ref-modes__text-chip"><Zap size={12} /> Education</span>
+                  <span className="p-ref-modes__text-chip"><Layers size={12} /> Productivity</span>
+                  <span className="p-ref-modes__text-chip"><Palette size={12} /> Creative</span>
+                  <span className="p-ref-modes__text-chip"><MessageSquare size={12} /> Social Media</span>
+                  <span className="p-ref-modes__text-chip"><DollarSign size={12} /> Ecommerce</span>
+                  <span className="p-ref-modes__text-chip"><Wand2 size={12} /> Other</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Data Card */}
+            <div className="p-ref-modes__right-pane">
+              <div className="p-ref-modes__info-card glass-effect">
+                {/* Code Generation Content */}
+                <div className={`p-ref-modes__info-card-content ${activeTextMode === 'code' ? 'active' : ''}`}>
+                  <div className="p-ref-modes__info-header">
+                    <span className="p-ref-modes__badge p-ref-modes__badge--sameScene">
+                      💻 Structured Code Blueprints
+                    </span>
+                    <h3>Generate Clean, Syntactically-Perfect Code Blocks</h3>
+                  </div>
+
+                  <div className="p-ref-modes__template-box">
+                    <span className="p-ref-modes__template-label">Code Prompt Template</span>
+                    <pre className="p-ref-modes__template-code">
+                      {'Act as a Senior React Engineer. Write a [component_name] component that uses [hooks] and implements [features]. Output only valid ES6 syntax. Do not explain standard modules ...'}
+                    </pre>
+                  </div>
+
+                  <div className="p-ref-modes__comparison-grid">
+                    <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--same">
+                      <h4>🟢 What Stays SAME</h4>
+                      <ul>
+                        <li><strong>Syntax Style:</strong> Standardized code layouts and naming conventions</li>
+                        <li><strong>Dependencies:</strong> Consistent package imports and library choices</li>
+                        <li><strong>Comments:</strong> Detailed inline docstrings and documentation formats</li>
+                      </ul>
+                    </div>
+
+                    <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--changes">
+                      <h4>⚡ What CHANGES</h4>
+                      <ul>
+                        <li><strong>Component Logic:</strong> Adapts state logic and handler functions dynamically</li>
+                        <li><strong>JSX Elements:</strong> Renders customized layout nodes based on feature specs</li>
+                        <li><strong>Sub-components:</strong> Swaps child nodes based on design requests</li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className="p-ref-modes__tip-banner">
+                    <div className="p-ref-modes__tip-icon">
+                      <Info size={18} />
+                    </div>
+                    <div className="p-ref-modes__tip-text">
+                      <strong>Text Reference Blueprints:</strong> Use these modes to lock in language choice, syntax rules, and error-handling strategies. This prevents random markdown commentary and enforces clean files.
+                    </div>
+                  </div>
+                </div>
+
+                {/* Copywriting Content */}
+                <div className={`p-ref-modes__info-card-content ${activeTextMode === 'copywriting' ? 'active' : ''}`}>
+                  <div className="p-ref-modes__info-header">
+                    <span className="p-ref-modes__badge p-ref-modes__badge--different">
+                      ✍️ Copywriting Frameworks
+                    </span>
+                    <h3>Lock Structural Frameworks (AIDA, PAS, BAB)</h3>
+                  </div>
+
+                  <div className="p-ref-modes__template-box">
+                    <span className="p-ref-modes__template-label">Copywriting Template</span>
+                    <pre className="p-ref-modes__template-code">
+                      {'Write high-converting copy for [product] targeting [audience] using the [framework] framework. Keep Attention punchy, build Interest with statistics, create Desire with benefits ...'}
+                    </pre>
+                  </div>
+
+                  <div className="p-ref-modes__comparison-grid">
+                    <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--same">
+                      <h4>🟢 What Stays SAME</h4>
+                      <ul>
+                        <li><strong>Copy Framework:</strong> Strict sectioning corresponding to AIDA, PAS, or BAB</li>
+                        <li><strong>Marketing Tone:</strong> Persuasive, professional, benefit-driven style</li>
+                        <li><strong>Formatting:</strong> Bullet points, bold headers, and short paragraphs</li>
+                      </ul>
+                    </div>
+
+                    <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--changes">
+                      <h4>⚡ What CHANGES</h4>
+                      <ul>
+                        <li><strong>Product Hook:</strong> Adapts the attention grabber to specific items/services</li>
+                        <li><strong>Call-to-Action:</strong> Swaps signup links, discount triggers, or buy buttons</li>
+                        <li><strong>Use Cases:</strong> Aligns problem/desire statements with user persona</li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className="p-ref-modes__tip-banner">
+                    <div className="p-ref-modes__tip-icon">
+                      <Info size={18} />
+                    </div>
+                    <div className="p-ref-modes__tip-text">
+                      <strong>Copywriting Blueprints:</strong> Enforce structural formatting. This guarantees that marketing generators structure paragraphs logically, instead of dumping large blocks of unstructured sentences.
+                    </div>
+                  </div>
+                </div>
+
+                {/* AI Agent Personas Content */}
+                <div className={`p-ref-modes__info-card-content ${activeTextMode === 'agents' ? 'active' : ''}`}>
+                  <div className="p-ref-modes__info-header">
+                    <span className="p-ref-modes__badge p-ref-modes__badge--fixed">
+                      🤖 AI Agent Personas
+                    </span>
+                    <h3>Define Strict System Rules & Chat Context</h3>
+                  </div>
+
+                  <div className="p-ref-modes__template-box">
+                    <span className="p-ref-modes__template-label">Agent Prompt Template</span>
+                    <pre className="p-ref-modes__template-code">
+                      {'You are [agent_name], a specialized AI designed for [specific_role]. Always follow [rule_1], [rule_2]. Respond in a [tone] voice. Frame decisions using [framework] ...'}
+                    </pre>
+                  </div>
+
+                  <div className="p-ref-modes__comparison-grid">
+                    <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--same">
+                      <h4>🟢 What Stays SAME</h4>
+                      <ul>
+                        <li><strong>System Mandate:</strong> The system instruction guidelines and behavior constraints</li>
+                        <li><strong>Response Tone:</strong> Specific voice tone (e.g., academic, playful, analytical)</li>
+                        <li><strong>Formatting Rules:</strong> Code-first outputs or structural guidelines</li>
+                      </ul>
+                    </div>
+
+                    <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--changes">
+                      <h4>⚡ What CHANGES</h4>
+                      <ul>
+                        <li><strong>Session Data:</strong> Custom user queries and incoming message history</li>
+                        <li><strong>Task Context:</strong> Specific problem domain to analyze or code to write</li>
+                        <li><strong>Action Output:</strong> Precise answers matching current conversation goals</li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className="p-ref-modes__tip-banner">
+                    <div className="p-ref-modes__tip-icon">
+                      <Info size={18} />
+                    </div>
+                    <div className="p-ref-modes__tip-text">
+                      <strong>Agent Persona Blueprints:</strong> Restrict agent behavior so it adheres to strict guidelines and doesn't hallucinate outside its core scope or break system instructions.
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-ref-modes__footer-actions">
+                <Link to="/generate" className="btn btn-primary btn-xl">
+                  Try text reference mode <ArrowRight size={18} style={{ marginLeft: '4px' }} />
+                </Link>
+              </div>
+            </div>
           </div>
-          <div className="p-playground__footer" style={{ display: 'flex', justifyContent: 'center', gap: '15px', marginTop: '20px', flexWrap: 'wrap' }}>
-            <button
-              className="btn btn-primary btn-xl btn-demo-transform"
-              onClick={handleDemoGenerate}
-            >
-              <Wand2 size={20} /> Transform into Professional Prompt
-            </button>
-            <button
-              className="btn btn-sky btn-xl btn-demo-random"
-              onClick={handleRandomGenerate}
-            >
-              <ZapIcon size={20} /> Randomly Generate
-            </button>
-          </div>
-          {demoResult && <div className="mt-2xl"><PromptOutput result={demoResult} /></div>}
         </div>
       </section>
 
@@ -1077,36 +1412,13 @@ export default function HomePage() {
           <a href="/pricing" className="p-tokens__pricing-link">View Token Packs & Pricing →</a>
         </div>
       </section>
-      {/* 05. SEO CONTENT — Keyword-rich text for search engines */}
-      <section className="p-seo-content container" style={{ paddingBottom: 'var(--space-2xl)' }}>
-        <div style={{ maxWidth: '900px', margin: '0 auto', padding: '40px 20px' }}>
-          <h2 className="h-display" style={{ textAlign: 'center', marginBottom: '24px' }}>
-            The Best <span className="text-cyan">AI Prompt</span> Platform — <span className="text-orange">Prompt by Niti</span>
-          </h2>
-          <div className="seo-caveat-text" style={{ color: 'var(--text-secondary)', lineHeight: '1.8' }}>
-            <p>
-              <strong>Prompt by Niti</strong> is the ultimate <strong>AI prompt generator</strong> and <strong>prompt marketplace</strong> built for creators, designers, and prompt engineers. Whether you need <strong>Midjourney prompts</strong>, <strong>ChatGPT prompts</strong>, <strong>DALL·E prompts</strong>, <strong>Stable Diffusion prompts</strong>, or <strong>Flux prompts</strong> — our AI-powered platform generates studio-quality results in seconds.
-            </p>
-            <p style={{ marginTop: '16px' }}>
-              Looking for <strong>prompt ideas</strong>? Our <strong>free prompt generator</strong> transforms your simple descriptions into professional, optimized <strong>prompt templates</strong> and <strong>prompt examples</strong> for any AI model. From <strong>AI art prompts</strong> and <strong>AI image prompts</strong> to <strong>text generation prompts</strong> and <strong>video prompts</strong> — we've got you covered.
-            </p>
-            <p style={{ marginTop: '16px' }}>
-              <strong>Prompt by Niti</strong> is the best <strong>PromptBase alternative</strong> — offering a richer <strong>prompt store</strong>, smarter <strong>prompt engineering</strong> tools, and a thriving <strong>prompt marketplace</strong> where you can <strong>buy prompts</strong> and <strong>sell prompts</strong> to earn real money. Our <strong>prompt library</strong> includes thousands of curated <strong>prompt templates</strong> for <strong>Midjourney</strong>, <strong>ChatGPT</strong>, <strong>DALL·E 3</strong>, <strong>Stable Diffusion XL</strong>, <strong>Flux</strong>, <strong>Sora</strong>, <strong>Niji</strong>, and many more AI models.
-            </p>
-            <p style={{ marginTop: '16px' }}>
-              Start generating <strong>professional AI prompts</strong> today — for free. No credit card required. Join thousands of creators who trust <strong>Prompt by Niti</strong> as their go-to <strong>prompt builder</strong> and <strong>prompt creator</strong> platform.
-            </p>
-          </div>
-        </div>
-      </section>
-
       {/* 05.5 RICH SEO HUB & FAQ SECTION */}
       <section className="p-seo-hub section-spacing" id="seo-hub">
         <div className="container">
           <div className="p-seo-hub__header reveal">
-            <h2 className="h-display text-center">Ultimate AI Prompt Guide: <span className="text-cyan">Text-to-Image</span> & <span className="text-orange">Image-to-Video</span></h2>
+            <h2 className="h-display text-center">Ultimate AI Prompt Guide: <span className="text-cyan">Text-to-Image</span>, <span className="text-orange">Image-to-Video</span>, & <span className="text-purple">Text-to-Code/Text</span></h2>
             <p className="text-center p-seo-hub__subtitle">
-              Learn how to master character consistency, style referencing, and multi-scene narrative prompt engineering.
+              Learn how to master character consistency, style referencing, camera movements, structured copywriting frameworks, and custom agent blueprints.
             </p>
           </div>
 
@@ -1146,11 +1458,58 @@ export default function HomePage() {
                 <li><strong>Fixed Character Motion:</strong> Lock the camera's focus on a subject while changing perspective or speed.</li>
               </ul>
             </article>
+
+            <article className="p-seo-article glass-effect">
+              <div className="p-seo-article__icon text-purple">
+                <Code size={28} />
+              </div>
+              <h3>Text-to-Code & Text Prompt Engineering</h3>
+              <p>
+                Generating structured textual output like React components, Python scripts, system prompt instructions, or sales copy requires syntax-aware template rules. By using specific system instructions, anti-visions, and context variables, engineers can force the model to output production-ready structures without generic chat commentary.
+              </p>
+              <p>
+                Our AI Prompt Generator handles these parameters, wrapping your descriptions in structured frameworks like AIDA (Copywriting) or strictly constrained personas. This results in high-conversion sales copy, error-free code blocks, and reliable agent bots.
+              </p>
+              <ul className="p-seo-article__bullets">
+                <li><strong>AIDA & PAS Frameworks:</strong> Auto-structure copy with attention hooks, problem breakdowns, and clear call-to-actions.</li>
+                <li><strong>Code Constraints:</strong> Restrict responses to raw, syntax-highlighted code output while omitting verbose conversational padding.</li>
+                <li><strong>System Personas:</strong> Define strict rules, behavior boundaries, and memory states for custom AI agent flows.</li>
+              </ul>
+            </article>
+          </div>
+
+          {/* 05. SEO CONTENT — Keyword-rich text for search engines */}
+          <div className="p-seo-content container" style={{ padding: '24px 0 48px', borderTop: '1px solid rgba(255, 255, 255, 0.03)' }}>
+            <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+              <h2 className="h-display" style={{ textAlign: 'center', marginBottom: '24px' }}>
+                The Best <span className="text-cyan">AI Prompt</span> Platform — <span className="text-orange">Prompt by Niti</span>
+              </h2>
+              <div className="seo-caveat-text" style={{ color: 'var(--text-secondary)', lineHeight: '1.8' }}>
+                <p>
+                  <strong>Prompt by Niti</strong> is the ultimate <strong>AI prompt generator</strong> and <strong>prompt marketplace</strong> built for creators, designers, developers, and prompt engineers. Whether you need <strong>Midjourney prompts</strong>, <strong>ChatGPT prompts</strong>, <strong>DALL·E prompts</strong>, <strong>Stable Diffusion prompts</strong>, <strong>Flux prompts</strong>, or <strong>Sora prompts</strong> — our advanced platform organizes and optimizes your prompt parameters to deliver studio-quality results in seconds.
+                </p>
+                <p style={{ marginTop: '16px' }}>
+                  What sets us apart is our triple-threat <strong>Consistency Reference Engine</strong>:
+                </p>
+                <ul style={{ marginTop: '8px', paddingLeft: '20px', listStyleType: 'disc', color: 'var(--text-secondary)' }}>
+                  <li style={{ marginTop: '6px' }}><strong>Image Reference Modes:</strong> Replicate complex art styles, portraits, and 3D concept graphics while locking character details (<code>--cref</code>) and style parameters (<code>--sref</code>).</li>
+                  <li style={{ marginTop: '6px' }}><strong>Video Reference Modes:</strong> Bring static images to life with cinematic motion anchors, orbital rotations, slow zooms, panning directions, and stable characters across frames.</li>
+                  <li style={{ marginTop: '6px' }}><strong>Text Reference Modes:</strong> Enforce structured blueprints for <strong>Code Generation</strong> (React components, Python scripts, APIs), <strong>Copywriting Frameworks</strong> (AIDA, PAS templates), and custom <strong>AI Agent Personas</strong>.</li>
+                </ul>
+                <p style={{ marginTop: '16px' }}>
+                  Looking for <strong>prompt ideas</strong>? Our <strong>free prompt generator</strong> transforms your simple descriptions into professional, optimized <strong>prompt templates</strong> and <strong>prompt examples</strong> for any AI model. **Prompt by Niti** is the best **PromptBase alternative** — offering a richer **prompt store**, smarter **prompt engineering** tools, and a thriving **prompt marketplace** where you can **buy prompts** and **sell prompts** to earn 80% royalties.
+                </p>
+                <p style={{ marginTop: '16px' }}>
+                  Start generating <strong>professional AI prompts</strong> today — for free. No credit card required. Join thousands of creators who trust <strong>Prompt by Niti</strong> as their go-to <strong>prompt builder</strong>, <strong>prompt creator</strong>, and <strong>prompt editor</strong> platform.
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* FAQ ACCORDION */}
+          <br></br>
           <div className="p-seo-faq reveal">
-            <h3 className="text-center p-seo-faq__title">Frequently Asked Questions</h3>
+            <h3 className="text-center p-seo-faq__title">Frequently Asked <span className="text-orange">Questions</span></h3>
             
             <div className="p-seo-faq__list">
               <details className="p-seo-faq__item glass-effect">
@@ -1163,11 +1522,52 @@ export default function HomePage() {
               </details>
 
               <details className="p-seo-faq__item glass-effect">
+                <summary>Why does the character's face change slightly across different image generations?</summary>
+                <div className="p-seo-faq__content">
+                  <p>
+                    AI models add a degree of latent noise during diffusion. To maximize facial consistency, set the character weight parameter (like <code>--cw 100</code> in Midjourney) to lock hair, clothing, and details. To change clothes while keeping the face identical, reduce the weight to <code>--cw 0</code> so only the face profile is locked.
+                  </p>
+                </div>
+              </details>
+
+              <details className="p-seo-faq__item glass-effect">
                 <summary>How do I write prompts for image-to-video generation?</summary>
                 <div className="p-seo-faq__content">
                   <p>
                     When doing image-to-video (I2V) prompting, you upload a source image and write a prompt describing the action rather than the details. Since the video model gets the details from the image, your text should focus on camera instructions (e.g., "slow tracking shot, camera dollying left") and motion details ("dust motes drifting in sunbeams, hair blowing softly in wind").
                   </p>
+                </div>
+              </details>
+
+              <details className="p-seo-faq__item glass-effect">
+                <summary>Why does my code prompt output verbose explanations instead of clean code?</summary>
+                <div className="p-seo-faq__content">
+                  <p>
+                    Standard LLMs are trained to be conversational and chatty, leading to verbose introductions. By using our <strong>Code Blueprint Reference Mode</strong>, the generated prompt forces the system instruction layer to mandate raw, syntax-highlighted code output inside markdown blocks while strictly banning conversational padding.
+                  </p>
+                </div>
+              </details>
+
+              <details className="p-seo-faq__item glass-effect">
+                <summary>Can I force the copywriting generator to adhere to specific marketing frameworks?</summary>
+                <div className="p-seo-faq__content">
+                  <p>
+                    Yes! Our <strong>Copywriting Framework Reference Mode</strong> allows you to choose templates like AIDA (Attention, Interest, Desire, Action) or PAS (Problem, Agitate, Solution). The engine forces the model to structure the response under bold section headers.
+                  </p>
+                </div>
+              </details>
+
+              <details className="p-seo-faq__item glass-effect">
+                <summary>How do generator credit tiers work when crafting my prompts?</summary>
+                <div className="p-seo-faq__content">
+                  <p>
+                    Our prompt reactor runs on three levels of complexity:
+                  </p>
+                  <ul style={{ marginTop: '8px', paddingLeft: '20px', listStyleType: 'circle', color: 'var(--text-secondary)' }}>
+                    <li><strong>Normal (1 credit):</strong> Focuses on syntax structure and clean layouts (500–700 chars).</li>
+                    <li><strong>Super (3 credits):</strong> Adds advanced target audience persona and tone metrics (800–1000 chars).</li>
+                    <li><strong>Power (5 credits):</strong> Appends multi-phase blueprints, anti-visions, and strict success metrics (1200–1500 chars).</li>
+                  </ul>
                 </div>
               </details>
 

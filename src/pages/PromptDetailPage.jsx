@@ -206,9 +206,45 @@ export default function PromptDetailPage() {
     <div className="p-detail" id="prompt-detail-page">
       <SEOHead
         title={`${template.title || template.name} — ${model.label} Prompt`}
-        description={`${template.description || 'Premium AI prompt'} — Buy this ${model.label} prompt on Prompt by Niti. ${category} AI prompt template with ${template.samples?.length || 3} sample outputs.`}
-        keywords={`${(template.keywords || []).join(', ')}, ${model.label} prompt, AI prompt, ${category} prompt, buy prompt, prompt template`}
+        description={`${template.description || 'Premium AI prompt'} — Buy this verified ${model.label} ${category} prompt on Prompt by Niti. ${template.samples?.length || 3} sample outputs included. Best ${model.label} prompt templates & ideas.`}
+        keywords={`${(template.keywords || []).join(', ')}, ${model.label} prompt, ${model.label} prompt template, AI prompt, ${category} prompt, buy ${category} prompt, ${category} AI art, prompt template, buy prompt online, premium AI prompt, ${model.label} examples`}
         ogImage={template.thumbnail || template.samples?.[0]?.output || template.samples?.[0] || 'https://promptbyniti.in/image1.png'}
+        ogType="product"
+        breadcrumbs={[
+          { name: 'Home', url: '/' },
+          { name: 'Prompt Store', url: '/templates' },
+          { name: template.title || template.name, url: `/prompt/${id}` }
+        ]}
+        schema={{
+          "@context": "https://schema.org",
+          "@type": "Product",
+          "name": template.title || template.name,
+          "description": template.description || `Premium ${model.label} AI prompt template`,
+          "image": template.thumbnail || template.samples?.[0]?.output || template.samples?.[0] || 'https://promptbyniti.in/image1.png',
+          "brand": {
+            "@type": "Brand",
+            "name": "Prompt by Niti"
+          },
+          "offers": {
+            "@type": "Offer",
+            "price": String(template.priceTokens || template.tokens || 5),
+            "priceCurrency": "USD",
+            "availability": "https://schema.org/InStock",
+            "seller": {
+              "@type": "Organization",
+              "name": template.seller?.name || "Prompt by Niti"
+            }
+          },
+          ...(template.totalReviews > 0 ? {
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": String(template.averageRating || 0),
+              "reviewCount": String(template.totalReviews || 0),
+              "bestRating": "5"
+            }
+          } : {}),
+          "category": category
+        }}
       />
       <div className="container">
         {/* Navigation */}

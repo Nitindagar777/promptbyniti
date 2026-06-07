@@ -549,9 +549,13 @@ export default function GeneratePage() {
   return (
     <div className="generate-page" id="generate-page">
       <SEOHead
-        title="Free AI Prompt Generator (Text-to-Image & Image-to-Video) — Prompt by Niti"
-        description="Free prompt engineering tool to generate consistent character prompts for Midjourney, Flux, and DALL-E, and motion templates for Sora, Kling, Luma, and Runway. Instantly generate consistent text-to-image and image-to-video prompts."
-        keywords="free AI prompt generator, consistent character prompts generator, text to image prompt builder, image to video prompt generator, Midjourney prompt creator, Sora video prompt builder, Flux prompt maker, prompt engineering tool"
+        title="Free AI Prompt Generator — Image, Video & Code Prompts"
+        description="Free AI prompt generator for consistent text-to-image, image-to-video, and text-to-code prompts. Supports Midjourney cref/sref, Sora motion anchors, Flux, Kling, Luma, Runway Gen-3, AIDA copywriting, React code blueprints & AI agent personas. Generate studio-quality prompts instantly."
+        keywords="free AI prompt generator, AI prompt creator, text to image prompt generator, image to video prompt generator, text to code prompt generator, consistent character prompts, midjourney cref generator, midjourney sref generator, sora video prompt builder, flux prompt maker, kling prompt generator, luma dream machine prompts, runway gen-3 prompts, AIDA copywriting prompts, PAS framework prompts, react code prompt generator, python code prompt generator, AI agent persona generator, system prompt builder, prompt engineering tool, free prompt maker, prompt builder online"
+        breadcrumbs={[
+          { name: 'Home', url: '/' },
+          { name: 'AI Prompt Generator', url: '/generate' }
+        ]}
         noIndex={false}
       />
       <div className="container">
@@ -1534,19 +1538,21 @@ export default function GeneratePage() {
                             style={{ '--cat-color': catData.color }}
                             onClick={() => setActiveCategory(catName)}
                           >
-                            <div className="text-cat-card__icon-wrap">
-                              {(() => {
-                                const IconComponent = categoryIconMap[catData.icon];
-                                return IconComponent ? <IconComponent size={20} /> : null;
-                              })()}
-                            </div>
                             <span className="text-cat-card__name">
                               {catName}
                               {hasSelection && <span className="text-cat-card__select-dot" />}
                             </span>
-                            <span className="text-cat-card__count">
-                              {hasSelection ? 'Selected' : `${catData.items.length} Prompts`}
-                            </span>
+                            <div className="text-cat-card__meta-below">
+                              <div className="text-cat-card__icon-wrap">
+                                {(() => {
+                                  const IconComponent = categoryIconMap[catData.icon];
+                                  return IconComponent ? <IconComponent size={14} /> : null;
+                                })()}
+                              </div>
+                              <span className="text-cat-card__count">
+                                {hasSelection ? 'Selected' : `${catData.items.length} Prompts`}
+                              </span>
+                            </div>
                           </div>
                         );
                       })}

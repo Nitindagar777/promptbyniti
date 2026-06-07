@@ -68,8 +68,12 @@ export default function LibraryPage() {
     <div className="library-page" id="library-page">
       <SEOHead
         title="Free Prompt Library — AI Prompt Templates & Examples"
-        description="Access free AI prompt templates and examples from Prompt by Niti's community library. Download free prompts for Midjourney, ChatGPT, DALL·E, and Stable Diffusion. Start creating with professional prompt formulas."
-        keywords="free prompts, free AI prompts, prompt library, prompt templates free, free prompt examples, Midjourney free prompts, ChatGPT free prompts, prompt collection, prompt database"
+        description="Access free AI prompt templates and examples from Prompt by Niti's community library. Free prompts for Midjourney, ChatGPT, DALL·E, Sora, Flux & Stable Diffusion. Start creating with professional prompt formulas — no signup required."
+        keywords="free prompts, free AI prompts, prompt library, prompt templates free, free prompt examples, Midjourney free prompts, ChatGPT free prompts, Sora free prompts, prompt collection, prompt database, free prompt ideas, AI prompt examples"
+        breadcrumbs={[
+          { name: 'Home', url: '/' },
+          { name: 'Free Prompt Library', url: '/library' }
+        ]}
         noIndex={false}
       />
       <div className="container">
