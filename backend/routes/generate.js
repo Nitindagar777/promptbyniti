@@ -350,14 +350,17 @@ Every prompt and sample MUST start with "Generate a video of: " or "Generate a v
   } else if (isText) {
     referenceImageRules = `
 CRITICAL — TEXT PROMPT RULES:
-- You are generating a text prompt for an LLM/AI writer. Focus on structure, copywriting framework (like AIDA, PAS, story structures), target tone, and context.
-- You are STRICTLY FORBIDDEN from including Midjourney parameter suffixes (like "--ar") or camera/lighting keywords (like "aperture", "lens", "camera pan").
-- The output must be optimized for text generation (copywriting, brainstorming, planning, etc.).`;
+- You are generating a text prompt (a prompt that the user will copy-paste into ChatGPT, Gemini, Claude, or another AI).
+- You MUST force the target AI to output exactly what the category demands:
+  1. For "CODE" and "AI AGENTS" categories: The generated prompt (mainPrompt, promptTemplate, and samples) MUST explicitly force the target AI to write complete, detailed, fully-functional, and clean code blocks (with syntax highlighting, modular files, and comments) rather than generic text summaries or placeholder explanations. The prompt description MUST reflect this (e.g., "Forces the AI to generate complete, high-quality code...").
+  2. For other categories ("WRITING", "MARKETING", "BUSINESS", "RESEARCH", "EDUCATION", "PRODUCTIVITY", "CREATIVE", "SOCIAL MEDIA", "ECOMMERCE", "OTHER"): The generated prompt must force the target AI to write detailed, formatted, and structured copywriting, articles, blueprints, or planning copy.
+- You are STRICTLY FORBIDDEN from including Midjourney parameter suffixes (like "--ar") or camera/lighting keywords (like "aperture", "lens", "camera pan") in text prompts.
+- Ensure the prompt's title and description clearly state what kind of output (code or structured text) it forces the target AI to generate.`;
 
     howToBuildSamples = `HOW TO BUILD SAMPLES (TEXT PROMPT - GENERAL - FOLLOW THIS EXACTLY):
-1. Write the mainPrompt first. It must be a complete, ready-to-use sample prompt with all bracketed variables replaced by real, creative copywriting values (e.g. following AIDA or problem-solution structures).
+1. Write the mainPrompt first. It must be a complete, ready-to-use sample prompt with all bracketed variables replaced by real, creative values (like detailed coding specifications or copywriting briefs).
    - CRITICAL: Do NOT append any camera settings, lens details, or Midjourney "--ar" suffixes to text prompts.
-2. Create promptTemplate: Take the mainPrompt and replace 1 to 5 key parameters with bracketed variables (e.g. [brand_name], [target_audience], [tone], etc.).
+2. Create promptTemplate: Take the mainPrompt and replace 1 to 5 key parameters with bracketed variables (e.g. [brand_name], [programming_language], [tone], etc.).
 3. For each of the samples (Sample A, Sample B, Sample C), copy the promptTemplate and replace the bracketed variables with unique creative details.
 4. ZERO TOLERANCE FOR BRACKETS IN SAMPLES: Samples and mainPrompt MUST NOT contain any [BRACKETS]. Only promptTemplate has brackets.
 5. SAMPLE COUNT: Generate exactly 3 samples for standard generations. Generate exactly 5 samples ONLY when "Example Generator" mode is requested.`;
