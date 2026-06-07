@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const SystemSettings = require('../models/SystemSettings');
-const { CREATIVE_RULES, SOCIAL_MEDIA_RULES, ECOMMERCE_RULES, OTHER_RULES } = require('./rules');
+const { TEXT_SUBCATEGORY_RULES, CREATIVE_RULES, SOCIAL_MEDIA_RULES, ECOMMERCE_RULES, OTHER_RULES } = require('./rules');
 
 /**
  * Programmatically reduce the number of bracketed variables in promptTemplate to maxVars,
@@ -587,30 +587,27 @@ When a reference image is provided in DIFFERENT CHARACTERS mode, you MUST:
 
   let subcategoryInstruction = '';
   if (isText && category && subcategory) {
-    let rulesDict = null;
-    const catUpper = category.toUpperCase();
-    if (catUpper === 'CREATIVE') rulesDict = CREATIVE_RULES;
-    else if (catUpper === 'SOCIAL MEDIA') rulesDict = SOCIAL_MEDIA_RULES;
-    else if (catUpper === 'ECOMMERCE') rulesDict = ECOMMERCE_RULES;
-    else if (catUpper === 'OTHER') rulesDict = OTHER_RULES;
+    const catUpper = category.toUpperCase().trim();
+    const subTrim = subcategory.trim();
+    const catRules = TEXT_SUBCATEGORY_RULES[catUpper];
 
-    if (rulesDict && rulesDict[subcategory]) {
-      const rule = rulesDict[subcategory];
+    if (catRules && catRules[subTrim]) {
+      const rule = catRules[subTrim];
       
       let subcategoryGuidelines = '';
-      if (subcategory === 'Personal Development') {
+      if (subTrim === 'Personal Development') {
         subcategoryGuidelines = `\nCustom Subcategory Guidelines:
 - Student: identity formation is the work
 - Early Career: skill acquisition > salary
 - Mid-Career: leverage and delegation
 - Parent: time boundaries are essential`;
-      } else if (subcategory === 'Content Creation') {
+      } else if (subTrim === 'Content Creation') {
         subcategoryGuidelines = `\nCustom Subcategory Guidelines:
 - TikTok: authenticity over production
 - Instagram: aesthetic consistency
 - LinkedIn: professional storytelling
 - YouTube: click-worthy hook`;
-      } else if (subcategory === 'Product Research') {
+      } else if (subTrim === 'Product Research') {
         subcategoryGuidelines = `\nCustom Subcategory Guidelines:
 - Dropshipping: shipping time is critical
 - Private Label: branding and differentiation
