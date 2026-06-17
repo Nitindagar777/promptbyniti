@@ -1586,6 +1586,137 @@
   filter: drop-shadow(0 0 4px rgba(168, 85, 247, 0.5));
 }
 
+/* Category Tab Bar */
+.p-ref-modes__category-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: var(--space-xl);
+  max-width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 5px;
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.p-ref-modes__cat-tab {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 30px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.p-ref-modes__cat-tab:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.p-ref-modes__cat-tab.active {
+  color: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.p-ref-modes__cat-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  width: 100%;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  background: rgba(255, 255, 255, 0.3);
+  animation: tabProgress 4s linear forwards;
+}
+
+@keyframes tabProgress {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+
+.p-ref-modes__cat-tab--image.active {
+  background: rgba(6, 182, 212, 0.12);
+  border-color: rgba(6, 182, 212, 0.25);
+  color: var(--color-cyan);
+  box-shadow: 0 4px 25px rgba(6, 182, 212, 0.15), inset 0 1px 0 rgba(6, 182, 212, 0.1);
+}
+
+.p-ref-modes__cat-tab--image.active::after {
+  background: var(--color-cyan);
+}
+
+.p-ref-modes__cat-tab--image.active svg {
+  filter: drop-shadow(0 0 6px rgba(6, 182, 212, 0.6));
+}
+
+.p-ref-modes__cat-tab--video.active {
+  background: rgba(168, 85, 247, 0.12);
+  border-color: rgba(168, 85, 247, 0.25);
+  color: var(--color-purple);
+  box-shadow: 0 4px 25px rgba(168, 85, 247, 0.15), inset 0 1px 0 rgba(168, 85, 247, 0.1);
+}
+
+.p-ref-modes__cat-tab--video.active::after {
+  background: var(--color-purple);
+}
+
+.p-ref-modes__cat-tab--video.active svg {
+  filter: drop-shadow(0 0 6px rgba(168, 85, 247, 0.6));
+}
+
+.p-ref-modes__cat-tab--text.active {
+  background: rgba(249, 115, 22, 0.12);
+  border-color: rgba(249, 115, 22, 0.25);
+  color: var(--color-orange);
+  box-shadow: 0 4px 25px rgba(249, 115, 22, 0.15), inset 0 1px 0 rgba(249, 115, 22, 0.1);
+}
+
+.p-ref-modes__cat-tab--text.active::after {
+  background: var(--color-orange);
+}
+
+.p-ref-modes__cat-tab--text.active svg {
+  filter: drop-shadow(0 0 6px rgba(249, 115, 22, 0.6));
+}
+
+/* Tab Panels Container */
+.p-ref-modes__panels {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+}
+
+.p-ref-modes__panel {
+  grid-area: 1 / 1 / 2 / 2;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(16px);
+  transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), 
+              transform 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+              visibility 0.5s;
+  pointer-events: none;
+}
+
+.p-ref-modes__panel.active {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
 /* Showcase Grid */
 .p-ref-modes__showcase-grid {
   display: grid;
@@ -1632,6 +1763,19 @@
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
+}
+
+.p-ref-modes__sub-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  background: currentColor;
+  opacity: 0.5;
+  animation: tabProgress 4s linear forwards;
 }
 
 .p-ref-modes__sub-btn:hover {
@@ -1948,6 +2092,19 @@
     padding: 10px 16px;
   }
   
+  .p-ref-modes__category-tabs {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .p-ref-modes__cat-tab {
+    flex: 1;
+    justify-content: center;
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    gap: 6px;
+  }
+
   .p-ref-modes__sub-toggles {
     grid-template-columns: 1fr;
     gap: 4px;

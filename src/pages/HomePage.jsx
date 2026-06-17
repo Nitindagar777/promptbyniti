@@ -15,6 +15,18 @@ import './HomePage.css';
 
 const API_URL = '/api';
 
+const REF_MODE_SEQUENCE = [
+  { cat: 'image', sub: 'sameScene' },
+  { cat: 'image', sub: 'different' },
+  { cat: 'image', sub: 'fixed' },
+  { cat: 'video', sub: 'sameSceneLoop' },
+  { cat: 'video', sub: 'differentScenes' },
+  { cat: 'video', sub: 'fixedCharacterMotion' },
+  { cat: 'text', sub: 'code' },
+  { cat: 'text', sub: 'copywriting' },
+  { cat: 'text', sub: 'agents' }
+];
+
 const renderStars = (rating) => {
   const fullStars = Math.floor(rating);
   const hasHalf = rating % 1 !== 0;
@@ -39,6 +51,7 @@ export default function HomePage() {
 
 
   // Reference Modes Showcase Section States
+  const [activeRefCategory, setActiveRefCategory] = useState('image'); // 'image' | 'video' | 'text'
   const [activeImageMode, setActiveImageMode] = useState('sameScene'); // 'sameScene' | 'different' | 'fixed'
   const [activeVideoMode, setActiveVideoMode] = useState('sameSceneLoop'); // 'sameSceneLoop' | 'differentScenes' | 'fixedCharacterMotion'
   const [activeTextMode, setActiveTextMode] = useState('code'); // 'code' | 'copywriting' | 'agents'
@@ -216,41 +229,49 @@ export default function HomePage() {
   }, [state.marketplace]);
 
 
-  // Auto-switch Image Reference Modes every 3 seconds smoothly
-  useEffect(() => {
-    const modes = ['sameScene', 'different', 'fixed'];
-    const timer = setTimeout(() => {
-      setActiveImageMode(current => {
-        const currentIndex = modes.indexOf(current);
-        const nextIndex = (currentIndex + 1) % modes.length;
-        return modes[nextIndex];
-      });
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, [activeImageMode]);
+  // Go to next reference mode in the global loop sequence
+  const goToNextMode = useCallback(() => {
+    const activeSub = activeRefCategory === 'image' 
+      ? activeImageMode 
+      : activeRefCategory === 'video' 
+        ? activeVideoMode 
+        : activeTextMode;
 
-  // Auto-switch Text Reference Modes every 3 seconds smoothly
-  useEffect(() => {
-    const modes = ['code', 'copywriting', 'agents'];
-    const timer = setTimeout(() => {
-      setActiveTextMode(current => {
-        const currentIndex = modes.indexOf(current);
-        const nextIndex = (currentIndex + 1) % modes.length;
-        return modes[nextIndex];
-      });
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, [activeTextMode]);
+    const currentIndex = REF_MODE_SEQUENCE.findIndex(
+      s => s.cat === activeRefCategory && s.sub === activeSub
+    );
 
-  // Handler to auto-switch Video Reference Modes when the active video ends
+    const nextIndex = (currentIndex !== -1 ? currentIndex + 1 : 0) % REF_MODE_SEQUENCE.length;
+    const next = REF_MODE_SEQUENCE[nextIndex];
+
+    setActiveRefCategory(next.cat);
+    if (next.cat === 'image') {
+      setActiveImageMode(next.sub);
+    } else if (next.cat === 'video') {
+      setActiveVideoMode(next.sub);
+    } else if (next.cat === 'text') {
+      setActiveTextMode(next.sub);
+    }
+  }, [activeRefCategory, activeImageMode, activeVideoMode, activeTextMode]);
+
+  // Handler to auto-switch Reference Modes when a video ends
   const handleVideoEnded = useCallback(() => {
-    const videoModes = ['sameSceneLoop', 'differentScenes', 'fixedCharacterMotion'];
-    setActiveVideoMode(current => {
-      const currentIndex = videoModes.indexOf(current);
-      const nextIndex = (currentIndex + 1) % videoModes.length;
-      return videoModes[nextIndex];
-    });
-  }, []);
+    if (activeRefCategory === 'video') {
+      goToNextMode();
+    }
+  }, [activeRefCategory, goToNextMode]);
+
+  // Unified auto-rotation timer for reference modes (resets automatically on manual user interaction)
+  useEffect(() => {
+    const isVideo = activeRefCategory === 'video';
+    const delay = isVideo ? 12000 : 4000; // 12s fallback for videos, 4s for image/text tabs
+
+    const timer = setTimeout(() => {
+      goToNextMode();
+    }, delay);
+
+    return () => clearTimeout(timer);
+  }, [activeRefCategory, activeImageMode, activeVideoMode, activeTextMode, goToNextMode]);
 
   // Effect to control playing/pausing of reference videos based on active video mode
   useEffect(() => {
@@ -355,17 +376,38 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* IMAGE REFERENCE MODES SECTION */}
-      <section className="p-ref-modes section-spacing" id="image-ref-modes">
+      {/* UNIFIED AI REFERENCE MODES SECTION */}
+      <section className="p-ref-modes section-spacing" id="ref-modes">
         <div className="container">
           <div className="p-ref-modes__header reveal">
-            <h2 className="h-display text-center">Consistent Character & Style <span className="text-cyan">Image Reference Modes</span></h2>
+            <h2 className="h-display text-center">AI <span className="text-cyan">Reference</span> Modes</h2>
             <p className="text-center p-ref-modes__subtitle">
-              Learn how our advanced image prompt templates maintain consistency across characters, styles, and settings.
+              Explore how our advanced prompt templates maintain consistency across images, videos, and text outputs.
             </p>
           </div>
 
-          <div className="p-ref-modes__showcase-grid reveal">
+          {/* Category Tabs */}
+          <div className="p-ref-modes__category-tabs reveal">
+            <button className={`p-ref-modes__cat-tab ${activeRefCategory === 'image' ? 'active p-ref-modes__cat-tab--image' : ''}`} onClick={() => setActiveRefCategory('image')}>
+              <Image size={18} />
+              <span>Image Modes</span>
+            </button>
+            <button className={`p-ref-modes__cat-tab ${activeRefCategory === 'video' ? 'active p-ref-modes__cat-tab--video' : ''}`} onClick={() => setActiveRefCategory('video')}>
+              <Video size={18} />
+              <span>Video Modes</span>
+            </button>
+            <button className={`p-ref-modes__cat-tab ${activeRefCategory === 'text' ? 'active p-ref-modes__cat-tab--text' : ''}`} onClick={() => setActiveRefCategory('text')}>
+              <Code size={18} />
+              <span>Text Modes</span>
+            </button>
+          </div>
+
+          {/* Tabbed Panels */}
+          <div className="p-ref-modes__panels">
+
+          {/* IMAGE PANEL */}
+          <div className={`p-ref-modes__panel ${activeRefCategory === 'image' ? 'active' : ''}`}>
+          <div className="p-ref-modes__showcase-grid">
             {/* Left Column: Media Preview */}
             <div className="p-ref-modes__left-pane">
               <div className="p-ref-modes__sub-toggles">
@@ -579,20 +621,11 @@ export default function HomePage() {
               </div>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* VIDEO REFERENCE MODES SECTION */}
-      <section className="p-ref-modes section-spacing" id="video-ref-modes">
-        <div className="container">
-          <div className="p-ref-modes__header reveal">
-            <h2 className="h-display text-center">Consistent Motion & Actor <span className="text-purple">Video Reference Modes</span></h2>
-            <p className="text-center p-ref-modes__subtitle">
-              Learn how our advanced video prompt templates animate characters with stable details across frames.
-            </p>
           </div>
 
-          <div className="p-ref-modes__showcase-grid p-ref-modes__showcase-grid--reversed reveal">
+          {/* VIDEO PANEL */}
+          <div className={`p-ref-modes__panel ${activeRefCategory === 'video' ? 'active' : ''}`}>
+          <div className="p-ref-modes__showcase-grid p-ref-modes__showcase-grid--reversed">
             {/* Left Column: Data Card */}
             <div className="p-ref-modes__right-pane">
               <div className="p-ref-modes__info-card glass-effect">
@@ -817,20 +850,11 @@ export default function HomePage() {
               </div>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* TEXT REFERENCE MODES SECTION */}
-      <section className="p-ref-modes section-spacing" id="text-ref-modes">
-        <div className="container">
-          <div className="p-ref-modes__header reveal">
-            <h2 className="h-display text-center">Structured Copy & Code <span className="text-orange">Text Reference Modes</span></h2>
-            <p className="text-center p-ref-modes__subtitle">
-              Learn how our advanced text reference blueprints generate syntax-perfect code, structured copy, and customized agent personas.
-            </p>
           </div>
 
-          <div className="p-ref-modes__showcase-grid reveal">
+          {/* TEXT PANEL */}
+          <div className={`p-ref-modes__panel ${activeRefCategory === 'text' ? 'active' : ''}`}>
+          <div className="p-ref-modes__showcase-grid">
             {/* Left Column: Interactive IDE Mockup */}
             <div className="p-ref-modes__left-pane">
               <div className="p-ref-modes__sub-toggles">
@@ -1150,6 +1174,8 @@ export default function HomePage() {
                 </Link>
               </div>
             </div>
+          </div>
+          </div>
           </div>
         </div>
       </section>

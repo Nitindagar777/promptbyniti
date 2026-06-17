@@ -10,12 +10,12 @@
 }
 
 :root {
-  /* Core Palette - Rich & Vibrant (NO GRADIENTS) */
-  --bg-primary: #0f172a;    /* Deep Slate Navy */
-  --bg-secondary: #1e293b;  /* Lighter Slate */
-  --bg-surface: #334155;
-  --bg-card: #1e293b;
-  --border-color: #334155;
+  /* Core Palette - Penta Black */
+  --bg-primary: #000000;    /* Pure Black */
+  --bg-secondary: #0a0a0a;  /* Near Black */
+  --bg-surface: #141414;
+  --bg-card: #0a0a0a;
+  --border-color: #1a1a1a;
   
   /* Vibrant Solid Accents */
   --color-orange: #f97316;
@@ -503,7 +503,7 @@ p {
   flex: 1;
   border-radius: var(--radius-md);
   overflow: hidden;
-  background: #0b1120;
+  background: #050505;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -530,7 +530,7 @@ p {
   aspect-ratio: 1 / 1;
   border-radius: var(--radius-md);
   overflow: hidden;
-  background: #0b1120;
+  background: #050505;
 }
 
 .preview-modal__gallery-right-item img,
@@ -596,7 +596,7 @@ p {
   position: relative;
   width: 100%;
   aspect-ratio: 1 / 1;
-  background: #1e293b; /* Dark background fallback */
+  background: #0a0a0a; /* Penta black fallback */
   overflow: hidden;
   border-bottom: 0;
 }
@@ -624,7 +624,7 @@ p {
   display: flex;
   gap: 6px;
   padding: 6px;
-  background: #0f172a; 
+  background: #000000; 
   opacity: 0;
   visibility: hidden;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
