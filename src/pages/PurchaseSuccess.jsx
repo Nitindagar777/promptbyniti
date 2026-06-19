@@ -167,17 +167,17 @@ const PurchaseSuccess = () => {
     <div className="success-error">
       <h2>Oops! Content not found.</h2>
       <button onClick={() => navigate('/buyer-dashboard')} className="btn-back">
-        <ArrowLeft /> Back to Dashboard
+        <ArrowLeft /> Back to My Library
       </button>
     </div>
   );
 
   return (
     <div className="purchase-success-page">
-      <SEOHead title="Purchase Complete" noIndex={true} />
+      <SEOHead title="Unlock Complete" noIndex={true} />
       <div className="container-small">
         <div className="success-header animate-fade-in">
-          <h1>Purchase Successful!</h1>
+          <h1>Unlock Successful!</h1>
           <p>This prompt is now permanently saved to your library.</p>
         </div>
 
@@ -206,7 +206,7 @@ const PurchaseSuccess = () => {
                 <h2>{prompt.name}</h2>
                 <p className="success-desc">{prompt.description}</p>
                 <div className="seller-badge">
-                  <span>Seller:</span> <strong>{prompt.seller?.name || 'Anonymous'}</strong>
+                  <span>Creator:</span> <strong>{prompt.seller?.name || 'Anonymous'}</strong>
                 </div>
               </div>
             </div>
@@ -319,41 +319,41 @@ const PurchaseSuccess = () => {
                         <button 
                           className={`btn-icon-tiny ${copiedStates[`input-${idx}`] ? 'copied' : ''}`} 
                           title="Copy Input"
-                          onClick={() => handleCopy(sample.input, `input-${idx}`)}
+                          onClick={() => handleCopy(sample.input || prompt.template, `input-${idx}`)}
                         >
                           {copiedStates[`input-${idx}`] ? <Check size={14} /> : <Copy size={14} />}
                         </button>
                       </div>
                       
                       <div className="sample-input">
-                        <span className="label">Input:</span> {sample.input}
+                        <span className="label">Input:</span> {sample.input || prompt.template}
                       </div>
 
                       <div className="sample-output-wrapper">
                         {prompt.generateType === 'video' ? (
                           <div className="media-container-premium">
-                            <video src={sample.output} className="sample-output-media" />
+                            <video src={sample.output || sample} className="sample-output-media" />
                             <div className="media-actions-overlay">
-                              <button onClick={() => setLightboxMedia({ url: sample.output, type: 'video' })} title="Full Screen"><Maximize2 size={16} /></button>
-                              <a href={sample.output} download={`sample-${idx+1}.mp4`} title="Download"><Download size={16} /></a>
+                              <button onClick={() => setLightboxMedia({ url: sample.output || sample, type: 'video' })} title="Full Screen"><Maximize2 size={16} /></button>
+                              <a href={sample.output || sample} download={`sample-${idx+1}.mp4`} title="Download"><Download size={16} /></a>
                             </div>
                           </div>
                         ) : prompt.generateType === 'text' ? (
                           <div className="sample-output-text-container">
-                            <div className="sample-output-text">{sample.output}</div>
+                            <div className="sample-output-text">{sample.output || sample}</div>
                             <button 
                               className={`btn-copy-text ${copiedStates[`output-${idx}`] ? 'copied' : ''}`} 
-                              onClick={() => handleCopy(sample.output, `output-${idx}`)}
+                              onClick={() => handleCopy(sample.output || sample, `output-${idx}`)}
                             >
                               {copiedStates[`output-${idx}`] ? <><Check size={14} /> Copied!</> : <><Copy size={14} /> Copy Response</>}
                             </button>
                           </div>
                         ) : (
                           <div className="media-container-premium">
-                            <img src={sample.output} alt={`Sample ${idx + 1}`} className="sample-output-media" />
+                            <img src={sample.output || sample} alt={`Sample ${idx + 1}`} className="sample-output-media" />
                             <div className="media-actions-overlay">
-                              <button onClick={() => setLightboxMedia({ url: sample.output, type: 'image' })} title="View Full Image"><Maximize2 size={16} /></button>
-                              <a href={sample.output} download={`sample-${idx+1}.png`} title="Download"><Download size={16} /></a>
+                              <button onClick={() => setLightboxMedia({ url: sample.output || sample, type: 'image' })} title="View Full Image"><Maximize2 size={16} /></button>
+                              <a href={sample.output || sample} download={`sample-${idx+1}.png`} title="Download"><Download size={16} /></a>
                             </div>
                           </div>
                         )}
@@ -384,7 +384,7 @@ const PurchaseSuccess = () => {
             </div>
             <div>
               <h3>How was the prompt?</h3>
-              <p>Your feedback helps other creators and the seller.</p>
+              <p>Your feedback helps other creators.</p>
             </div>
           </div>
 

@@ -119,8 +119,8 @@ export default function PricingPage() {
     <div className="pricing-page" id="pricing-page">
       <SEOHead
         title="Pricing — AI Prompt Token Packs & Plans"
-        description="Get prompt packs and token plans for Prompt by Niti. Unlock AI prompt generation for Midjourney, Sora, Flux, ChatGPT & more. Affordable one-time plans with 80% seller royalties. Free tier available."
-        keywords="prompt pricing, AI prompt plans, buy tokens, prompt credits, prompt packs, AI marketplace pricing, prompt by niti pricing, AI prompt subscription, prompt token packs, free AI prompts"
+        description="Get prompt packs and token plans for Prompt by Niti. Unlock AI prompt generation for Midjourney, Sora, Flux, ChatGPT & more. Grow your social media content and followers with premium AI prompts."
+        keywords="prompt pricing, AI prompt plans, buy tokens, prompt credits, prompt packs, prompt by niti pricing, AI prompt subscription, prompt token packs, free AI prompts, grow social media followers"
         breadcrumbs={[
           { name: 'Home', url: '/' },
           { name: 'Pricing', url: '/pricing' }
@@ -188,22 +188,22 @@ export default function PricingPage() {
           ))}
         </div>
 
-        {/* Seller Earnings Callout */}
+        {/* Social Media Growth Callout */}
         <div className="seller-earnings-box">
-          <h3>💰 Earn by Selling Prompts</h3>
-          <p>List your AI prompts in our marketplace and earn on every sale.</p>
+          <h3>🚀 Grow Your Social Media</h3>
+          <p>Use AI-generated content to boost your social media presence and grow your followers.</p>
           <div className="seller-earnings-example">
             <div className="seller-earnings-row">
-              <span>You sell a prompt for</span>
-              <strong>20 tokens</strong>
+              <span>Generate stunning content</span>
+              <strong>AI-powered</strong>
             </div>
             <div className="seller-earnings-row">
-              <span>You earn (80%)</span>
-              <strong className="text-green">16 tokens</strong>
+              <span>Increase engagement</span>
+              <strong className="text-green">10x faster</strong>
             </div>
             <div className="seller-earnings-row seller-earnings-row--fee">
-              <span>Platform fee (20%)</span>
-              <span>4 tokens</span>
+              <span>Grow followers organically</span>
+              <span>All platforms</span>
             </div>
           </div>
           <p className="seller-earnings-note">Your first prompt generation is always free — no purchase needed.</p>
@@ -235,8 +235,8 @@ export default function PricingPage() {
           <div className="trust-badge">
             <Sparkles size={20} className="trust-badge__icon text-pink" />
             <div>
-              <h4 className="text-pink">80% Royalties</h4>
-              <p>20% platform fee</p>
+              <h4 className="text-pink">Grow Followers</h4>
+              <p>Boost your reach</p>
             </div>
           </div>
           <div className="trust-badge">

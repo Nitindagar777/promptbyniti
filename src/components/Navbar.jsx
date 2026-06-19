@@ -20,14 +20,14 @@ const SIMULATED_USERS = [
 const SIMULATED_PHRASES = [
   "Wow, that's clean! Just tested it in the Generate tab. 🔥",
   "Has anyone optimized prompts for Claude 3.5 Sonnet yet?",
-  "Just sold another prompt template! This marketplace is awesome. 💎",
+  "Just grew my followers with a new feed post! Feed is awesome. 💎",
   "Try adding 'low contrast, photorealistic' to decrease AI artifacts.",
   "Highly recommend upgrading to the PRO tier for unlimited credits.",
   "Let's build a group prompt for generating React clean architecture!",
   "Is the midjourney v6 ratio command still --ar 16:9?",
   "Yes @DesignNinja, it is! Works perfectly.",
   "Welcome new joiners to the Prompt Lounge! 🤖☕",
-  "Just earned 100 free credits from the seller stats page. Check it out!"
+  "Just grew my followers and unlocked premium prompts. Check it out!"
 ];
 
 
@@ -139,13 +139,13 @@ export default function Navbar() {
       });
     }
 
-    // 4. Marketplace Purchases (Buy)
+    // 4. Unlocked Prompts (Unlocks)
     if (state.user.purchasedPrompts && state.user.purchasedPrompts.length > 0) {
       state.user.purchasedPrompts.slice(0, 3).forEach((id, idx) => {
         list.push({
           id: `buy-${id}-${idx}`,
           type: 'payment',
-          text: `You successfully purchased a new premium prompt!`,
+          text: `You successfully unlocked a new premium prompt!`,
           time: 'Recently',
           icon: <Zap size={14} className="text-orange" />,
           rawTime: baseTime - (idx * 3600000)
@@ -153,16 +153,16 @@ export default function Navbar() {
       });
     }
 
-    // 5. Seller Activity (Sale)
+    // 5. Creator Engagement Activity (Follows / Unlocks)
     if (state.sellerStats && state.sellerStats.recentActivity) {
       const sales = state.sellerStats.recentActivity.filter(a => a.type === 'sale');
       sales.slice(0, 3).forEach((sale, idx) => {
         list.push({
           id: sale.id || `sale-${idx}`,
           type: 'sale',
-          text: `${sale.user} bought your prompt "${sale.prompt}"! You earned ${sale.price} tokens.`,
+          text: `${sale.user} followed you and unlocked your prompt "${sale.prompt}"!`,
           time: sale.time || 'Recently',
-          icon: <DollarSign size={14} className="text-green" />,
+          icon: <Users size={14} className="text-cyan" />,
           rawTime: new Date(sale.timestamp).getTime() || (baseTime - (idx * 1800000))
         });
       });
@@ -278,20 +278,17 @@ export default function Navbar() {
             </li>
           )}
           <li>
-            <Link to="/templates" className={`navbar__link ${isActive('/templates') ? 'navbar__link--active' : ''}`}>Store</Link>
+            <Link to="/templates" className={`navbar__link ${isActive('/templates') ? 'navbar__link--active' : ''}`}>Feed</Link>
           </li>
           {state?.user && (
-            <>
-              <li>
-                <Link to="/sell" className={`navbar__link ${isActive('/sell') ? 'navbar__link--active' : ''}`}>Sell</Link>
-              </li>
-              <li>
-                <Link to="/library" className={`navbar__link ${isActive('/library') ? 'navbar__link--active' : ''}`}>Free</Link>
-              </li>
-              <li>
-                <Link to="/pricing" className={`navbar__link ${isActive('/pricing') ? 'navbar__link--active' : ''}`}>Pricing</Link>
-              </li>
-            </>
+            <li>
+              <Link to="/pricing" className={`navbar__link ${isActive('/pricing') ? 'navbar__link--active' : ''}`}>Pricing</Link>
+            </li>
+          )}
+          {state?.user && (
+            <li>
+              <Link to="/sell" className={`navbar__link ${isActive('/sell') ? 'navbar__link--active' : ''}`}>Post</Link>
+            </li>
           )}
           {isAdmin && (
             <li>
@@ -367,10 +364,7 @@ export default function Navbar() {
                 </Link>
               </div>
 
-              <div className="navbar__credits navbar__credits--header" title="Remaining Credits">
-                <Zap size={16} fill="currentColor" />
-                <span>{Math.floor(state?.credits ?? 0)}</span>
-              </div>
+
 
               {/* Notification Bell */}
               <div className="navbar__notifications-wrapper hide-on-mobile" ref={notifRef}>
@@ -471,12 +465,7 @@ export default function Navbar() {
               </div>
             </div>
             
-            <div className="mobile-drawer__stats">
-              <div className="mobile-drawer__stat-item">
-                <Zap size={16} className="text-cyan" fill="currentColor" />
-                <span><strong>{Math.floor(state?.credits ?? 0)}</strong> Tokens</span>
-              </div>
-            </div>
+
           </div>
         )}
 
@@ -490,20 +479,17 @@ export default function Navbar() {
             </li>
           )}
           <li>
-            <Link to="/templates" className={`mobile-drawer__link ${isActive('/templates') ? 'mobile-drawer__link--active' : ''}`} onClick={() => setMobileMenuOpen(false)}>Store</Link>
+            <Link to="/templates" className={`mobile-drawer__link ${isActive('/templates') ? 'mobile-drawer__link--active' : ''}`} onClick={() => setMobileMenuOpen(false)}>Feed</Link>
           </li>
           {state?.user && (
-            <>
-              <li>
-                <Link to="/sell" className={`mobile-drawer__link ${isActive('/sell') ? 'mobile-drawer__link--active' : ''}`} onClick={() => setMobileMenuOpen(false)}>Sell</Link>
-              </li>
-              <li>
-                <Link to="/library" className={`mobile-drawer__link ${isActive('/library') ? 'mobile-drawer__link--active' : ''}`} onClick={() => setMobileMenuOpen(false)}>Free</Link>
-              </li>
-              <li>
-                <Link to="/pricing" className={`mobile-drawer__link ${isActive('/pricing') ? 'mobile-drawer__link--active' : ''}`} onClick={() => setMobileMenuOpen(false)}>Pricing</Link>
-              </li>
-            </>
+            <li>
+              <Link to="/pricing" className={`mobile-drawer__link ${isActive('/pricing') ? 'mobile-drawer__link--active' : ''}`} onClick={() => setMobileMenuOpen(false)}>Pricing</Link>
+            </li>
+          )}
+          {state?.user && (
+            <li>
+              <Link to="/sell" className={`mobile-drawer__link ${isActive('/sell') ? 'mobile-drawer__link--active' : ''}`} onClick={() => setMobileMenuOpen(false)}>Post</Link>
+            </li>
           )}
           {isAdmin && (
             <li>

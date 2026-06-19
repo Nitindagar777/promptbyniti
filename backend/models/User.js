@@ -39,11 +39,11 @@ const userSchema = new mongoose.Schema({
   },
   credits: {
     type: Number,
-    default: 0 // No free tokens for new users
+    default: 2 // 2 free tokens for new users
   },
   hasUsedFreePrompt: {
     type: Boolean,
-    default: false
+    default: true // Default to true so they use their 2 credits
   },
   walletTokens: {
     type: Number,
@@ -51,7 +51,7 @@ const userSchema = new mongoose.Schema({
   },
   plan: {
     type: String,
-    enum: ['free', 'pro', 'unlimited'],
+    enum: ['free', 'starter', 'pro', 'unlimited'],
     default: 'free'
   },
   otp: {
@@ -88,6 +88,18 @@ const userSchema = new mongoose.Schema({
   purchasedPrompts: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Prompt'
+  }],
+  socialLinks: {
+    type: mongoose.Schema.Types.Mixed,
+    default: {}
+  },
+  followers: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
+  following: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
   }]
 }, {
   timestamps: true

@@ -1,4 +1,4 @@
-/* TermsPage — Service agreement and marketplace rules */
+/* TermsPage — Service agreement and feed rules */
 import React from 'react';
 import { Gavel, Scale, FileText, AlertTriangle, Copyright, HelpCircle, Zap } from 'lucide-react';
 import SEOHead from '../components/SEOHead';
@@ -11,8 +11,8 @@ export default function TermsPage() {
     <div className="legal-page terms-page">
       <SEOHead
         title="Terms of Service — Prompt by Niti"
-        description="Read Prompt by Niti's terms of service. Understand our marketplace rules, token usage policies, intellectual property guidelines, and user responsibilities on our AI prompt platform."
-        keywords="prompt by niti terms, AI prompt terms of service, prompt marketplace rules, prompt platform agreement"
+        description="Read Prompt by Niti's terms of service. Understand our feed posting guidelines, token usage policies, intellectual property guidelines, and user responsibilities on our AI prompt platform."
+        keywords="prompt by niti terms, AI prompt terms of service, prompt feed guidelines, prompt platform agreement"
       />
       <div className="container">
         <div className="legal-page__hero text-center">
@@ -32,12 +32,12 @@ export default function TermsPage() {
           <section className="legal-section">
             <div className="section-heading">
               <FileText className="text-cyan" />
-              <h2>2. Marketplace Rules</h2>
+              <h2>2. Feed Posting Guidelines</h2>
             </div>
-            <p>When selling prompts on our marketplace:</p>
+            <p>When posting prompts on our feed:</p>
             <ul>
-              <li>You must have the legal right to sell the content.</li>
-              <li>Prompts must be original and not violate any intellectual property rights.</li>
+              <li>You must have the legal right to post the content.</li>
+              <li>Prompts must be original and not violate any third-party intellectual property rights.</li>
               <li>We reserve the right to remove any prompt that violates our community standards or quality guidelines.</li>
             </ul>
           </section>
@@ -55,7 +55,7 @@ export default function TermsPage() {
               <Copyright className="text-purple" />
               <h2>4. Intellectual Property</h2>
             </div>
-            <p>The "Prompt by Niti" name, logo, and platform design are protected by copyright. You retain ownership of the prompts you create, but grant us a license to display them in our marketplace.</p>
+            <p>The "Prompt by Niti" name, logo, and platform design are protected by copyright. You retain ownership of the prompts you create, but grant us a license to display them in our community feed.</p>
           </section>
 
           <section className="legal-section">

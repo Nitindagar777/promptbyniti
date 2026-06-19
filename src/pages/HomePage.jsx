@@ -6,14 +6,32 @@ import { randomDescriptions } from '../data/promptData';
 import PromptOutput from '../components/PromptOutput';
 import { ArrowRight, Sparkles, Zap, Image, Layers, Heart, Wand2, Rocket, Star, Palette, MessageSquare, ShieldCheck, Zap as ZapIcon, ShoppingBag, Coins, DollarSign, Eye, Camera, Lock, Check, Repeat, Video, Info, Copy, ChevronDown, Code, FileText, Bot, Clock, RotateCw, ZoomIn, Activity, Film, Package } from 'lucide-react';
 import PreviewModal from '../components/PreviewModal';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import PromptThumbnail from '../components/PromptThumbnail';
+import MasonryGrid from '../components/MasonryGrid';
+import PinterestCard from '../components/PinterestCard';
 import SEOHead from '../components/SEOHead';
 import QuantumReactor from '../components/QuantumReactor';
 import './HomePage.css';
 
 const API_URL = '/api';
+
+// Seeded shuffle — deterministic order for the same dataset so cards never jump
+const seededShuffle = (arr) => {
+  const out = [...arr];
+  let seed = 0;
+  for (const item of out) {
+    const s = String(item.keyId);
+    for (let i = 0; i < s.length; i++) seed = (seed * 31 + s.charCodeAt(i)) | 0;
+  }
+  const next = () => { seed = (seed * 16807 + 0) % 2147483647; return (seed & 0x7fffffff) / 0x7fffffff; };
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(next() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+};
 
 const REF_MODE_SEQUENCE = [
   { cat: 'image', sub: 'sameScene' },
@@ -47,6 +65,57 @@ export default function HomePage() {
   const [loadingPrompts, setLoadingPrompts] = useState(!state.marketplace || state.marketplace.length === 0);
   const navigate = useNavigate();
   const [previewPrompt, setPreviewPrompt] = useState(null);
+
+  // Build, shuffle, and slice prompt sample cards to exactly 16 items (4 rows of 4 columns)
+  const feedItems = useMemo(() => {
+    const items = [];
+    const sourcePrompts = state.marketplace || [];
+    sourcePrompts.forEach((tmpl, tmplIdx) => {
+      if (tmpl.generateType === 'text') {
+        items.push({
+          prompt: tmpl,
+          mediaSrc: null,
+          isTextOnly: true,
+          sampleIndex: 0,
+          keyId: tmpl.id || tmpl._id || `tmpl-${tmplIdx}`
+        });
+      } else {
+        const samples = tmpl.samples || [];
+        if (samples.length > 0) {
+          samples.forEach((sample, idx) => {
+            const src = sample.output || sample;
+            if (src) {
+              items.push({
+                prompt: tmpl,
+                mediaSrc: src,
+                isTextOnly: false,
+                sampleIndex: idx,
+                keyId: `${tmpl.id || tmpl._id || `tmpl-${tmplIdx}`}-sample-${idx}`
+              });
+            }
+          });
+        } else {
+          const src = tmpl.video || tmpl.thumbnail;
+          items.push({
+            prompt: tmpl,
+            mediaSrc: src,
+            isTextOnly: !src,
+            sampleIndex: 0,
+            keyId: `${tmpl.id || tmpl._id || `tmpl-${tmplIdx}`}-fallback`
+          });
+        }
+      }
+    });
+
+    // Sort by createdAt descending to ensure latest/newest content is visible first
+    const sortedItems = [...items].sort((a, b) => {
+      const dateA = a.prompt?.createdAt ? new Date(a.prompt.createdAt).getTime() : 0;
+      const dateB = b.prompt?.createdAt ? new Date(b.prompt.createdAt).getTime() : 0;
+      return dateB - dateA;
+    });
+
+    return sortedItems.slice(0, 16);
+  }, [state.marketplace]);
 
 
 
@@ -82,9 +151,9 @@ export default function HomePage() {
       avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150&q=80"
     },
     { 
-      quote: "Started selling my prompts here and earned back my investment in the first week. The 80% royalty is the best in the market.", 
+      quote: "Using these prompts has completely transformed my social media content. My engagement has gone up by 400% and I've gained thousands of followers.", 
       name: "Jordan K.", 
-      role: "Prompt Seller", 
+      role: "Social Media Influencer", 
       stars: 5,
       avatar: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&h=150&q=80"
     },
@@ -96,9 +165,9 @@ export default function HomePage() {
       avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&h=150&q=80"
     },
     { 
-      quote: "Listing my prompts here has become a viable side income. The platform handles payment processing and delivery flawlessly.", 
+      quote: "Maintaining visual consistency is crucial for my brand, and the reference engine locks character faces perfectly. My followers love the storytelling!", 
       name: "Elena S.", 
-      role: "Generative Art Director", 
+      role: "Content Creator", 
       stars: 5,
       avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80"
     }
@@ -216,17 +285,12 @@ export default function HomePage() {
 
 
   useEffect(() => {
-    if (state.marketplace && state.marketplace.length > 0) {
-      setPrompts(state.marketplace.slice(0, 8));
-      setLoadingPrompts(false);
-    } else {
-      fetchPrompts();
-    }
+    fetchPrompts();
 
     return () => {
       setScroll(location.pathname, window.scrollY);
     };
-  }, [state.marketplace]);
+  }, []);
 
 
   // Go to next reference mode in the global loop sequence
@@ -295,16 +359,15 @@ export default function HomePage() {
 
 
   const fetchPrompts = async () => {
+    setLoadingPrompts(true);
     try {
       const res = await fetch(`${API_URL}/prompts`);
       const data = await res.json();
       if (data.success) {
         const sliced = data.prompts.slice(0, 8);
         setPrompts(sliced);
-        // Dispatch to global state if missing or to update it
-        if (!state.marketplace || state.marketplace.length === 0) {
-          dispatch({ type: 'PRELOAD_DATA', payload: { marketplace: data.prompts } });
-        }
+        // Dispatch to global state to update/refresh it
+        dispatch({ type: 'PRELOAD_DATA', payload: { marketplace: data.prompts } });
       }
     } catch (err) {
       console.error('Failed to fetch home prompts:', err);
@@ -316,9 +379,9 @@ export default function HomePage() {
   return (
     <div className="p-home" id="home-page">
       <SEOHead
-        title="#1 AI Prompt Generator & Marketplace — Image, Video & Code"
-        description="Prompt by Niti is the leading AI prompt generator and marketplace with 3 consistency engines. Craft consistent character prompts (cref/sref) for Midjourney & Flux, cinematic motion anchors for Sora & Kling videos, and structured code/text blueprints (AIDA, PAS, agent personas). Generate, buy & sell premium prompt templates."
-        keywords="ai prompt generator, prompt generator, prompt marketplace, buy prompts, sell prompts, midjourney prompt generator, chatgpt prompt generator, consistent character prompts, midjourney cref, midjourney sref, image to video prompts, sora video prompts, flux prompt generator, text to code prompts, AIDA copywriting prompts, react code prompts, AI agent personas, prompt templates, prompt engineering, promptbase alternative, promptbyniti, free prompt generator, prompt builder, prompt ideas, best AI prompts 2026"
+        title="#1 AI Prompt Generator & Feed — Image, Video & Code"
+        description="Prompt by Niti is the leading AI prompt generator and content feed with 3 consistency engines. Craft consistent character prompts (cref/sref) for Midjourney & Flux, cinematic motion anchors for Sora & Kling videos, and structured code/text blueprints (AIDA, PAS, agent personas). Generate premium prompt templates and grow your social media."
+        keywords="ai prompt generator, prompt generator, prompt feed, AI prompt feed, midjourney prompt generator, chatgpt prompt generator, consistent character prompts, midjourney cref, midjourney sref, image to video prompts, sora video prompts, flux prompt generator, text to code prompts, AIDA copywriting prompts, react code prompts, AI agent personas, prompt templates, prompt engineering, promptbase alternative, promptbyniti, free prompt generator, prompt builder, prompt ideas, best AI prompts 2026, grow social media followers"
         breadcrumbs={[
           { name: 'Home', url: '/' }
         ]}
@@ -331,7 +394,7 @@ export default function HomePage() {
             <div className="p-hero__content-col reveal" style={{ animationDelay: '0.1s' }}>
               
               <h1 className="p-hero__title">
-                <span className="text-cyan">AI Prompt</span> Generator & <span className="text-orange">Marketplace</span>
+                <span className="text-cyan">AI Prompt</span> <span style={{ fontSize: '3.25rem' }}>Generator & </span> <span className="text-orange">Feed (inc. Followers)</span>
               </h1>
               
               <p className="p-hero__pitch">
@@ -339,15 +402,15 @@ export default function HomePage() {
               </p>
               
               <p className="p-hero__subtitle p-hero__subtitle--accent">
-                <span className="text-orange">Generate.</span> <span className="text-cyan">Customize.</span> <span className="text-purple">Sell.</span>
+                <span className="text-orange">Generate.</span> <span className="text-cyan">Customize.</span> <span className="text-purple">Share.</span>
               </p>
               
               <div className="p-hero__btns">
-                <Link to="/generate" className="btn btn-primary btn-xl">
+                <Link to={state?.user ? "/generate" : "/login"} className="btn btn-primary btn-xl">
                   Start Generating <ArrowRight size={18} style={{ marginLeft: '4px' }} />
                 </Link>
                 <Link to="/templates" className="btn btn-secondary btn-xl">
-                  Explore Archive
+                  Explore Feed <Sparkles size={18} style={{ marginLeft: '4px' }} />
                 </Link>
               </div>
               
@@ -615,7 +678,7 @@ export default function HomePage() {
               </div>
               
               <div className="p-ref-modes__footer-actions">
-                <Link to="/generate" className="btn btn-primary btn-xl">
+                <Link to={state?.user ? "/generate" : "/login"} className="btn btn-primary btn-xl">
                   Try image reference mode <ArrowRight size={18} style={{ marginLeft: '4px' }} />
                 </Link>
               </div>
@@ -768,7 +831,7 @@ export default function HomePage() {
               </div>
               
               <div className="p-ref-modes__footer-actions">
-                <Link to="/generate" className="btn btn-sky btn-xl">
+                <Link to={state?.user ? "/generate" : "/login"} className="btn btn-sky btn-xl">
                   Try video reference mode <ArrowRight size={18} style={{ marginLeft: '4px' }} />
                 </Link>
               </div>
@@ -1169,7 +1232,7 @@ export default function HomePage() {
               </div>
 
               <div className="p-ref-modes__footer-actions">
-                <Link to="/generate" className="btn btn-primary btn-xl">
+                <Link to={state?.user ? "/generate" : "/login"} className="btn btn-primary btn-xl">
                   Try text reference mode <ArrowRight size={18} style={{ marginLeft: '4px' }} />
                 </Link>
               </div>
@@ -1180,103 +1243,37 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 03. PROMPT STORE — NEW */}
+      {/* 03. EXPLORE FEED — PINTEREST STYLE */}
       <section className="p-categories bg-secondary section-spacing">
         <div className="container">
           <div className="p-market-header reveal">
-            <h2 className="h-display">Prompt <span className="text-pink">Store</span></h2>
+            <h2 className="h-display">Viral <span className="text-pink">Feed</span></h2>
             <Link to="/templates" className="btn btn-secondary">
-              See all Prompts <ShoppingBag size={18} style={{ marginLeft: '8px' }} />
+              Explore Feed <Sparkles size={18} style={{ marginLeft: '8px' }} />
             </Link>
           </div>
 
-          <div className="p-market-grid">
-            {loadingPrompts ? (
-              // Skeleton loaders
-              [...Array(4)].map((_, i) => (
-                <div key={i} className="template-card card skeleton" style={{ height: '350px', background: 'rgba(255,255,255,0.02)' }}></div>
-              ))
-            ) : prompts.length > 0 ? (
-              prompts.map((tmpl, i) => {
-                // Mirror the exact same logic as PromptDetailPage
-                // Samples are now normalized as simple URL arrays from the backend
-                const s0 = tmpl.samples?.[0];
-                const s1 = tmpl.samples?.[1];
-                const s2 = tmpl.samples?.[2];
-                
-                const coverSrc = tmpl.thumbnail && tmpl.thumbnail.startsWith('http') ? tmpl.thumbnail : (tmpl.generateType !== 'text' ? s0 : null);
-                const isTextOnly = tmpl.generateType === 'text' || (!coverSrc && !tmpl.video);
-
-                return (
-                  <Link
-                    key={tmpl.id || tmpl._id}
-                    to={`/prompt/${tmpl.id || tmpl._id}`}
-                    className={`template-card card reveal ${tmpl.generateType === 'text' ? 'template-card--text' : ''}`}
-                    id={`template-${tmpl.id || tmpl._id}`}
-                    style={{ animationDelay: `${i * 0.05}s`, textDecoration: 'none' }}
-                  >
-                    <div className="template-card__visual">
-                      {/* Main media using unified component */}
-                      <PromptThumbnail 
-                        src={tmpl.video || coverSrc} 
-                        alt={tmpl.title || tmpl.name} 
-                        title={tmpl.title || tmpl.name}
-                        className="template-card__media template-card__media-main"
-                        type={tmpl.generateType}
-                      />
-
-                      {/* Hover gallery - Only for Image/Video */}
-                      {tmpl.generateType !== 'text' && (
-                        <div className="template-card__gallery">
-                          <div className="template-card__gallery-main">
-                            <PromptThumbnail src={s0} alt="sample 1" type={tmpl.generateType} />
-                          </div>
-                          <div className="template-card__gallery-side">
-                            <PromptThumbnail src={s1} alt="sample 2" type={tmpl.generateType} />
-                            <PromptThumbnail src={s2} alt="sample 3" type={tmpl.generateType} />
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Model tag (top) */}
-                      <div className="template-card__overlay template-card__overlay--top">
-                        <span className={`template-card__model-tag ${tmpl.generateType === 'text' ? 'template-card__model-tag--text' : ''}`}>
-                          {tmpl.model || (tmpl.category === 'anime' ? 'Niji v6' : (tmpl.generateType === 'text' ? 'GPT-4o' : 'Flux.1'))}
-                        </span>
-                        <div className="template-card__view-badge">
-                          <Eye size={12} /> {tmpl.views || 0}
-                        </div>
-                      </div>
-
-                      {/* Title + seller + tokens (bottom) */}
-                      <div className="template-card__overlay template-card__overlay--bottom">
-                        <div style={{ flex: 1 }}>
-                          <h3 className="template-card__title-overlay">{tmpl.title || tmpl.name}</h3>
-                        </div>
-                      </div>
-
-                      {/* Absolute token badge */}
-                      <div className={`template-card__token-badge ${tmpl.generateType === 'text' ? 'template-card__token-badge--text' : ''}`}>
-                        <Zap size={12} fill="currentColor" /> {tmpl.priceTokens || tmpl.tokens || 5}
-                      </div>
-                    </div>
-
-                    {/* Hover eye icon (half inside/half outside) */}
-                    <div className="template-card__hover-eye" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPreviewPrompt(tmpl); }}>
-                      <Eye size={18} color="red" />
-                    </div>
-                  </Link>
-                );
-              })
-            ) : (
-              <div className="p-market-empty reveal" style={{ gridColumn: '1/-1', textAlign: 'center', padding: 'var(--space-2xl) 0' }}>
-                <ShoppingBag size={48} className="text-muted mb-4 mx-auto" />
-                <h3>No Prompts Found</h3>
-                <p>Be the first to list a prompt in our store!</p>
-                <Link to="/sell" className="btn btn-primary mt-4">Start Selling</Link>
-              </div>
-            )}
-          </div>
+          {loadingPrompts ? (
+            <div style={{ display: 'flex', gap: '16px', width: '100%', margin: '30px 0' }}>
+              {[...Array(4)].map((_, i) => (
+                <div key={i} style={{ flex: 1, height: '280px', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }} />
+              ))}
+            </div>
+          ) : feedItems.length > 0 ? (
+            <MasonryGrid
+              columns={4}
+              items={feedItems}
+              renderItem={(item, i) => (
+                <PinterestCard key={item.keyId} item={item} index={i} />
+              )}
+            />
+          ) : (
+            <div className="p-market-empty reveal" style={{ textAlign: 'center', padding: 'var(--space-2xl) 0' }}>
+              <Sparkles size={48} className="text-muted mb-4 mx-auto" />
+              <h3>No Prompts Found</h3>
+              <p>Be the first to post a prompt to the community feed!</p>
+            </div>
+          )}
         </div>
       </section>
 
@@ -1393,21 +1390,21 @@ export default function HomePage() {
           <div className="p-tokens__step-arrow">→</div>
           <div className="p-tokens__step p-tokens__step--3">
             <span className="p-tokens__step-number">03</span>
-            <div className="p-tokens__step-icon p-tokens__step-icon--pink">💰</div>
-            <h3><span className="text-pink">Sell & Earn 80%</span></h3>
-            <p>List your prompts in the marketplace. <strong>You keep 80% of every sale</strong>. Set your own prices.</p>
+            <div className="p-tokens__step-icon p-tokens__step-icon--pink">🚀</div>
+            <h3><span className="text-pink">Share & Grow</span></h3>
+            <p>Share your AI-generated content on social media. <strong>Grow your audience and followers</strong> organically.</p>
             <div className="p-tokens__features">
               <div className="p-tokens__feature-item">
                 <span className="p-tokens__feature-check p-tokens__feature-check--pink">✓</span>
-                <span>Industry-leading <strong>80% royalty</strong></span>
+                <span>Post to <strong>Instagram, TikTok & more</strong></span>
               </div>
               <div className="p-tokens__feature-item">
                 <span className="p-tokens__feature-check p-tokens__feature-check--pink">✓</span>
-                <span>Set your <strong>own custom pricing</strong></span>
+                <span>Boost <strong>engagement & reach</strong></span>
               </div>
               <div className="p-tokens__feature-item">
                 <span className="p-tokens__feature-check p-tokens__feature-check--pink">✓</span>
-                <span>Get paid <strong>instantly</strong> in tokens</span>
+                <span>Grow <strong>followers organically</strong></span>
               </div>
             </div>
           </div>
@@ -1512,7 +1509,7 @@ export default function HomePage() {
               </h2>
               <div className="seo-caveat-text" style={{ color: 'var(--text-secondary)', lineHeight: '1.8' }}>
                 <p>
-                  <strong>Prompt by Niti</strong> is the ultimate <strong>AI prompt generator</strong> and <strong>prompt marketplace</strong> built for creators, designers, developers, and prompt engineers. Whether you need <strong>Midjourney prompts</strong>, <strong>ChatGPT prompts</strong>, <strong>DALL·E prompts</strong>, <strong>Stable Diffusion prompts</strong>, <strong>Flux prompts</strong>, or <strong>Sora prompts</strong> — our advanced platform organizes and optimizes your prompt parameters to deliver studio-quality results in seconds.
+                  <strong>Prompt by Niti</strong> is the ultimate <strong>AI prompt generator</strong> and <strong>prompt feed</strong> built for creators, designers, developers, and prompt engineers. Whether you need <strong>Midjourney prompts</strong>, <strong>ChatGPT prompts</strong>, <strong>DALL·E prompts</strong>, <strong>Stable Diffusion prompts</strong>, <strong>Flux prompts</strong>, or <strong>Sora prompts</strong> — our advanced platform organizes and optimizes your prompt parameters to deliver studio-quality results in seconds.
                 </p>
                 <p style={{ marginTop: '16px' }}>
                   What sets us apart is our triple-threat <strong>Consistency Reference Engine</strong>:
@@ -1523,7 +1520,7 @@ export default function HomePage() {
                   <li style={{ marginTop: '6px' }}><strong>Text Reference Modes:</strong> Enforce structured blueprints for <strong>Code Generation</strong> (React components, Python scripts, APIs), <strong>Copywriting Frameworks</strong> (AIDA, PAS templates), and custom <strong>AI Agent Personas</strong>.</li>
                 </ul>
                 <p style={{ marginTop: '16px' }}>
-                  Looking for <strong>prompt ideas</strong>? Our <strong>free prompt generator</strong> transforms your simple descriptions into professional, optimized <strong>prompt templates</strong> and <strong>prompt examples</strong> for any AI model. **Prompt by Niti** is the best **PromptBase alternative** — offering a richer **prompt store**, smarter **prompt engineering** tools, and a thriving **prompt marketplace** where you can **buy prompts** and **sell prompts** to earn 80% royalties.
+                  Looking for <strong>prompt ideas</strong>? Our <strong>free prompt generator</strong> transforms your simple descriptions into professional, optimized <strong>prompt templates</strong> and <strong>prompt examples</strong> for any AI model. **Prompt by Niti** is the best **PromptBase alternative** — offering a richer **prompt feed**, smarter **prompt engineering** tools, and a thriving **content community** where you can grow your **social media presence** and **followers** with stunning AI-generated content.
                 </p>
                 <p style={{ marginTop: '16px' }}>
                   Start generating <strong>professional AI prompts</strong> today — for free. No credit card required. Join thousands of creators who trust <strong>Prompt by Niti</strong> as their go-to <strong>prompt builder</strong>, <strong>prompt creator</strong>, and <strong>prompt editor</strong> platform.
@@ -1607,10 +1604,10 @@ export default function HomePage() {
               </details>
 
               <details className="p-seo-faq__item glass-effect">
-                <summary>Can I sell my optimized prompt templates on the marketplace?</summary>
+                <summary>How can I use Prompt by Niti to grow my social media?</summary>
                 <div className="p-seo-faq__content">
                   <p>
-                    Absolutely! Prompt by Niti is a marketplace where prompt engineers sell high-quality, verified prompt templates. You earn 80% royalties on every sale, with payments processed securely. Head over to the <a href="/sell">Sell Prompts</a> page to list your prompts.
+                    Generate professional AI prompts for stunning images and videos, then share them directly on your social media platforms. Use our feed to discover trending content ideas, grow your followers, and increase engagement organically.
                   </p>
                 </div>
               </details>
@@ -1625,7 +1622,7 @@ export default function HomePage() {
           <div className="p-cta__content">
             <h2 className="h-display p-cta__title">Start your <span className="text-orange">journey</span> <span className="text-cyan">today!</span></h2>
             <p className="p-cta__subtitle">Join a growing community of AI creators. No more guessing, just creating.</p>
-            <Link to="/generate" className="btn btn-primary btn-xl">
+            <Link to={state?.user ? "/generate" : "/login"} className="btn btn-primary btn-xl">
               Get Started for Free <Sparkles size={20} />
             </Link>
           </div>

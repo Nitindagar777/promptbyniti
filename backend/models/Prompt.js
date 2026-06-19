@@ -39,6 +39,8 @@ const promptSchema = new mongoose.Schema({
   ],
   averageRating: { type: Number, default: 0 },
   totalReviews: { type: Number, default: 0 },
+  socialLinks: { type: mongoose.Schema.Types.Mixed, default: {} },
+  unlockRules: { type: mongoose.Schema.Types.Mixed, default: {} },
   createdAt: { type: Date, default: Date.now }
 });
 

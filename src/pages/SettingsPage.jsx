@@ -38,9 +38,9 @@ function SavedPromptsTab() {
     setDeleteId(null);
   };
 
-  const handleSell = (p) => {
+  const handlePostToFeed = (p) => {
     const modelEntry = aiModels.find(m => m.id === p.model);
-    const sellData = {
+    const postData = {
       name: p.title || '',
       description: p.description || '',
       generateType: p.promptType || 'image',
@@ -57,7 +57,7 @@ function SavedPromptsTab() {
         output: null
       }))
     };
-    navigate('/sell', { state: { fromGenerator: true, promptData: sellData } });
+    navigate('/sell', { state: { fromGenerator: true, promptData: postData } });
   };
 
   const copyText = (text, field) => {
@@ -93,11 +93,11 @@ function SavedPromptsTab() {
           </div>
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
             <button
-              onClick={() => handleSell(p)}
+              onClick={() => handlePostToFeed(p)}
               className="btn btn-primary btn-sm"
               style={{ borderRadius: '12px', padding: '10px 24px', gap: '8px', fontSize: '1rem', background: 'var(--color-orange)', border: 'none' }}
             >
-              <ShoppingBag size={18} /> Sell
+              <Sparkles size={18} /> Post
             </button>
             <button
               onClick={() => handleDelete(p.id)}
@@ -216,10 +216,10 @@ function SavedPromptsTab() {
                   <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{new Date(p.savedAt).toLocaleDateString()}</span>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button
-                      onClick={(e) => { e.stopPropagation(); handleSell(p); }}
+                      onClick={(e) => { e.stopPropagation(); handlePostToFeed(p); }}
                       style={{ background: 'rgba(6, 182, 212, 0.1)', border: 'none', color: 'var(--color-cyan)', cursor: 'pointer', padding: '4px 10px', borderRadius: '6px', fontSize: '0.7rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}
                     >
-                      <ShoppingBag size={12} /> Sell
+                      <Sparkles size={12} /> Post
                     </button>
                     <button
                       onClick={(e) => { e.stopPropagation(); handleDelete(p.id); }}
@@ -300,6 +300,7 @@ export default function SettingsPage() {
     name: state.user?.name || '',
     bio: state.user?.bio || '',
     avatar: state.user?.avatar || '',
+    socialLinks: state.user?.socialLinks || { instagram: '', twitter: '', github: '', youtube: '', website: '', linkedin: '', facebook: '' },
   });
 
   const [loading, setLoading] = useState(false);
@@ -313,6 +314,7 @@ export default function SettingsPage() {
         name: state.user.name || '',
         bio: state.user.bio || '',
         avatar: state.user.avatar || '',
+        socialLinks: state.user.socialLinks || { instagram: '', twitter: '', github: '', youtube: '', website: '', linkedin: '', facebook: '' },
       });
     }
   }, [state.user]);
@@ -366,6 +368,9 @@ export default function SettingsPage() {
       const data = await res.json();
       if (data.success) {
         dispatch({ type: 'SET_USER', payload: data.user });
+        if (data.user?.socialLinks) {
+          localStorage.setItem('promptbyniti_last_social_links', JSON.stringify(data.user.socialLinks));
+        }
         setMessage({ type: 'success', text: 'Profile updated successfully!' });
         setPreview(null); // Clear preview since we have the new real URL
       } else {
@@ -564,7 +569,7 @@ export default function SettingsPage() {
               onClick={() => handleTabChange('dashboards')}
             >
               <LayoutGrid size={20} className="icon-dashboards" />
-              <span>Dashboards</span>
+              <span>Dashboard</span>
             </button>
             <button
               className={`settings-tab ${activeTab === 'saved' ? 'settings-tab--active' : ''}`}
@@ -656,6 +661,101 @@ export default function SettingsPage() {
                     <p className="text-xs text-muted" style={{ textAlign: 'right', marginTop: '4px' }}>
                       {formData.bio.length}/200
                     </p>
+                  </div>
+
+                  <h4 style={{ color: 'white', marginTop: '24px', marginBottom: '12px', fontFamily: 'var(--font-display)', fontSize: '1.05rem' }}>Social Media Links</h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px', marginBottom: '20px' }}>
+                    <div className="settings-field" style={{ marginBottom: 0 }}>
+                      <label>Instagram URL</label>
+                      <input
+                        type="url"
+                        className="input"
+                        placeholder="https://instagram.com/username"
+                        value={formData.socialLinks?.instagram || ''}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          socialLinks: { ...prev.socialLinks, instagram: e.target.value }
+                        }))}
+                      />
+                    </div>
+                    <div className="settings-field" style={{ marginBottom: 0 }}>
+                      <label>Twitter/X URL</label>
+                      <input
+                        type="url"
+                        className="input"
+                        placeholder="https://twitter.com/username"
+                        value={formData.socialLinks?.twitter || ''}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          socialLinks: { ...prev.socialLinks, twitter: e.target.value }
+                        }))}
+                      />
+                    </div>
+                    <div className="settings-field" style={{ marginBottom: 0 }}>
+                      <label>YouTube URL</label>
+                      <input
+                        type="url"
+                        className="input"
+                        placeholder="https://youtube.com/@channel"
+                        value={formData.socialLinks?.youtube || ''}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          socialLinks: { ...prev.socialLinks, youtube: e.target.value }
+                        }))}
+                      />
+                    </div>
+                    <div className="settings-field" style={{ marginBottom: 0 }}>
+                      <label>GitHub URL</label>
+                      <input
+                        type="url"
+                        className="input"
+                        placeholder="https://github.com/username"
+                        value={formData.socialLinks?.github || ''}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          socialLinks: { ...prev.socialLinks, github: e.target.value }
+                        }))}
+                      />
+                    </div>
+                    <div className="settings-field" style={{ marginBottom: 0 }}>
+                      <label>LinkedIn URL</label>
+                      <input
+                        type="url"
+                        className="input"
+                        placeholder="https://linkedin.com/in/username"
+                        value={formData.socialLinks?.linkedin || ''}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          socialLinks: { ...prev.socialLinks, linkedin: e.target.value }
+                        }))}
+                      />
+                    </div>
+                    <div className="settings-field" style={{ marginBottom: 0 }}>
+                      <label>Facebook URL</label>
+                      <input
+                        type="url"
+                        className="input"
+                        placeholder="https://facebook.com/username"
+                        value={formData.socialLinks?.facebook || ''}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          socialLinks: { ...prev.socialLinks, facebook: e.target.value }
+                        }))}
+                      />
+                    </div>
+                    <div className="settings-field" style={{ gridColumn: '1 / -1', marginBottom: 0 }}>
+                      <label>Website / Custom Link URL</label>
+                      <input
+                        type="url"
+                        className="input"
+                        placeholder="https://yourwebsite.com"
+                        value={formData.socialLinks?.website || ''}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          socialLinks: { ...prev.socialLinks, website: e.target.value }
+                        }))}
+                      />
+                    </div>
                   </div>
 
                   <div style={{ marginTop: 'var(--space-md)' }}>
@@ -803,29 +903,18 @@ export default function SettingsPage() {
               <section className="settings-section card">
                 <h3 className="settings-section-title">
                   <LayoutGrid size={22} className="text-cyan" />
-                  <span className="text-cyan">Account Dashboards</span>
+                  <span className="text-cyan">Account Dashboard</span>
                 </h3>
-                <p className="text-muted mb-6">Switch between your selling performance and your personal acquisition hub.</p>
+                <p className="text-muted mb-6">View your unlocked prompts, manage favorites, and track your history.</p>
 
                 <div className="dashboards-selector-grid">
-                  <div className="dashboard-option-card" onClick={() => navigate('/dashboard')}>
-                    <div className="option-icon-box seller-bg">
-                      <TrendingUp size={32} />
-                    </div>
-                    <div className="option-info">
-                      <h4>Seller Dashboard</h4>
-                      <p>Track earnings, manage products, and view sales analytics.</p>
-                      <span className="option-link">Access Marketplace Stats →</span>
-                    </div>
-                  </div>
-
-                  <div className="dashboard-option-card" onClick={() => navigate('/buyer-dashboard')}>
+                  <div className="dashboard-option-card" onClick={() => navigate('/buyer-dashboard')} style={{ margin: '0 auto', maxWidth: '400px' }}>
                     <div className="option-icon-box buyer-bg">
                       <ShoppingBag size={32} />
                     </div>
                     <div className="option-info">
-                      <h4>Buyer Dashboard</h4>
-                      <p>View purchased prompts, manage favorites, and track history.</p>
+                      <h4>My Library Dashboard</h4>
+                      <p>View unlocked prompts, manage favorites, and track history.</p>
                       <span className="option-link">Access My Library →</span>
                     </div>
                   </div>

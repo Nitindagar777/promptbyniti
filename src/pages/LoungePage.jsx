@@ -204,7 +204,7 @@ export default function LoungePage() {
     }
   };
 
-  // Fetch 1-on-1 private contacts (buyers/sellers/recent chats)
+  // Fetch 1-on-1 private contacts (creators/users/recent chats)
   const fetchPrivateContacts = async () => {
     try {
       const token = localStorage.getItem('promptbyniti_token');
@@ -660,7 +660,7 @@ export default function LoungePage() {
                 </select>
               ) : (
                 <div style={{ flex: 1, fontSize: '1.2rem', color: 'rgba(255,255,255,0.5)', fontStyle: 'italic', paddingLeft: '8px' }}>
-                  No active clients or sellers. Purchased prompt chats appear here automatically.
+                  No active creators or users. Unlocked prompt chats appear here automatically.
                 </div>
               )}
             </div>
@@ -682,7 +682,7 @@ export default function LoungePage() {
                     : chatMode === 'private'
                       ? (selectedPrivateContactId
                           ? 'No messages yet in this private discussion thread. Start your conversation!'
-                          : 'Select an eligible client or seller from the dropdown above to start a secure, private 1-on-1 chat!')
+                          : 'Select an eligible creator or user from the dropdown above to start a secure, private 1-on-1 chat!')
                       : isAdmin 
                         ? 'Select a member contact from the dropdown to start your 1-on-1 direct discussion!'
                         : 'This is a private direct message board with Nitin (Admin). Share your questions, feedback, or custom requests directly and privately here!'}

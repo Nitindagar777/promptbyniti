@@ -34,7 +34,7 @@ export default function SEOHead({
     // --- Title ---
     document.title = title 
       ? `${title} | ${BASE_TITLE}` 
-      : `${BASE_TITLE} — #1 AI Prompt Generator & Marketplace`;
+      : `${BASE_TITLE} — #1 AI Prompt Generator & Feed`;
 
     // --- Meta Description ---
     const metaDesc = document.querySelector('meta[name="description"]');
@@ -64,7 +64,7 @@ export default function SEOHead({
 
     const ogTitleTag = document.querySelector('meta[property="og:title"]');
     if (ogTitleTag) {
-      ogTitleTag.setAttribute('content', ogTitle || title || `${BASE_TITLE} — #1 AI Prompt Generator & Marketplace`);
+      ogTitleTag.setAttribute('content', ogTitle || title || `${BASE_TITLE} — #1 AI Prompt Generator & Feed`);
     }
 
     const ogDescTag = document.querySelector('meta[property="og:description"]');
@@ -85,7 +85,7 @@ export default function SEOHead({
     // --- Twitter tags ---
     const twTitle = document.querySelector('meta[name="twitter:title"]');
     if (twTitle) {
-      twTitle.setAttribute('content', ogTitle || title || `${BASE_TITLE} — #1 AI Prompt Generator & Marketplace`);
+      twTitle.setAttribute('content', ogTitle || title || `${BASE_TITLE} — #1 AI Prompt Generator & Feed`);
     }
 
     const twDesc = document.querySelector('meta[name="twitter:description"]');

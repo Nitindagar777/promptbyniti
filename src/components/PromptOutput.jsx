@@ -17,13 +17,13 @@ export default function PromptOutput({ result, mode }) {
 
   return (
     <div className="prompt-output animate-fade-in-up" id="prompt-output">
-      {/* Marketplace Listing Details */}
+      {/* Community Feed Details */}
       {mode !== 'example' && (
         <div className="prompt-output__section prompt-output__section--premium">
         <div className="prompt-output__header">
           <div className="prompt-output__label">
             <Sparkles size={16} color="#ff0080" />
-            <span style={{ color: '#ff0080', fontWeight: 'bold' }}>Marketplace Listing Metadata</span>
+             <span style={{ color: '#ff0080', fontWeight: 'bold' }}>Community Feed Metadata</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="badge badge-primary">{result.priceTokens || 5} Credits</span>
@@ -43,7 +43,7 @@ export default function PromptOutput({ result, mode }) {
             </div>
           </div>
           <div className="prompt-output__meta-item">
-            <label>Product Description</label>
+            <label>Post Description</label>
             <div className="prompt-output__meta-box">
               <span className="text-sm line-clamp-1">{result.description || 'No description available'}</span>
               <button 

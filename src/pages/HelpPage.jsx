@@ -13,8 +13,8 @@ export default function HelpPage() {
     <div className="legal-page help-page">
       <SEOHead
         title="Help Center — Support & FAQ"
-        description="Get help with Prompt by Niti. FAQ about AI prompt generation, buying and selling prompts, token purchases, image-to-video prompts, text-to-code prompts & more. Contact our support team via email or Discord."
-        keywords="prompt by niti help, prompt support, AI prompt FAQ, how to use prompts, prompt marketplace help, prompt generator help, AI prompt tutorial, prompt engineering guide"
+        description="Get help with Prompt by Niti. FAQ about AI prompt generation, token purchases, image-to-video prompts, text-to-code prompts & more. Contact our support team via email or Discord."
+        keywords="prompt by niti help, prompt support, AI prompt FAQ, how to use prompts, prompt generator help, AI prompt tutorial, prompt engineering guide"
         breadcrumbs={[
           { name: 'Home', url: '/' },
           { name: 'Help Center', url: '/help' }
@@ -45,7 +45,7 @@ export default function HelpPage() {
               <MessageSquare size={32} />
             </div>
             <h3>Discord Community</h3>
-            <p>Join our 24/7 community of prompt engineers and creators.</p>
+            <p>Join our 24/7 community of prompt engineering and creators.</p>
             <a href="https://discord.gg/vMSfcpQDpu" className="help-link">Join Discord <ExternalLink size={14} /></a>
           </div>
         </div>
@@ -90,8 +90,8 @@ export default function HelpPage() {
               <p>Tokens can be purchased through the Pricing page using Razorpay. They are added to your account instantly.</p>
             </div>
             <div className="faq-item">
-              <h4>Can I sell my Midjourney prompts?</h4>
-              <p>Yes! Our marketplace supports Midjourney, Stable Diffusion, DALL-E, and more. Use the "Sell" page to start.</p>
+              <h4>Can I share my Midjourney prompts?</h4>
+              <p>Yes! Our feed supports Midjourney, Stable Diffusion, DALL-E, and more. Use the "Post" page to start.</p>
             </div>
             <div className="faq-item">
               <h4>How do I contact the founder?</h4>

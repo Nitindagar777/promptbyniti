@@ -2,13 +2,25 @@
 import { Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { categories } from '../data/promptData';
-import { Crown, Lock, ArrowRight, Sparkles, Filter, Zap, Loader2, Eye, Search } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Crown, Lock, ArrowRight, Sparkles, Filter, Zap, Loader2, Eye, Search, RotateCw } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import PromptThumbnail from '../components/PromptThumbnail';
+import MasonryGrid from '../components/MasonryGrid';
+import PinterestCard from '../components/PinterestCard';
 import PreviewModal from '../components/PreviewModal';
 import SEOHead from '../components/SEOHead';
 import './TemplatesPage.css';
+
+// Random shuffle — non-deterministic order for different dataset loads so refresh changes card order
+const randomShuffle = (arr) => {
+  const out = [...arr];
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+};
 
 const API_URL = '/api';
 
@@ -32,29 +44,24 @@ export default function TemplatesPage() {
     }
   }, [location.state]);
 
+  const [refreshing, setRefreshing] = useState(false);
+
   useEffect(() => {
-    if (state.marketplace && state.marketplace.length > 0) {
-      setPrompts(state.marketplace);
-      setLoading(false);
-    } else {
-      fetchPrompts();
-    }
+    fetchPrompts();
 
     return () => {
       setScroll(location.pathname, window.scrollY);
     };
-  }, [state.marketplace]);
+  }, []);
 
   const fetchPrompts = async () => {
+    setLoading(true);
     try {
       const res = await fetch(`${API_URL}/prompts`);
       const data = await res.json();
       if (data.success) {
         setPrompts(data.prompts);
-        // Sync to global state
-        if (!state.marketplace || state.marketplace.length === 0) {
-          dispatch({ type: 'PRELOAD_DATA', payload: { marketplace: data.prompts } });
-        }
+        dispatch({ type: 'PRELOAD_DATA', payload: { marketplace: data.prompts } });
       }
     } catch (err) {
       console.error('Failed to fetch prompts:', err);
@@ -63,58 +70,167 @@ export default function TemplatesPage() {
     }
   };
 
-  const filteredTemplates = prompts.filter(t => {
-    const searchLower = searchTerm.toLowerCase().trim();
-    const catLower = selectedCat.toLowerCase();
-
-    // Check category match (Primary category OR in keywords)
-    const matchesCat = selectedCat === 'all' ||
-      (t.category || '').toLowerCase() === catLower ||
-      (Array.isArray(t.keywords) && t.keywords.some(k => k && k.toLowerCase().replace(/ /g, '-') === catLower)) ||
-      (typeof t.keywords === 'string' && t.keywords.toLowerCase().replace(/ /g, '-').includes(catLower));
-
-    if (!searchLower) return matchesCat;
-
-    // Robust keyword check (handles both arrays and strings)
-    let keywordMatch = false;
-    if (Array.isArray(t.keywords)) {
-      keywordMatch = t.keywords.some(k => k && k.toLowerCase().includes(searchLower));
-    } else if (typeof t.keywords === 'string') {
-      keywordMatch = t.keywords.toLowerCase().includes(searchLower);
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      const res = await fetch(`${API_URL}/prompts`);
+      const data = await res.json();
+      if (data.success) {
+        setPrompts(data.prompts);
+        dispatch({ type: 'PRELOAD_DATA', payload: { marketplace: data.prompts } });
+      }
+    } catch (err) {
+      console.error('Failed to refresh prompts:', err);
+    } finally {
+      setTimeout(() => setRefreshing(false), 500);
     }
+  };
 
-    const matchesSearch =
-      (t.name || '').toLowerCase().includes(searchLower) ||
-      (t.title || '').toLowerCase().includes(searchLower) ||
-      (t.description || '').toLowerCase().includes(searchLower) ||
-      keywordMatch;
+  const feedItems = useMemo(() => {
+    const items = [];
+    const templates = prompts.filter(t => {
+      const searchLower = searchTerm.toLowerCase().trim();
+      const catLower = selectedCat.toLowerCase();
 
-    return matchesCat && matchesSearch;
-  });
+      // Check category match (Primary category OR in keywords)
+      const matchesCat = selectedCat === 'all' ||
+        (t.category || '').toLowerCase() === catLower ||
+        (Array.isArray(t.keywords) && t.keywords.some(k => k && k.toLowerCase().replace(/ /g, '-') === catLower)) ||
+        (typeof t.keywords === 'string' && t.keywords.toLowerCase().replace(/ /g, '-').includes(catLower));
+
+      if (!searchLower) return matchesCat;
+
+      // Robust keyword check (handles both arrays and strings)
+      let keywordMatch = false;
+      if (Array.isArray(t.keywords)) {
+        keywordMatch = t.keywords.some(k => k && k.toLowerCase().includes(searchLower));
+      } else if (typeof t.keywords === 'string') {
+        keywordMatch = t.keywords.toLowerCase().includes(searchLower);
+      }
+
+      const matchesSearch =
+        (t.name || '').toLowerCase().includes(searchLower) ||
+        (t.title || '').toLowerCase().includes(searchLower) ||
+        (t.description || '').toLowerCase().includes(searchLower) ||
+        keywordMatch;
+
+      return matchesCat && matchesSearch;
+    });
+
+    templates.forEach((tmpl, tmplIdx) => {
+      if (tmpl.generateType === 'text') {
+        items.push({
+          prompt: tmpl,
+          mediaSrc: null,
+          isTextOnly: true,
+          sampleIndex: 0,
+          keyId: tmpl.id || tmpl._id || `tmpl-${tmplIdx}`
+        });
+      } else {
+        const samples = tmpl.samples || [];
+        if (samples.length > 0) {
+          samples.forEach((sample, idx) => {
+            const src = sample.output || sample;
+            if (src) {
+              items.push({
+                prompt: tmpl,
+                mediaSrc: src,
+                isTextOnly: false,
+                sampleIndex: idx,
+                keyId: `${tmpl.id || tmpl._id || `tmpl-${tmplIdx}`}-sample-${idx}`
+              });
+            }
+          });
+        } else {
+          const src = tmpl.video || tmpl.thumbnail;
+          items.push({
+            prompt: tmpl,
+            mediaSrc: src,
+            isTextOnly: !src,
+            sampleIndex: 0,
+            keyId: `${tmpl.id || tmpl._id || `tmpl-${tmplIdx}`}-fallback`
+          });
+        }
+      }
+    });
+
+    return randomShuffle(items);
+  }, [prompts, searchTerm, selectedCat]);
+
+  const [visibleCount, setVisibleCount] = useState(12);
+
+  // Reset visibleCount when filters change
+  useEffect(() => {
+    setVisibleCount(12);
+  }, [searchTerm, selectedCat]);
+
+  // Infinite scroll event listener
+  useEffect(() => {
+    const handleScroll = () => {
+      if (visibleCount >= feedItems.length) return;
+      // Trigger load more when user scrolls to within 300px of the page bottom
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 300) {
+        setVisibleCount(prev => Math.min(prev + 12, feedItems.length));
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [visibleCount, feedItems.length]);
 
   const templateCategories = ['all', ...categories.filter(c => c.id !== 'default' && c.id !== 'none').map(c => c.id)];
 
   return (
     <div className="templates-page" id="templates-page">
       <SEOHead
-        title="AI Prompt Marketplace — Buy & Sell Prompts for Midjourney, Sora, ChatGPT"
-        description="Browse, buy, and sell premium AI prompts for Midjourney, ChatGPT, DALL·E, Stable Diffusion, Flux, Sora, Kling & more. Verified prompt templates with sample outputs. The best prompt store and PromptBase alternative. Earn 80% royalties selling your prompts."
-        keywords="prompt marketplace, buy prompts, sell prompts, prompt store, AI prompts, Midjourney prompts, ChatGPT prompts, DALL-E prompts, Sora video prompts, Flux prompts, prompt templates, prompt ideas, PromptBase alternative, prompt shop, AI art prompts, premium prompts, image prompts, video prompts, text prompts, code prompts, prompt pack, verified prompts, prompt catalog, buy AI prompts online"
+        title="Explore Prompts — Free Midjourney, Sora, ChatGPT & Flux Feed"
+        description="Browse and discover premium AI prompts for Midjourney, ChatGPT, DALL·E, Stable Diffusion, Flux, Sora, Kling & more. Verified prompt templates with sample outputs. The best free community-driven prompt feed."
+        keywords="prompt feed, free prompts, explore prompts, AI prompts, Midjourney prompts, ChatGPT prompts, DALL-E prompts, Sora video prompts, Flux prompts, prompt templates, prompt ideas, prompt shop, AI art prompts, premium prompts, image prompts, video prompts, text prompts, code prompts"
         breadcrumbs={[
           { name: 'Home', url: '/' },
-          { name: 'Prompt Marketplace', url: '/templates' }
+          { name: 'Explore Feed', url: '/templates' }
         ]}
       />
       <div className="container">
         {/* Header */}
         <div className="templates-page__header">
-          <h1 className="section-title">Prompt <span className="text-cyan">Store</span></h1>
+          <h1 className="section-title">Explore <span className="text-cyan">Feed</span></h1>
           <div className="templates-page__header-row">
             <p className="section-desc">
-              Token-Powered Prompt Marketplace. Spend tokens to own the industry's most powerful, ready-to-generate prompt configurations.
+              Community-driven Prompt Feed. Discover and copy the industry's most powerful, ready-to-generate prompt configurations for free.
             </p>
 
-            <div className="templates-page__search-container">
+            <div className="templates-page__search-container" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+              <button 
+                onClick={handleRefresh} 
+                className="btn-refresh" 
+                title="Shuffle & Refresh Feed"
+                style={{
+                  borderRadius: '50%',
+                  width: '40px',
+                  height: '40px',
+                  padding: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  color: 'var(--text-primary)',
+                  transition: 'all 0.3s ease',
+                  cursor: 'pointer'
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
+                  e.currentTarget.style.borderColor = 'var(--color-cyan)';
+                  e.currentTarget.style.color = 'var(--color-cyan)';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+                  e.currentTarget.style.color = 'var(--text-primary)';
+                }}
+              >
+                <RotateCw size={16} className={refreshing ? 'animate-spin' : ''} />
+              </button>
               <div className="compact-search-box">
                 <Search size={16} className="search-icon" />
                 <input
@@ -152,80 +268,22 @@ export default function TemplatesPage() {
             <p className="text-muted">Loading premium prompts...</p>
           </div>
         ) : (
-          <div className="templates-page__grid">
-            {filteredTemplates.length > 0 ? (
-              filteredTemplates.map((tmpl, i) => {
-                const s0 = tmpl.samples?.[0];
-                const s1 = tmpl.samples?.[1];
-                const s2 = tmpl.samples?.[2];
-                const coverSrc = tmpl.thumbnail && tmpl.thumbnail.startsWith('http') ? tmpl.thumbnail : (tmpl.generateType !== 'text' ? s0 : null);
-                const isTextOnly = tmpl.generateType === 'text' || (!coverSrc && !tmpl.video);
-
-                return (
-                  <Link
-                    key={tmpl.id || tmpl._id}
-                    to={`/prompt/${tmpl.id || tmpl._id}`}
-                    className={`template-card card ${tmpl.generateType === 'text' ? 'template-card--text' : ''}`}
-                    id={`template-${tmpl.id || tmpl._id}`}
-                    style={{ animationDelay: `${i * 0.05}s`, textDecoration: 'none' }}
-                  >
-                    <div className="template-card__visual">
-                      <PromptThumbnail
-                        src={tmpl.video || coverSrc}
-                        alt={tmpl.title || tmpl.name}
-                        title={tmpl.title || tmpl.name}
-                        className="template-card__media template-card__media-main"
-                        type={tmpl.generateType}
-                      />
-
-                      {/* Hover gallery — all 3 samples */}
-                      {tmpl.generateType !== 'text' && (
-                        <div className="template-card__gallery">
-                          <div className="template-card__gallery-main">
-                            <PromptThumbnail src={s0} alt="sample 1" type={tmpl.generateType} />
-                          </div>
-                          <div className="template-card__gallery-side">
-                            <PromptThumbnail src={s1} alt="sample 2" type={tmpl.generateType} />
-                            <PromptThumbnail src={s2} alt="sample 3" type={tmpl.generateType} />
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="template-card__overlay template-card__overlay--top">
-                        <span className={`template-card__model-tag ${tmpl.generateType === 'text' ? 'template-card__model-tag--text' : ''}`}>
-                          {tmpl.model || (tmpl.category === 'anime' ? 'Niji v6' : (tmpl.generateType === 'text' ? 'GPT-4o' : 'Flux.1'))}
-                        </span>
-                        <div className="template-card__view-badge">
-                          <Eye size={12} /> {tmpl.views || 0}
-                        </div>
-                      </div>
-                      <div className="template-card__overlay template-card__overlay--bottom">
-                        <div style={{ flex: 1 }}>
-                          <h3 className="template-card__title-overlay">{tmpl.title || tmpl.name}</h3>
-                        </div>
-                      </div>
-
-                      {/* Absolute token badge */}
-                      <div className={`template-card__token-badge ${tmpl.generateType === 'text' ? 'template-card__token-badge--text' : ''}`}>
-                        <Zap size={12} fill="currentColor" /> {tmpl.priceTokens || tmpl.tokens || 5}
-                      </div>
-                    </div>
-
-                    {/* Hover eye icon (half inside/half outside) */}
-                    <div className="template-card__hover-eye" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPreviewPrompt(tmpl); }}>
-                      <Eye size={18} color="red" />
-                    </div>
-                  </Link>
-                );
-              })
-            ) : (
-              <div className="templates-page__empty">
-                <Sparkles size={48} className="text-muted mb-4 mx-auto" />
-                <h3>No prompts found</h3>
-                <p>Try selecting another category to discover more premium prompts.</p>
-              </div>
+          <>
+          <MasonryGrid
+            columns={4}
+            items={feedItems.slice(0, visibleCount)}
+            renderItem={(item, i) => (
+              <PinterestCard key={item.keyId} item={item} index={i} />
             )}
-          </div>
+          />
+          {feedItems.length === 0 && (
+            <div className="templates-page__empty">
+              <Sparkles size={48} className="text-muted mb-4 mx-auto" />
+              <h3>No prompts found</h3>
+              <p>Try selecting another category to discover more prompts.</p>
+            </div>
+          )}
+          </>
         )}
       </div>
       {/* Preview Modal */}

@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useApp } from './context/AppContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -10,7 +10,7 @@ import GeneratePage from './pages/GeneratePage';
 import TemplatesPage from './pages/TemplatesPage';
 import LibraryPage from './pages/LibraryPage';
 import PricingPage from './pages/PricingPage';
-import DashboardPage from './pages/DashboardPage';
+
 import SettingsPage from './pages/SettingsPage';
 import AuthPage from './pages/AuthPage';
 import PromptDetailPage from './pages/PromptDetailPage';
@@ -82,6 +82,9 @@ function GuestRoute({ children }) {
 }
 
 function App() {
+  const location = useLocation();
+  const hideFooter = location.pathname === '/templates';
+
   return (
     <div className="app">
         <ScrollToTop />
@@ -89,13 +92,13 @@ function App() {
         <main className="main-content">
           <Routes>
             <Route path="/" element={<HomePage />} />
-            <Route path="/generate" element={<GeneratePage />} />
+            <Route path="/generate" element={<ProtectedRoute><GeneratePage /></ProtectedRoute>} />
             <Route path="/templates" element={<TemplatesPage />} />
             <Route path="/library" element={<ProtectedRoute><LibraryPage /></ProtectedRoute>} />
             <Route path="/pricing" element={<PricingPage />} />
             <Route path="/prompt/:id" element={<PromptDetailPage />} />
             <Route path="/sell" element={<ProtectedRoute><SellPage /></ProtectedRoute>} />
-            <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+            <Route path="/dashboard" element={<Navigate to="/buyer-dashboard" replace />} />
             <Route path="/buyer-dashboard" element={<ProtectedRoute><BuyerDashboard /></ProtectedRoute>} />
             <Route path="/admin-lab" element={<AdminRoute><AdminTestLab /></AdminRoute>} />
             <Route path="/purchase-success/:id" element={<ProtectedRoute><PurchaseSuccess /></ProtectedRoute>} />
@@ -119,7 +122,7 @@ function App() {
             } />
           </Routes>
         </main>
-      <Footer />
+      {!hideFooter && <Footer />}
     </div>
   );
 }

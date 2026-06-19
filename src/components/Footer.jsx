@@ -53,7 +53,7 @@ export default function Footer() {
             </span>
           </div>
           <p className="footer__tagline">
-            Get <span className="text-orange">Tokens</span>, generate studio-quality <span className="text-cyan">Prompts</span>, and <span className="text-pink">Sell</span> your creations in seconds.
+            Discover, save, and generate studio-quality <span className="text-cyan">Prompts</span> from our community-driven <span className="text-pink">Pinterest-style feed</span>.
           </p>
           <div className="footer__socials">
             <a href="https://www.youtube.com/@promptbyniti" className="footer__social-link youtube" title="YouTube" target="_blank" rel="noopener noreferrer">
@@ -77,14 +77,9 @@ export default function Footer() {
         <div className="footer__links">
           <div className="footer__column">
             <h4 className="text-cyan">Platform</h4>
-            {state?.user && <Link to="/generate">Prompt Generator</Link>}
-            <Link to="/templates">Marketplace</Link>
-            {state?.user && (
-              <>
-                <Link to="/library">Free Library</Link>
-                <Link to="/pricing">Pricing</Link>
-              </>
-            )}
+            <Link to={state?.user ? "/generate" : "/login"}>Prompt Generator</Link>
+            <Link to="/templates">Explore Feed</Link>
+            {state?.user && <Link to="/pricing">Pricing</Link>}
           </div>
           <div className="footer__column">
             <h4 className="text-purple">Resources</h4>

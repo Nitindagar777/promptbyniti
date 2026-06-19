@@ -1,124 +1,271 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { aiModels } from '../data/promptData';
 import {
-  ShoppingBag, Zap, Image, Video,
   Upload, CheckCircle, AlertCircle, Info,
-  Wand2, ShieldCheck, DollarSign, Type,
-  Plus, Trash2, ChevronRight, Sparkles, ArrowLeft,
-  X
+  Sparkles, ArrowLeft, ShieldCheck, Trash2, Plus, X, Globe, Eye
 } from 'lucide-react';
 import SEOHead from '../components/SEOHead';
 import './SellPage.css';
 
+// Platform configuration lookup helper
+const getPlatformConfig = (platformId, url = '') => {
+  const defaults = {
+    instagram: {
+      name: 'Instagram',
+      color: '#e1306c',
+      placeholder: 'https://instagram.com/username',
+      icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle' }}><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+    },
+    twitter: {
+      name: 'Twitter/X',
+      color: '#ffffff',
+      placeholder: 'https://twitter.com/username',
+      icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" style={{ display: 'inline-block', verticalAlign: 'middle' }}><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+    },
+    youtube: {
+      name: 'YouTube',
+      color: '#ff0000',
+      placeholder: 'https://youtube.com/@channel',
+      icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" style={{ display: 'inline-block', verticalAlign: 'middle' }}><path d="M23.498 6.163a3.003 3.003 0 0 0-2.11-2.11C19.517 3.545 12 3.545 12 3.545s-7.517 0-9.388.507a3.003 3.003 0 0 0-2.11 2.11C0 8.033 0 12 0 12s0 3.967.502 5.837a3.003 3.003 0 0 0 2.11 2.11c1.871.507 9.388.507 9.388.507s7.517 0 9.388-.507a3.003 3.003 0 0 0 2.11-2.11C24 15.967 24 12 24 12s0-3.967-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+    },
+    github: {
+      name: 'GitHub',
+      color: '#ffffff',
+      placeholder: 'https://github.com/username',
+      icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" style={{ display: 'inline-block', verticalAlign: 'middle' }}><path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.579.688.481C19.137 20.162 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>
+    },
+    website: {
+      name: 'Website',
+      color: '#06b6d4',
+      placeholder: 'https://yourwebsite.com',
+      icon: <Globe size={22} style={{ display: 'inline-block', verticalAlign: 'middle' }} />
+    },
+    linkedin: {
+      name: 'LinkedIn',
+      color: '#0a66c2',
+      placeholder: 'https://linkedin.com/in/username',
+      icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="#0a66c2" style={{ display: 'inline-block', verticalAlign: 'middle' }}><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+    },
+    facebook: {
+      name: 'Facebook',
+      color: '#1877f2',
+      placeholder: 'https://facebook.com/username',
+      icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="#1877f2" style={{ display: 'inline-block', verticalAlign: 'middle' }}><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+    },
+    pinterest: {
+      name: 'Pinterest',
+      color: '#bd081c',
+      placeholder: 'https://pinterest.com/username',
+      icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="#bd081c" style={{ display: 'inline-block', verticalAlign: 'middle' }}><path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.162-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.663.967-2.906 2.17-2.906 1.024 0 1.517.768 1.517 1.686 0 1.029-.653 2.567-.992 3.992-.285 1.193.6 2.168 1.777 2.168 2.133 0 3.772-2.254 3.772-5.509 0-2.881-2.071-4.896-5.029-4.896-3.424 0-5.437 2.568-5.437 5.228 0 1.033.398 2.143.896 2.746.098.118.112.222.083.342-.091.382-.294 1.197-.333 1.36-.053.218-.173.264-.399.157-1.494-.696-2.428-2.882-2.428-4.636 0-3.778 2.748-7.247 7.915-7.247 4.155 0 7.386 2.96 7.386 6.917 0 4.129-2.607 7.452-6.223 7.452-1.215 0-2.359-.631-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.498 3.156 1.127.349 2.321.537 3.56.537 6.62 0 11.988-5.368 11.988-11.991C24.005 5.368 18.636 0 12.017 0z"/></svg>
+    },
+    tiktok: {
+      name: 'TikTok',
+      color: '#ff0050',
+      placeholder: 'https://tiktok.com/@username',
+      icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="#ff0050" style={{ display: 'inline-block', verticalAlign: 'middle' }}><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.17-2.86-.74-3.94-1.74-.22-.21-.42-.45-.61-.7-.08 3.68-.06 7.37-.05 11.06-.01 1.15-.25 2.35-.8 3.39-.56 1.1-1.47 1.99-2.58 2.53-1.22.61-2.61.85-3.96.8-1.57-.04-3.15-.55-4.43-1.5-1.33-1-2.27-2.5-2.6-4.13-.36-1.74-.1-3.6.76-5.14.82-1.49 2.22-2.66 3.84-3.13.91-.26 1.87-.34 2.82-.25v4.21c-.88-.17-1.84-.04-2.6.43-.75.48-1.27 1.31-1.37 2.2-.15 1.18.39 2.4 1.34 3.08.89.65 2.08.8 3.14.47.88-.27 1.61-.97 1.94-1.81.25-.63.33-1.33.32-2.01-.01-5.12-.01-10.24-.01-15.36z"/></svg>
+    },
+    twitch: {
+      name: 'Twitch',
+      color: '#9146ff',
+      placeholder: 'https://twitch.tv/username',
+      icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="#9146ff" style={{ display: 'inline-block', verticalAlign: 'middle' }}><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/></svg>
+    },
+    discord: {
+      name: 'Discord',
+      color: '#5865f2',
+      placeholder: 'https://discord.gg/invite',
+      icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="#5865f2" style={{ display: 'inline-block', verticalAlign: 'middle' }}><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.094 13.094 0 0 1-1.873-.894.077.077 0 0 1-.008-.128c.126-.093.252-.19.372-.287a.075.075 0 0 1 .077-.011c3.92 1.793 8.18 1.793 12.061 0a.073.073 0 0 1 .078.009c.12.099.246.195.373.289a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 1-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03a.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.156-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.156 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.156-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.156 2.418z"/></svg>
+    }
+  };
+
+  const key = platformId.toLowerCase();
+  if (defaults[key]) {
+    return defaults[key];
+  }
+
+  if (url) {
+    try {
+      const parsedUrl = new URL(url.startsWith('http') ? url : `https://${url}`);
+      const host = parsedUrl.hostname.toLowerCase();
+      for (const presetKey of Object.keys(defaults)) {
+        if (host.includes(presetKey)) {
+          return defaults[presetKey];
+        }
+      }
+      const faviconUrl = `https://www.google.com/s2/favicons?sz=64&domain=${host}`;
+      return {
+        name: platformId.charAt(0).toUpperCase() + platformId.slice(1),
+        color: '#06b6d4',
+        placeholder: 'https://' + host,
+        icon: <img src={faviconUrl} alt={platformId} style={{ width: '22px', height: '22px', borderRadius: '4px', display: 'inline-block', verticalAlign: 'middle' }} onError={(e) => { e.target.src = ''; }} />
+      };
+    } catch (err) {
+      // ignore
+    }
+  }
+
+  return {
+    name: platformId.charAt(0).toUpperCase() + platformId.slice(1),
+    color: '#06b6d4',
+    placeholder: 'https://link.com',
+    icon: <Globe size={22} className="text-cyan" style={{ display: 'inline-block', verticalAlign: 'middle' }} />
+  };
+};
+
 export default function SellPage() {
-  const { state } = useApp();
+  const { state, dispatch } = useApp();
   const navigate = useNavigate();
-  const location = useLocation();
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    generateType: 'image', // 'image', 'video', 'text'
-    model: '',
-    tokens: '5',
-    template: '',
-    instructions: '',
-    keywords: [],
-    negativePrompt: '',
-    imageAnalysis: '',
-    mainPrompt: '',
-  });
 
-  const [showKeywordModal, setShowKeywordModal] = useState(false);
-  const [customKeyword, setCustomKeyword] = useState('');
+  // Form Fields State
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [prompt, setPrompt] = useState('');
+  const [tags, setTags] = useState([]);
+  const [tagInput, setTagInput] = useState('');
+  
+  // Media State
+  const [media, setMedia] = useState(null);
+  const [mediaType, setMediaType] = useState('image'); // 'image' or 'video'
+  const [dragging, setDragging] = useState(false);
 
-  const ALL_KEYWORDS = [
-    'Portrait', 'Group', 'Expression', 'Lifestyle', 'AI Influencer', 'Baby', 'Old Age',
-    'Character', 'Sci-Fi Character', 'Fantasy Character', 'Horror Character', 'Cosplay',
-    'Professional Headshot', 'Selfie', 'Fashion', 'Streetwear', 'Luxury Fashion', 'Beauty',
-    'Hairstyle', 'Makeup', 'Outfit Design', 'Product', 'E-commerce', 'Advertisement',
-    'Branding', 'Marketing', 'Social Media Post', 'Thumbnail', 'App UI', 'Website UI',
-    'Poster', 'Book Cover', 'Movie Poster', 'Landscape', 'Sunset', 'Sunrise', 'Cityscape',
-    'Urban', 'Night City', 'Space', 'Nature', 'Forest', 'Tropical', 'Desert', 'Mountains',
-    'Ocean', 'Snow', 'Volcano', 'Architecture', 'Interior Design', 'Exterior Design',
-    'Building Concept', 'Historical', 'Futuristic Architecture', 'Food', 'Fast Food',
-    'Dessert', 'Drinks', 'Coffee Art', 'Fine Dining', 'Tattoo', 'Illustration', 'Digital Art',
-    'Painting', 'Line Art', 'Sketch', '3D Render', 'Isometric', 'Abstract', 'Colorful',
-    'Geometric', 'Surreal', 'Psychedelic', 'Minimalist', 'Anime', 'Game Art', 'Pixel Art',
-    'Cartoon', 'Comic', 'Superhero', 'Fantasy', 'Mythology', 'Vehicles', 'Cars', 'Sports Cars',
-    'Spaceships', 'Aircraft', 'Ships', 'Animals', 'Pets', 'Wildlife', 'Creatures',
-    'Underwater Life', 'Action', 'Explosion', 'War', 'Medieval', 'Apocalypse', 'Emotions',
-    'Sad', 'Love', 'Angry', 'Funny', 'Celebration', 'Education', 'Infographic',
-    'Data Visualization', 'Science', 'Medical', 'Music', 'Concert', 'Band', 'Album Cover',
-    'Cinematic', 'Film Still', 'Documentary', 'Scene Design', 'Travel', 'Adventure',
-    'Camping', 'Exploration', 'Wellness', 'Fitness', 'Mental Health', 'Spa', 'Festival',
-    'Christmas', 'Halloween', 'Diwali', 'Futuristic', 'Cyberpunk', 'Metaverse', 'AI Generated World'
-  ];
-
-  const [samples, setSamples] = useState([
-    { id: 1, input: '', output: null },
-    { id: 2, input: '', output: null },
-    { id: 3, input: '', output: null },
-  ]);
+  // Dynamic Add Platform Form States
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newPlatformType, setNewPlatformType] = useState('linkedin');
+  const [newPlatformName, setNewPlatformName] = useState('');
+  const [newPlatformUrl, setNewPlatformUrl] = useState('');
 
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editId, setEditId] = useState(null);
-  const [rules, setRules] = useState([]);
-  const [showRules, setShowRules] = useState(false);
+  const [limitModal, setLimitModal] = useState({ show: false, planName: '', limit: 0 });
+  // Creator Social Links & Task Rules (persisted in localStorage)
+  const [socialLinks, setSocialLinks] = useState(() => {
+    try {
+      const stored = localStorage.getItem('promptbyniti_state');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.user?.socialLinks) {
+          return {
+            instagram: '', twitter: '', github: '', youtube: '', website: '',
+            ...parsed.user.socialLinks
+          };
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+    return { instagram: '', twitter: '', github: '', youtube: '', website: '' };
+  });
 
-  // Load Rules
+  const socialLinksRef = useRef(socialLinks);
+  // Keep ref in sync with state
+  socialLinksRef.current = socialLinks;
+
+  const [unlockRules, setUnlockRules] = useState(() => {
+    const initialLinks = (() => {
+      try {
+        const stored = localStorage.getItem('promptbyniti_state');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed.user?.socialLinks) {
+            return {
+              instagram: '', twitter: '', github: '', youtube: '', website: '',
+              ...parsed.user.socialLinks
+            };
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
+      return { instagram: '', twitter: '', github: '', youtube: '', website: '' };
+    })();
+
+    const rules = {};
+    Object.keys(initialLinks).forEach(key => {
+      rules[key] = false;
+    });
+    return rules;
+  });
+
+  // Creator Social Links & Task Rules: sync with global user profile
   useEffect(() => {
-    fetch(`/api/prompts/rules`)
+    if (!isEditMode && state.user?.socialLinks) {
+      const merged = {
+        instagram: '', twitter: '', github: '', youtube: '', website: '',
+        ...state.user.socialLinks
+      };
+      
+      setSocialLinks(prev => {
+        const activeEl = document.activeElement;
+        const isEditingSocialInput = activeEl && activeEl.tagName === 'INPUT' && activeEl.closest('.form-card-glass');
+        if (isEditingSocialInput) {
+          return prev;
+        }
+
+        const keys1 = Object.keys(prev);
+        const keys2 = Object.keys(merged);
+        if (keys1.length === keys2.length && keys1.every(k => prev[k] === merged[k])) {
+          return prev;
+        }
+        return merged;
+      });
+
+      setUnlockRules(prev => {
+        const rules = { ...prev };
+        let changed = false;
+        Object.keys(merged).forEach(key => {
+          if (rules[key] === undefined) {
+            rules[key] = false;
+            changed = true;
+          }
+        });
+        return changed ? rules : prev;
+      });
+    }
+  }, [state.user?.socialLinks, isEditMode]);
+
+  // Save social links directly to the user profile in the database
+  const saveSocialLinksToProfile = (updatedLinks) => {
+    // 1. IMMEDIATELY update global state + localStorage (synchronous, survives refresh)
+    if (state.user) {
+      dispatch({
+        type: 'SET_USER',
+        payload: { ...state.user, socialLinks: updatedLinks }
+      });
+    }
+
+    // 2. Persist to MongoDB (async, for cross-device / cross-session persistence)
+    const token = localStorage.getItem('promptbyniti_token');
+    if (!token) return;
+
+    fetch('/api/auth/profile', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ socialLinks: updatedLinks })
+    })
       .then(res => res.json())
       .then(data => {
-        if (data.success) setRules(data.rules);
+        if (data.success) {
+          // Sync with server-confirmed data
+          dispatch({ type: 'SET_USER', payload: data.user });
+        }
       })
-      .catch(err => console.warn("Failed to load rules:", err));
-  }, []);
+      .catch(err => console.error('Failed to save social links to profile:', err));
+  };
 
-  // ── Auto-fill from Prompt Generator ──
-  // Use a ref (not state) so the value is synchronously available when the generateType useEffect fires
-  const fromGeneratorRef = useRef(false);
-  useEffect(() => {
-    if (location.state?.fromGenerator && location.state?.promptData) {
-      const d = location.state.promptData;
-      // Set BEFORE updating formData so the generateType useEffect sees it immediately
-      fromGeneratorRef.current = true;
-      setFormData(prev => ({
-        ...prev,
-        name: d.name || '',
-        description: d.description || '',
-        generateType: d.generateType || 'image',
-        model: d.model || '',
-        template: d.template || '',
-        instructions: d.instructions || '',
-        keywords: d.keywords || [],
-        negativePrompt: d.negativePrompt || '',
-        imageAnalysis: d.imageAnalysis || '',
-        mainPrompt: d.mainPrompt || '',
-      }));
-      // Auto-fill samples: input = generated prompt text, output = null (user uploads image)
-      if (d.samples && d.samples.length > 0) {
-        const filledSamples = d.samples.map((s, idx) => ({
-          id: idx + 1,
-          input: s.input || '',
-          output: s.output || null
-        }));
-        setSamples(filledSamples);
-      }
-    }
-  }, [location.state]);
-
-  // Load Edit Data
+  // Load Edit Data if edit query param is present
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const id = params.get('edit');
     if (id) {
       setIsEditMode(true);
       setEditId(id);
+      setLoading(true);
       fetch(`/api/prompts/${id}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('promptbyniti_token')}`
@@ -128,100 +275,108 @@ export default function SellPage() {
         .then(data => {
           if (data.success && data.prompt) {
             const p = data.prompt;
-            setFormData({
-              name: p.name || '',
-              description: p.description || '',
-              generateType: p.generateType || 'image',
-              model: p.model || '',
-              tokens: p.priceTokens ? p.priceTokens.toString() : '5',
-              template: p.template || '',
-              instructions: p.instructions || '',
-              keywords: p.keywords || [],
-              mainPrompt: p.mainPrompt || '',
-              negativePrompt: p.negativePrompt || '',
-              imageAnalysis: p.imageAnalysis || '',
+            setName(p.name || '');
+            setDescription(p.description || '');
+            setPrompt(p.template || '');
+            setTags(p.keywords || []);
+            setMedia(p.thumbnail || (p.samples && p.samples[0]?.output) || null);
+            setMediaType(p.generateType || 'image');
+            const links = p.socialLinks || { instagram: '', twitter: '', github: '', youtube: '', website: '' };
+            const rules = p.unlockRules || { instagram: false, youtube: false, twitter: false };
+            
+            // Sync all socialLinks keys to unlockRules keys
+            const mergedRules = { ...rules };
+            Object.keys(links).forEach(key => {
+              if (mergedRules[key] === undefined) {
+                mergedRules[key] = false;
+              }
             });
-            if (p.samples && p.samples.length > 0) {
-              const loadedSamples = p.samples.map((s, idx) => ({
-                id: idx + 1,
-                input: s.input || '',
-                output: s.output || null
-              }));
-              setSamples(loadedSamples);
-            }
+            
+            setSocialLinks(links);
+            socialLinksRef.current = links;
+            setUnlockRules(mergedRules);
           }
         })
-        .catch(err => console.error("Error loading prompt for edit:", err));
+        .catch(err => console.error("Error loading prompt for edit:", err))
+        .finally(() => setLoading(false));
     }
   }, []);
 
-  // Filter models based on generate type
-  const filteredModels = aiModels.filter(m => {
-    if (formData.generateType === 'image') return m.type === 'image';
-    if (formData.generateType === 'video') return m.type === 'video';
-    if (formData.generateType === 'text') return m.type === 'chat';
-    return true;
-  });
+  // Handle Drag Events
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setDragging(true);
+  };
 
-  useEffect(() => {
-    // Skip model reset if data came from the generator (preserve user's original model selection)
-    if (fromGeneratorRef.current) {
-      fromGeneratorRef.current = false; // only skip once
+  const handleDragLeave = () => {
+    setDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setDragging(false);
+    const file = e.dataTransfer.files[0];
+    processFile(file);
+  };
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    processFile(file);
+  };
+
+  const processFile = (file) => {
+    if (!file) return;
+    const isVid = file.type.startsWith('video/');
+    const isImg = file.type.startsWith('image/');
+    if (!isVid && !isImg) {
+      alert("Please upload an image or a video file.");
       return;
     }
-    if (filteredModels.length > 0) {
-      setFormData(prev => ({ ...prev, model: filteredModels[0].id }));
-    }
-  }, [formData.generateType]);
+    setMediaType(isVid ? 'video' : 'image');
+    
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setMedia(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
 
-  // ── Validation: check if all sample images are uploaded (for image/video types) ──
-  const allSamplesHaveOutput = formData.generateType === 'text'
-    ? samples.every(s => s.output && s.output.trim() !== '')
-    : samples.every(s => s.output !== null && s.output !== undefined);
-  const missingSampleCount = formData.generateType === 'text'
-    ? samples.filter(s => !s.output || s.output.trim() === '').length
-    : samples.filter(s => !s.output).length;
-  const canPublish = allSamplesHaveOutput && !loading;
-
-  const handleMediaChange = (id, e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const newSamples = samples.map(s =>
-          s.id === id ? { ...s, output: reader.result } : s
-        );
-        setSamples(newSamples);
-      };
-      reader.readAsDataURL(file);
+  // Add Tag Chip
+  const handleAddTag = (e) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      const cleanVal = tagInput.trim().replace(/,/g, '');
+      if (cleanVal && !tags.includes(cleanVal)) {
+        setTags([...tags, cleanVal]);
+      }
+      setTagInput('');
     }
   };
 
-  const handleTextOutputChange = (id, value) => {
-    const newSamples = samples.map(s =>
-      s.id === id ? { ...s, output: value } : s
-    );
-    setSamples(newSamples);
-  };
-
-  const handleInputChange = (id, value) => {
-    const newSamples = samples.map(s =>
-      s.id === id ? { ...s, input: value } : s
-    );
-    setSamples(newSamples);
+  const removeTag = (indexToRemove) => {
+    setTags(tags.filter((_, idx) => idx !== indexToRemove));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!media) {
+      alert("Please upload an image or video showcasing your prompt.");
+      return;
+    }
     setLoading(true);
 
     try {
-      const firstSampleImage = samples.find(s => s.output)?.output || null;
       const payload = {
-        ...formData,
-        thumbnail: firstSampleImage,
-        priceTokens: parseInt(formData.tokens) || 5,
-        samples: samples.map(s => ({ input: s.input, output: s.output }))
+        name,
+        description,
+        generateType: mediaType,
+        model: 'flux', // general high quality prompt
+        template: prompt,
+        thumbnail: media,
+        samples: [{ input: prompt, output: media }],
+        keywords: tags,
+        socialLinks,
+        unlockRules
       };
 
       const url = isEditMode
@@ -239,8 +394,16 @@ export default function SellPage() {
 
       const data = await response.json();
       if (data.success) {
-        // Clear generator session after successful publish
-        sessionStorage.removeItem('promptgen_session');
+        // Sync social links to the local state.user dynamically
+        if (state.user) {
+          dispatch({
+            type: 'SET_USER',
+            payload: {
+              ...state.user,
+              socialLinks: socialLinks
+            }
+          });
+        }
         setSubmitted(true);
         window.scrollTo(0, 0);
       } else {
@@ -255,46 +418,109 @@ export default function SellPage() {
   };
 
   const handleListAnother = () => {
-    setFormData({
-      name: '',
-      description: '',
-      generateType: 'image',
-      model: '',
-      tokens: '5',
-      template: '',
-      instructions: '',
-      keywords: [],
-      negativePrompt: '',
-      imageAnalysis: '',
-      mainPrompt: '',
+    setName('');
+    setDescription('');
+    setPrompt('');
+    setTags([]);
+    setMedia(null);
+    const userLinks = state.user?.socialLinks || {};
+    const merged = {
+      instagram: '', twitter: '', github: '', youtube: '', website: '',
+      ...userLinks
+    };
+    setSocialLinks(merged);
+    
+    // Dynamically expand unlock rules keys to match merged socialLinks
+    const rules = {};
+    Object.keys(merged).forEach(key => {
+      rules[key] = false;
     });
-    setSamples([
-      { id: 1, input: '', output: null },
-      { id: 2, input: '', output: null },
-      { id: 3, input: '', output: null },
-    ]);
+    setUnlockRules(rules);
+
     setSubmitted(false);
     setIsEditMode(false);
     setEditId(null);
-    // Clear navigation state so it doesn't auto-fill again
-    navigate('/sell', { replace: true, state: {} });
+    navigate('/sell');
+  };
+
+  const handleAddCustomPlatform = (e) => {
+    e.preventDefault();
+    let key = newPlatformType;
+    let displayName = '';
+    
+    if (newPlatformType === 'custom') {
+      if (!newPlatformName.trim()) {
+        alert('Please enter a platform name.');
+        return;
+      }
+      key = newPlatformName.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+      displayName = newPlatformName.trim();
+    } else {
+      const presets = {
+        linkedin: 'LinkedIn',
+        facebook: 'Facebook',
+        pinterest: 'Pinterest',
+        tiktok: 'TikTok',
+        twitch: 'Twitch',
+        discord: 'Discord'
+      };
+      displayName = presets[newPlatformType];
+    }
+
+    if (!key) return;
+
+    if (socialLinks[key] !== undefined) {
+      alert(`Platform "${displayName || key}" is already added.`);
+      return;
+    }
+
+    const updated = {
+      ...socialLinks,
+      [key]: newPlatformUrl.trim()
+    };
+
+    setSocialLinks(updated);
+    socialLinksRef.current = updated;
+    setUnlockRules(prev => ({
+      ...prev,
+      [key]: false
+    }));
+
+    setNewPlatformName('');
+    setNewPlatformUrl('');
+    setShowAddForm(false);
+
+    saveSocialLinksToProfile(updated);
+  };
+
+  const handleDeletePlatform = (platformKey) => {
+    const updatedLinks = { ...socialLinks };
+    delete updatedLinks[platformKey];
+    setSocialLinks(updatedLinks);
+    socialLinksRef.current = updatedLinks;
+
+    const updatedRules = { ...unlockRules };
+    delete updatedRules[platformKey];
+    setUnlockRules(updatedRules);
+
+    saveSocialLinksToProfile(updatedLinks);
   };
 
   if (submitted) {
     return (
       <div className="sell-page sell-page--success container">
-        <div className="card text-center reveal" style={{ padding: 'var(--space-3xl) var(--space-xl)' }}>
-          <div className="success-icon">
-            <CheckCircle size={80} color="var(--color-green)" />
+        <div className="card text-center reveal" style={{ padding: 'var(--space-3xl) var(--space-xl)', background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px' }}>
+          <div className="success-icon" style={{ display: 'inline-flex', padding: '20px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '50%', marginBottom: '20px' }}>
+            <CheckCircle size={64} color="var(--color-green)" />
           </div>
-          <h1 className="h-display" style={{ marginTop: '24px' }}>Submission <span className="text-green">Received!</span></h1>
+          <h1 className="h-display" style={{ marginTop: '10px' }}>Post <span className="text-green">Live in Feed!</span></h1>
           <p className="text-secondary" style={{ maxWidth: '600px', margin: '16px auto var(--space-xl)' }}>
-            Your prompt package "{formData.name}" is now being reviewed by our quality team. You will be notified once it is approved and live in the Store.
+            Your prompt post "{name}" is now live in the community feed. Creators can unlock the prompt template by performing your required social verification tasks!
           </p>
           <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button className="btn btn-primary" onClick={handleListAnother}>List Another</button>
-            <button className="btn btn-purple" onClick={() => navigate('/generate')} style={{ background: 'var(--color-purple)', boxShadow: '0 6px 0 #7e22ce' }}>Generate One More</button>
-            <button className="btn btn-secondary" onClick={() => navigate('/')}>Go Home</button>
+            <button className="btn btn-primary" onClick={() => navigate('/templates')}>View Feed</button>
+            <button className="btn btn-secondary" onClick={handleListAnother}>Post Another</button>
+            <button className="btn btn-blue" onClick={() => navigate('/')}>Go Home</button>
           </div>
         </div>
       </div>
@@ -304,355 +530,553 @@ export default function SellPage() {
   return (
     <div className="sell-page container">
       <SEOHead
-        title="Sell Your AI Prompts — Earn 80% Royalties"
-        description="Sell your AI prompts on Prompt by Niti marketplace. List Midjourney, ChatGPT, DALL·E, Sora, Flux & Stable Diffusion prompts. Earn 80% royalties on every sale. Start monetizing your prompt engineering skills today."
-        keywords="sell prompts, sell AI prompts, prompt marketplace seller, earn money with prompts, prompt engineer income, sell Midjourney prompts, sell ChatGPT prompts, sell Sora prompts, prompt royalties, monetize prompts, list prompts for sale, prompt creator platform, AI prompt seller"
-        breadcrumbs={[
-          { name: 'Home', url: '/' },
-          { name: 'Sell Prompts', url: '/sell' }
-        ]}
-        noIndex={false}
+        title="Create New Post — Prompt by Niti"
+        description="Post your AI prompt with customized social tasks. Get followers on Instagram, subscribers on YouTube, and followers on Twitter/X to unlock your prompt template."
       />
-      <div className="sell-page__header reveal" style={{ position: 'relative' }}>
+      
+      <div className="sell-page__header">
         {isEditMode && (
           <button
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate('/buyer-dashboard')}
             className="btn btn-secondary btn-sm"
             style={{ position: 'absolute', left: '0', top: '5px', display: 'flex', alignItems: 'center', gap: '8px', zIndex: 10 }}
           >
             <ArrowLeft size={16} /> Back
           </button>
         )}
-        <h1 className="h-display">{isEditMode ? 'Edit Your' : 'Sell Your'} <span className="text-orange">AI Excellence</span></h1>
+        <h1 className="h-display">{isEditMode ? 'Edit Your' : 'Post to'} <span className="text-orange">the Feed</span></h1>
         <p className="section-desc">
-          {isEditMode
-            ? "Update your prompt details. Note: Editing will send it back to pending for admin review."
-            : "Create a listing with 3 samples to prove your prompt's power and start earning tokens."}
+          Upload an image or video, enter your prompt template, and require social actions to unlock it.
         </p>
       </div>
-      <br></br>
-      {rules && rules.length > 0 && (
-        <div 
-          className={`rules-guidelines-box reveal ${showRules ? 'expanded' : ''}`}
-          style={{ 
-            width: showRules ? '100%' : '220px', 
-            maxWidth: showRules ? '1200px' : '220px',
-            transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
-          }}
-        >
-          <div 
-            className="rules-header" 
-            onClick={() => setShowRules(!showRules)} 
-            style={{ 
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: showRules ? 'space-between' : 'center',
-              width: '100%',
-              gap: '10px'
-            }}
-          >
-            <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--color-purple)', fontSize: '1.2rem' }}>
-              <ShieldCheck size={24} /> Seller Guidelines
-            </h3>
-            {showRules && (
-              <button 
-                type="button" 
-                className="collapse-btn" 
-                onClick={(e) => { e.stopPropagation(); setShowRules(false); }}
-              >
-                <X size={20} />
-              </button>
-            )}
-          </div>
 
-          <div className={`rules-content-wrapper ${showRules ? 'open' : ''}`}>
-            <div style={{ paddingTop: '20px' }}>
-              <p className="text-sm text-secondary mb-4">Please ensure your prompt follows these requirements to guarantee a fast approval:</p>
-              <br></br>
-              <div className="rules-grid-v2" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '15px' }}>
-                {rules.map((rule, idx) => {
-                  const ruleTextRaw = rule.text || rule;
-                  const match = typeof ruleTextRaw === 'string' ? ruleTextRaw.match(/^(\d+\.)\s*(.*)/) : null;
-                  const numStr = match ? match[1] : `${idx + 1}.`;
-                  const textStr = match ? match[2] : ruleTextRaw;
-                  
-                  const colors = ['var(--color-cyan)', 'var(--color-pink)', 'var(--color-orange)', 'var(--color-purple)', '#fbbf24', '#22c55e'];
-                  const themeColor = colors[idx % colors.length];
-
-                  // Highlight important keywords
-                  const highlightRegex = /(\[.*?\]|\b(?:must|no|not|max|only|exactly|never|consistent|unique|distinctive)\b)/gi;
-                  const textParts = textStr.split(highlightRegex);
-
-                  return (
-                    <div key={idx} className="rule-card-v2" style={{ background: `rgba(255, 255, 255, 0.03)`, padding: '15px', borderRadius: '12px', borderLeft: `4px solid ${themeColor}`, fontFamily: "var(--font-body)" }}>
-                      <p style={{ fontWeight: '600', fontSize: '1rem', marginBottom: '4px', color: 'var(--text-primary)', lineHeight: '1.4', fontFamily: "var(--font-body)" }}>
-                        <span style={{ color: themeColor, marginRight: '6px', fontSize: '1.1rem', fontWeight: '700', fontFamily: "var(--font-body)" }}>{numStr}</span>
-                        {textParts.map((part, i) => {
-                          if (part && part.match(highlightRegex)) {
-                            return <span key={i} style={{ color: themeColor, opacity: 0.9, fontWeight: '700', fontFamily: "var(--font-body)" }}>{part}</span>;
-                          }
-                          return part;
-                        })}
-                      </p>
-                      {rule.example && (
-                        <p style={{ fontSize: '0.9rem', color: themeColor, fontStyle: 'italic', opacity: 0.9, fontFamily: "var(--font-body)" }}>
-                          <span style={{ fontWeight: '700', fontSize: '0.85rem', textTransform: 'uppercase', marginRight: '5px', fontFamily: "var(--font-body)" }}>Example:</span>
-                          {rule.example}
-                        </p>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
+      {loading && (
+        <div style={{ textAlign: 'center', padding: '50px 0' }}>
+          <Sparkles className="spin text-cyan mb-4 mx-auto" size={40} />
+          <p className="text-muted">Loading post details...</p>
         </div>
       )}
-      <br></br>
-      <form className="sell-form-v2" onSubmit={handleSubmit}>
-        <div className="sell-page__grid">
-          <div className="sell-section reveal" style={{ animationDelay: '0.1s' }}>
-            <div className="card">
-              <h3 className="section-subtitle"><Zap size={20} className="text-orange" /> Basic Information</h3>
-              <div className="form-group">
-                <label>Prompt Name</label>
-                <input
-                  type="text" required className="input" placeholder="e.g. Masterpiece Oil Portrait"
-                  value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })}
-                />
-              </div>
-              <div className="form-group">
-                <label>Description</label>
-                <textarea
-                  required className="textarea" placeholder="Describe what makes this prompt unique..."
-                  value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })}
-                ></textarea>
-              </div>
-              <div className="form-row">
+
+      {!loading && (
+        <form className="sell-form-v2" onSubmit={handleSubmit} style={{ marginTop: '30px' }}>
+          <div className="sell-page__grid">
+            {/* Left Column: Post Fields */}
+            <div className="sell-section">
+              <div className="card form-card-glass">
+                <h3 className="section-subtitle"><Sparkles size={20} className="text-cyan" /> Post Details</h3>
+                
                 <div className="form-group">
-                  <label>Generate Type</label>
-                  <div className="type-selector">
-                    <button type="button" className={`type-btn ${formData.generateType === 'image' ? 'active' : ''}`} onClick={() => setFormData({ ...formData, generateType: 'image' })}><Image size={18} /> Image</button>
-                    <button type="button" className={`type-btn ${formData.generateType === 'video' ? 'active' : ''}`} onClick={() => setFormData({ ...formData, generateType: 'video' })}><Video size={18} /> Video</button>
-                    <button type="button" className={`type-btn ${formData.generateType === 'text' ? 'active' : ''}`} onClick={() => setFormData({ ...formData, generateType: 'text' })}><Type size={18} /> Text</button>
-                  </div>
+                  <label>Post Title / Prompt Name</label>
+                  <input
+                    type="text"
+                    required
+                    className="input"
+                    placeholder="e.g. Dreamy Cyberpunk Street Portrait"
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                  />
                 </div>
-              </div>
-              <div className="form-row">
+
                 <div className="form-group">
-                  <label>Model</label>
-                  <select className="input" required value={formData.model} onChange={e => setFormData({ ...formData, model: e.target.value })}>
-                    {filteredModels.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
-                    {/* If model from generator isn't in the filtered list, show it as an option */}
-                    {formData.model && !filteredModels.find(m => m.id === formData.model) && formData.model !== 'other' && (
-                      <option value={formData.model}>{location.state?.promptData?.modelLabel || formData.model}</option>
-                    )}
-                    <option value="other">Other (Custom Model)</option>
-                  </select>
+                  <label>Description</label>
+                  <textarea
+                    required
+                    className="textarea"
+                    placeholder="Describe what this prompt generates and what settings you used..."
+                    value={description}
+                    onChange={e => setDescription(e.target.value)}
+                  ></textarea>
                 </div>
+
                 <div className="form-group">
-                  <label>Price (Tokens)</label>
-                  <select className="input" value={formData.tokens} onChange={e => setFormData({ ...formData, tokens: e.target.value })}>
-                    <option value="1">1 Token</option>
-                    <option value="2">2 Tokens</option>
-                    <option value="3">3 Tokens</option>
-                    <option value="5">5 Tokens</option>
-                    <option value="8">8 Tokens</option>
-                    <option value="10">10 Tokens</option>
-                    <option value="12">12 Tokens</option>
-                    <option value="15">15 Tokens</option>
-                    <option value="18">18 Tokens</option>
-                    <option value="20">20 Tokens</option>
-                  </select>
+                  <label>The Prompt Template</label>
+                  <textarea
+                    required
+                    className="textarea"
+                    style={{ minHeight: '110px', fontFamily: 'monospace', fontSize: '0.9rem' }}
+                    placeholder="e.g. A neon-lit cyberpunk street corner in Neo-Tokyo, shot on 35mm lens, atmospheric fog, [subject details] standing under [light type]..."
+                    value={prompt}
+                    onChange={e => setPrompt(e.target.value)}
+                  ></textarea>
+                  <span className="input-hint"><Info size={14} /> This will be locked behind your selected Creator Tasks.</span>
                 </div>
-              </div>
-              {formData.model === 'other' && (
-                <div className="form-group reveal">
-                  <label>Custom Model Name</label>
-                  <input type="text" required className="input" placeholder="Enter the name of the AI model used..." value={formData.customModel || ''} onChange={e => setFormData({ ...formData, customModel: e.target.value })} />
-                </div>
-              )}
-              <div className="form-group">
-                <label>Prompt Template</label>
-                <textarea required className="textarea" style={{ minHeight: '120px', fontFamily: 'monospace' }} placeholder="A portrait of [subject] in [style] with [lighting]..." value={formData.template} onChange={e => setFormData({ ...formData, template: e.target.value })}></textarea>
-                <span className="input-hint"><Info size={14} /> Use <strong>[square brackets]</strong> for variables.</span>
-              </div>
-              <div className="form-group">
-                <label>Prompt Instructions</label>
-                <textarea required className="textarea" style={{ minHeight: '100px' }} placeholder="e.g. For best results, use aspect ratio 16:9 and set stylize to 250..." value={formData.instructions} onChange={e => setFormData({ ...formData, instructions: e.target.value })}></textarea>
-                <span className="input-hint"><Info size={14} /> Tips for the buyer on how to use this prompt.</span>
-              </div>
-              {/* Extra fields from Generator (only shown when populated) */}
-              {(formData.mainPrompt || formData.negativePrompt || formData.imageAnalysis) && (
-                <div style={{ marginTop: 'var(--space-md)', padding: 'var(--space-md)', background: 'rgba(0, 224, 255, 0.03)', borderRadius: 'var(--radius-md)', border: '1px dashed rgba(0, 224, 255, 0.2)' }}>
-                  <h4 style={{ color: 'var(--color-cyan)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.95rem' }}>
-                    <Sparkles size={16} /> Auto-filled from Generator
-                  </h4>
-                  {formData.mainPrompt && (
-                    <div className="form-group">
-                      <label>Complete Prompt Example</label>
-                      <textarea className="textarea" style={{ minHeight: '80px', fontFamily: 'monospace', fontSize: '0.85rem' }} value={formData.mainPrompt} onChange={e => setFormData({ ...formData, mainPrompt: e.target.value })}></textarea>
-                    </div>
-                  )}
-                  {formData.negativePrompt && (
-                    <div className="form-group">
-                      <label>Negative Prompt</label>
-                      <textarea className="textarea" style={{ minHeight: '60px', fontFamily: 'monospace', fontSize: '0.85rem' }} value={formData.negativePrompt} onChange={e => setFormData({ ...formData, negativePrompt: e.target.value })}></textarea>
-                    </div>
-                  )}
-                  {formData.imageAnalysis && (
-                    <div className="form-group">
-                      <label>Image Analysis</label>
-                      <textarea className="textarea" style={{ minHeight: '60px', fontSize: '0.85rem' }} value={formData.imageAnalysis} onChange={e => setFormData({ ...formData, imageAnalysis: e.target.value })} readOnly></textarea>
-                    </div>
-                  )}
-                </div>
-              )}
-              <div className="form-group mt-md">
-                <label>Keywords (Select at least 4)</label>
-                <div className="selected-keywords-preview">
-                  {formData.keywords?.length > 0 ? (
-                    <div className="keywords-grid">
-                      {formData.keywords.map(kw => (
-                        <span key={kw} className="keyword-tag active">
-                          {kw}
-                          <button type="button" className="kw-remove" onClick={() => setFormData({ ...formData, keywords: formData.keywords.filter(k => k !== kw) })}>×</button>
+
+                <div className="form-group">
+                  <label>Tags / Keywords (Press Enter or Comma)</label>
+                  <div className="tags-input-container">
+                    <div className="tags-chips-list">
+                      {tags.map((tag, idx) => (
+                        <span key={idx} className="tag-chip">
+                          #{tag}
+                          <button type="button" className="tag-chip-remove" onClick={() => removeTag(idx)}>
+                            <X size={12} />
+                          </button>
                         </span>
                       ))}
                     </div>
-                  ) : <p className="text-sm text-muted">No keywords selected yet.</p>}
-                  <button type="button" className="btn btn-secondary btn-sm mt-md" onClick={() => setShowKeywordModal(true)}><Plus size={16} /> Add Keywords</button>
+                    <input
+                      type="text"
+                      className="input"
+                      placeholder={tags.length === 0 ? "Type tag and press Enter..." : "Add more tags..."}
+                      value={tagInput}
+                      onChange={e => setTagInput(e.target.value)}
+                      onKeyDown={handleAddTag}
+                    />
+                  </div>
                 </div>
-                {(!formData.keywords || formData.keywords.length < 4) && (
-                  <span className="text-xs text-orange mt-2">Please select {Math.max(0, 4 - (formData.keywords?.length || 0))} more keywords</span>
-                )}
               </div>
-            </div>
-          </div>
-          <div className="sell-section reveal" style={{ animationDelay: '0.2s' }}>
-            <div className="card">
-              <h3 className="section-subtitle"><Sparkles size={20} className="text-cyan" /> Proof of Concept (3 Samples)</h3>
-              <p className="text-sm text-muted mb-4">Provide 3 input prompts and their actual outputs.</p>
-              <div className="samples-container">
-                {samples.map((sample, index) => (
-                  <div key={sample.id} className={`sample-box card ${formData.generateType === 'text' ? 'sample-box--text' : ''}`}>
-                    <div className="sample-header">
-                      <span className="sample-num">Sample #{index + 1}</span>
-                      {formData.generateType !== 'text' && <span className="sample-output-label">Output {formData.generateType === 'video' ? 'Video' : 'Media'}</span>}
-                    </div>
-                    {formData.generateType === 'text' ? (
-                      <div className="sample-content-text">
-                        <div className="form-group"><label>Input Prompt</label><input type="text" required className="input input-sm" placeholder="Input used" value={sample.input} onChange={e => handleInputChange(sample.id, e.target.value)} /></div>
-                        <div className="form-group"><label>Output Response</label><textarea required className="textarea textarea-sm" placeholder="AI's response" value={sample.output || ''} onChange={e => handleTextOutputChange(sample.id, e.target.value)}></textarea></div>
+
+              {/* Social Tasks Card */}
+              <div className="card form-card-glass">
+                <h3 className="section-subtitle"><Globe size={20} className="text-purple" /> Creator Social Tasks</h3>
+                <p className="text-sm text-muted mb-4">Provide your social links and select which ones are required to unlock the prompt.</p>                {Object.keys(socialLinks).map((key) => {
+                  const url = socialLinks[key];
+                  const config = getPlatformConfig(key, url);
+                  const isDefault = ['instagram', 'twitter', 'youtube', 'github', 'website'].includes(key);
+                  return (
+                    <div className="form-group" key={key}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ color: config.color, display: 'inline-flex', alignItems: 'center' }}>
+                          {config.icon}
+                        </span>
+                        <span>{config.name} Profile URL</span>
+                      </label>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <input
+                          type="url"
+                          className="input"
+                          style={{ flex: 1 }}
+                          placeholder={`e.g. ${config.placeholder}`}
+                          value={url}
+                          onChange={e => {
+                            const updated = { ...socialLinks, [key]: e.target.value };
+                            setSocialLinks(updated);
+                            socialLinksRef.current = updated;
+                          }}
+                          onBlur={() => saveSocialLinksToProfile(socialLinksRef.current)}
+                        />
+                        {!isDefault && (
+                          <button
+                            type="button"
+                            onClick={() => handleDeletePlatform(key)}
+                            className="btn-delete-platform"
+                            title={`Remove ${config.name}`}
+                            style={{
+                              background: 'rgba(239, 68, 68, 0.1)',
+                              border: '1px solid rgba(239, 68, 68, 0.2)',
+                              color: '#ef4444',
+                              borderRadius: '12px',
+                              width: '46px',
+                              height: '46px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s ease',
+                              padding: '0'
+                            }}
+                          >
+                            <Trash2 size={18} style={{ margin: 'auto' }} />
+                          </button>
+                        )}
                       </div>
-                    ) : (
+                    </div>
+                  );
+                })}
+
+                {!showAddForm ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowAddForm(true)}
+                    className="btn btn-secondary"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      justifyContent: 'center',
+                      width: '100%',
+                      marginTop: '10px',
+                      padding: '12px',
+                      borderRadius: '12px',
+                      border: '1px dashed rgba(255,255,255,0.15)',
+                      background: 'rgba(255,255,255,0.01)'
+                    }}
+                  >
+                    <Plus size={18} /> Add Platform Link
+                  </button>
+                ) : (
+                  <div
+                    className="add-platform-form"
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.02)',
+                      border: '1px solid rgba(255, 255, 255, 0.06)',
+                      borderRadius: '16px',
+                      padding: '16px',
+                      marginTop: '16px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '12px'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontWeight: 'bold', fontSize: '0.95rem', color: 'white' }}>Add Social Platform</span>
+                      <button
+                        type="button"
+                        onClick={() => setShowAddForm(false)}
+                        style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
+                      >
+                        <X size={18} />
+                      </button>
+                    </div>
+
+                    <div className="form-group" style={{ marginBottom: '0' }}>
+                      <label style={{ fontSize: '0.85rem' }}>Select Platform</label>
+                      <select
+                        className="input"
+                        value={newPlatformType}
+                        onChange={e => setNewPlatformType(e.target.value)}
+                        style={{ width: '100%', cursor: 'pointer' }}
+                      >
+                        <option value="linkedin">LinkedIn</option>
+                        <option value="facebook">Facebook</option>
+                        <option value="pinterest">Pinterest</option>
+                        <option value="tiktok">TikTok</option>
+                        <option value="twitch">Twitch</option>
+                        <option value="discord">Discord</option>
+                        <option value="custom">Custom Platform / Website</option>
+                      </select>
+                    </div>
+
+                    {newPlatformType === 'custom' && (
+                      <div className="form-group" style={{ marginBottom: '0' }}>
+                        <label style={{ fontSize: '0.85rem' }}>Platform Name</label>
+                        <input
+                          type="text"
+                          className="input"
+                          placeholder="e.g. Patreon"
+                          value={newPlatformName}
+                          onChange={e => setNewPlatformName(e.target.value)}
+                        />
+                      </div>
+                    )}
+
+                    <div className="form-group" style={{ marginBottom: '0' }}>
+                      <label style={{ fontSize: '0.85rem' }}>Profile or Channel URL (Optional)</label>
+                      <input
+                        type="url"
+                        className="input"
+                        placeholder="e.g. https://linkedin.com/in/username"
+                        value={newPlatformUrl}
+                        onChange={e => setNewPlatformUrl(e.target.value)}
+                      />
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleAddCustomPlatform}
+                      className="btn btn-primary"
+                      style={{ marginTop: '8px', padding: '10px' }}
+                    >
+                      Confirm Add
+                    </button>
+                  </div>
+                )}
+
+                <div className="form-group mt-md">
+                  {(() => {
+                    const isAdmin = state.user?.email?.toLowerCase().trim() === 'nitindagar0800@gmail.com';
+                    
+                    const getPlanName = (plan) => {
+                      if (isAdmin) return 'Studio';
+                      const p = (plan || 'free').toLowerCase();
+                      if (p === 'unlimited') return 'Studio';
+                      if (p === 'pro') return 'Creator';
+                      if (p === 'starter') return 'Starter';
+                      return 'Free';
+                    };
+                    const getPlanLimit = (plan) => {
+                      if (isAdmin) return 3;
+                      const p = (plan || 'free').toLowerCase();
+                      if (p === 'unlimited') return 3; // Studio
+                      if (p === 'pro') return 2;       // Creator
+                      if (p === 'starter') return 1;   // Starter
+                      return 0;                        // Free by default
+                    };
+                    
+                    const limit = getPlanLimit(state.plan);
+                    const planName = getPlanName(state.plan);
+                    const checkedCount = Object.values(unlockRules).filter(Boolean).length;
+                    
+                    return (
                       <>
-                        <div className="form-group"><label>Input Prompt</label><textarea required className="textarea" style={{ minHeight: '60px', fontSize: '0.85rem' }} placeholder="The prompt used to generate this output..." value={sample.input} onChange={e => handleInputChange(sample.id, e.target.value)} /></div>
-                        <div className="sample-media-section">
-                          <div className="sample-media-upload">
-                            {sample.output ? (
-                              <div className="sample-media-preview">
-                                {formData.generateType === 'video' ? <video src={sample.output} autoPlay muted loop /> : <img src={sample.output} alt="Sample" />}
-                                <button type="button" className="media-remove" onClick={() => handleTextOutputChange(sample.id, null)}>×</button>
-                              </div>
-                            ) : (
-                              <label className="sample-upload-btn"><input type="file" hidden accept={formData.generateType === 'video' ? 'video/*' : 'image/*'} onChange={e => handleMediaChange(sample.id, e)} /><Upload size={20} /><span>Upload {formData.generateType === 'video' ? 'Video' : 'Image'}</span><span style={{ fontSize: '0.7rem', color: 'var(--color-orange)', marginTop: '4px' }}>Required</span></label>
-                            )}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                          <label style={{ fontWeight: 'bold', margin: 0 }}>Unlock Requirements (Checkboxes)</label>
+                          <span style={{ 
+                            fontSize: '0.8rem', 
+                            padding: '4px 10px', 
+                            background: 'rgba(255,255,255,0.05)', 
+                            borderRadius: '12px', 
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            color: planName === 'Studio' ? 'var(--color-purple, #a855f7)' : planName === 'Creator' ? 'var(--color-cyan, #06b6d4)' : planName === 'Starter' ? 'var(--color-green, #10b981)' : '#ef4444',
+                            fontWeight: 'bold'
+                          }}>
+                            {planName} Plan: {checkedCount} / {limit} Selected
+                          </span>
+                        </div>
+
+                        {limit === 0 && (
+                          <div style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'space-between',
+                            gap: '16px', 
+                            background: 'rgba(239, 68, 68, 0.08)', 
+                            border: '1px solid rgba(239, 68, 68, 0.2)', 
+                            color: '#f87171', 
+                            padding: '16px 20px', 
+                            borderRadius: '12px', 
+                            fontSize: '0.9rem', 
+                            marginTop: '8px',
+                            marginBottom: '20px',
+                            width: '100%'
+                          }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                              <span style={{ 
+                                background: '#ef4444', 
+                                color: 'white', 
+                                fontWeight: 'bold', 
+                                fontSize: '0.95rem',
+                                width: '24px',
+                                height: '24px',
+                                borderRadius: '50%',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                flexShrink: 0
+                              }}>!</span>
+                              <span>
+                                Social lock rules are locked on the Free Plan. Please upgrade your plan to unlock and set required tasks.
+                              </span>
+                            </div>
+                            <Link to="/pricing" className="btn btn-primary btn-sm" style={{ 
+                              flexShrink: 0,
+                              padding: '8px 16px',
+                              borderRadius: '8px',
+                              boxShadow: '0 0 10px rgba(6, 182, 212, 0.3)',
+                              textDecoration: 'none'
+                            }}>
+                              Go to Pricing Page
+                            </Link>
                           </div>
+                        )}
+
+                        <span className="input-hint" style={{ marginBottom: '14px' }}>
+                          <Info size={14} /> Checked options will show up as lock rules on your post. 
+                          {limit === 0 ? " Upgrade your plan to set required social tasks." : limit === 1 ? ` ${planName} plan allows 1 lock rule.` : limit === 2 ? ` ${planName} plan allows 2 lock rules.` : ` ${planName} plan allows 3 lock rules.`}
+                        </span>
+                        
+                        <div className="tasks-checkbox-grid">
+                          {Object.keys(socialLinks).map((platformId) => {
+                            const url = socialLinks[platformId];
+                            const config = getPlatformConfig(platformId, url);
+                            const isRequired = !!unlockRules[platformId];
+                            
+                            let actionText = `Follow on ${config.name}`;
+                            if (platformId === 'youtube') {
+                              actionText = `Subscribe on ${config.name}`;
+                            } else if (platformId === 'website') {
+                              actionText = `Visit Website`;
+                            } else if (['github', 'linkedin', 'facebook', 'pinterest', 'tiktok', 'twitch'].includes(platformId)) {
+                              actionText = `Follow on ${config.name}`;
+                            } else if (platformId === 'discord') {
+                              actionText = `Join Discord Server`;
+                            } else {
+                              actionText = `Follow/Visit ${config.name}`;
+                            }
+
+                            return (
+                              <label 
+                                className="task-checkbox-label" 
+                                key={platformId} 
+                                style={{ 
+                                  opacity: (limit === 0 || (!isAdmin && !url)) ? 0.5 : 1, 
+                                  cursor: (limit === 0 || (!isAdmin && !url)) ? 'not-allowed' : 'pointer' 
+                                }}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={isRequired}
+                                  disabled={limit === 0 || (!isAdmin && !url)}
+                                  onChange={e => {
+                                    const isChecking = e.target.checked;
+                                    if (isChecking) {
+                                      if (checkedCount >= limit) {
+                                        setLimitModal({ show: true, planName: planName, limit: limit });
+                                        return;
+                                      }
+                                    }
+                                    setUnlockRules({ ...unlockRules, [platformId]: e.target.checked });
+                                  }}
+                                />
+                                <span className={((!url && !isAdmin) || limit === 0) ? "opacity-50" : ""} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  <span style={{ color: config.color, display: 'inline-flex', alignItems: 'center' }}>
+                                    {config.icon}
+                                  </span>
+                                  <span>Require {actionText}</span>
+                                </span>
+                                {!url && <span className="req-warning">(Add URL first)</span>}
+                              </label>
+                            );
+                          })}
                         </div>
                       </>
-                    )}
-                  </div>
-                ))}
+                    );
+                  })()}
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-        <div className="sell-footer mt-2xl">
-          <div className="security-note"><ShieldCheck size={18} className="text-green" /><span>Verified Listing - 80% Creator Royalty</span></div>
-          <div style={{ position: 'relative', display: 'inline-block' }} className="publish-btn-wrapper">
-            <button type="submit" className="btn btn-primary btn-xl" disabled={!canPublish} style={{ minWidth: '300px', opacity: canPublish ? 1 : 0.5, cursor: canPublish ? 'pointer' : 'not-allowed' }}>{loading ? 'Submitting...' : (isEditMode ? 'Save & Request Review' : 'Publish to Store')} <ChevronRight size={20} /></button>
-            {!allSamplesHaveOutput && (
-              <div className="publish-tooltip" style={{
-                position: 'absolute', bottom: '110%', left: '50%', transform: 'translateX(-50%)',
-                background: 'rgba(239, 68, 68, 0.95)', color: '#fff', padding: '10px 18px',
-                borderRadius: '12px', fontSize: '0.85rem', fontFamily: 'var(--font-display)',
-                whiteSpace: 'nowrap', pointerEvents: 'none', opacity: 0,
-                transition: 'opacity 0.2s ease', zIndex: 100,
-                boxShadow: '0 4px 20px rgba(239, 68, 68, 0.3)'
-              }}>
-                ⚠️ Please upload {formData.generateType === 'text' ? 'output responses' : 'output images'} for all {missingSampleCount} missing sample{missingSampleCount > 1 ? 's' : ''}
-              </div>
-            )}
-          </div>
-        </div>
-      </form>
-      {showKeywordModal && (
-        <div className="keyword-modal-overlay" onClick={() => setShowKeywordModal(false)}>
-          <div className="keyword-modal card" onClick={e => e.stopPropagation()}>
-            <div className="modal-header"><h3><Plus size={24} className="text-cyan" /> Select Keywords</h3><button className="modal-close" onClick={() => setShowKeywordModal(false)}>×</button></div>
 
-            <div className="modal-content-scroll">
-              <div className="custom-keyword-row mb-4">
-                <input
-                  type="text"
-                  className="input input-sm"
-                  placeholder="Search or add custom keyword..."
-                  value={customKeyword}
-                  onChange={e => setCustomKeyword(e.target.value)}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      if (customKeyword.trim()) {
-                        const current = formData.keywords || [];
-                        if (!current.includes(customKeyword.trim())) {
-                          setFormData({ ...formData, keywords: [...current, customKeyword.trim()] });
-                        }
-                        setCustomKeyword('');
-                      }
-                    }
-                  }}
-                />
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-sm"
-                  onClick={() => {
-                    if (customKeyword.trim()) {
-                      const current = formData.keywords || [];
-                      if (!current.includes(customKeyword.trim())) {
-                        setFormData({ ...formData, keywords: [...current, customKeyword.trim()] });
-                      }
-                      setCustomKeyword('');
-                    }
-                  }}
+            {/* Right Column: Drag & Drop Media Upload */}
+            <div className="sell-section">
+              <div className="card form-card-glass sticky-media-box">
+                <h3 className="section-subtitle"><Eye size={20} className="text-orange" /> Showcased Media</h3>
+                <p className="text-sm text-muted mb-4">Upload the single image or video generated by this prompt that will represent it in the feed.</p>
+
+                <div
+                  className={`media-dropzone ${dragging ? 'dragging' : ''} ${media ? 'has-media' : ''}`}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
                 >
-                  Add
+                  {media ? (
+                    <div className="media-preview-container">
+                      {mediaType === 'video' ? (
+                        <video src={media} autoPlay muted loop playsInline controls />
+                      ) : (
+                        <img src={media} alt="Prompt showcased result" />
+                      )}
+                      <button
+                        type="button"
+                        className="media-clear-btn"
+                        onClick={() => setMedia(null)}
+                        title="Remove Media"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="dropzone-label">
+                      <input
+                        type="file"
+                        hidden
+                        accept="image/*,video/*"
+                        onChange={handleFileSelect}
+                      />
+                      <div className="upload-icon-circle">
+                        <Upload size={32} />
+                      </div>
+                      <span className="dropzone-text-main">Drag & Drop Image or Video</span>
+                      <span className="dropzone-text-sub">or click to browse from device</span>
+                      <span className="dropzone-limits">Supports MP4, WebM, PNG, JPG, WebP</span>
+                    </label>
+                  )}
+                </div>
+
+                <div className="post-security-badge" style={{ marginTop: '24px' }}>
+                  <ShieldCheck size={18} className="text-green" />
+                  <span>Immediate Publish - Posted directly to Feed</span>
+                </div>
+              </div>
+
+              {/* Publish Actions */}
+              <div className="publish-actions-container">
+                <button
+                  type="submit"
+                  className="btn btn-primary btn-xl w-full"
+                  disabled={loading || !name || !description || !prompt || !media}
+                  style={{ opacity: (loading || !name || !description || !prompt || !media) ? 0.6 : 1 }}
+                >
+                  {loading ? 'Publishing...' : (isEditMode ? 'Save & Update Post' : 'Publish Post to Feed')}
                 </button>
               </div>
-
-              <p className="text-muted mb-4">
-                {customKeyword ? `Matching keywords (${ALL_KEYWORDS.filter(k => k.toLowerCase().includes(customKeyword.toLowerCase())).length}):` : 'Or select from our categories:'}
-              </p>
-
-              <div className="modal-keywords-grid">
-                {ALL_KEYWORDS
-                  .filter(kw => kw.toLowerCase().includes(customKeyword.toLowerCase()))
-                  .map(kw => (
-                    <button key={kw} type="button" className={`keyword-tag ${formData.keywords?.includes(kw) ? 'active' : ''}`} onClick={() => {
-                      const current = formData.keywords || [];
-                      if (current.includes(kw)) setFormData({ ...formData, keywords: current.filter(k => k !== kw) });
-                      else setFormData({ ...formData, keywords: [...current, kw] });
-                    }}>{kw}</button>
-                  ))}
-                {customKeyword && ALL_KEYWORDS.filter(k => k.toLowerCase().includes(customKeyword.toLowerCase())).length === 0 && (
-                  <p className="text-sm text-muted w-full text-center py-4">No matching categories found. Click "Add" to create this as a custom keyword!</p>
-                )}
-              </div>
             </div>
-            <div className="modal-footer mt-lg">
-              <div className="selection-status"><span className={formData.keywords?.length >= 4 ? 'text-green' : 'text-orange'}>{formData.keywords?.length || 0} selected</span>{formData.keywords?.length < 4 && <span className="text-xs ml-2">(Need {4 - formData.keywords.length} more)</span>}</div>
-              <button className="btn btn-primary" onClick={() => setShowKeywordModal(false)} disabled={formData.keywords?.length < 4}>Save Selection</button>
+          </div>
+        </form>
+      )}
+
+      {/* Limit Upgrade Modal */}
+      {limitModal.show && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(15, 23, 42, 0.85)',
+          backdropFilter: 'blur(10px)',
+          zIndex: 99999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          animation: 'fadeIn 0.25s ease-out'
+        }} onClick={() => setLimitModal({ show: false, planName: '', limit: 0 })}>
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.98))',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(6, 182, 212, 0.15)',
+            padding: '40px 30px',
+            borderRadius: '24px',
+            maxWidth: '450px',
+            width: '90%',
+            textAlign: 'center',
+            transform: 'scale(1)',
+            transition: 'transform 0.3s ease',
+          }} onClick={e => e.stopPropagation()}>
+            <div style={{
+              width: '64px',
+              height: '64px',
+              borderRadius: '50%',
+              background: 'rgba(6, 182, 212, 0.1)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 20px',
+              color: 'var(--color-cyan, #06b6d4)'
+            }}>
+              <AlertCircle size={32} />
+            </div>
+            
+            <h2 style={{ fontFamily: 'var(--font-display)', color: 'white', fontSize: '1.75rem', marginBottom: '16px' }}>
+              Limit Reached
+            </h2>
+            
+            <p style={{ color: '#94a3b8', marginBottom: '30px', fontSize: '1rem', lineHeight: '1.6' }}>
+              Your current plan (<strong>{limitModal.planName}</strong>) allows you to select at most <strong>{limitModal.limit}</strong> lock rule{limitModal.limit === 1 ? '' : 's'}. Upgrade your plan to add more social tasks and unlock full creator settings!
+            </p>
+            
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                type="button"
+                onClick={() => setLimitModal({ show: false, planName: '', limit: 0 })}
+                className="btn btn-secondary"
+                style={{ flex: 1, height: '48px', borderRadius: '14px', fontSize: '0.95rem' }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate('/pricing')}
+                className="btn btn-primary"
+                style={{ 
+                  flex: 1, 
+                  height: '48px', 
+                  borderRadius: '14px', 
+                  fontSize: '0.95rem',
+                  boxShadow: '0 0 15px rgba(6, 182, 212, 0.4)'
+                }}
+              >
+                Upgrade Plan
+              </button>
             </div>
           </div>
         </div>

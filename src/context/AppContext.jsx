@@ -66,8 +66,40 @@ const actions = {
 /* Reducer */
 function appReducer(state, action) {
   switch (action.type) {
-    case actions.SET_USER:
-      return { ...state, user: action.payload };
+    case actions.SET_USER: {
+      const updatedUser = action.payload;
+      const updatedMarketplace = (state.marketplace || []).map(p => {
+        const sellerId = p.seller?._id?.toString() || p.seller?.id?.toString() || p.seller?.toString();
+        const userId = updatedUser?._id?.toString() || updatedUser?.id?.toString();
+        if (userId && sellerId === userId) {
+          const updatedSeller = typeof p.seller === 'object' && p.seller !== null
+            ? { ...p.seller, socialLinks: updatedUser.socialLinks || {} }
+            : p.seller;
+          return {
+            ...p,
+            socialLinks: updatedUser.socialLinks || {},
+            seller: updatedSeller
+          };
+        }
+        return p;
+      });
+      const updatedPrompts = (state.prompts || []).map(p => {
+        const sellerId = p.seller?._id?.toString() || p.seller?.id?.toString() || p.seller?.toString();
+        const userId = updatedUser?._id?.toString() || updatedUser?.id?.toString();
+        if (userId && sellerId === userId) {
+          const updatedSeller = typeof p.seller === 'object' && p.seller !== null
+            ? { ...p.seller, socialLinks: updatedUser.socialLinks || {} }
+            : p.seller;
+          return {
+            ...p,
+            socialLinks: updatedUser.socialLinks || {},
+            seller: updatedSeller
+          };
+        }
+        return p;
+      });
+      return { ...state, user: updatedUser, marketplace: updatedMarketplace, prompts: updatedPrompts };
+    }
 
     case actions.USE_CREDIT:
       if (state.plan === 'unlimited') return state;
@@ -140,13 +172,116 @@ function appReducer(state, action) {
       return { ...state, credits: planCredits[state.plan] || 0 };
     }
 
-    case actions.LOGIN:
+    case actions.LOGIN: {
+      const loggedInUser = action.payload;
+      const updatedMarketplace = (state.marketplace || []).map(p => {
+        const sellerId = p.seller?._id?.toString() || p.seller?.id?.toString() || p.seller?.toString();
+        const userId = loggedInUser?._id?.toString() || loggedInUser?.id?.toString();
+        if (userId && sellerId === userId) {
+          const updatedSeller = typeof p.seller === 'object' && p.seller !== null
+            ? { ...p.seller, socialLinks: loggedInUser.socialLinks || {} }
+            : p.seller;
+          return {
+            ...p,
+            socialLinks: loggedInUser.socialLinks || {},
+            seller: updatedSeller
+          };
+        }
+        return p;
+      });
+      const updatedPrompts = (state.prompts || []).map(p => {
+        const sellerId = p.seller?._id?.toString() || p.seller?.id?.toString() || p.seller?.toString();
+        const userId = loggedInUser?._id?.toString() || loggedInUser?.id?.toString();
+        if (userId && sellerId === userId) {
+          const updatedSeller = typeof p.seller === 'object' && p.seller !== null
+            ? { ...p.seller, socialLinks: loggedInUser.socialLinks || {} }
+            : p.seller;
+          return {
+            ...p,
+            socialLinks: loggedInUser.socialLinks || {},
+            seller: updatedSeller
+          };
+        }
+        return p;
+      });
       return {
         ...state,
-        user: action.payload,
-        credits: action.payload.credits ?? state.credits,
-        plan: action.payload.plan ?? state.plan,
+        user: loggedInUser,
+        credits: loggedInUser.credits ?? state.credits,
+        plan: loggedInUser.plan ?? state.plan,
+        marketplace: updatedMarketplace,
+        prompts: updatedPrompts
       };
+    }
+
+    case 'UPDATE_MARKETPLACE_PROMPT': {
+      const updatedPrompt = action.payload;
+      const updatedMarketplace = (state.marketplace || []).map(p => {
+        const pId = p._id?.toString() || p.id?.toString();
+        const uId = updatedPrompt._id?.toString() || updatedPrompt.id?.toString();
+        if (pId && uId && pId === uId) {
+          return updatedPrompt;
+        }
+        return p;
+      });
+      return {
+        ...state,
+        marketplace: updatedMarketplace
+      };
+    }
+
+    case 'UPDATE_CREATOR_FOLLOWERS': {
+      const { creatorId, followersCount, currentUserId, isFollowing } = action.payload;
+      
+      const updateSellerFollowers = (seller) => {
+        if (!seller) return seller;
+        const sId = seller._id?.toString() || seller.id?.toString() || seller.toString();
+        if (sId === creatorId) {
+          let followers = seller.followers || [];
+          if (isFollowing) {
+            if (!followers.some(id => (id._id || id).toString() === currentUserId)) {
+              followers = [...followers, currentUserId];
+            }
+          } else {
+            followers = followers.filter(id => (id._id || id).toString() !== currentUserId);
+          }
+          return {
+            ...seller,
+            followers
+          };
+        }
+        return seller;
+      };
+
+      const updatedMarketplace = (state.marketplace || []).map(p => {
+        const pSellerId = p.seller?._id?.toString() || p.seller?.id?.toString() || p.seller?.toString();
+        if (pSellerId === creatorId) {
+          return {
+            ...p,
+            seller: typeof p.seller === 'object' && p.seller !== null ? updateSellerFollowers(p.seller) : p.seller
+          };
+        }
+        return p;
+      });
+
+      const updatedPrompts = (state.prompts || []).map(p => {
+        const pSellerId = p.seller?._id?.toString() || p.seller?.id?.toString() || p.seller?.toString();
+        if (pSellerId === creatorId) {
+          return {
+            ...p,
+            seller: typeof p.seller === 'object' && p.seller !== null ? updateSellerFollowers(p.seller) : p.seller
+          };
+        }
+        return p;
+      });
+
+      return {
+        ...state,
+        marketplace: updatedMarketplace,
+        prompts: updatedPrompts
+      };
+    }
+
 
     case actions.LOGOUT:
       return {
@@ -233,6 +368,8 @@ export function AppProvider({ children }) {
 
     validateSession();
   }, []);
+
+
 
   /* Background Data Preloading (Marketplace & Stats) */
   useEffect(() => {
@@ -404,7 +541,7 @@ export function AppProvider({ children }) {
       localStorage.removeItem(TOKEN_KEY);
       dispatch({ type: actions.LOGOUT });
     },
-    canGenerate: state.plan === 'unlimited' || state.credits > 0 || (state.user && state.user.hasUsedFreePrompt === false),
+    canGenerate: state.plan === 'unlimited' || state.credits > 0,
     isPremium: state.plan !== 'free',
     authLoading,
     /* Caching & Scroll helpers */

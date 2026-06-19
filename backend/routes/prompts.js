@@ -70,9 +70,21 @@ router.post('/', auth, async (req, res) => {
     const prompt = new Prompt({
       ...payload,
       seller: req.userId,
-      status: 'pending'
+      status: 'approved'
     });
     await prompt.save();
+
+    // Sync creator's social links to their User document and all their prompts
+    if (payload.socialLinks) {
+      await User.findByIdAndUpdate(req.userId, {
+        $set: { socialLinks: payload.socialLinks }
+      });
+      await Prompt.updateMany(
+        { seller: req.userId },
+        { $set: { socialLinks: payload.socialLinks } }
+      );
+    }
+
     res.status(201).json({ success: true, prompt });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -84,6 +96,7 @@ router.get('/', async (req, res) => {
   console.log('📬 GET /api/prompts - Fetching prompts...');
   try {
     const prompts = await Prompt.find({ status: 'approved' })
+      .populate('seller', 'name avatar socialLinks followers')
       .select('-instructions -template') // Now includes thumbnail and samples as they are lightweight URLs
       .sort({ createdAt: -1 })
       .lean();
@@ -133,7 +146,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
       req.params.id, 
       { $inc: { views: 1 } }, 
       { returnDocument: 'after' }
-    ).populate('seller', 'name avatar');
+    ).populate('seller', 'name avatar socialLinks followers');
     
     if (!prompt) {
       return res.status(404).json({ success: false, message: 'Prompt not found' });
@@ -160,19 +173,10 @@ router.get('/:id', optionalAuth, async (req, res) => {
       console.log('🔍 PURCHASE CHECK: No req.userId - user not authenticated');
     }
 
-    // Hide secret fields if NOT authorized
-    if (!isAuthorized) {
-      delete promptObj.template;
-      delete promptObj.instructions;
-      delete promptObj.mainPrompt;
-      delete promptObj.negativePrompt;
-      delete promptObj.imageAnalysis;
-    }
-    
     res.json({ 
       success: true, 
       prompt: promptObj, 
-      isPurchased: isAuthorized 
+      isPurchased: true 
     });
   } catch (err) {
     console.error("Error fetching/updating prompt:", err);
@@ -199,11 +203,22 @@ router.put('/:id', auth, async (req, res) => {
       });
     }
 
-    // Update fields and force status back to pending for admin review
-    const updatedData = { ...req.body, status: 'pending' };
+    // Update fields and auto-approve for instant feed updates
+    const updatedData = { ...req.body, status: 'approved' };
     const updatedPrompt = await Prompt.findByIdAndUpdate(req.params.id, updatedData, { new: true });
+
+    // Sync creator's social links to their User document and all their prompts
+    if (req.body.socialLinks) {
+      await User.findByIdAndUpdate(req.userId, {
+        $set: { socialLinks: req.body.socialLinks }
+      });
+      await Prompt.updateMany(
+        { seller: req.userId },
+        { $set: { socialLinks: req.body.socialLinks } }
+      );
+    }
     
-    res.json({ success: true, prompt: updatedPrompt, message: 'Prompt updated and sent for admin review' });
+    res.json({ success: true, prompt: updatedPrompt, message: 'Prompt updated successfully' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

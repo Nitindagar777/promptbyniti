@@ -341,7 +341,7 @@ export default function AuthPage() {
                 ? 'Follow the steps to regain access to your account.'
                 : mode === 'login' 
                   ? 'Sign in to access your prompts and tokens.'
-                  : 'Join the ultimate AI prompt marketplace today.'}
+                  : 'Join the ultimate AI prompt feed today.'}
             </p>
           </div>
 

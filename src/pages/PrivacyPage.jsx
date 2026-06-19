@@ -11,8 +11,8 @@ export default function PrivacyPage() {
     <div className="legal-page privacy-page">
       <SEOHead
         title="Privacy Policy — Prompt by Niti"
-        description="Read Prompt by Niti's privacy policy. Learn how we protect your data, handle personal information, and ensure secure transactions on our AI prompt marketplace."
-        keywords="prompt by niti privacy, AI prompt privacy policy, data protection, prompt marketplace privacy"
+        description="Read Prompt by Niti's privacy policy. Learn how we protect your data, handle personal information, and ensure secure transactions on our AI prompt feed."
+        keywords="prompt by niti privacy, AI prompt privacy policy, data protection, prompt feed privacy"
       />
       <div className="container">
         <div className="legal-page__hero text-center">
@@ -26,7 +26,7 @@ export default function PrivacyPage() {
               <Eye className="text-cyan" />
               <h2>1. Information We Collect</h2>
             </div>
-            <p>We collect information you provide directly to us when you create an account, purchase tokens, or list prompts on our marketplace. This includes:</p>
+            <p>We collect information you provide directly to us when you create an account, purchase tokens, or post prompts to our feed. This includes:</p>
             <ul>
               <li><strong>Personal Info:</strong> Name, email address, and profile biography.</li>
               <li><strong>Financial Info:</strong> Payment details processed securely via Razorpay (we do not store credit card numbers).</li>

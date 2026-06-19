@@ -82,12 +82,14 @@ router.post('/register', async (req, res) => {
       user.password = password;
       user.otp = otp;
       user.otpExpires = otpExpires;
-      user.hasUsedFreePrompt = false; // Brand new local registration, allow first free prompt
+      user.hasUsedFreePrompt = true; // 2 credits represent their free generations
+      user.credits = 2; // Initial 2 free generations
       await user.save();
     } else {
       user = await User.create({
         name, email, password, provider: 'local', otp, otpExpires, isVerified: false,
-        hasUsedFreePrompt: false // Brand new local registration, allow first free prompt
+        hasUsedFreePrompt: true, // 2 credits represent their free generations
+        credits: 2 // Initial 2 free generations
       });
     }
     await sendOTPEmail(email, otp);
@@ -130,7 +132,10 @@ router.post('/login', async (req, res) => {
           credits: user.credits,
           plan: user.plan,
           hasUsedFreePrompt: user.hasUsedFreePrompt,
-          purchasedPrompts: user.purchasedPrompts || []
+          purchasedPrompts: user.purchasedPrompts || [],
+          socialLinks: user.socialLinks || {},
+          followers: user.followers || [],
+          following: user.following || []
         }
       });
     }
@@ -175,7 +180,10 @@ router.post('/verify-otp', async (req, res) => {
         credits: user.credits,
         plan: user.plan,
         hasUsedFreePrompt: user.hasUsedFreePrompt,
-        purchasedPrompts: user.purchasedPrompts || []
+        purchasedPrompts: user.purchasedPrompts || [],
+        socialLinks: user.socialLinks || {},
+        followers: user.followers || [],
+        following: user.following || []
       }
     });
   } catch (err) {
@@ -208,8 +216,8 @@ router.post('/google', async (req, res) => {
     } else {
       user = await User.create({
         name, email, googleId, avatar: picture || 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=100&auto=format&fit=crop&q=60', provider: 'google',
-        credits: 0, plan: 'free', isVerified: true,
-        hasUsedFreePrompt: false // Brand new Google user, allow first free prompt
+        credits: 2, plan: 'free', isVerified: true,
+        hasUsedFreePrompt: true // 2 credits represent their free generations
       });
     }
     const token = generateToken(user._id);
@@ -225,7 +233,10 @@ router.post('/google', async (req, res) => {
         credits: user.credits,
         plan: user.plan,
         hasUsedFreePrompt: user.hasUsedFreePrompt,
-        purchasedPrompts: user.purchasedPrompts || []
+        purchasedPrompts: user.purchasedPrompts || [],
+        socialLinks: user.socialLinks || {},
+        followers: user.followers || [],
+        following: user.following || []
       }
     });
   } catch (err) {
@@ -256,7 +267,10 @@ router.get('/me', async (req, res) => {
         credits: user.credits,
         plan: user.plan,
         hasUsedFreePrompt: user.hasUsedFreePrompt,
-        purchasedPrompts: user.purchasedPrompts || []
+        purchasedPrompts: user.purchasedPrompts || [],
+        socialLinks: user.socialLinks || {},
+        followers: user.followers || [],
+        following: user.following || []
       }
     });
   } catch (err) {
@@ -273,11 +287,25 @@ router.put('/profile', async (req, res) => {
     if (!authHeader) return res.status(401).json({ success: false, message: 'Not authenticated' });
     const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const { name, bio, avatar } = req.body;
+    const { name, bio, avatar, socialLinks } = req.body;
     const user = await User.findById(decoded.id);
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
     if (name) user.name = name;
     if (bio !== undefined) user.bio = bio;
+    if (socialLinks !== undefined) {
+      user.socialLinks = socialLinks;
+      user.markModified('socialLinks');
+      // Propagate social links to all existing prompts created by this user
+      const Prompt = require('../models/Prompt');
+      try {
+        await Prompt.updateMany(
+          { seller: user._id },
+          { $set: { socialLinks: socialLinks } }
+        );
+      } catch (err) {
+        console.error('Error propagating social links to prompts:', err);
+      }
+    }
     if (avatar && avatar.startsWith('data:image')) {
       const uploadRes = await cloudinary.uploader.upload(avatar, {
         folder: 'niti_avatars', width: 300, height: 300, crop: 'fill'
@@ -297,7 +325,10 @@ router.put('/profile', async (req, res) => {
         credits: user.credits,
         plan: user.plan,
         hasUsedFreePrompt: user.hasUsedFreePrompt,
-        purchasedPrompts: user.purchasedPrompts || []
+        purchasedPrompts: user.purchasedPrompts || [],
+        socialLinks: user.socialLinks || {},
+        followers: user.followers || [],
+        following: user.following || []
       }
     });
   } catch (err) {
@@ -466,10 +497,83 @@ router.post('/reset-password', async (req, res) => {
         bio: user.bio || '',
         credits: user.credits, plan: user.plan,
         hasUsedFreePrompt: user.hasUsedFreePrompt,
-        purchasedPrompts: user.purchasedPrompts || []
+        purchasedPrompts: user.purchasedPrompts || [],
+        socialLinks: user.socialLinks || {},
+        followers: user.followers || [],
+        following: user.following || []
       }
     });
   } catch (err) {
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// ============================================
+// POST /api/auth/follow/:id — Follow/Unfollow creator
+// ============================================
+router.post('/follow/:id', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ success: false, message: 'Not authenticated' });
+    const token = authHeader.split(' ')[1];
+    if (!token || token === 'null' || token === 'undefined') {
+      return res.status(401).json({ success: false, message: 'Not authenticated' });
+    }
+
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (jwtErr) {
+      return res.status(401).json({ success: false, message: 'Session expired or invalid token' });
+    }
+    const currentUserId = decoded.id;
+    const targetUserId = req.params.id;
+
+    const mongoose = require('mongoose');
+    if (!mongoose.Types.ObjectId.isValid(targetUserId)) {
+      return res.status(400).json({ success: false, message: 'Invalid Creator ID' });
+    }
+
+    if (currentUserId === targetUserId) {
+      return res.status(400).json({ success: false, message: 'You cannot follow yourself' });
+    }
+
+    const currentUser = await User.findById(currentUserId);
+    const targetUser = await User.findById(targetUserId);
+
+    if (!currentUser || !targetUser) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    // Ensure array fields exist
+    if (!currentUser.following) currentUser.following = [];
+    if (!targetUser.followers) targetUser.followers = [];
+
+    // Check if currently following
+    const isFollowing = currentUser.following.some(id => id.toString() === targetUserId);
+
+    if (isFollowing) {
+      // Unfollow
+      currentUser.following = currentUser.following.filter(id => id.toString() !== targetUserId);
+      targetUser.followers = targetUser.followers.filter(id => id.toString() !== currentUserId);
+    } else {
+      // Follow
+      currentUser.following.push(targetUserId);
+      targetUser.followers.push(currentUserId);
+    }
+
+    await currentUser.save();
+    await targetUser.save();
+
+    res.json({
+      success: true,
+      isFollowing: !isFollowing,
+      followersCount: targetUser.followers.length,
+      followingCount: currentUser.following.length,
+      following: currentUser.following
+    });
+  } catch (err) {
+    console.error('Follow error:', err);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });

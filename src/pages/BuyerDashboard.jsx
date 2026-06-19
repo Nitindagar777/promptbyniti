@@ -82,7 +82,7 @@ export default function BuyerDashboard() {
 
   return (
     <div className="buyer-dashboard" id="buyer-dashboard">
-      <SEOHead title="My Purchases" noIndex={true} />
+      <SEOHead title="My Unlocked Prompts" noIndex={true} />
       {/* Toast */}
       {toast && (
         <div className={`dash-toast animate-slide-up ${toast.type}`}>
@@ -116,7 +116,7 @@ export default function BuyerDashboard() {
           </div>
           <div className="dash-header-actions">
             <Link to="/templates" className="btn btn-secondary btn-glow">
-              <ShoppingBag size={18} /> Marketplace
+              <ShoppingBag size={18} /> Feed
             </Link>
             <button onClick={() => navigate(-1)} className="btn btn-back-premium">
               <ArrowLeft size={18} /> <span>Back</span>
@@ -154,7 +154,7 @@ export default function BuyerDashboard() {
           <div className="section-header-row mb-lg">
             <div className="header-with-icon">
               <Layout size={20} className="text-purple" />
-              <h3>My Purchased Prompts</h3>
+              <h3>My Unlocked Prompts</h3>
             </div>
             <div className="dash-search-box">
               <Search size={16} />
@@ -192,7 +192,7 @@ export default function BuyerDashboard() {
                     <h4>{prompt.name}</h4>
                     <div className="purchase-actions" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                       <button className="btn-copy-prompt" onClick={() => handleCopy(prompt.template)}>
-                        <Copy size={16} /> Copy Secret Prompt
+                        <Copy size={16} /> Copy Prompt Template
                       </button>
                       <button
                         className="btn-view-access"
@@ -224,8 +224,8 @@ export default function BuyerDashboard() {
               <div className="empty-library">
                 <ShoppingBag size={48} />
                 <p>Your library is empty</p>
-                <span>Unlock your first pro prompt in the marketplace</span>
-                <Link to="/templates" className="btn btn-primary mt-md">Explore Marketplace</Link>
+                <span>Unlock your first pro prompt in the feed</span>
+                <Link to="/templates" className="btn btn-primary mt-md">Explore Feed</Link>
               </div>
             )}
           </div>
