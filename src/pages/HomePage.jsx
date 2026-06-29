@@ -136,38 +136,38 @@ export default function HomePage() {
 
   // Testimonials & Reviews State
   const DEFAULT_TESTIMONIALS = [
-    { 
-      quote: "The reference mode is a game-changer. I can now maintain character consistency across entire comic series. Nothing else comes close.", 
-      name: "Priya M.", 
-      role: "Digital Comic Artist", 
+    {
+      quote: "The reference mode is a game-changer. I can now maintain character consistency across entire comic series. Nothing else comes close.",
+      name: "Priya M.",
+      role: "Digital Comic Artist",
       stars: 5,
       avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&h=150&q=80"
     },
-    { 
-      quote: "I've tried PromptBase and others, but the prompt quality here is on another level. The multi-model support saves me hours of tweaking.", 
-      name: "Alex R.", 
-      role: "AI Art Creator", 
+    {
+      quote: "I've tried PromptBase and others, but the prompt quality here is on another level. The multi-model support saves me hours of tweaking.",
+      name: "Alex R.",
+      role: "AI Art Creator",
       stars: 5,
       avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150&q=80"
     },
-    { 
-      quote: "Using these prompts has completely transformed my social media content. My engagement has gone up by 400% and I've gained thousands of followers.", 
-      name: "Jordan K.", 
-      role: "Social Media Influencer", 
+    {
+      quote: "Using these prompts has completely transformed my social media content. My engagement has gone up by 400% and I've gained thousands of followers.",
+      name: "Jordan K.",
+      role: "Social Media Influencer",
       stars: 5,
       avatar: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&h=150&q=80"
     },
-    { 
-      quote: "The custom prompt options and model fine-tuning are incredible. The output images look exactly like what I envisioned in my mind.", 
-      name: "Marcus L.", 
-      role: "3D Concept Artist", 
+    {
+      quote: "The custom prompt options and model fine-tuning are incredible. The output images look exactly like what I envisioned in my mind.",
+      name: "Marcus L.",
+      role: "3D Concept Artist",
       stars: 5,
       avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&h=150&q=80"
     },
-    { 
-      quote: "Maintaining visual consistency is crucial for my brand, and the reference engine locks character faces perfectly. My followers love the storytelling!", 
-      name: "Elena S.", 
-      role: "Content Creator", 
+    {
+      quote: "Maintaining visual consistency is crucial for my brand, and the reference engine locks character faces perfectly. My followers love the storytelling!",
+      name: "Elena S.",
+      role: "Content Creator",
       stars: 5,
       avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80"
     }
@@ -295,10 +295,10 @@ export default function HomePage() {
 
   // Go to next reference mode in the global loop sequence
   const goToNextMode = useCallback(() => {
-    const activeSub = activeRefCategory === 'image' 
-      ? activeImageMode 
-      : activeRefCategory === 'video' 
-        ? activeVideoMode 
+    const activeSub = activeRefCategory === 'image'
+      ? activeImageMode
+      : activeRefCategory === 'video'
+        ? activeVideoMode
         : activeTextMode;
 
     const currentIndex = REF_MODE_SEQUENCE.findIndex(
@@ -392,19 +392,19 @@ export default function HomePage() {
           <div className="p-hero__split-grid">
             {/* Left Hero Content */}
             <div className="p-hero__content-col reveal" style={{ animationDelay: '0.1s' }}>
-              
+
               <h1 className="p-hero__title">
-                <span className="text-cyan">AI Prompt</span> <span style={{ fontSize: '3.25rem' }}>Generator & </span> <span className="text-orange">Feed (inc. Followers)</span>
+                <span className="text-cyan">AI Prompts</span> <span style={{ fontSize: '3.25rem' }}>Generator & </span> <span className="text-orange">Feed</span> <span className="text-purple">(Free Prompts)</span>
               </h1>
-              
+
               <p className="p-hero__pitch">
-                Traditional prompt makers only guess. Our generator supports <strong>Image</strong>, <strong>Video</strong>, & <strong>Text</strong> prompts, using advanced <strong>Reference Consistency Engines</strong> to lock character profiles, synchronize camera motion, structure syntax-perfect code, and align copywriting frameworks.
+                <strong className="text-orange">Stop</strong> buying prompts. Generate premium <strong className="text-cyan">Image</strong>, <strong className="text-cyan">Video</strong> & <strong className="text-cyan">Text</strong> prompts for less, powered by <strong className="text-purple">smart looping</strong> and <strong className="text-pink">Reference Consistency</strong> that keeps every character and style <strong className="text-green">perfectly consistent</strong>.
               </p>
-              
+
               <p className="p-hero__subtitle p-hero__subtitle--accent">
                 <span className="text-orange">Generate.</span> <span className="text-cyan">Customize.</span> <span className="text-purple">Share.</span>
               </p>
-              
+
               <div className="p-hero__btns">
                 <Link to={state?.user ? "/generate" : "/login"} className="btn btn-primary btn-xl">
                   Start Generating <ArrowRight size={18} style={{ marginLeft: '4px' }} />
@@ -413,7 +413,7 @@ export default function HomePage() {
                   Explore Feed <Sparkles size={18} style={{ marginLeft: '4px' }} />
                 </Link>
               </div>
-              
+
               {/* Feature Pills */}
               <div className="p-hero__features">
                 <div className="p-hero__feature-item">
@@ -430,7 +430,7 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
-            
+
             {/* Right Hero Showcase (Interactive Quantum Prompt Reactor) */}
             <div className="p-hero__showcase-col reveal" style={{ animationDelay: '0.2s' }}>
               <QuantumReactor />
@@ -468,777 +468,777 @@ export default function HomePage() {
           {/* Tabbed Panels */}
           <div className="p-ref-modes__panels">
 
-          {/* IMAGE PANEL */}
-          <div className={`p-ref-modes__panel ${activeRefCategory === 'image' ? 'active' : ''}`}>
-          <div className="p-ref-modes__showcase-grid">
-            {/* Left Column: Media Preview */}
-            <div className="p-ref-modes__left-pane">
-              <div className="p-ref-modes__sub-toggles">
-                <button 
-                  className={`p-ref-modes__sub-btn ${activeImageMode === 'sameScene' ? 'active active--sameScene' : ''}`}
-                  onClick={() => setActiveImageMode('sameScene')}
-                >
-                  <Camera size={16} />
-                  <span>Same Scene</span>
-                </button>
-                <button 
-                  className={`p-ref-modes__sub-btn ${activeImageMode === 'different' ? 'active active--different' : ''}`}
-                  onClick={() => setActiveImageMode('different')}
-                >
-                  <Repeat size={16} />
-                  <span>Diff Subjects</span>
-                </button>
-                <button 
-                  className={`p-ref-modes__sub-btn ${activeImageMode === 'fixed' ? 'active active--fixed' : ''}`}
-                  onClick={() => setActiveImageMode('fixed')}
-                >
-                  <Lock size={16} />
-                  <span>Fixed Character</span>
-                </button>
-              </div>
+            {/* IMAGE PANEL */}
+            <div className={`p-ref-modes__panel ${activeRefCategory === 'image' ? 'active' : ''}`}>
+              <div className="p-ref-modes__showcase-grid">
+                {/* Left Column: Media Preview */}
+                <div className="p-ref-modes__left-pane">
+                  <div className="p-ref-modes__sub-toggles">
+                    <button
+                      className={`p-ref-modes__sub-btn ${activeImageMode === 'sameScene' ? 'active active--sameScene' : ''}`}
+                      onClick={() => setActiveImageMode('sameScene')}
+                    >
+                      <Camera size={16} />
+                      <span>Same Scene</span>
+                    </button>
+                    <button
+                      className={`p-ref-modes__sub-btn ${activeImageMode === 'different' ? 'active active--different' : ''}`}
+                      onClick={() => setActiveImageMode('different')}
+                    >
+                      <Repeat size={16} />
+                      <span>Diff Subjects</span>
+                    </button>
+                    <button
+                      className={`p-ref-modes__sub-btn ${activeImageMode === 'fixed' ? 'active active--fixed' : ''}`}
+                      onClick={() => setActiveImageMode('fixed')}
+                    >
+                      <Lock size={16} />
+                      <span>Fixed Character</span>
+                    </button>
+                  </div>
 
-              <div className="p-ref-modes__media-wrap">
-                <img 
-                  src="/same_scene_ref.png" 
-                  alt="Same Scene Image Reference Guide" 
-                  className={`p-ref-modes__showcase-media ${activeImageMode === 'sameScene' ? 'active' : ''}`}
-                />
-                <img 
-                  src="/diff_characters_ref.png" 
-                  alt="Different Characters Image Reference Guide" 
-                  className={`p-ref-modes__showcase-media ${activeImageMode === 'different' ? 'active' : ''}`}
-                />
-                <img 
-                  src="/fixed_character_ref.png" 
-                  alt="Fixed Character Image Reference Guide" 
-                  className={`p-ref-modes__showcase-media ${activeImageMode === 'fixed' ? 'active' : ''}`}
-                />
-              </div>
+                  <div className="p-ref-modes__media-wrap">
+                    <img
+                      src="/same_scene_ref.png"
+                      alt="Same Scene Image Reference Guide"
+                      className={`p-ref-modes__showcase-media ${activeImageMode === 'sameScene' ? 'active' : ''}`}
+                    />
+                    <img
+                      src="/diff_characters_ref.png"
+                      alt="Different Characters Image Reference Guide"
+                      className={`p-ref-modes__showcase-media ${activeImageMode === 'different' ? 'active' : ''}`}
+                    />
+                    <img
+                      src="/fixed_character_ref.png"
+                      alt="Fixed Character Image Reference Guide"
+                      className={`p-ref-modes__showcase-media ${activeImageMode === 'fixed' ? 'active' : ''}`}
+                    />
+                  </div>
 
-              {/* Supported Image Styles & Presets */}
-              <div className="p-ref-modes__text-categories-list">
-                <span className="p-ref-modes__text-list-label">Supported Image Styles & Presets</span>
-                <div className="p-ref-modes__text-list-chips">
-                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--cyan"><Camera size={12} /> Portraits</span>
-                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--cyan"><Eye size={12} /> Cinematic Shots</span>
-                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--cyan"><Heart size={12} /> Anime & Manga</span>
-                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--cyan"><Layers size={12} /> 3D Concept Art</span>
-                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--cyan"><Palette size={12} /> Vector Art</span>
-                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--cyan"><Image size={12} /> Comic Book Style</span>
-                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--cyan"><Palette size={12} /> Watercolor</span>
-                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--cyan"><Layers size={12} /> Pixel Art</span>
-                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--cyan"><Package size={12} /> Product Design</span>
-                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--cyan"><Zap size={12} /> Logo Design</span>
-                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--cyan"><Palette size={12} /> Oil Painting</span>
-                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--cyan"><Wand2 size={12} /> Lineart & Sketch</span>
+                  {/* Supported Image Styles & Presets */}
+                  <div className="p-ref-modes__text-categories-list">
+                    <span className="p-ref-modes__text-list-label">Supported Image Styles & Presets</span>
+                    <div className="p-ref-modes__text-list-chips">
+                      <span className="p-ref-modes__text-chip p-ref-modes__text-chip--cyan"><Camera size={12} /> Portraits</span>
+                      <span className="p-ref-modes__text-chip p-ref-modes__text-chip--cyan"><Eye size={12} /> Cinematic Shots</span>
+                      <span className="p-ref-modes__text-chip p-ref-modes__text-chip--cyan"><Heart size={12} /> Anime & Manga</span>
+                      <span className="p-ref-modes__text-chip p-ref-modes__text-chip--cyan"><Layers size={12} /> 3D Concept Art</span>
+                      <span className="p-ref-modes__text-chip p-ref-modes__text-chip--cyan"><Palette size={12} /> Vector Art</span>
+                      <span className="p-ref-modes__text-chip p-ref-modes__text-chip--cyan"><Image size={12} /> Comic Book Style</span>
+                      <span className="p-ref-modes__text-chip p-ref-modes__text-chip--cyan"><Palette size={12} /> Watercolor</span>
+                      <span className="p-ref-modes__text-chip p-ref-modes__text-chip--cyan"><Layers size={12} /> Pixel Art</span>
+                      <span className="p-ref-modes__text-chip p-ref-modes__text-chip--cyan"><Package size={12} /> Product Design</span>
+                      <span className="p-ref-modes__text-chip p-ref-modes__text-chip--cyan"><Zap size={12} /> Logo Design</span>
+                      <span className="p-ref-modes__text-chip p-ref-modes__text-chip--cyan"><Palette size={12} /> Oil Painting</span>
+                      <span className="p-ref-modes__text-chip p-ref-modes__text-chip--cyan"><Wand2 size={12} /> Lineart & Sketch</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column: Data Card */}
+                <div className="p-ref-modes__right-pane">
+                  <div className="p-ref-modes__info-card glass-effect">
+                    {/* Same Scene Mode Content */}
+                    <div className={`p-ref-modes__info-card-content ${activeImageMode === 'sameScene' ? 'active' : ''}`}>
+                      <div className="p-ref-modes__info-header">
+                        <span className="p-ref-modes__badge p-ref-modes__badge--sameScene">
+                          Same Scene / Photoshoot
+                        </span>
+                        <h3>Maintain Identical Background & Composition</h3>
+                      </div>
+
+                      <div className="p-ref-modes__template-box">
+                        <span className="p-ref-modes__template-label">Prompt Template</span>
+                        <pre className="p-ref-modes__template-code">
+                          {'A [camera_angle] photoshoot of [subject] posing in [setting] --cref [url] --cw 100 ......'}
+                        </pre>
+                      </div>
+
+                      <div className="p-ref-modes__comparison-grid">
+                        <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--same">
+                          <h4>🟢 What Stays SAME</h4>
+                          <ul>
+                            <li><strong>Subject Identity:</strong> Face shape, eyes, hair color, and basic features</li>
+                            <li><strong>Outfit Details:</strong> Dress style, clothing texture, and accessory colors</li>
+                            <li><strong>Lighting & Setting:</strong> The ambient illumination and background scenery</li>
+                          </ul>
+                        </div>
+
+                        <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--changes">
+                          <h4>⚡ What CHANGES</h4>
+                          <ul>
+                            <li><strong>Pose & Angle:</strong> Standing front-facing vs looking back over shoulder</li>
+                            <li><strong>Framing:</strong> Close-up zoom vs full-body frame length</li>
+                            <li><strong>Expression:</strong> Smiles, natural gaze changes, head tilt</li>
+                          </ul>
+                        </div>
+                      </div>
+
+                      <div className="p-ref-modes__tip-banner">
+                        <div className="p-ref-modes__tip-icon">
+                          <Info size={18} />
+                        </div>
+                        <div className="p-ref-modes__tip-text">
+                          <strong>Text-to-Image Consistency:</strong> You can upload any reference image (such as a character profile or style reference) and use these image reference modes to generate consistent characters in new poses, settings, or expressions!
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Different Subjects Mode Content */}
+                    <div className={`p-ref-modes__info-card-content ${activeImageMode === 'different' ? 'active' : ''}`}>
+                      <div className="p-ref-modes__info-header">
+                        <span className="p-ref-modes__badge p-ref-modes__badge--different">
+                          Different Subjects / Medium Match
+                        </span>
+                        <h3>Maintain Artistic Style & Medium Coherence</h3>
+                      </div>
+
+                      <div className="p-ref-modes__template-box">
+                        <span className="p-ref-modes__template-label">Prompt Template</span>
+                        <pre className="p-ref-modes__template-code">
+                          {'A stylized [medium] illustration of a [animal_subject], [color] palette, geometric vector style ......'}
+                        </pre>
+                      </div>
+
+                      <div className="p-ref-modes__comparison-grid">
+                        <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--same">
+                          <h4>🟢 What Stays SAME</h4>
+                          <ul>
+                            <li><strong>Artistic Medium:</strong> Stained-glass vector illustration</li>
+                            <li><strong>Composition:</strong> Single-subject centered profile layout</li>
+                            <li><strong>Rendering Style:</strong> Geometric contours and stylized line art</li>
+                          </ul>
+                        </div>
+
+                        <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--changes">
+                          <h4>⚡ What CHANGES</h4>
+                          <ul>
+                            <li><strong>Main Subject:</strong> Swaps the animal (Leopard ➔ Fox ➔ Owl)</li>
+                            <li><strong>Colors:</strong> Hue matches the natural coloration of the new subject</li>
+                            <li><strong>Details:</strong> Contours adapt to the physical shape of the animal</li>
+                          </ul>
+                        </div>
+                      </div>
+
+                      <div className="p-ref-modes__tip-banner">
+                        <div className="p-ref-modes__tip-icon">
+                          <Info size={18} />
+                        </div>
+                        <div className="p-ref-modes__tip-text">
+                          <strong>Text-to-Image Consistency:</strong> You can upload any reference image (such as a character profile or style reference) and use these image reference modes to generate consistent characters in new poses, settings, or expressions!
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Fixed Character Mode Content */}
+                    <div className={`p-ref-modes__info-card-content ${activeImageMode === 'fixed' ? 'active' : ''}`}>
+                      <div className="p-ref-modes__info-header">
+                        <span className="p-ref-modes__badge p-ref-modes__badge--fixed">
+                          Fixed Character / Consistency
+                        </span>
+                        <h3>Lock Character Details & Move Settings</h3>
+                      </div>
+
+                      <div className="p-ref-modes__template-box">
+                        <span className="p-ref-modes__template-label">Prompt Template</span>
+                        <pre className="p-ref-modes__template-code">
+                          {'A close-up shot of [character] performing [action] at [new_background] --cref [url] --cw 100 ......'}
+                        </pre>
+                      </div>
+
+                      <div className="p-ref-modes__comparison-grid">
+                        <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--same">
+                          <h4>🟢 What Stays SAME</h4>
+                          <ul>
+                            <li><strong>Character Identity:</strong> Hair cut/color, facial features, body structure</li>
+                            <li><strong>Exact Outfit:</strong> Teal sporty windbreaker, sunglasses, helmet</li>
+                            <li><strong>Key Accessories:</strong> Black skateboard, trousers</li>
+                          </ul>
+                        </div>
+
+                        <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--changes">
+                          <h4>⚡ What CHANGES</h4>
+                          <ul>
+                            <li><strong>Scenery:</strong> Sunny beach ➔ concrete city stairs ➔ urban streets</li>
+                            <li><strong>Action:</strong> Cruising ➔ jumping high in air ➔ standing post-ride</li>
+                            <li><strong>Lighting Vibe:</strong> Direct warm sunlight ➔ overcast soft day glow</li>
+                          </ul>
+                        </div>
+                      </div>
+
+                      <div className="p-ref-modes__tip-banner">
+                        <div className="p-ref-modes__tip-icon">
+                          <Info size={18} />
+                        </div>
+                        <div className="p-ref-modes__tip-text">
+                          <strong>Text-to-Image Consistency:</strong> You can upload any reference image (such as a character profile or style reference) and use these image reference modes to generate consistent characters in new poses, settings, or expressions!
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-ref-modes__footer-actions">
+                    <Link to={state?.user ? "/generate" : "/login"} className="btn btn-primary btn-xl">
+                      Try image reference mode <ArrowRight size={18} style={{ marginLeft: '4px' }} />
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Right Column: Data Card */}
-            <div className="p-ref-modes__right-pane">
-              <div className="p-ref-modes__info-card glass-effect">
-                {/* Same Scene Mode Content */}
-                <div className={`p-ref-modes__info-card-content ${activeImageMode === 'sameScene' ? 'active' : ''}`}>
-                  <div className="p-ref-modes__info-header">
-                    <span className="p-ref-modes__badge p-ref-modes__badge--sameScene">
-                      Same Scene / Photoshoot
-                    </span>
-                    <h3>Maintain Identical Background & Composition</h3>
+            {/* VIDEO PANEL */}
+            <div className={`p-ref-modes__panel ${activeRefCategory === 'video' ? 'active' : ''}`}>
+              <div className="p-ref-modes__showcase-grid p-ref-modes__showcase-grid--reversed">
+                {/* Left Column: Data Card */}
+                <div className="p-ref-modes__right-pane">
+                  <div className="p-ref-modes__info-card glass-effect">
+                    {/* Same Scene Video Content */}
+                    <div className={`p-ref-modes__info-card-content ${activeVideoMode === 'sameSceneLoop' ? 'active' : ''}`}>
+                      <div className="p-ref-modes__info-header">
+                        <span className="p-ref-modes__badge p-ref-modes__badge--sameSceneLoop">
+                          🎥 Same Scene Video
+                        </span>
+                        <h3>Animate Details Within A Stationary Frame</h3>
+                      </div>
+
+                      <div className="p-ref-modes__template-box">
+                        <span className="p-ref-modes__template-label">Video Prompt Template</span>
+                        <pre className="p-ref-modes__template-code">
+                          {'Generate a video of: Scene 1 (0 to 2.5 seconds): [subject] posing in [setting], slow zoom --ar 16:9 ......'}
+                        </pre>
+                      </div>
+
+                      <div className="p-ref-modes__comparison-grid">
+                        <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--same">
+                          <h4>🟢 What Stays SAME</h4>
+                          <ul>
+                            <li><strong>Character Details:</strong> Face, hair, age, and identity details remain static</li>
+                            <li><strong>Background & Frame:</strong> The background set, composition, and props do not shift</li>
+                            <li><strong>Art Style:</strong> Cinematic resolution, color depth, lighting levels</li>
+                          </ul>
+                        </div>
+
+                        <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--changes">
+                          <h4>⚡ What CHANGES</h4>
+                          <ul>
+                            <li><strong>Micro-movement:</strong> Gentle breathing, hair blowing in breeze, blinking</li>
+                            <li><strong>Atmosphere:</strong> Tree leaves swaying, wind blowing, minor shadows moving</li>
+                            <li><strong>Timing:</strong> Continuous fluid loop across the timeline</li>
+                          </ul>
+                        </div>
+                      </div>
+
+                      <div className="p-ref-modes__tip-banner">
+                        <div className="p-ref-modes__tip-icon">
+                          <Info size={18} />
+                        </div>
+                        <div className="p-ref-modes__tip-text">
+                          <strong>Image-to-Video Generation:</strong> You can upload any static reference image (such as a character sheet or portrait) and select these video reference modes to bring that exact character to life with smooth, consistent motion!
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Different Scenes Content */}
+                    <div className={`p-ref-modes__info-card-content ${activeVideoMode === 'differentScenes' ? 'active' : ''}`}>
+                      <div className="p-ref-modes__info-header">
+                        <span className="p-ref-modes__badge p-ref-modes__badge--differentScenes">
+                          🎬 Different Scenes (Continuity)
+                        </span>
+                        <h3>Follow a Consistent Character Across Locations</h3>
+                      </div>
+
+                      <div className="p-ref-modes__template-box">
+                        <span className="p-ref-modes__template-label">Video Prompt Template</span>
+                        <pre className="p-ref-modes__template-code">
+                          {'Generate a video of: Scene 1 (0 to 2.5 seconds): [character] walking in [location_1] --ar 16:9. Scene 2 (2.5 to 5.0 seconds): [character] sitting in [location_2] --ar 16:9 ......'}
+                        </pre>
+                      </div>
+
+                      <div className="p-ref-modes__comparison-grid">
+                        <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--same">
+                          <h4>🟢 What Stays SAME</h4>
+                          <ul>
+                            <li><strong>Character Identity:</strong> Hair style, facial contours, eyes, skin tone</li>
+                            <li><strong>Outfit Consistency:</strong> Specific clothes, colours, and accessories</li>
+                            <li><strong>Visual Tone:</strong> Consistent camera lenses, color grade, and grading</li>
+                          </ul>
+                        </div>
+
+                        <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--changes">
+                          <h4>⚡ What CHANGES</h4>
+                          <ul>
+                            <li><strong>Environment:</strong> Swaps backgrounds (e.g. library ➔ cafeteria ➔ outdoors)</li>
+                            <li><strong>Action/Activity:</strong> Walking ➔ sitting down ➔ reading ➔ talking</li>
+                            <li><strong>Camera Angle:</strong> Transitioning between close-ups and medium pans</li>
+                          </ul>
+                        </div>
+                      </div>
+
+                      <div className="p-ref-modes__tip-banner">
+                        <div className="p-ref-modes__tip-icon">
+                          <Info size={18} />
+                        </div>
+                        <div className="p-ref-modes__tip-text">
+                          <strong>Image-to-Video Generation:</strong> You can upload any static reference image (such as a character sheet or portrait) and select these video reference modes to bring that exact character to life with smooth, consistent motion!
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Fixed Character + Motion Content */}
+                    <div className={`p-ref-modes__info-card-content ${activeVideoMode === 'fixedCharacterMotion' ? 'active' : ''}`}>
+                      <div className="p-ref-modes__info-header">
+                        <span className="p-ref-modes__badge p-ref-modes__badge--fixedCharacterMotion">
+                          📽️ Fixed Character + Motion
+                        </span>
+                        <h3>Maintain Character Poses & Rotate Camera</h3>
+                      </div>
+
+                      <div className="p-ref-modes__template-box">
+                        <span className="p-ref-modes__template-label">Video Prompt Template</span>
+                        <pre className="p-ref-modes__template-code">
+                          {'Generate a video of: Scene 1 (0 to 2.5 seconds): orbital camera rotation around [character] performing [motion] --ar 16:9 ......'}
+                        </pre>
+                      </div>
+
+                      <div className="p-ref-modes__comparison-grid">
+                        <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--same">
+                          <h4>🟢 What Stays SAME</h4>
+                          <ul>
+                            <li><strong>Character Identity:</strong> Face features, build, and key traits</li>
+                            <li><strong>Outfit:</strong> The specific teal jacket, sunglasses, and helmet</li>
+                            <li><strong>Relative Stance:</strong> The subject remains center-frame as camera moves</li>
+                          </ul>
+                        </div>
+
+                        <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--changes">
+                          <h4>⚡ What CHANGES</h4>
+                          <ul>
+                            <li><strong>Camera Angle:</strong> Orbital rotating camera pan (360 orbit) around subject</li>
+                            <li><strong>Dynamic Lighting:</strong> Reflections and shadows shift along with camera rotation</li>
+                          </ul>
+                        </div>
+                      </div>
+
+                      <div className="p-ref-modes__tip-banner">
+                        <div className="p-ref-modes__tip-icon">
+                          <Info size={18} />
+                        </div>
+                        <div className="p-ref-modes__tip-text">
+                          <strong>Image-to-Video Generation:</strong> You can upload any static reference image (such as a character sheet or portrait) and select these video reference modes to bring that exact character to life with smooth, consistent motion!
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="p-ref-modes__template-box">
-                    <span className="p-ref-modes__template-label">Prompt Template</span>
-                    <pre className="p-ref-modes__template-code">
-                      {'A [camera_angle] photoshoot of [subject] posing in [setting] --cref [url] --cw 100 ......'}
-                    </pre>
-                  </div>
-
-                  <div className="p-ref-modes__comparison-grid">
-                    <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--same">
-                      <h4>🟢 What Stays SAME</h4>
-                      <ul>
-                        <li><strong>Subject Identity:</strong> Face shape, eyes, hair color, and basic features</li>
-                        <li><strong>Outfit Details:</strong> Dress style, clothing texture, and accessory colors</li>
-                        <li><strong>Lighting & Setting:</strong> The ambient illumination and background scenery</li>
-                      </ul>
-                    </div>
-
-                    <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--changes">
-                      <h4>⚡ What CHANGES</h4>
-                      <ul>
-                        <li><strong>Pose & Angle:</strong> Standing front-facing vs looking back over shoulder</li>
-                        <li><strong>Framing:</strong> Close-up zoom vs full-body frame length</li>
-                        <li><strong>Expression:</strong> Smiles, natural gaze changes, head tilt</li>
-                      </ul>
-                    </div>
-                  </div>
-
-                  <div className="p-ref-modes__tip-banner">
-                    <div className="p-ref-modes__tip-icon">
-                      <Info size={18} />
-                    </div>
-                    <div className="p-ref-modes__tip-text">
-                      <strong>Text-to-Image Consistency:</strong> You can upload any reference image (such as a character profile or style reference) and use these image reference modes to generate consistent characters in new poses, settings, or expressions!
-                    </div>
+                  <div className="p-ref-modes__footer-actions">
+                    <Link to={state?.user ? "/generate" : "/login"} className="btn btn-sky btn-xl">
+                      Try video reference mode <ArrowRight size={18} style={{ marginLeft: '4px' }} />
+                    </Link>
                   </div>
                 </div>
 
-                {/* Different Subjects Mode Content */}
-                <div className={`p-ref-modes__info-card-content ${activeImageMode === 'different' ? 'active' : ''}`}>
-                  <div className="p-ref-modes__info-header">
-                    <span className="p-ref-modes__badge p-ref-modes__badge--different">
-                      Different Subjects / Medium Match
-                    </span>
-                    <h3>Maintain Artistic Style & Medium Coherence</h3>
+                {/* Right Column: Media Preview */}
+                <div className="p-ref-modes__left-pane">
+                  <div className="p-ref-modes__sub-toggles">
+                    <button
+                      className={`p-ref-modes__sub-btn ${activeVideoMode === 'sameSceneLoop' ? 'active active--sameScene' : ''}`}
+                      onClick={() => setActiveVideoMode('sameSceneLoop')}
+                    >
+                      <Camera size={16} />
+                      <span>Same Scene Video</span>
+                    </button>
+                    <button
+                      className={`p-ref-modes__sub-btn ${activeVideoMode === 'differentScenes' ? 'active active--different' : ''}`}
+                      onClick={() => setActiveVideoMode('differentScenes')}
+                    >
+                      <Repeat size={16} />
+                      <span>Different Scenes</span>
+                    </button>
+                    <button
+                      className={`p-ref-modes__sub-btn ${activeVideoMode === 'fixedCharacterMotion' ? 'active active--fixed' : ''}`}
+                      onClick={() => setActiveVideoMode('fixedCharacterMotion')}
+                    >
+                      <Lock size={16} />
+                      <span>Fixed Character + Motion</span>
+                    </button>
                   </div>
 
-                  <div className="p-ref-modes__template-box">
-                    <span className="p-ref-modes__template-label">Prompt Template</span>
-                    <pre className="p-ref-modes__template-code">
-                      {'A stylized [medium] illustration of a [animal_subject], [color] palette, geometric vector style ......'}
-                    </pre>
+                  <div className="p-ref-modes__media-wrap p-ref-modes__media-wrap--video">
+                    <video
+                      ref={videoRefs.sameSceneLoop}
+                      src="/Same_Scene_Video_ref.mp4"
+                      className={`p-ref-modes__showcase-media ${activeVideoMode === 'sameSceneLoop' ? 'active' : ''}`}
+                      muted
+                      playsInline
+                      preload="auto"
+                      onEnded={handleVideoEnded}
+                    />
+                    <video
+                      ref={videoRefs.differentScenes}
+                      src="/Different_Character_Video_ref.mp4"
+                      className={`p-ref-modes__showcase-media ${activeVideoMode === 'differentScenes' ? 'active' : ''}`}
+                      muted
+                      playsInline
+                      preload="auto"
+                      onEnded={handleVideoEnded}
+                    />
+                    <video
+                      ref={videoRefs.fixedCharacterMotion}
+                      src="/Fixed_Character_Motion_Video_ref.mp4"
+                      className={`p-ref-modes__showcase-media ${activeVideoMode === 'fixedCharacterMotion' ? 'active' : ''}`}
+                      muted
+                      playsInline
+                      preload="auto"
+                      onEnded={handleVideoEnded}
+                    />
                   </div>
 
-                  <div className="p-ref-modes__comparison-grid">
-                    <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--same">
-                      <h4>🟢 What Stays SAME</h4>
-                      <ul>
-                        <li><strong>Artistic Medium:</strong> Stained-glass vector illustration</li>
-                        <li><strong>Composition:</strong> Single-subject centered profile layout</li>
-                        <li><strong>Rendering Style:</strong> Geometric contours and stylized line art</li>
-                      </ul>
-                    </div>
-
-                    <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--changes">
-                      <h4>⚡ What CHANGES</h4>
-                      <ul>
-                        <li><strong>Main Subject:</strong> Swaps the animal (Leopard ➔ Fox ➔ Owl)</li>
-                        <li><strong>Colors:</strong> Hue matches the natural coloration of the new subject</li>
-                        <li><strong>Details:</strong> Contours adapt to the physical shape of the animal</li>
-                      </ul>
-                    </div>
-                  </div>
-
-                  <div className="p-ref-modes__tip-banner">
-                    <div className="p-ref-modes__tip-icon">
-                      <Info size={18} />
-                    </div>
-                    <div className="p-ref-modes__tip-text">
-                      <strong>Text-to-Image Consistency:</strong> You can upload any reference image (such as a character profile or style reference) and use these image reference modes to generate consistent characters in new poses, settings, or expressions!
+                  {/* Supported Cinematic Movements */}
+                  <div className="p-ref-modes__text-categories-list">
+                    <span className="p-ref-modes__text-list-label">Supported Camera Movements & Motions</span>
+                    <div className="p-ref-modes__text-list-chips">
+                      <span className="p-ref-modes__text-chip p-ref-modes__text-chip--sky"><ZoomIn size={12} /> Slow Zoom</span>
+                      <span className="p-ref-modes__text-chip p-ref-modes__text-chip--sky"><RotateCw size={12} /> Orbital Rotation</span>
+                      <span className="p-ref-modes__text-chip p-ref-modes__text-chip--sky"><Film size={12} /> Tracking Shot</span>
+                      <span className="p-ref-modes__text-chip p-ref-modes__text-chip--sky"><Rocket size={12} /> Drone Flyby</span>
+                      <span className="p-ref-modes__text-chip p-ref-modes__text-chip--sky"><Clock size={12} /> Timelapse</span>
+                      <span className="p-ref-modes__text-chip p-ref-modes__text-chip--sky"><ArrowRight size={12} /> Panning Shot</span>
+                      <span className="p-ref-modes__text-chip p-ref-modes__text-chip--sky"><ChevronDown size={12} /> Dynamic Tilt</span>
+                      <span className="p-ref-modes__text-chip p-ref-modes__text-chip--sky"><Eye size={12} /> Subject Follow</span>
+                      <span className="p-ref-modes__text-chip p-ref-modes__text-chip--sky"><Activity size={12} /> Handheld Shake</span>
+                      <span className="p-ref-modes__text-chip p-ref-modes__text-chip--sky"><Zap size={12} /> Slow Motion</span>
+                      <span className="p-ref-modes__text-chip p-ref-modes__text-chip--sky"><Repeat size={12} /> 360 Rotation</span>
+                      <span className="p-ref-modes__text-chip p-ref-modes__text-chip--sky"><Sparkles size={12} /> Cinematic Focus</span>
                     </div>
                   </div>
-                </div>
-
-                {/* Fixed Character Mode Content */}
-                <div className={`p-ref-modes__info-card-content ${activeImageMode === 'fixed' ? 'active' : ''}`}>
-                  <div className="p-ref-modes__info-header">
-                    <span className="p-ref-modes__badge p-ref-modes__badge--fixed">
-                      Fixed Character / Consistency
-                    </span>
-                    <h3>Lock Character Details & Move Settings</h3>
-                  </div>
-
-                  <div className="p-ref-modes__template-box">
-                    <span className="p-ref-modes__template-label">Prompt Template</span>
-                    <pre className="p-ref-modes__template-code">
-                      {'A close-up shot of [character] performing [action] at [new_background] --cref [url] --cw 100 ......'}
-                    </pre>
-                  </div>
-
-                  <div className="p-ref-modes__comparison-grid">
-                    <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--same">
-                      <h4>🟢 What Stays SAME</h4>
-                      <ul>
-                        <li><strong>Character Identity:</strong> Hair cut/color, facial features, body structure</li>
-                        <li><strong>Exact Outfit:</strong> Teal sporty windbreaker, sunglasses, helmet</li>
-                        <li><strong>Key Accessories:</strong> Black skateboard, trousers</li>
-                      </ul>
-                    </div>
-
-                    <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--changes">
-                      <h4>⚡ What CHANGES</h4>
-                      <ul>
-                        <li><strong>Scenery:</strong> Sunny beach ➔ concrete city stairs ➔ urban streets</li>
-                        <li><strong>Action:</strong> Cruising ➔ jumping high in air ➔ standing post-ride</li>
-                        <li><strong>Lighting Vibe:</strong> Direct warm sunlight ➔ overcast soft day glow</li>
-                      </ul>
-                    </div>
-                  </div>
-
-                  <div className="p-ref-modes__tip-banner">
-                    <div className="p-ref-modes__tip-icon">
-                      <Info size={18} />
-                    </div>
-                    <div className="p-ref-modes__tip-text">
-                      <strong>Text-to-Image Consistency:</strong> You can upload any reference image (such as a character profile or style reference) and use these image reference modes to generate consistent characters in new poses, settings, or expressions!
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="p-ref-modes__footer-actions">
-                <Link to={state?.user ? "/generate" : "/login"} className="btn btn-primary btn-xl">
-                  Try image reference mode <ArrowRight size={18} style={{ marginLeft: '4px' }} />
-                </Link>
-              </div>
-            </div>
-          </div>
-          </div>
-
-          {/* VIDEO PANEL */}
-          <div className={`p-ref-modes__panel ${activeRefCategory === 'video' ? 'active' : ''}`}>
-          <div className="p-ref-modes__showcase-grid p-ref-modes__showcase-grid--reversed">
-            {/* Left Column: Data Card */}
-            <div className="p-ref-modes__right-pane">
-              <div className="p-ref-modes__info-card glass-effect">
-                {/* Same Scene Video Content */}
-                <div className={`p-ref-modes__info-card-content ${activeVideoMode === 'sameSceneLoop' ? 'active' : ''}`}>
-                  <div className="p-ref-modes__info-header">
-                    <span className="p-ref-modes__badge p-ref-modes__badge--sameSceneLoop">
-                      🎥 Same Scene Video
-                    </span>
-                    <h3>Animate Details Within A Stationary Frame</h3>
-                  </div>
-
-                  <div className="p-ref-modes__template-box">
-                    <span className="p-ref-modes__template-label">Video Prompt Template</span>
-                    <pre className="p-ref-modes__template-code">
-                      {'Generate a video of: Scene 1 (0 to 2.5 seconds): [subject] posing in [setting], slow zoom --ar 16:9 ......'}
-                    </pre>
-                  </div>
-
-                  <div className="p-ref-modes__comparison-grid">
-                    <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--same">
-                      <h4>🟢 What Stays SAME</h4>
-                      <ul>
-                        <li><strong>Character Details:</strong> Face, hair, age, and identity details remain static</li>
-                        <li><strong>Background & Frame:</strong> The background set, composition, and props do not shift</li>
-                        <li><strong>Art Style:</strong> Cinematic resolution, color depth, lighting levels</li>
-                      </ul>
-                    </div>
-
-                    <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--changes">
-                      <h4>⚡ What CHANGES</h4>
-                      <ul>
-                        <li><strong>Micro-movement:</strong> Gentle breathing, hair blowing in breeze, blinking</li>
-                        <li><strong>Atmosphere:</strong> Tree leaves swaying, wind blowing, minor shadows moving</li>
-                        <li><strong>Timing:</strong> Continuous fluid loop across the timeline</li>
-                      </ul>
-                    </div>
-                  </div>
-
-                  <div className="p-ref-modes__tip-banner">
-                    <div className="p-ref-modes__tip-icon">
-                      <Info size={18} />
-                    </div>
-                    <div className="p-ref-modes__tip-text">
-                      <strong>Image-to-Video Generation:</strong> You can upload any static reference image (such as a character sheet or portrait) and select these video reference modes to bring that exact character to life with smooth, consistent motion!
-                    </div>
-                  </div>
-                </div>
-
-                {/* Different Scenes Content */}
-                <div className={`p-ref-modes__info-card-content ${activeVideoMode === 'differentScenes' ? 'active' : ''}`}>
-                  <div className="p-ref-modes__info-header">
-                    <span className="p-ref-modes__badge p-ref-modes__badge--differentScenes">
-                      🎬 Different Scenes (Continuity)
-                    </span>
-                    <h3>Follow a Consistent Character Across Locations</h3>
-                  </div>
-
-                  <div className="p-ref-modes__template-box">
-                    <span className="p-ref-modes__template-label">Video Prompt Template</span>
-                    <pre className="p-ref-modes__template-code">
-                      {'Generate a video of: Scene 1 (0 to 2.5 seconds): [character] walking in [location_1] --ar 16:9. Scene 2 (2.5 to 5.0 seconds): [character] sitting in [location_2] --ar 16:9 ......'}
-                    </pre>
-                  </div>
-
-                  <div className="p-ref-modes__comparison-grid">
-                    <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--same">
-                      <h4>🟢 What Stays SAME</h4>
-                      <ul>
-                        <li><strong>Character Identity:</strong> Hair style, facial contours, eyes, skin tone</li>
-                        <li><strong>Outfit Consistency:</strong> Specific clothes, colours, and accessories</li>
-                        <li><strong>Visual Tone:</strong> Consistent camera lenses, color grade, and grading</li>
-                      </ul>
-                    </div>
-
-                    <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--changes">
-                      <h4>⚡ What CHANGES</h4>
-                      <ul>
-                        <li><strong>Environment:</strong> Swaps backgrounds (e.g. library ➔ cafeteria ➔ outdoors)</li>
-                        <li><strong>Action/Activity:</strong> Walking ➔ sitting down ➔ reading ➔ talking</li>
-                        <li><strong>Camera Angle:</strong> Transitioning between close-ups and medium pans</li>
-                      </ul>
-                    </div>
-                  </div>
-
-                  <div className="p-ref-modes__tip-banner">
-                    <div className="p-ref-modes__tip-icon">
-                      <Info size={18} />
-                    </div>
-                    <div className="p-ref-modes__tip-text">
-                      <strong>Image-to-Video Generation:</strong> You can upload any static reference image (such as a character sheet or portrait) and select these video reference modes to bring that exact character to life with smooth, consistent motion!
-                    </div>
-                  </div>
-                </div>
-
-                {/* Fixed Character + Motion Content */}
-                <div className={`p-ref-modes__info-card-content ${activeVideoMode === 'fixedCharacterMotion' ? 'active' : ''}`}>
-                  <div className="p-ref-modes__info-header">
-                    <span className="p-ref-modes__badge p-ref-modes__badge--fixedCharacterMotion">
-                      📽️ Fixed Character + Motion
-                    </span>
-                    <h3>Maintain Character Poses & Rotate Camera</h3>
-                  </div>
-
-                  <div className="p-ref-modes__template-box">
-                    <span className="p-ref-modes__template-label">Video Prompt Template</span>
-                    <pre className="p-ref-modes__template-code">
-                      {'Generate a video of: Scene 1 (0 to 2.5 seconds): orbital camera rotation around [character] performing [motion] --ar 16:9 ......'}
-                    </pre>
-                  </div>
-
-                  <div className="p-ref-modes__comparison-grid">
-                    <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--same">
-                      <h4>🟢 What Stays SAME</h4>
-                      <ul>
-                        <li><strong>Character Identity:</strong> Face features, build, and key traits</li>
-                        <li><strong>Outfit:</strong> The specific teal jacket, sunglasses, and helmet</li>
-                        <li><strong>Relative Stance:</strong> The subject remains center-frame as camera moves</li>
-                      </ul>
-                    </div>
-
-                    <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--changes">
-                      <h4>⚡ What CHANGES</h4>
-                      <ul>
-                        <li><strong>Camera Angle:</strong> Orbital rotating camera pan (360 orbit) around subject</li>
-                        <li><strong>Dynamic Lighting:</strong> Reflections and shadows shift along with camera rotation</li>
-                      </ul>
-                    </div>
-                  </div>
-
-                  <div className="p-ref-modes__tip-banner">
-                    <div className="p-ref-modes__tip-icon">
-                      <Info size={18} />
-                    </div>
-                    <div className="p-ref-modes__tip-text">
-                      <strong>Image-to-Video Generation:</strong> You can upload any static reference image (such as a character sheet or portrait) and select these video reference modes to bring that exact character to life with smooth, consistent motion!
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="p-ref-modes__footer-actions">
-                <Link to={state?.user ? "/generate" : "/login"} className="btn btn-sky btn-xl">
-                  Try video reference mode <ArrowRight size={18} style={{ marginLeft: '4px' }} />
-                </Link>
-              </div>
-            </div>
-
-            {/* Right Column: Media Preview */}
-            <div className="p-ref-modes__left-pane">
-              <div className="p-ref-modes__sub-toggles">
-                <button 
-                  className={`p-ref-modes__sub-btn ${activeVideoMode === 'sameSceneLoop' ? 'active active--sameScene' : ''}`}
-                  onClick={() => setActiveVideoMode('sameSceneLoop')}
-                >
-                  <Camera size={16} />
-                  <span>Same Scene Video</span>
-                </button>
-                <button 
-                  className={`p-ref-modes__sub-btn ${activeVideoMode === 'differentScenes' ? 'active active--different' : ''}`}
-                  onClick={() => setActiveVideoMode('differentScenes')}
-                >
-                  <Repeat size={16} />
-                  <span>Different Scenes</span>
-                </button>
-                <button 
-                  className={`p-ref-modes__sub-btn ${activeVideoMode === 'fixedCharacterMotion' ? 'active active--fixed' : ''}`}
-                  onClick={() => setActiveVideoMode('fixedCharacterMotion')}
-                >
-                  <Lock size={16} />
-                  <span>Fixed Character + Motion</span>
-                </button>
-              </div>
-
-              <div className="p-ref-modes__media-wrap p-ref-modes__media-wrap--video">
-                <video 
-                  ref={videoRefs.sameSceneLoop}
-                  src="/Same_Scene_Video_ref.mp4" 
-                  className={`p-ref-modes__showcase-media ${activeVideoMode === 'sameSceneLoop' ? 'active' : ''}`}
-                  muted 
-                  playsInline
-                  preload="auto"
-                  onEnded={handleVideoEnded}
-                />
-                <video 
-                  ref={videoRefs.differentScenes}
-                  src="/Different_Character_Video_ref.mp4" 
-                  className={`p-ref-modes__showcase-media ${activeVideoMode === 'differentScenes' ? 'active' : ''}`}
-                  muted 
-                  playsInline
-                  preload="auto"
-                  onEnded={handleVideoEnded}
-                />
-                <video 
-                  ref={videoRefs.fixedCharacterMotion}
-                  src="/Fixed_Character_Motion_Video_ref.mp4" 
-                  className={`p-ref-modes__showcase-media ${activeVideoMode === 'fixedCharacterMotion' ? 'active' : ''}`}
-                  muted 
-                  playsInline
-                  preload="auto"
-                  onEnded={handleVideoEnded}
-                />
-              </div>
-
-              {/* Supported Cinematic Movements */}
-              <div className="p-ref-modes__text-categories-list">
-                <span className="p-ref-modes__text-list-label">Supported Camera Movements & Motions</span>
-                <div className="p-ref-modes__text-list-chips">
-                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--sky"><ZoomIn size={12} /> Slow Zoom</span>
-                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--sky"><RotateCw size={12} /> Orbital Rotation</span>
-                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--sky"><Film size={12} /> Tracking Shot</span>
-                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--sky"><Rocket size={12} /> Drone Flyby</span>
-                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--sky"><Clock size={12} /> Timelapse</span>
-                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--sky"><ArrowRight size={12} /> Panning Shot</span>
-                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--sky"><ChevronDown size={12} /> Dynamic Tilt</span>
-                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--sky"><Eye size={12} /> Subject Follow</span>
-                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--sky"><Activity size={12} /> Handheld Shake</span>
-                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--sky"><Zap size={12} /> Slow Motion</span>
-                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--sky"><Repeat size={12} /> 360 Rotation</span>
-                  <span className="p-ref-modes__text-chip p-ref-modes__text-chip--sky"><Sparkles size={12} /> Cinematic Focus</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          </div>
-
-          {/* TEXT PANEL */}
-          <div className={`p-ref-modes__panel ${activeRefCategory === 'text' ? 'active' : ''}`}>
-          <div className="p-ref-modes__showcase-grid">
-            {/* Left Column: Interactive IDE Mockup */}
-            <div className="p-ref-modes__left-pane">
-              <div className="p-ref-modes__sub-toggles">
-                <button 
-                  className={`p-ref-modes__sub-btn ${activeTextMode === 'code' ? 'active active--sameScene' : ''}`}
-                  onClick={() => setActiveTextMode('code')}
-                >
-                  <Code size={16} />
-                  <span>Structured Code</span>
-                </button>
-                <button 
-                  className={`p-ref-modes__sub-btn ${activeTextMode === 'copywriting' ? 'active active--different' : ''}`}
-                  onClick={() => setActiveTextMode('copywriting')}
-                >
-                  <FileText size={16} />
-                  <span>Copywriting</span>
-                </button>
-                <button 
-                  className={`p-ref-modes__sub-btn ${activeTextMode === 'agents' ? 'active active--fixed' : ''}`}
-                  onClick={() => setActiveTextMode('agents')}
-                >
-                  <Bot size={16} />
-                  <span>AI Agent Personas</span>
-                </button>
-              </div>
-
-              <div className="p-ref-modes__media-wrap p-ref-modes__media-wrap--text">
-                {/* Code Window */}
-                <div className={`p-ref-modes__editor-mock ${activeTextMode === 'code' ? 'active' : ''}`}>
-                  <div className="p-ref-modes__editor-header">
-                    <div className="p-ref-modes__editor-dots">
-                      <span className="dot dot--red"></span>
-                      <span className="dot dot--yellow"></span>
-                      <span className="dot dot--green"></span>
-                    </div>
-                    <span className="p-ref-modes__editor-title">PromptReactor.jsx</span>
-                  </div>
-                  <div className="p-ref-modes__editor-body">
-                    <div className="p-ref-modes__code-content">
-                      <div className="code-line">
-                        <span className="code-keyword">import</span> React, &#123; useState, useEffect &#125; <span className="code-keyword">from</span> <span className="code-string">'react'</span>;
-                      </div>
-                      <div className="code-line">
-                        <span className="code-keyword">import</span> &#123; Sparkles &#125; <span className="code-keyword">from</span> <span className="code-string">'lucide-react'</span>;
-                      </div>
-                      <div className="code-line code-line--empty"></div>
-                      <div className="code-line">
-                        <span className="code-keyword">export default function</span> <span className="code-function">PromptReactor</span>() &#123;
-                      </div>
-                      <div className="code-line code-line--indent-1">
-                        <span className="code-keyword">const</span> [state, setState] = <span className="code-function">useState</span>(<span className="code-string">'idle'</span>);
-                      </div>
-                      <div className="code-line code-line--empty"></div>
-                      <div className="code-line code-line--indent-1">
-                        <span className="code-function">useEffect</span>(() =&gt; &#123;
-                      </div>
-                      <div className="code-line code-line--indent-2">
-                        <span className="code-comment">// Initialize quantum sequence</span>
-                      </div>
-                      <div className="code-line code-line--indent-2">
-                        <span className="code-keyword">const</span> system = <span className="code-function">connectToAgent</span>();
-                      </div>
-                      <div className="code-line code-line--indent-2">
-                        system.<span className="code-function">setPrecision</span>(<span className="code-string">'maximum'</span>);
-                      </div>
-                      <div className="code-line code-line--indent-1">
-                        &#125;, []);
-                      </div>
-                      <div className="code-line code-line--empty"></div>
-                      <div className="code-line code-line--indent-1">
-                        <span className="code-keyword">return</span> (
-                      </div>
-                      <div className="code-line code-line--indent-2">
-                        <span className="code-tag">&lt;div</span> <span className="code-attr">className</span>=<span className="code-string">"reactor-core"</span><span className="code-tag">&gt;</span>
-                      </div>
-                      <div className="code-line code-line--indent-3">
-                        <span className="code-tag">&lt;Sparkles</span> <span className="code-attr">className</span>=<span className="code-string">"animated-spark"</span> <span className="code-tag">/&gt;</span>
-                      </div>
-                      <div className="code-line code-line--indent-3">
-                        <span className="code-tag">&lt;h2&gt;</span>Prompt Reactor Activated<span className="code-tag">&lt;/h2&gt;</span>
-                      </div>
-                      <div className="code-line code-line--indent-2">
-                        <span className="code-tag">&lt;/div&gt;</span>
-                      </div>
-                      <div className="code-line code-line--indent-1">
-                        );
-                      </div>
-                      <div className="code-line">
-                        &#125;
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Copywriting Window */}
-                <div className={`p-ref-modes__editor-mock ${activeTextMode === 'copywriting' ? 'active' : ''}`}>
-                  <div className="p-ref-modes__editor-header">
-                    <div className="p-ref-modes__editor-dots">
-                      <span className="dot dot--red"></span>
-                      <span className="dot dot--yellow"></span>
-                      <span className="dot dot--green"></span>
-                    </div>
-                    <span className="p-ref-modes__editor-title">AIDA_Sales_Pitch.md</span>
-                  </div>
-                  <div className="p-ref-modes__editor-body">
-                    <div className="p-ref-modes__doc-content">
-                      <p><strong>[ATTENTION]</strong><br />
-                      Stop burning hours on manual prompt adjustments that yield subpar results.</p>
-                      
-                      <p><strong>[INTEREST]</strong><br />
-                      Our revolutionary text reference engine locks in your desired framework structures, outputting consistent templates that execute perfectly on first try, every single time.</p>
-                      
-                      <p><strong>[DESIRE]</strong><br />
-                      Imagine generating high-converting sales letters, clean codebase files, or custom agent personas without manual adjustments or endless copy-pasting iterations.</p>
-                      
-                      <p><strong>[ACTION]</strong><br />
-                      Click "Start Generating" below to unlock premium text reference modes and boost your workflow efficiency by 10x today!</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* AI Agent Chat Window */}
-                <div className={`p-ref-modes__editor-mock ${activeTextMode === 'agents' ? 'active' : ''}`}>
-                  <div className="p-ref-modes__editor-header">
-                    <div className="p-ref-modes__editor-dots">
-                      <span className="dot dot--red"></span>
-                      <span className="dot dot--yellow"></span>
-                      <span className="dot dot--green"></span>
-                    </div>
-                    <span className="p-ref-modes__editor-title">System Persona Log</span>
-                  </div>
-                  <div className="p-ref-modes__editor-body">
-                    <div className="p-ref-modes__chat-content">
-                      <div className="chat-bubble chat-bubble--system">
-                        <span className="bubble-label">SYSTEM INSTRUCTION</span>
-                        <p>You are Antigravity, a professional Senior Developer AI. Focus heavily on production-ready, clean, well-documented code. Maintain a concise and helpful tone.</p>
-                      </div>
-                      <div className="chat-bubble chat-bubble--user">
-                        <span className="bubble-label">USER</span>
-                        <p>Explain how reference prompts optimize prompt styling.</p>
-                      </div>
-                      <div className="chat-bubble chat-bubble--agent">
-                        <span className="bubble-label">AGENT (ANTIGRAVITY)</span>
-                        <p>Reference prompts lock variables, styles, and structural frameworks into system layers. This forces the model's latent weights to prioritize consistency constraints over generic text outputs.</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-              </div>
-
-              {/* Supported Text Prompt Categories List */}
-              <div className="p-ref-modes__text-categories-list">
-                <span className="p-ref-modes__text-list-label">Supported Prompt Categories</span>
-                <div className="p-ref-modes__text-list-chips">
-                  <span className="p-ref-modes__text-chip"><Bot size={12} /> AI Agents</span>
-                  <span className="p-ref-modes__text-chip"><Code size={12} /> Code</span>
-                  <span className="p-ref-modes__text-chip"><FileText size={12} /> Writing</span>
-                  <span className="p-ref-modes__text-chip"><ShoppingBag size={12} /> Marketing</span>
-                  <span className="p-ref-modes__text-chip"><Coins size={12} /> Business</span>
-                  <span className="p-ref-modes__text-chip"><Sparkles size={12} /> Research</span>
-                  <span className="p-ref-modes__text-chip"><Zap size={12} /> Education</span>
-                  <span className="p-ref-modes__text-chip"><Layers size={12} /> Productivity</span>
-                  <span className="p-ref-modes__text-chip"><Palette size={12} /> Creative</span>
-                  <span className="p-ref-modes__text-chip"><MessageSquare size={12} /> Social Media</span>
-                  <span className="p-ref-modes__text-chip"><DollarSign size={12} /> Ecommerce</span>
-                  <span className="p-ref-modes__text-chip"><Wand2 size={12} /> Other</span>
                 </div>
               </div>
             </div>
 
-            {/* Right Column: Data Card */}
-            <div className="p-ref-modes__right-pane">
-              <div className="p-ref-modes__info-card glass-effect">
-                {/* Code Generation Content */}
-                <div className={`p-ref-modes__info-card-content ${activeTextMode === 'code' ? 'active' : ''}`}>
-                  <div className="p-ref-modes__info-header">
-                    <span className="p-ref-modes__badge p-ref-modes__badge--sameScene">
-                      💻 Structured Code Blueprints
-                    </span>
-                    <h3>Generate Clean, Syntactically-Perfect Code Blocks</h3>
+            {/* TEXT PANEL */}
+            <div className={`p-ref-modes__panel ${activeRefCategory === 'text' ? 'active' : ''}`}>
+              <div className="p-ref-modes__showcase-grid">
+                {/* Left Column: Interactive IDE Mockup */}
+                <div className="p-ref-modes__left-pane">
+                  <div className="p-ref-modes__sub-toggles">
+                    <button
+                      className={`p-ref-modes__sub-btn ${activeTextMode === 'code' ? 'active active--sameScene' : ''}`}
+                      onClick={() => setActiveTextMode('code')}
+                    >
+                      <Code size={16} />
+                      <span>Structured Code</span>
+                    </button>
+                    <button
+                      className={`p-ref-modes__sub-btn ${activeTextMode === 'copywriting' ? 'active active--different' : ''}`}
+                      onClick={() => setActiveTextMode('copywriting')}
+                    >
+                      <FileText size={16} />
+                      <span>Copywriting</span>
+                    </button>
+                    <button
+                      className={`p-ref-modes__sub-btn ${activeTextMode === 'agents' ? 'active active--fixed' : ''}`}
+                      onClick={() => setActiveTextMode('agents')}
+                    >
+                      <Bot size={16} />
+                      <span>AI Agent Personas</span>
+                    </button>
                   </div>
 
-                  <div className="p-ref-modes__template-box">
-                    <span className="p-ref-modes__template-label">Code Prompt Template</span>
-                    <pre className="p-ref-modes__template-code">
-                      {'Act as a Senior React Engineer. Write a [component_name] component that uses [hooks] and implements [features]. Output only valid ES6 syntax. Do not explain standard modules ...'}
-                    </pre>
+                  <div className="p-ref-modes__media-wrap p-ref-modes__media-wrap--text">
+                    {/* Code Window */}
+                    <div className={`p-ref-modes__editor-mock ${activeTextMode === 'code' ? 'active' : ''}`}>
+                      <div className="p-ref-modes__editor-header">
+                        <div className="p-ref-modes__editor-dots">
+                          <span className="dot dot--red"></span>
+                          <span className="dot dot--yellow"></span>
+                          <span className="dot dot--green"></span>
+                        </div>
+                        <span className="p-ref-modes__editor-title">PromptReactor.jsx</span>
+                      </div>
+                      <div className="p-ref-modes__editor-body">
+                        <div className="p-ref-modes__code-content">
+                          <div className="code-line">
+                            <span className="code-keyword">import</span> React, &#123; useState, useEffect &#125; <span className="code-keyword">from</span> <span className="code-string">'react'</span>;
+                          </div>
+                          <div className="code-line">
+                            <span className="code-keyword">import</span> &#123; Sparkles &#125; <span className="code-keyword">from</span> <span className="code-string">'lucide-react'</span>;
+                          </div>
+                          <div className="code-line code-line--empty"></div>
+                          <div className="code-line">
+                            <span className="code-keyword">export default function</span> <span className="code-function">PromptReactor</span>() &#123;
+                          </div>
+                          <div className="code-line code-line--indent-1">
+                            <span className="code-keyword">const</span> [state, setState] = <span className="code-function">useState</span>(<span className="code-string">'idle'</span>);
+                          </div>
+                          <div className="code-line code-line--empty"></div>
+                          <div className="code-line code-line--indent-1">
+                            <span className="code-function">useEffect</span>(() =&gt; &#123;
+                          </div>
+                          <div className="code-line code-line--indent-2">
+                            <span className="code-comment">// Initialize quantum sequence</span>
+                          </div>
+                          <div className="code-line code-line--indent-2">
+                            <span className="code-keyword">const</span> system = <span className="code-function">connectToAgent</span>();
+                          </div>
+                          <div className="code-line code-line--indent-2">
+                            system.<span className="code-function">setPrecision</span>(<span className="code-string">'maximum'</span>);
+                          </div>
+                          <div className="code-line code-line--indent-1">
+                            &#125;, []);
+                          </div>
+                          <div className="code-line code-line--empty"></div>
+                          <div className="code-line code-line--indent-1">
+                            <span className="code-keyword">return</span> (
+                          </div>
+                          <div className="code-line code-line--indent-2">
+                            <span className="code-tag">&lt;div</span> <span className="code-attr">className</span>=<span className="code-string">"reactor-core"</span><span className="code-tag">&gt;</span>
+                          </div>
+                          <div className="code-line code-line--indent-3">
+                            <span className="code-tag">&lt;Sparkles</span> <span className="code-attr">className</span>=<span className="code-string">"animated-spark"</span> <span className="code-tag">/&gt;</span>
+                          </div>
+                          <div className="code-line code-line--indent-3">
+                            <span className="code-tag">&lt;h2&gt;</span>Prompt Reactor Activated<span className="code-tag">&lt;/h2&gt;</span>
+                          </div>
+                          <div className="code-line code-line--indent-2">
+                            <span className="code-tag">&lt;/div&gt;</span>
+                          </div>
+                          <div className="code-line code-line--indent-1">
+                            );
+                          </div>
+                          <div className="code-line">
+                            &#125;
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Copywriting Window */}
+                    <div className={`p-ref-modes__editor-mock ${activeTextMode === 'copywriting' ? 'active' : ''}`}>
+                      <div className="p-ref-modes__editor-header">
+                        <div className="p-ref-modes__editor-dots">
+                          <span className="dot dot--red"></span>
+                          <span className="dot dot--yellow"></span>
+                          <span className="dot dot--green"></span>
+                        </div>
+                        <span className="p-ref-modes__editor-title">AIDA_Sales_Pitch.md</span>
+                      </div>
+                      <div className="p-ref-modes__editor-body">
+                        <div className="p-ref-modes__doc-content">
+                          <p><strong>[ATTENTION]</strong><br />
+                            Stop burning hours on manual prompt adjustments that yield subpar results.</p>
+
+                          <p><strong>[INTEREST]</strong><br />
+                            Our revolutionary text reference engine locks in your desired framework structures, outputting consistent templates that execute perfectly on first try, every single time.</p>
+
+                          <p><strong>[DESIRE]</strong><br />
+                            Imagine generating high-converting sales letters, clean codebase files, or custom agent personas without manual adjustments or endless copy-pasting iterations.</p>
+
+                          <p><strong>[ACTION]</strong><br />
+                            Click "Start Generating" below to unlock premium text reference modes and boost your workflow efficiency by 10x today!</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* AI Agent Chat Window */}
+                    <div className={`p-ref-modes__editor-mock ${activeTextMode === 'agents' ? 'active' : ''}`}>
+                      <div className="p-ref-modes__editor-header">
+                        <div className="p-ref-modes__editor-dots">
+                          <span className="dot dot--red"></span>
+                          <span className="dot dot--yellow"></span>
+                          <span className="dot dot--green"></span>
+                        </div>
+                        <span className="p-ref-modes__editor-title">System Persona Log</span>
+                      </div>
+                      <div className="p-ref-modes__editor-body">
+                        <div className="p-ref-modes__chat-content">
+                          <div className="chat-bubble chat-bubble--system">
+                            <span className="bubble-label">SYSTEM INSTRUCTION</span>
+                            <p>You are Antigravity, a professional Senior Developer AI. Focus heavily on production-ready, clean, well-documented code. Maintain a concise and helpful tone.</p>
+                          </div>
+                          <div className="chat-bubble chat-bubble--user">
+                            <span className="bubble-label">USER</span>
+                            <p>Explain how reference prompts optimize prompt styling.</p>
+                          </div>
+                          <div className="chat-bubble chat-bubble--agent">
+                            <span className="bubble-label">AGENT (ANTIGRAVITY)</span>
+                            <p>Reference prompts lock variables, styles, and structural frameworks into system layers. This forces the model's latent weights to prioritize consistency constraints over generic text outputs.</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
                   </div>
 
-                  <div className="p-ref-modes__comparison-grid">
-                    <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--same">
-                      <h4>🟢 What Stays SAME</h4>
-                      <ul>
-                        <li><strong>Syntax Style:</strong> Standardized code layouts and naming conventions</li>
-                        <li><strong>Dependencies:</strong> Consistent package imports and library choices</li>
-                        <li><strong>Comments:</strong> Detailed inline docstrings and documentation formats</li>
-                      </ul>
-                    </div>
-
-                    <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--changes">
-                      <h4>⚡ What CHANGES</h4>
-                      <ul>
-                        <li><strong>Component Logic:</strong> Adapts state logic and handler functions dynamically</li>
-                        <li><strong>JSX Elements:</strong> Renders customized layout nodes based on feature specs</li>
-                        <li><strong>Sub-components:</strong> Swaps child nodes based on design requests</li>
-                      </ul>
-                    </div>
-                  </div>
-
-                  <div className="p-ref-modes__tip-banner">
-                    <div className="p-ref-modes__tip-icon">
-                      <Info size={18} />
-                    </div>
-                    <div className="p-ref-modes__tip-text">
-                      <strong>Text Reference Blueprints:</strong> Use these modes to lock in language choice, syntax rules, and error-handling strategies. This prevents random markdown commentary and enforces clean files.
+                  {/* Supported Text Prompt Categories List */}
+                  <div className="p-ref-modes__text-categories-list">
+                    <span className="p-ref-modes__text-list-label">Supported Prompt Categories</span>
+                    <div className="p-ref-modes__text-list-chips">
+                      <span className="p-ref-modes__text-chip"><Bot size={12} /> AI Agents</span>
+                      <span className="p-ref-modes__text-chip"><Code size={12} /> Code</span>
+                      <span className="p-ref-modes__text-chip"><FileText size={12} /> Writing</span>
+                      <span className="p-ref-modes__text-chip"><ShoppingBag size={12} /> Marketing</span>
+                      <span className="p-ref-modes__text-chip"><Coins size={12} /> Business</span>
+                      <span className="p-ref-modes__text-chip"><Sparkles size={12} /> Research</span>
+                      <span className="p-ref-modes__text-chip"><Zap size={12} /> Education</span>
+                      <span className="p-ref-modes__text-chip"><Layers size={12} /> Productivity</span>
+                      <span className="p-ref-modes__text-chip"><Palette size={12} /> Creative</span>
+                      <span className="p-ref-modes__text-chip"><MessageSquare size={12} /> Social Media</span>
+                      <span className="p-ref-modes__text-chip"><DollarSign size={12} /> Ecommerce</span>
+                      <span className="p-ref-modes__text-chip"><Wand2 size={12} /> Other</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Copywriting Content */}
-                <div className={`p-ref-modes__info-card-content ${activeTextMode === 'copywriting' ? 'active' : ''}`}>
-                  <div className="p-ref-modes__info-header">
-                    <span className="p-ref-modes__badge p-ref-modes__badge--different">
-                      ✍️ Copywriting Frameworks
-                    </span>
-                    <h3>Lock Structural Frameworks (AIDA, PAS, BAB)</h3>
+                {/* Right Column: Data Card */}
+                <div className="p-ref-modes__right-pane">
+                  <div className="p-ref-modes__info-card glass-effect">
+                    {/* Code Generation Content */}
+                    <div className={`p-ref-modes__info-card-content ${activeTextMode === 'code' ? 'active' : ''}`}>
+                      <div className="p-ref-modes__info-header">
+                        <span className="p-ref-modes__badge p-ref-modes__badge--sameScene">
+                          💻 Structured Code Blueprints
+                        </span>
+                        <h3>Generate Clean, Syntactically-Perfect Code Blocks</h3>
+                      </div>
+
+                      <div className="p-ref-modes__template-box">
+                        <span className="p-ref-modes__template-label">Code Prompt Template</span>
+                        <pre className="p-ref-modes__template-code">
+                          {'Act as a Senior React Engineer. Write a [component_name] component that uses [hooks] and implements [features]. Output only valid ES6 syntax. Do not explain standard modules ...'}
+                        </pre>
+                      </div>
+
+                      <div className="p-ref-modes__comparison-grid">
+                        <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--same">
+                          <h4>🟢 What Stays SAME</h4>
+                          <ul>
+                            <li><strong>Syntax Style:</strong> Standardized code layouts and naming conventions</li>
+                            <li><strong>Dependencies:</strong> Consistent package imports and library choices</li>
+                            <li><strong>Comments:</strong> Detailed inline docstrings and documentation formats</li>
+                          </ul>
+                        </div>
+
+                        <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--changes">
+                          <h4>⚡ What CHANGES</h4>
+                          <ul>
+                            <li><strong>Component Logic:</strong> Adapts state logic and handler functions dynamically</li>
+                            <li><strong>JSX Elements:</strong> Renders customized layout nodes based on feature specs</li>
+                            <li><strong>Sub-components:</strong> Swaps child nodes based on design requests</li>
+                          </ul>
+                        </div>
+                      </div>
+
+                      <div className="p-ref-modes__tip-banner">
+                        <div className="p-ref-modes__tip-icon">
+                          <Info size={18} />
+                        </div>
+                        <div className="p-ref-modes__tip-text">
+                          <strong>Text Reference Blueprints:</strong> Use these modes to lock in language choice, syntax rules, and error-handling strategies. This prevents random markdown commentary and enforces clean files.
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Copywriting Content */}
+                    <div className={`p-ref-modes__info-card-content ${activeTextMode === 'copywriting' ? 'active' : ''}`}>
+                      <div className="p-ref-modes__info-header">
+                        <span className="p-ref-modes__badge p-ref-modes__badge--different">
+                          ✍️ Copywriting Frameworks
+                        </span>
+                        <h3>Lock Structural Frameworks (AIDA, PAS, BAB)</h3>
+                      </div>
+
+                      <div className="p-ref-modes__template-box">
+                        <span className="p-ref-modes__template-label">Copywriting Template</span>
+                        <pre className="p-ref-modes__template-code">
+                          {'Write high-converting copy for [product] targeting [audience] using the [framework] framework. Keep Attention punchy, build Interest with statistics, create Desire with benefits ...'}
+                        </pre>
+                      </div>
+
+                      <div className="p-ref-modes__comparison-grid">
+                        <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--same">
+                          <h4>🟢 What Stays SAME</h4>
+                          <ul>
+                            <li><strong>Copy Framework:</strong> Strict sectioning corresponding to AIDA, PAS, or BAB</li>
+                            <li><strong>Marketing Tone:</strong> Persuasive, professional, benefit-driven style</li>
+                            <li><strong>Formatting:</strong> Bullet points, bold headers, and short paragraphs</li>
+                          </ul>
+                        </div>
+
+                        <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--changes">
+                          <h4>⚡ What CHANGES</h4>
+                          <ul>
+                            <li><strong>Product Hook:</strong> Adapts the attention grabber to specific items/services</li>
+                            <li><strong>Call-to-Action:</strong> Swaps signup links, discount triggers, or buy buttons</li>
+                            <li><strong>Use Cases:</strong> Aligns problem/desire statements with user persona</li>
+                          </ul>
+                        </div>
+                      </div>
+
+                      <div className="p-ref-modes__tip-banner">
+                        <div className="p-ref-modes__tip-icon">
+                          <Info size={18} />
+                        </div>
+                        <div className="p-ref-modes__tip-text">
+                          <strong>Copywriting Blueprints:</strong> Enforce structural formatting. This guarantees that marketing generators structure paragraphs logically, instead of dumping large blocks of unstructured sentences.
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* AI Agent Personas Content */}
+                    <div className={`p-ref-modes__info-card-content ${activeTextMode === 'agents' ? 'active' : ''}`}>
+                      <div className="p-ref-modes__info-header">
+                        <span className="p-ref-modes__badge p-ref-modes__badge--fixed">
+                          🤖 AI Agent Personas
+                        </span>
+                        <h3>Define Strict System Rules & Chat Context</h3>
+                      </div>
+
+                      <div className="p-ref-modes__template-box">
+                        <span className="p-ref-modes__template-label">Agent Prompt Template</span>
+                        <pre className="p-ref-modes__template-code">
+                          {'You are [agent_name], a specialized AI designed for [specific_role]. Always follow [rule_1], [rule_2]. Respond in a [tone] voice. Frame decisions using [framework] ...'}
+                        </pre>
+                      </div>
+
+                      <div className="p-ref-modes__comparison-grid">
+                        <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--same">
+                          <h4>🟢 What Stays SAME</h4>
+                          <ul>
+                            <li><strong>System Mandate:</strong> The system instruction guidelines and behavior constraints</li>
+                            <li><strong>Response Tone:</strong> Specific voice tone (e.g., academic, playful, analytical)</li>
+                            <li><strong>Formatting Rules:</strong> Code-first outputs or structural guidelines</li>
+                          </ul>
+                        </div>
+
+                        <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--changes">
+                          <h4>⚡ What CHANGES</h4>
+                          <ul>
+                            <li><strong>Session Data:</strong> Custom user queries and incoming message history</li>
+                            <li><strong>Task Context:</strong> Specific problem domain to analyze or code to write</li>
+                            <li><strong>Action Output:</strong> Precise answers matching current conversation goals</li>
+                          </ul>
+                        </div>
+                      </div>
+
+                      <div className="p-ref-modes__tip-banner">
+                        <div className="p-ref-modes__tip-icon">
+                          <Info size={18} />
+                        </div>
+                        <div className="p-ref-modes__tip-text">
+                          <strong>Agent Persona Blueprints:</strong> Restrict agent behavior so it adheres to strict guidelines and doesn't hallucinate outside its core scope or break system instructions.
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="p-ref-modes__template-box">
-                    <span className="p-ref-modes__template-label">Copywriting Template</span>
-                    <pre className="p-ref-modes__template-code">
-                      {'Write high-converting copy for [product] targeting [audience] using the [framework] framework. Keep Attention punchy, build Interest with statistics, create Desire with benefits ...'}
-                    </pre>
-                  </div>
-
-                  <div className="p-ref-modes__comparison-grid">
-                    <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--same">
-                      <h4>🟢 What Stays SAME</h4>
-                      <ul>
-                        <li><strong>Copy Framework:</strong> Strict sectioning corresponding to AIDA, PAS, or BAB</li>
-                        <li><strong>Marketing Tone:</strong> Persuasive, professional, benefit-driven style</li>
-                        <li><strong>Formatting:</strong> Bullet points, bold headers, and short paragraphs</li>
-                      </ul>
-                    </div>
-
-                    <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--changes">
-                      <h4>⚡ What CHANGES</h4>
-                      <ul>
-                        <li><strong>Product Hook:</strong> Adapts the attention grabber to specific items/services</li>
-                        <li><strong>Call-to-Action:</strong> Swaps signup links, discount triggers, or buy buttons</li>
-                        <li><strong>Use Cases:</strong> Aligns problem/desire statements with user persona</li>
-                      </ul>
-                    </div>
-                  </div>
-
-                  <div className="p-ref-modes__tip-banner">
-                    <div className="p-ref-modes__tip-icon">
-                      <Info size={18} />
-                    </div>
-                    <div className="p-ref-modes__tip-text">
-                      <strong>Copywriting Blueprints:</strong> Enforce structural formatting. This guarantees that marketing generators structure paragraphs logically, instead of dumping large blocks of unstructured sentences.
-                    </div>
+                  <div className="p-ref-modes__footer-actions">
+                    <Link to={state?.user ? "/generate" : "/login"} className="btn btn-primary btn-xl">
+                      Try text reference mode <ArrowRight size={18} style={{ marginLeft: '4px' }} />
+                    </Link>
                   </div>
                 </div>
-
-                {/* AI Agent Personas Content */}
-                <div className={`p-ref-modes__info-card-content ${activeTextMode === 'agents' ? 'active' : ''}`}>
-                  <div className="p-ref-modes__info-header">
-                    <span className="p-ref-modes__badge p-ref-modes__badge--fixed">
-                      🤖 AI Agent Personas
-                    </span>
-                    <h3>Define Strict System Rules & Chat Context</h3>
-                  </div>
-
-                  <div className="p-ref-modes__template-box">
-                    <span className="p-ref-modes__template-label">Agent Prompt Template</span>
-                    <pre className="p-ref-modes__template-code">
-                      {'You are [agent_name], a specialized AI designed for [specific_role]. Always follow [rule_1], [rule_2]. Respond in a [tone] voice. Frame decisions using [framework] ...'}
-                    </pre>
-                  </div>
-
-                  <div className="p-ref-modes__comparison-grid">
-                    <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--same">
-                      <h4>🟢 What Stays SAME</h4>
-                      <ul>
-                        <li><strong>System Mandate:</strong> The system instruction guidelines and behavior constraints</li>
-                        <li><strong>Response Tone:</strong> Specific voice tone (e.g., academic, playful, analytical)</li>
-                        <li><strong>Formatting Rules:</strong> Code-first outputs or structural guidelines</li>
-                      </ul>
-                    </div>
-
-                    <div className="p-ref-modes__comparison-col p-ref-modes__comparison-col--changes">
-                      <h4>⚡ What CHANGES</h4>
-                      <ul>
-                        <li><strong>Session Data:</strong> Custom user queries and incoming message history</li>
-                        <li><strong>Task Context:</strong> Specific problem domain to analyze or code to write</li>
-                        <li><strong>Action Output:</strong> Precise answers matching current conversation goals</li>
-                      </ul>
-                    </div>
-                  </div>
-
-                  <div className="p-ref-modes__tip-banner">
-                    <div className="p-ref-modes__tip-icon">
-                      <Info size={18} />
-                    </div>
-                    <div className="p-ref-modes__tip-text">
-                      <strong>Agent Persona Blueprints:</strong> Restrict agent behavior so it adheres to strict guidelines and doesn't hallucinate outside its core scope or break system instructions.
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-ref-modes__footer-actions">
-                <Link to={state?.user ? "/generate" : "/login"} className="btn btn-primary btn-xl">
-                  Try text reference mode <ArrowRight size={18} style={{ marginLeft: '4px' }} />
-                </Link>
               </div>
             </div>
-          </div>
-          </div>
           </div>
         </div>
       </section>
@@ -1282,8 +1282,8 @@ export default function HomePage() {
         <div className="p-testimonials__header-wrap">
           <h2 className="h-display text-center" style={{ margin: 0 }}>Loved by <span className="text-pink">AI Artists</span></h2>
           &nbsp;
-          <button 
-            className="btn-add-review" 
+          <button
+            className="btn-add-review"
             onClick={() => setShowReviewForm(true)}
             title="Write a Review"
           >
@@ -1293,13 +1293,13 @@ export default function HomePage() {
 
         <div className="p-testimonials__carousel-container">
           <button className="carousel-nav-btn prev" onClick={handlePrevTestimonial}>&larr;</button>
-          
+
           <div className="p-testimonials__carousel-track">
             {testimonials.map((t, idx) => {
               const posClass = getCardClass(idx);
               return (
-                <div 
-                  key={idx} 
+                <div
+                  key={idx}
                   className={`p-testimonial-card p-testimonial-card--carousel ${posClass}`}
                   onClick={() => {
                     if (posClass.includes('left') || posClass.includes('right')) {
@@ -1323,15 +1323,15 @@ export default function HomePage() {
               );
             })}
           </div>
-          
+
           <button className="carousel-nav-btn next" onClick={handleNextTestimonial}>&rarr;</button>
         </div>
 
         {/* Dots indicators */}
         <div className="p-testimonials__dots">
           {testimonials.map((_, idx) => (
-            <button 
-              key={idx} 
+            <button
+              key={idx}
               className={`testimonial-dot ${idx === activeTestimonialIndex ? 'active' : ''}`}
               onClick={() => setActiveTestimonialIndex(idx)}
             />
@@ -1343,7 +1343,7 @@ export default function HomePage() {
       <section className="p-section p-tokens">
         <h2 className="h-display text-center">How <span className="text-cyan">Tokens</span> Work</h2>
         <p className="p-tokens__subtitle">Simple, transparent pricing. No subscriptions required.</p>
-        
+
         {/* 3-step flow */}
         <div className="p-tokens__flow">
           <div className="p-tokens__step p-tokens__step--1">
@@ -1439,8 +1439,15 @@ export default function HomePage() {
       <section className="p-seo-hub section-spacing" id="seo-hub">
         <div className="container">
           <div className="p-seo-hub__header reveal">
-            <h2 className="h-display text-center">Ultimate AI Prompt Guide: <span className="text-cyan">Text-to-Image</span>, <span className="text-orange">Image-to-Video</span>, & <span className="text-purple">Text-to-Code/Text</span></h2>
-            <p className="text-center p-seo-hub__subtitle">
+            <h2 className="h-display text-center" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: '8px 16px' }}>
+              <span>Ultimate AI Prompt Guide:</span>
+              <span className="text-cyan">Text-to-Image</span>
+              <span style={{ color: 'rgba(255, 255, 255, 0.2)', fontFamily: 'var(--font-body), sans-serif', fontWeight: '300' }}>|</span>
+              <span className="text-orange">Image-to-Video</span>
+              <span style={{ color: 'rgba(255, 255, 255, 0.2)', fontFamily: 'var(--font-body), sans-serif', fontWeight: '300' }}>|</span>
+              <span className="text-purple">Text-to-Code/Text</span>
+            </h2>
+            <p className="text-center p-seo-hub__subtitle" style={{ marginTop: '16px' }}>
               Learn how to master character consistency, style referencing, camera movements, structured copywriting frameworks, and custom agent blueprints.
             </p>
           </div>
@@ -1450,7 +1457,7 @@ export default function HomePage() {
               <div className="p-seo-article__icon text-cyan">
                 <Image size={28} />
               </div>
-              <h3>Text-to-Image Generation & Consistent Characters</h3>
+              <h3><span className="text-cyan">Text-to-Image</span> Generation & Consistent Characters</h3>
               <p>
                 Creating consistent characters in text-to-image generators like Midjourney (v6), Stable Diffusion, and Flux has historically been a challenge. By utilizing specialized prompt formats and style/character reference anchors (like Midjourney's <code>--cref</code> and <code>--sref</code> parameters), creators can lock facial features, clothing, and environment.
               </p>
@@ -1468,7 +1475,7 @@ export default function HomePage() {
               <div className="p-seo-article__icon text-orange">
                 <Video size={28} />
               </div>
-              <h3>Image-to-Video Generation Prompts & Motion Anchors</h3>
+              <h3><span className="text-orange">Image-to-Video</span> Generation & Motion Anchors</h3>
               <p>
                 Converting a static character sheet or image into a fluid movie clip requires motion anchor prompting. AI video models such as Sora, Kling, Luma Dream Machine, and Runway Gen-3 utilize reference frames to guide video diffusion.
               </p>
@@ -1486,7 +1493,7 @@ export default function HomePage() {
               <div className="p-seo-article__icon text-purple">
                 <Code size={28} />
               </div>
-              <h3>Text-to-Code & Text Prompt Engineering</h3>
+              <h3><span className="text-purple">Text-to-Code & Text</span> Prompt Engineering</h3>
               <p>
                 Generating structured textual output like React components, Python scripts, system prompt instructions, or sales copy requires syntax-aware template rules. By using specific system instructions, anti-visions, and context variables, engineers can force the model to output production-ready structures without generic chat commentary.
               </p>
@@ -1533,7 +1540,7 @@ export default function HomePage() {
           <br></br>
           <div className="p-seo-faq reveal">
             <h3 className="text-center p-seo-faq__title">Frequently Asked <span className="text-orange">Questions</span></h3>
-            
+
             <div className="p-seo-faq__list">
               <details className="p-seo-faq__item glass-effect">
                 <summary>How does text-to-image character consistency work?</summary>
@@ -1643,12 +1650,12 @@ export default function HomePage() {
                 <p style={{ color: 'var(--text-secondary)', marginBottom: '24px', fontSize: '0.95rem' }}>
                   You must be logged in to share your experience with the community.
                 </p>
-                <button 
-                  className="btn btn-primary" 
+                <button
+                  className="btn btn-primary"
                   onClick={() => {
                     setShowReviewForm(false);
                     navigate('/login');
-                  }} 
+                  }}
                   style={{ width: '100%' }}
                 >
                   Log In
@@ -1668,20 +1675,20 @@ export default function HomePage() {
                           <span key={starIndex} className="star-select-item">
                             {/* Base grey star */}
                             <span className="star-select-visual-base">★</span>
-                            
+
                             {/* Overlay active/orange star */}
                             {(isFull || isHalf) && (
                               <span className={`star-select-visual-overlay ${isHalf ? 'half' : 'full'}`}>
                                 ★
                               </span>
                             )}
-                            
+
                             {/* Transparent click targets */}
-                            <span 
+                            <span
                               className="star-select-btn left"
                               onClick={() => setNewReview({ ...newReview, stars: starIndex - 0.5 })}
                             />
-                            <span 
+                            <span
                               className="star-select-btn right"
                               onClick={() => setNewReview({ ...newReview, stars: starIndex })}
                             />
@@ -1697,9 +1704,9 @@ export default function HomePage() {
                         {500 - (newReview.quote?.length || 0)} characters left
                       </span>
                     </div>
-                    <textarea 
-                      required 
-                      rows="4" 
+                    <textarea
+                      required
+                      rows="4"
                       maxLength={500}
                       placeholder="Tell us what you like about PromptByNiti..."
                       value={newReview.quote}

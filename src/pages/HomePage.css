@@ -2186,14 +2186,43 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: var(--transition);
+}
+
+.p-seo-article:nth-child(1) .p-seo-article__icon {
+  border-color: rgba(6, 182, 212, 0.25);
+  background: rgba(6, 182, 212, 0.04);
+}
+.p-seo-article:nth-child(2) .p-seo-article__icon {
+  border-color: rgba(249, 115, 22, 0.25);
+  background: rgba(249, 115, 22, 0.04);
+}
+.p-seo-article:nth-child(3) .p-seo-article__icon {
+  border-color: rgba(168, 85, 247, 0.25);
+  background: rgba(168, 85, 247, 0.04);
+}
+
+/* Themed Glow Hover Effects */
+.p-seo-article:nth-child(1).glass-effect:hover {
+  border-color: rgba(6, 182, 212, 0.35) !important;
+  box-shadow: 0 12px 40px 0 rgba(6, 182, 212, 0.12) !important;
+}
+.p-seo-article:nth-child(2).glass-effect:hover {
+  border-color: rgba(249, 115, 22, 0.35) !important;
+  box-shadow: 0 12px 40px 0 rgba(249, 115, 22, 0.18) !important;
+}
+.p-seo-article:nth-child(3).glass-effect:hover {
+  border-color: rgba(168, 85, 247, 0.35) !important;
+  box-shadow: 0 12px 40px 0 rgba(168, 85, 247, 0.12) !important;
 }
 
 .p-seo-article h3 {
-  font-family: var(--font-display);
-  font-size: 1.35rem;
+  font-family: var(--font-body), sans-serif;
+  font-size: 1.25rem;
   color: var(--text-primary);
   margin: 0;
-  font-weight: 600;
+  font-weight: 700;
+  line-height: 1.35;
 }
 
 .p-seo-article p {
@@ -2231,6 +2260,10 @@
 
 .p-seo-article:nth-child(2) .p-seo-article__bullets li::before {
   color: var(--color-orange);
+}
+
+.p-seo-article:nth-child(3) .p-seo-article__bullets li::before {
+  color: var(--color-purple);
 }
 
 /* FAQ Accordion Styling */
