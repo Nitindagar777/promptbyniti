@@ -1062,6 +1062,7 @@ DO NOT exceed 5 bracketed variables under any circumstances. Keep the majority o
     // 3. Try each model in the chain until one works. Try free key first, then paid.
     let text = null;
     let lastError = null;
+    let quotaError = null;
 
     const modelsToTry = [];
     if (cached.geminiModel) {
@@ -1105,6 +1106,10 @@ DO NOT exceed 5 bracketed variables under any circumstances. Keep the majority o
           console.warn(`⚠️ ${modelName} with ${keyName} key failed: ${modelErr.message}`);
           lastError = modelErr;
 
+          if (modelErr.message?.includes('429') || modelErr.message?.includes('quota') || modelErr.message?.includes('prepayment') || modelErr.message?.includes('depleted')) {
+            quotaError = modelErr;
+          }
+
           // If 429 (Too Many Requests/Quota) and we have a paid key, we definitely want to try the next key
           if (modelErr.message?.includes('429') || modelErr.message?.includes('quota') || modelErr.message?.includes('exhausted')) {
             console.log(`  → ${keyName} key quota exceeded, falling back if another key exists...`);
@@ -1144,7 +1149,7 @@ DO NOT exceed 5 bracketed variables under any circumstances. Keep the majority o
     }
 
     if (!text) {
-      throw lastError || new Error('All models failed. Please try again later.');
+      throw quotaError || lastError || new Error('All models failed. Please try again later.');
     }
 
     // 4. Parse and return
