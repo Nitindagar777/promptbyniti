@@ -69,7 +69,7 @@ let cachedApiKey = null;
 const SYSTEM_PROMPT_VERSION = 'v21-character-mode-fixed-different'; // bump this when system prompt changes
 
 // Fallback chain: try best model first, fall back if unavailable
-const MODEL_CHAIN = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
+const MODEL_CHAIN = ['gemini-3.5-flash', 'gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
 
 /**
  * Build (or re-use) a Gemini model with system instruction baked in.
@@ -100,7 +100,7 @@ async function getOrCreateModel() {
   const genAIPaid = settings.paidGeminiApiKey ? new GoogleGenerativeAI(settings.paidGeminiApiKey) : null;
 
   // Store both genAI instances, rulesStr, and the configured model
-  cachedModel = { genAIFree, genAIPaid, rulesStr, geminiModel: settings.geminiModel || 'gemini-1.5-flash' };
+  cachedModel = { genAIFree, genAIPaid, rulesStr, geminiModel: settings.geminiModel || 'gemini-3.5-flash' };
 
   cachedRulesHash = currentHash;
   cachedApiKey = settings.geminiApiKey;

@@ -595,13 +595,13 @@ const AdminDashboard = () => {
         <div style={{ display: 'flex', gap: '10px' }}>
           <select 
             className="admin-input" 
-            value={systemSettings.geminiModel || 'gemini-2.0-flash'}
+            value={systemSettings.geminiModel || 'gemini-3.5-flash'}
             onChange={(e) => setSystemSettings({...systemSettings, geminiModel: e.target.value})}
             style={{ flex: 1 }}
           >
-            <option value="gemini-2.0-flash">Gemini 2.0 Flash (Stable)</option>
-            <option value="gemini-2.5-flash">Gemini 2.5 Flash (Advanced)</option>
-            <option value="gemini-3-flash-preview">Gemini 3 Flash Preview (Experimental)</option>
+            <option value="gemini-3.5-flash">Gemini 3.5 Flash (High/Flagship)</option>
+            <option value="gemini-2.5-flash">Gemini 2.5 Flash (High/Advanced)</option>
+            <option value="gemini-2.0-flash">Gemini 2.0 Flash (Standard)</option>
             <option value="gemini-flash-latest">Gemini Flash Latest (Auto-update)</option>
           </select>
           <button 
