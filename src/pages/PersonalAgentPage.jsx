@@ -1385,9 +1385,13 @@ export default function PersonalAgentPage() {
               <h2 className="cta-title">Ready to deploy your agent?</h2>
               <p>Personal Agent customization and cross-platform publishing are included in our PRO & CREATOR tiers.</p>
               <div className="cta-buttons">
-                <Link to="/pricing" className="btn btn-primary btn-xl">
+                <button 
+                  onClick={() => handleSelectPlan('pricing')}
+                  className="btn btn-primary btn-xl"
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', border: 'none' }}
+                >
                   View Tiers & Pricing <Zap size={18} style={{ fill: 'currentColor' }} />
-                </Link>
+                </button>
             
               </div>
             </div>
