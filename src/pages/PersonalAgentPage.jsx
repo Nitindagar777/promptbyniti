@@ -937,7 +937,15 @@ export default function PersonalAgentPage() {
                 <div className="no-results-card text-center card">
                   <Bot size={48} className="text-muted" style={{ margin: '0 auto 16px auto' }} />
                   <h4>No Agents Found</h4>
-                  <p>Try searching for a different k      {/* AI Automation Workflow Visualizer Section */}
+                  <p>Try searching for a different keyword or check spelling.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* AI Automation Workflow Visualizer Section */}
       <section id="agent-workflow-visualizer-section" className="agent-workflow-visualizer-section">
         <div className="container">
           <div className="section-header text-center">
