@@ -149,6 +149,16 @@
   font-weight: 600;
 }
 
+/* Dynamic Agent Avatar Text Colors */
+.text-cyan { color: var(--color-cyan) !important; }
+.text-orange { color: var(--color-orange) !important; }
+.text-pink { color: var(--color-pink) !important; }
+.text-purple { color: var(--color-purple) !important; }
+.text-green { color: var(--color-green) !important; }
+.text-yellow { color: #fbbf24 !important; }
+.text-red { color: #ef4444 !important; }
+.text-blue { color: #3b82f6 !important; }
+
 /* Colored Header Tagline matching home page format */
 .hero-colored-header {
   font-family: var(--font-body);

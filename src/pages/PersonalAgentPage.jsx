@@ -321,6 +321,17 @@ const getAgentFeatures = (name) => {
   ];
 };
 
+// Helper function to dynamically rotate colors for directory cards based on their name to prevent repetition
+const getDynamicColorClass = (name) => {
+  const colors = ['text-cyan', 'text-orange', 'text-pink', 'text-purple', 'text-green', 'text-yellow', 'text-blue', 'text-red'];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % colors.length;
+  return colors[index];
+};
+
 // Helper function to map domain specialist agents to their correct platform brand SVGs
 const getAgentIcon = (name, size = 22) => {
   const normalized = name.toLowerCase();
@@ -391,71 +402,71 @@ const getAgentIcon = (name, size = 22) => {
 
   // Developer/Coding agents
   if (normalized.includes('developer') || normalized.includes('api developer') || normalized.includes('ai engineer') || normalized.includes('coding tutor')) {
-    return <Code size={size} className="text-cyan" />;
+    return <Code size={size} className={getDynamicColorClass(name)} />;
   }
   // DevOps / Cloud / Systems / Database / Server / Tech Architect
   if (normalized.includes('devops') || normalized.includes('cloud') || normalized.includes('system') || normalized.includes('database') || normalized.includes('architect') || normalized.includes('security')) {
-    return <Terminal size={size} className="text-cyan" />;
+    return <Terminal size={size} className={getDynamicColorClass(name)} />;
   }
   // Mobile app developer
   if (normalized.includes('mobile')) {
-    return <Smartphone size={size} className="text-cyan" />;
+    return <Smartphone size={size} className={getDynamicColorClass(name)} />;
   }
   // Game Developer / Gaming / Minecraft / Roblox / Unity / Unreal
   if (normalized.includes('game') || normalized.includes('minecraft') || normalized.includes('roblox') || normalized.includes('unity') || normalized.includes('unreal')) {
-    return <Gamepad2 size={size} className="text-pink" strokeWidth={1.8} />;
+    return <Gamepad2 size={size} className={getDynamicColorClass(name)} strokeWidth={1.8} />;
   }
   // Cybersecurity / Guardrails / Safety / Legal / Compliance / Policy / Contract
   if (normalized.includes('cybersecurity') || normalized.includes('safety') || normalized.includes('legal') || normalized.includes('compliance') || normalized.includes('policy') || normalized.includes('contract')) {
-    return <Shield size={size} className="text-purple" />;
+    return <Shield size={size} className={getDynamicColorClass(name)} />;
   }
   // UI/UX / Designer / Graphic / Logo / Thumbnail / Presentation / Poster / Brand Identity
   if (normalized.includes('designer') || normalized.includes('design') || normalized.includes('brand identity') || normalized.includes('thumbnail') || normalized.includes('presentation') || normalized.includes('poster') || normalized.includes('logo') || normalized.includes('packaging')) {
-    return <Palette size={size} className="text-pink" />;
+    return <Palette size={size} className={getDynamicColorClass(name)} />;
   }
   // Business / CEO / Operations / Project / Product Manager / HR / Consultant / Mentor
   if (normalized.includes('business consultant') || normalized.includes('startup') || normalized.includes('ceo') || normalized.includes('operations') || normalized.includes('project manager') || normalized.includes('product manager') || normalized.includes('hr manager') || normalized.includes('analyst')) {
-    return <Briefcase size={size} className="text-orange" />;
+    return <Briefcase size={size} className={getDynamicColorClass(name)} />;
   }
   // Marketing / SEO / Sales / Advertising / Growth / Lead Generation / Affiliate / Influencer
   if (normalized.includes('marketing') || normalized.includes('seo') || normalized.includes('sales') || normalized.includes('advertising') || normalized.includes('growth') || normalized.includes('lead generation') || normalized.includes('affiliate') || normalized.includes('influencer') || normalized.includes('strategist')) {
-    return <TrendingUp size={size} className="text-orange" />;
+    return <TrendingUp size={size} className={getDynamicColorClass(name)} />;
   }
   // Writer / Copywriter / blog / technical / Resume / book / story / translator / proposal / note organizer
   if (normalized.includes('writer') || normalized.includes('copywriter') || normalized.includes('blog') || normalized.includes('technical') || normalized.includes('resume') || normalized.includes('story') || normalized.includes('translator') || normalized.includes('proposal') || normalized.includes('note')) {
-    return <PenTool size={size} className="text-purple" />;
+    return <PenTool size={size} className={getDynamicColorClass(name)} />;
   }
   // Teacher / Tutor / Book / Anime / Movie / Education / Research Assistant
   if (normalized.includes('teacher') || normalized.includes('tutor') || normalized.includes('book') || normalized.includes('anime') || normalized.includes('movie') || normalized.includes('education') || normalized.includes('exam')) {
-    return <BookOpen size={size} className="text-yellow" />;
+    return <BookOpen size={size} className={getDynamicColorClass(name)} />;
   }
   // Financial / Investment / Crypto / Tax / Budget / Accountant
   if (normalized.includes('financial') || normalized.includes('investment') || normalized.includes('crypto') || normalized.includes('tax') || normalized.includes('budget') || normalized.includes('accountant') || normalized.includes('finance')) {
-    return <DollarSign size={size} className="text-green" />;
+    return <DollarSign size={size} className={getDynamicColorClass(name)} />;
   }
   // Fitness / Nutrition / Meal Planner / Wellness / Relationship / Heart / Health
   if (normalized.includes('fitness') || normalized.includes('nutrition') || normalized.includes('meal') || normalized.includes('wellness') || normalized.includes('relationship') || normalized.includes('health') || normalized.includes('coach')) {
-    return <Heart size={size} className="text-red" fill="#ef4444" stroke="none" />;
+    return <Heart size={size} className={getDynamicColorClass(name)} fill="currentColor" stroke="none" />;
   }
   // Travel / Compass / Event / Lifestyle / Fashion
   if (normalized.includes('travel') || normalized.includes('event') || normalized.includes('lifestyle') || normalized.includes('fashion') || normalized.includes('recipe') || normalized.includes('shopping')) {
-    return <Compass size={size} className="text-cyan" />;
+    return <Compass size={size} className={getDynamicColorClass(name)} />;
   }
   // Daily / Task / Habit / Time / Meeting / Planner / Schedule / Calendar
   if (normalized.includes('daily') || normalized.includes('task') || normalized.includes('habit') || normalized.includes('time') || normalized.includes('meeting') || normalized.includes('planner')) {
-    return <Calendar size={size} className="text-purple" />;
+    return <Calendar size={size} className={getDynamicColorClass(name)} />;
   }
   // Customer Success / Conversation / public speaking / Interview / Negotiation / Relationship / Communication / Message
   if (normalized.includes('customer success') || normalized.includes('conversation') || normalized.includes('speaking') || normalized.includes('interview') || normalized.includes('negotiation') || normalized.includes('communication')) {
-    return <MessageSquare size={size} className="text-orange" />;
+    return <MessageSquare size={size} className={getDynamicColorClass(name)} />;
   }
   // Research / Data / Analyst / Competitor / Market / Trend / Fact Checker
   if (normalized.includes('research') || normalized.includes('data') || normalized.includes('analyst') || normalized.includes('competitor') || normalized.includes('trend') || normalized.includes('fact')) {
-    return <BarChart2 size={size} className="text-green" />;
+    return <BarChart2 size={size} className={getDynamicColorClass(name)} />;
   }
 
   // Default Fallback
-  return <Bot size={size} className="text-cyan" />;
+  return <Bot size={size} className={getDynamicColorClass(name)} />;
 };
 
 export default function PersonalAgentPage() {
