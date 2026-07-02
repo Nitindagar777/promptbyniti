@@ -280,6 +280,9 @@ export default function Navbar() {
           <li>
             <Link to="/templates" className={`navbar__link ${isActive('/templates') ? 'navbar__link--active' : ''}`}>Feed</Link>
           </li>
+          <li>
+            <Link to={state?.user ? "/personal-agent" : "/login"} className={`navbar__link ${isActive('/personal-agent') ? 'navbar__link--active' : ''}`}>Agents</Link>
+          </li>
           {state?.user && (
             <li>
               <Link to="/pricing" className={`navbar__link ${isActive('/pricing') ? 'navbar__link--active' : ''}`}>Pricing</Link>
@@ -480,6 +483,9 @@ export default function Navbar() {
           )}
           <li>
             <Link to="/templates" className={`mobile-drawer__link ${isActive('/templates') ? 'mobile-drawer__link--active' : ''}`} onClick={() => setMobileMenuOpen(false)}>Feed</Link>
+          </li>
+          <li>
+            <Link to={state?.user ? "/personal-agent" : "/login"} className={`mobile-drawer__link ${isActive('/personal-agent') ? 'mobile-drawer__link--active' : ''}`} onClick={() => setMobileMenuOpen(false)}>Agents</Link>
           </li>
           {state?.user && (
             <li>

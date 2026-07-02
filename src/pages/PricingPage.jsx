@@ -18,7 +18,7 @@ export default function PricingPage() {
     // Must be logged in
     if (!state.user) {
       alert('Please login first to upgrade your plan.');
-      navigate('/auth');
+      navigate('/login');
       return;
     }
 

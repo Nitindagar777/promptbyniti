@@ -1,6 +1,6 @@
 /* PersonalAgentPage — Interactive Agent Customization and Feature Showcase */
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Bot, Send, Sparkles, Database, Globe, RefreshCw,
   Upload, Check, ArrowRight, ShieldCheck, Cpu,
@@ -473,6 +473,16 @@ const getAgentIcon = (name, size = 22) => {
 export default function PersonalAgentPage() {
   const { state, setScroll, getScroll } = useApp();
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleSelectPlan = (planId) => {
+    if (!state?.user) {
+      alert('Please login first to access AI Autopilot plans.');
+      navigate('/login');
+    } else {
+      navigate('/pricing');
+    }
+  };
 
   // Ecosystem Synced Platforms State
   const [syncedPlatforms, setSyncedPlatforms] = useState({
@@ -1115,7 +1125,7 @@ export default function PersonalAgentPage() {
                 </div>
               </div>
               <div className="pricing-footer">
-                <button type="button" className="btn btn-secondary-outline w-100">Get Started</button>
+                <button type="button" onClick={() => handleSelectPlan('starter')} className="btn btn-secondary-outline w-100">Get Started</button>
               </div>
             </div>
 
@@ -1154,7 +1164,7 @@ export default function PersonalAgentPage() {
                 </div>
               </div>
               <div className="pricing-footer">
-                <button type="button" className="btn btn-primary w-100">Unlock Pro Autopilot <Zap size={14} style={{ fill: 'currentColor', marginLeft: '4px' }} /></button>
+                <button type="button" onClick={() => handleSelectPlan('pro')} className="btn btn-primary w-100">Unlock Pro Autopilot <Zap size={14} style={{ fill: 'currentColor', marginLeft: '4px' }} /></button>
               </div>
             </div>
 
@@ -1188,7 +1198,7 @@ export default function PersonalAgentPage() {
                 </div>
               </div>
               <div className="pricing-footer">
-                <button type="button" className="btn btn-secondary-outline w-100">Contact Sales</button>
+                <button type="button" onClick={() => handleSelectPlan('enterprise')} className="btn btn-secondary-outline w-100">Contact Sales</button>
               </div>
             </div>
           </div>
@@ -1378,9 +1388,7 @@ export default function PersonalAgentPage() {
                 <Link to="/pricing" className="btn btn-primary btn-xl">
                   View Tiers & Pricing <Zap size={18} style={{ fill: 'currentColor' }} />
                 </Link>
-                <Link to="/" className="btn btn-secondary-outline btn-xl">
-                  Back to Hub
-                </Link>
+            
               </div>
             </div>
           </div>
