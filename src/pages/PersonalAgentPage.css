@@ -788,10 +788,11 @@
 }
 
 .workflow-title {
-  color: #a855f7 !important; /* Unique neon purple that stands out from all other headings */
-  display: inline-block;
+  color: #fbbf24 !important; /* Unique vibrant amber-gold, distinct from all other page headings */
   font-weight: 800;
   letter-spacing: -0.02em;
+  text-shadow: none !important;
+  filter: none !important;
 }
 
 /* Real-Time Operations Dashboard */
