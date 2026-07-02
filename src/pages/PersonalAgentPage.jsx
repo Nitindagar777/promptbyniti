@@ -930,63 +930,7 @@ export default function PersonalAgentPage() {
                 <span className="sketch-subtitle">Hours of manual copy-paste & editing</span>
               </div>
               <div className="sketch-viewport">
-                <svg viewBox="0 0 400 400" className="sketch-svg">
-                  {/* Tangled winding path (double strokes for sketchy look) */}
-                  <path
-                    d="M 40 180 C 60 260, 140 280, 160 180 C 180 80, 240 100, 240 180 C 240 260, 100 290, 80 340 C 60 390, 220 380, 260 340 C 300 300, 360 280, 360 200"
-                    fill="none"
-                    stroke="#444"
-                    strokeWidth="6"
-                    strokeLinecap="round"
-                  />
-                  <path
-                    d="M 40 180 C 60 260, 140 280, 160 180 C 180 80, 240 100, 240 180 C 240 260, 100 290, 80 340 C 60 390, 220 380, 260 340 C 300 300, 360 280, 360 200"
-                    fill="none"
-                    stroke="rgba(239, 68, 68, 0.45)"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    strokeDasharray="5 7"
-                  />
-
-                  {/* Start Flag (Sketchy design) */}
-                  <line x1="40" y1="180" x2="40" y2="130" stroke="#ffffff" strokeWidth="2" />
-                  <path d="M 40,130 L 65,142 L 40,154 Z" fill="#ef4444" stroke="#ffffff" strokeWidth="1.5" />
-                  <text x="50" y="125" fill="#ffffff" fontSize="12" fontWeight="bold">YOU</text>
-
-                  {/* Sketchy House: Job Boards / Offices */}
-                  <g transform="translate(140, 25)">
-                    {/* Sketchy roof */}
-                    <path d="M 10 40 L 45 10 L 80 40 Z" fill="rgba(239, 68, 68, 0.05)" stroke="#ef4444" strokeWidth="2" />
-                    {/* Sketchy base */}
-                    <path d="M 20 40 L 20 80 L 70 80 L 70 40" fill="none" stroke="#ef4444" strokeWidth="2" />
-                    {/* Sketched window */}
-                    <rect x="30" y="50" width="12" height="12" fill="none" stroke="#ef4444" strokeWidth="1.5" />
-                    {/* Sketched door */}
-                    <path d="M 50 80 L 50 60 L 62 60 L 62 80" fill="none" stroke="#ef4444" strokeWidth="1.5" />
-                    <text x="12" y="95" fill="rgba(255,255,255,0.7)" fontSize="11">JOB BOARDS</text>
-                  </g>
-
-                  {/* Sketchy Doors (Social Network Red Tape) */}
-                  <g transform="translate(180, 140)">
-                    {/* Three sketchy doors */}
-                    <path d="M 10 50 L 25 42 L 25 92 L 10 100 Z" fill="rgba(239, 68, 68, 0.1)" stroke="#ef4444" strokeWidth="2" />
-                    <path d="M 35 50 L 50 42 L 50 92 L 35 100 Z" fill="rgba(239, 68, 68, 0.1)" stroke="#ef4444" strokeWidth="2" />
-                    <path d="M 60 50 L 75 42 L 75 92 L 60 100 Z" fill="rgba(239, 68, 68, 0.1)" stroke="#ef4444" strokeWidth="2" />
-                    <text x="-5" y="32" fill="rgba(255,255,255,0.7)" fontSize="11">SOCIAL WALLS</text>
-                  </g>
-
-                  {/* Tangled Loop (Recruitment Consultants / Agencies) */}
-                  <g transform="translate(45, 290)">
-                    <path d="M 30,30 C 50,10 70,50 90,30 C 110,10 120,50 140,30" fill="none" stroke="#ef4444" strokeWidth="2" />
-                    <path d="M 28,32 C 48,12 68,52 88,32 C 108,12 118,52 138,32" fill="none" stroke="rgba(239,68,68,0.4)" strokeWidth="1" />
-                    <text x="25" y="65" fill="rgba(255,255,255,0.7)" fontSize="11">RECRUITERS</text>
-                  </g>
-
-                  {/* End Flag */}
-                  <line x1="360" y1="200" x2="360" y2="150" stroke="#ffffff" strokeWidth="2" />
-                  <path d="M 360,150 L 335,162 L 360,174 Z" fill="#35e177" stroke="#ffffff" strokeWidth="1.5" />
-                  <text x="310" y="145" fill="#35e177" fontSize="12" fontWeight="bold">THE GOAL</text>
-                </svg>
+                <img src="/agent1.png" alt="The Usual Path - Manual Chaos Sketch" className="sketch-image" />
               </div>
               <div className="comparison-bullets">
                 <div className="bullet-item text-red">✕ Wasting 4-6 hours per day on content creation</div>
@@ -1002,68 +946,7 @@ export default function PersonalAgentPage() {
                 <span className="sketch-subtitle">Instant automation & direct delivery</span>
               </div>
               <div className="sketch-viewport">
-                <svg viewBox="0 0 400 400" className="sketch-svg">
-                  {/* Clean Direct Arc Path (Dotted style to match the reference) */}
-                  <path
-                    d="M 50 280 Q 200 60, 350 280"
-                    fill="none"
-                    stroke="rgba(255,255,255,0.1)"
-                    strokeWidth="8"
-                    strokeLinecap="round"
-                  />
-                  <path
-                    d="M 50 280 Q 200 60, 350 280"
-                    fill="none"
-                    stroke="#35e177"
-                    strokeWidth="4"
-                    strokeLinecap="round"
-                    strokeDasharray="6 8"
-                  />
-                  
-                  {/* Start Flag (Sketchy Green Flag) */}
-                  <line x1="50" y1="280" x2="50" y2="230" stroke="#ffffff" strokeWidth="2" />
-                  <path d="M 50,230 L 75,242 L 50,254 Z" fill="#35e177" stroke="#ffffff" strokeWidth="1.5" />
-                  <text x="60" y="225" fill="#ffffff" fontSize="12" fontWeight="bold">YOU</text>
-
-                  {/* Destination Flag (Orange Flag) */}
-                  <line x1="350" y1="280" x2="350" y2="230" stroke="#ffffff" strokeWidth="2" />
-                  <path d="M 350,230 L 325,242 L 350,254 Z" fill="#fbbf24" stroke="#ffffff" strokeWidth="1.5" />
-                  <text x="310" y="225" fill="#fbbf24" fontSize="12" fontWeight="bold">THE GOAL</text>
-
-                  {/* Jet Plane/Rocket (Flying on the Arc) */}
-                  <g transform="translate(170, 95)" className="sketch-rocket-group">
-                    {/* Flame Trail */}
-                    <path d="M -15,0 L -25,-6 L -20,0 L -25,6 Z" fill="#fbbf24" stroke="#d97706" strokeWidth="1.5" />
-                    {/* Sketchy Capsule Jet Body */}
-                    <path
-                      d="M -10,-10 C 15,-15 35,0 35,0 C 35,0 15,15 -10,10 Z"
-                      fill="#111111"
-                      stroke="#35e177"
-                      strokeWidth="2.5"
-                    />
-                    {/* Wing Top */}
-                    <path d="M -5,-12 L -15,-22 L -2,-12" fill="none" stroke="#35e177" strokeWidth="2" />
-                    {/* Wing Bottom */}
-                    <path d="M -5,12 L -15,22 L -2,12" fill="none" stroke="#35e177" strokeWidth="2" />
-                    {/* Cockpit Window */}
-                    <circle cx="15" cy="0" r="4" fill="#35e177" />
-                    
-                    {/* Niti Logo badge */}
-                    <g transform="translate(-4, -6) scale(0.6)">
-                      <Bot size={18} className="text-green" />
-                    </g>
-                  </g>
-
-                  {/* Sketched Ground Decor */}
-                  <path d="M 120,320 L 150,320" stroke="#35e177" strokeWidth="1.5" strokeDasharray="3 3" />
-                  <path d="M 230,340 L 270,340" stroke="#35e177" strokeWidth="1.5" strokeDasharray="3 3" />
-                  <g transform="translate(100, 325)">
-                    {/* Little Sketch Flower */}
-                    <circle cx="10" cy="10" r="4" fill="#fbbf24" />
-                    <path d="M 10,6 C 12,6 12,14 10,14 C 8,14 8,6 10,6" fill="none" stroke="#35e177" strokeWidth="1" />
-                    <path d="M 6,10 C 6,12 14,12 14,10 C 14,8 6,8 6,10" fill="none" stroke="#35e177" strokeWidth="1" />
-                  </g>
-                </svg>
+                <img src="/agent2.png" alt="Cutshort via Niti Autopilot Sketch" className="sketch-image" />
               </div>
               <div className="comparison-bullets">
                 <div className="bullet-item text-green">✓ Setup once in 10 minutes & run forever</div>

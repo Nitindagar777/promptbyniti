@@ -1690,6 +1690,14 @@
   height: 100%;
 }
 
+.sketch-image {
+  width: 100%;
+  height: auto;
+  max-height: 280px;
+  object-fit: contain;
+  display: block;
+}
+
 .sketch-svg text {
   font-family: 'Architects Daughter', cursive, sans-serif !important;
 }
