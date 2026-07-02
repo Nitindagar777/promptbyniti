@@ -136,126 +136,9 @@ export default function PricingPage() {
           </p>
         </div>
 
-        {/* Section 1: AI Agent Autopilot Plans */}
+        {/* Section 1: Prompt Token Packs */}
         <div className="pricing-section-header">
-          <h2 className="pricing-section-title">AI Agent Autopilot Plans</h2>
-          <p className="pricing-section-desc">Fully autonomous virtual models syncing with your ecosystems 24/7.</p>
-        </div>
-
-        <div className="pricing-grid pricing-grid--agents">
-          {/* Agent Tier 1: Starter */}
-          <div className="pricing-card pricing-card--agent theme-starter">
-            <span className="pricing-card__name">Starter Agent</span>
-            <p className="pricing-card__description">Perfect for creators looking to automate basic tasks.</p>
-            <div className="pricing-card__price">
-              <span className="pricing-card__currency">$</span>
-              <span className="pricing-card__amount">19</span>
-              <span className="pricing-card__period">/ month</span>
-            </div>
-            
-            <ul className="pricing-card__features">
-              <li>
-                <Check size={14} />
-                <span>1 Custom AI Agent</span>
-              </li>
-              <li>
-                <Check size={14} />
-                <span>1,000 Vector Memory Logs</span>
-              </li>
-              <li>
-                <Check size={14} />
-                <span>2 Connected Platforms</span>
-              </li>
-              <li>
-                <Check size={14} />
-                <span>Standard Execution Speed</span>
-              </li>
-            </ul>
-            
-            <button className="btn btn-secondary pricing-card__cta">
-              Get Started
-            </button>
-          </div>
-
-          {/* Agent Tier 2: Pro */}
-          <div className="pricing-card pricing-card--agent theme-pro pricing-card--popular">
-            <div className="pricing-card__popular-tag">
-              <Star size={12} /> Most Popular
-            </div>
-            <span className="pricing-card__name" style={{ color: '#35e177' }}>Pro Autopilot</span>
-            <p className="pricing-card__description">For professionals wanting fully autonomous 24/7 brand synchronization.</p>
-            <div className="pricing-card__price">
-              <span className="pricing-card__currency">$</span>
-              <span className="pricing-card__amount">49</span>
-              <span className="pricing-card__period">/ month</span>
-            </div>
-            
-            <ul className="pricing-card__features">
-              <li>
-                <Check size={14} />
-                <span>5 Custom AI Agents</span>
-              </li>
-              <li>
-                <Check size={14} />
-                <span>100,000 Vector Memory Logs</span>
-              </li>
-              <li>
-                <Check size={14} />
-                <span>Unlimited Platform Sync</span>
-              </li>
-              <li>
-                <Check size={14} />
-                <span>Advanced Guardrails & Safety</span>
-              </li>
-              <li>
-                <Check size={14} />
-                <span>Priority Queue Speed</span>
-              </li>
-            </ul>
-            
-            <button className="btn btn-primary pricing-card__cta">
-              Unlock Pro Autopilot <Zap size={14} style={{ fill: 'currentColor', marginLeft: '4px' }} />
-            </button>
-          </div>
-
-          {/* Agent Tier 3: Enterprise */}
-          <div className="pricing-card pricing-card--agent theme-enterprise">
-            <span className="pricing-card__name">Enterprise Scale</span>
-            <p className="pricing-card__description">For agencies and companies requiring custom SLAs.</p>
-            <div className="pricing-card__price">
-              <span className="pricing-card__currency">$</span>
-              <span className="pricing-card__amount">149</span>
-              <span className="pricing-card__period">/ month</span>
-            </div>
-            
-            <ul className="pricing-card__features">
-              <li>
-                <Check size={14} />
-                <span>Unlimited Custom Agents</span>
-              </li>
-              <li>
-                <Check size={14} />
-                <span>Dedicated Memory Clusters</span>
-              </li>
-              <li>
-                <Check size={14} />
-                <span>Custom API Integrations</span>
-              </li>
-              <li>
-                <Check size={14} />
-                <span>24/7 Dedicated Support SLA</span>
-              </li>
-            </ul>
-            
-            <button className="btn btn-secondary pricing-card__cta">
-              Contact Sales
-            </button>
-          </div>
-        </div>
-
-        {/* Section 2: Prompt Token Packs */}
-        <div className="pricing-section-header" style={{ marginTop: '80px' }}>
-          <h2 className="pricing-section-title">Prompt Pack Token Tiers</h2>
+          <h2 className="pricing-section-title title-prompts">Prompt Pack Token Tiers</h2>
           <p className="pricing-section-desc">One-time token packs to generate fully optimized, high-converting prompts.</p>
         </div>
 
@@ -308,6 +191,123 @@ export default function PricingPage() {
               </button>
             </div>
           ))}
+        </div>
+
+        {/* Section 2: AI Agent Autopilot Plans */}
+        <div className="pricing-section-header" style={{ marginTop: '80px' }}>
+          <h2 className="pricing-section-title title-agents">AI Agent Autopilot Plans</h2>
+          <p className="pricing-section-desc">Fully autonomous virtual models syncing with your ecosystems 24/7.</p>
+        </div>
+
+        <div className="pricing-grid pricing-grid--agents">
+          {/* Agent Tier 1: Starter */}
+          <div className="pricing-card pricing-card--agent pricing-card--compact theme-starter">
+            <span className="pricing-card__name">Starter Agent</span>
+            <p className="pricing-card__description">Perfect for creators looking to automate basic tasks.</p>
+            <div className="pricing-card__price">
+              <span className="pricing-card__currency">$</span>
+              <span className="pricing-card__amount" style={{ fontSize: '38px' }}>19</span>
+              <span className="pricing-card__period">/ month</span>
+            </div>
+            
+            <ul className="pricing-card__features">
+              <li>
+                <Check size={14} />
+                <span><span className="text-cyan">1</span> Custom AI Agent</span>
+              </li>
+              <li>
+                <Check size={14} />
+                <span><span className="text-cyan">1,000</span> Vector Memory Logs</span>
+              </li>
+              <li>
+                <Check size={14} />
+                <span><span className="text-cyan">2</span> Connected Platforms</span>
+              </li>
+              <li>
+                <Check size={14} />
+                <span><span className="text-cyan">Standard</span> Execution Speed</span>
+              </li>
+            </ul>
+            
+            <button className="btn btn-secondary pricing-card__cta">
+              Get Started
+            </button>
+          </div>
+
+          {/* Agent Tier 2: Pro */}
+          <div className="pricing-card pricing-card--agent pricing-card--compact theme-pro pricing-card--popular">
+            <div className="pricing-card__popular-tag">
+              <Star size={12} /> Most Popular
+            </div>
+            <span className="pricing-card__name" style={{ color: '#35e177' }}>Pro Autopilot</span>
+            <p className="pricing-card__description">For professionals wanting fully autonomous 24/7 brand synchronization.</p>
+            <div className="pricing-card__price">
+              <span className="pricing-card__currency">$</span>
+              <span className="pricing-card__amount" style={{ fontSize: '38px' }}>49</span>
+              <span className="pricing-card__period">/ month</span>
+            </div>
+            
+            <ul className="pricing-card__features">
+              <li>
+                <Check size={14} />
+                <span><span className="text-green">5</span> Custom AI Agents</span>
+              </li>
+              <li>
+                <Check size={14} />
+                <span><span className="text-green">100,000</span> Vector Memory Logs</span>
+              </li>
+              <li>
+                <Check size={14} />
+                <span><span className="text-green">Unlimited</span> Platform Sync</span>
+              </li>
+              <li>
+                <Check size={14} />
+                <span><span className="text-green">Advanced</span> Guardrails & Safety</span>
+              </li>
+              <li>
+                <Check size={14} />
+                <span><span className="text-green">Priority</span> Queue Speed</span>
+              </li>
+            </ul>
+            
+            <button className="btn btn-primary pricing-card__cta">
+              Unlock Pro Autopilot <Zap size={14} style={{ fill: 'currentColor', marginLeft: '4px' }} />
+            </button>
+          </div>
+
+          {/* Agent Tier 3: Enterprise */}
+          <div className="pricing-card pricing-card--agent pricing-card--compact theme-enterprise">
+            <span className="pricing-card__name">Enterprise Scale</span>
+            <p className="pricing-card__description">For agencies and companies requiring custom SLAs.</p>
+            <div className="pricing-card__price">
+              <span className="pricing-card__currency">$</span>
+              <span className="pricing-card__amount" style={{ fontSize: '38px' }}>149</span>
+              <span className="pricing-card__period">/ month</span>
+            </div>
+            
+            <ul className="pricing-card__features">
+              <li>
+                <Check size={14} />
+                <span><span className="text-purple">Unlimited</span> Custom Agents</span>
+              </li>
+              <li>
+                <Check size={14} />
+                <span><span className="text-purple">Dedicated</span> Memory Clusters</span>
+              </li>
+              <li>
+                <Check size={14} />
+                <span><span className="text-purple">Custom API</span> Integrations</span>
+              </li>
+              <li>
+                <Check size={14} />
+                <span><span className="text-purple">24/7</span> Dedicated Support SLA</span>
+              </li>
+            </ul>
+            
+            <button className="btn btn-secondary pricing-card__cta">
+              Contact Sales
+            </button>
+          </div>
         </div>
 
         {/* Social Media Growth Callout */}
