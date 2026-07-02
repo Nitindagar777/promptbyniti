@@ -8,7 +8,7 @@ import {
   Code, Terminal, Smartphone, Gamepad2, Shield,
   Server, Palette, Briefcase, TrendingUp, PenTool,
   BookOpen, DollarSign, Heart, Compass, Calendar,
-  MessageSquare, BarChart2
+  MessageSquare, BarChart2, Play, CheckCircle
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import SEOHead from '../components/SEOHead';
@@ -469,49 +469,133 @@ const getAgentIcon = (name, size = 22) => {
   return <Bot size={size} className={getDynamicColorClass(name)} />;
 };
 
+// Pre-built Automation Recipes for visual pipeline simulator
+const AUTOMATION_RECIPES = [
+  {
+    id: 'video-booster',
+    name: 'Cross-Platform Video Booster',
+    emoji: '🎥',
+    iconColor: '#ff0000',
+    description: 'Automatically repurposes new YouTube video uploads into LinkedIn posts, X threads, and Telegram broadcasts.',
+    timeSaved: '45 mins saved',
+    steps: [
+      { id: 'trigger', type: 'trigger', label: 'New Video Upload', platform: 'YouTube', icon: 'youtube', details: 'Trigger: Video Published' },
+      { id: 'processing', type: 'ai', label: 'Cognitive Engine', platform: 'AI Agent', icon: 'bot', details: 'Transcribe & Generate Posts' },
+      { id: 'action1', type: 'action', label: 'LinkedIn Post', platform: 'LinkedIn', icon: 'linkedin', details: 'Publish Article Outline' },
+      { id: 'action2', type: 'action', label: 'X Thread', platform: 'Twitter', icon: 'twitter', details: 'Post 5-Part Hook Thread' },
+      { id: 'action3', type: 'action', label: 'Telegram Broadcast', platform: 'Telegram', icon: 'telegram', details: 'Send Video Digest Alert' }
+    ],
+    logs: [
+      'Initializing Cross-Platform Video Booster...',
+      'Listening for new uploads on YouTube Channel...',
+      'SUCCESS: New video detected "Understanding AI Agent Swarms" (11:42 duration)',
+      'AI AGENT: Starting transcription & cognitive analysis...',
+      'AI AGENT: Core insights extracted. Formatting content for professional networks...',
+      'LINKEDIN: Draft post generated. Staging publishing...',
+      'LINKEDIN: Successfully posted update to Profile (Post ID: li_98231)',
+      'X (TWITTER): Generating 5-part hook thread...',
+      'X (TWITTER): Successfully published thread (Tweet ID: x_784321)',
+      'TELEGRAM: Formatting channel markdown alert...',
+      'TELEGRAM: Successfully broadcasted message to subscribers...',
+      'Automation workflow complete! Total execution time: 4.8 seconds.'
+    ]
+  },
+  {
+    id: 'support-autopilot',
+    name: 'Customer Support Autopilot',
+    emoji: '🎧',
+    iconColor: '#5865F2',
+    description: 'Intercepts incoming customer tickets, runs sentiment analysis, drafts responses, and updates CRM databases.',
+    timeSaved: '30 mins saved',
+    steps: [
+      { id: 'trigger', type: 'trigger', label: 'Discord Message', platform: 'Discord', icon: 'discord', details: 'Trigger: Support Ticket Raised' },
+      { id: 'processing', type: 'ai', label: 'Sentiment & Draft Agent', platform: 'AI Agent', icon: 'bot', details: 'Analyze Tone & Write Response' },
+      { id: 'action1', type: 'action', label: 'Slack Alert', platform: 'Slack', icon: 'slack', details: 'Notify Support Channel' },
+      { id: 'action2', type: 'action', label: 'CRM Sync', platform: 'Shopify', icon: 'shopify', details: 'Create HubSpot Customer Ticket' }
+    ],
+    logs: [
+      'Initializing Customer Support Autopilot...',
+      'Monitoring support channel hooks on Discord...',
+      'SUCCESS: Discord support ticket #4812 received: "Order shipment delayed"',
+      'AI AGENT: Analyzing sentiment... status: [FRUSTRATED, HIGH PRIORITY]',
+      'AI AGENT: Querying shipment API... status: [DELAYED AT PORT]',
+      'AI AGENT: Drafting apologetic response with tracking details...',
+      'SLACK: Alerting triage channel #support-alerts...',
+      'SLACK: Successfully posted alert with drafted reply (Channel ID: sl_4831)',
+      'SHOPIFY: Syncing ticket details to customer profile...',
+      'SHOPIFY: Successfully updated customer profile (Ticket ID: shop_90213)',
+      'Automation workflow complete! Total execution time: 3.2 seconds.'
+    ]
+  },
+  {
+    id: 'ecommerce-lister',
+    name: 'E-commerce Listing Promotor',
+    emoji: '🛒',
+    iconColor: '#96bf48',
+    description: 'Monitors new e-commerce store listings to instantly create creative copy and publish marketing visuals.',
+    timeSaved: '60 mins saved',
+    steps: [
+      { id: 'trigger', type: 'trigger', label: 'Shopify Product', platform: 'Shopify', icon: 'shopify', details: 'Trigger: Product Added' },
+      { id: 'processing', type: 'ai', label: 'Creative Content Agent', platform: 'AI Agent', icon: 'bot', details: 'Generate Product Copy & Assets' },
+      { id: 'action1', type: 'action', label: 'Pinterest Pin', platform: 'Pinterest', icon: 'pinterest', details: 'Pin Product Creative image' },
+      { id: 'action2', type: 'action', label: 'Instagram Post', platform: 'Instagram', icon: 'instagram', details: 'Post Product Carousel photo' }
+    ],
+    logs: [
+      'Initializing E-commerce Listing Promoter...',
+      'Listening for shop catalog changes on Shopify...',
+      'SUCCESS: New product detected "Quantum Ergonomic Chair" ($299)',
+      'AI AGENT: Generating SEO-optimized product copy...',
+      'AI AGENT: Creating promotional images for social media platforms...',
+      'PINTEREST: Uploading visual pins for board "Office Tech"...',
+      'PINTEREST: Successfully pinned image (Pin ID: pin_89412)',
+      'INSTAGRAM: Generating relevant hashtags and description...',
+      'INSTAGRAM: Successfully uploaded photo carousel (Post ID: ig_38210)',
+      'Automation workflow complete! Total execution time: 4.1 seconds.'
+    ]
+  },
+  {
+    id: 'research-newsletter',
+    name: 'Research & News Intelligence',
+    emoji: '📰',
+    iconColor: '#ff5722',
+    description: 'Tracks industry trends and news alerts, summarizes key details, and saves fact-checked outlines.',
+    timeSaved: '90 mins saved',
+    steps: [
+      { id: 'trigger', type: 'trigger', label: 'Substack News', platform: 'Substack', icon: 'substack', details: 'Trigger: RSS Feed Alert' },
+      { id: 'processing', type: 'ai', label: 'Fact-Check Agent', platform: 'AI Agent', icon: 'bot', details: 'Summarize, Extract & Check facts' },
+      { id: 'action1', type: 'action', label: 'Database Log', platform: 'Database', icon: 'database', details: 'Save to Notion Wiki' },
+      { id: 'action2', type: 'action', label: 'Email Broadcast', platform: 'Email', icon: 'substack', details: 'Send Newsletter to Team' }
+    ],
+    logs: [
+      'Initializing Research & News Intelligence...',
+      'Scanning Substack newsletters and RSS alerts...',
+      'SUCCESS: New article detected: "State of Agentic Systems in 2026"',
+      'AI AGENT: Parsing article text & extracting core findings...',
+      'AI AGENT: Cross-referencing claims with fact check database...',
+      'AI AGENT: Fact check: [VERIFIED]. Summary generated (400 words)',
+      'DATABASE: Formatting Notion database page properties...',
+      'DATABASE: Successfully added page to "Tech Trends wiki" (Page ID: db_7841)',
+      'EMAIL NEWSLETTER: Creating custom HTML alert template...',
+      'EMAIL NEWSLETTER: Successfully sent digest email to 12 team members...',
+      'Automation workflow complete! Total execution time: 5.2 seconds.'
+    ]
+  }
+];
+
 export default function PersonalAgentPage() {
   const { state, setScroll, getScroll } = useApp();
   const location = useLocation();
 
-  // Builder configuration states
-  const [agentName, setAgentName] = useState('Niti-Bot 1.0');
-  const [activeTone, setActiveTone] = useState(TONE_PRESETS[0]);
-  const [memoryDepth, setMemoryDepth] = useState(500);
-  const [syncedPlatforms, setSyncedPlatforms] = useState({
-    twitter: false,
-    linkedin: false,
-    instagram: false,
-    discord: false,
-    slack: false,
-    telegram: false
-  });
-
-  // Custom Knowledge Sources
-  const [knowledgeSources, setKnowledgeSources] = useState([
-    { id: 1, name: 'brand_guidelines_v2.pdf', size: '2.4 MB', type: 'PDF' },
-    { id: 2, name: 'historical_tweets_archive.txt', size: '1.1 MB', type: 'TXT' }
-  ]);
-  const [newSourceName, setNewSourceName] = useState('');
-
-  // Chat simulator states
-  const [chatMessages, setChatMessages] = useState([
-    { sender: 'agent', text: TONE_PRESETS[0].greeting, timestamp: 'Just now' }
-  ]);
-  const [chatInput, setChatInput] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const chatEndRef = useRef(null);
+  // Automation Visualizer States
+  const [activeRecipe, setActiveRecipe] = useState(AUTOMATION_RECIPES[0]);
+  const [simulationState, setSimulationState] = useState('idle'); // 'idle' | 'running' | 'completed'
+  const [simulationStepIndex, setSimulationStepIndex] = useState(-1);
+  const [liveLogs, setLiveLogs] = useState([]);
 
   // Directory filter states
   const [activeCategory, setActiveCategory] = useState(AI_EMPLOYEE_CATEGORIES[0].id);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedAgentForModal, setSelectedAgentForModal] = useState(null);
-
-  // Update greeting when tone changes
-  useEffect(() => {
-    setChatMessages([
-      { sender: 'agent', text: activeTone.greeting, timestamp: 'Just now' }
-    ]);
-  }, [activeTone]);
 
   // Restore and preserve scroll position + clear hash on mount
   useEffect(() => {
@@ -541,57 +625,40 @@ export default function PersonalAgentPage() {
     };
   }, []);
 
-  // Scroll to bottom of chat
-  useEffect(() => {
-    if (chatEndRef.current) {
-      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [chatMessages, isTyping]);
+  const runSimulation = () => {
+    if (simulationState === 'running') return;
 
-  const handleSendMessage = (e) => {
-    e.preventDefault();
-    if (!chatInput.trim()) return;
+    setSimulationState('running');
+    setSimulationStepIndex(-1);
+    setLiveLogs([]);
 
-    const userMsg = chatInput.trim();
-    setChatMessages(prev => [...prev, { sender: 'user', text: userMsg, timestamp: 'Just now' }]);
-    setChatInput('');
-    setIsTyping(true);
+    let currentLogLine = 0;
+    const totalSteps = activeRecipe.steps.length;
+    const totalLogs = activeRecipe.logs.length;
 
-    // Simulate Agent response based on personality
-    setTimeout(() => {
-      setIsTyping(false);
-      const toneReplies = activeTone.replies;
-      const randomReply = toneReplies[Math.floor(Math.random() * toneReplies.length)];
-      setChatMessages(prev => [...prev, { sender: 'agent', text: randomReply, timestamp: 'Just now' }]);
-    }, 1000);
-  };
+    const interval = setInterval(() => {
+      if (currentLogLine < totalLogs) {
+        setLiveLogs(prev => [...prev, activeRecipe.logs[currentLogLine]]);
 
-  const handleTogglePlatform = (platform) => {
-    setSyncedPlatforms(prev => ({
-      ...prev,
-      [platform]: !prev[platform]
-    }));
-  };
+        if (currentLogLine === 1) {
+          setSimulationStepIndex(0);
+        } else if (currentLogLine === 3) {
+          setSimulationStepIndex(1);
+        } else if (currentLogLine === 5) {
+          setSimulationStepIndex(2);
+        } else if (currentLogLine === 7 && totalSteps > 3) {
+          setSimulationStepIndex(3);
+        } else if (currentLogLine === 9 && totalSteps > 4) {
+          setSimulationStepIndex(4);
+        }
 
-  const handleAddKnowledge = (e) => {
-    e.preventDefault();
-    if (!newSourceName.trim()) return;
-
-    const newSource = {
-      id: Date.now(),
-      name: newSourceName.trim().endsWith('.txt') || newSourceName.trim().endsWith('.pdf')
-        ? newSourceName.trim()
-        : `${newSourceName.trim()}.txt`,
-      size: `${(Math.random() * 2 + 0.1).toFixed(1)} MB`,
-      type: newSourceName.trim().split('.').pop().toUpperCase() || 'TXT'
-    };
-
-    setKnowledgeSources(prev => [...prev, newSource]);
-    setNewSourceName('');
-  };
-
-  const handleDeleteKnowledge = (id) => {
-    setKnowledgeSources(prev => prev.filter(src => src.id !== id));
+        currentLogLine++;
+      } else {
+        setSimulationState('completed');
+        setSimulationStepIndex(totalSteps);
+        clearInterval(interval);
+      }
+    }, 450);
   };
 
   // Filter logic for AI employees catalog
@@ -870,195 +937,138 @@ export default function PersonalAgentPage() {
                 <div className="no-results-card text-center card">
                   <Bot size={48} className="text-muted" style={{ margin: '0 auto 16px auto' }} />
                   <h4>No Agents Found</h4>
-                  <p>Try searching for a different keyword or check spelling.</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Interactive Sandbox Section */}
-      <section id="agent-sandbox-section" className="agent-sandbox-section">
+                  <p>Try searching for a different k      {/* AI Automation Workflow Visualizer Section */}
+      <section id="agent-workflow-visualizer-section" className="agent-workflow-visualizer-section">
         <div className="container">
           <div className="section-header text-center">
-
-            <h2 className="section-title sandbox-title">Configure & Test in Real-Time</h2>
+            <span className="section-tag">Automation Pipeline</span>
+            <h2 className="section-title workflow-title">Live AI Automation Pipelines</h2>
             <p className="section-desc">
-              Tweak settings on the left and immediately converse with your customized agent persona on the right.
+              Select an automation recipe on the left and trigger the simulation to watch how our pre-built AI Agents connect platforms, process data, and execute complex workflows in real-time.
             </p>
           </div>
 
-          <div className="sandbox-grid">
-            {/* CONFIG PANEL */}
-            <div className="config-panel card">
-              <div className="panel-header">
+          <div className="workflow-visualizer-grid">
+            {/* Left side: Recipe list & Terminal Console */}
+            <div className="workflow-left-panel">
+              <div className="recipe-selector-wrap card">
+                <h4>Select Automation Template</h4>
+                <div className="recipes-list">
+                  {AUTOMATION_RECIPES.map((recipe) => (
+                    <div
+                      key={recipe.id}
+                      className={`recipe-card ${activeRecipe.id === recipe.id ? 'active' : ''}`}
+                      onClick={() => {
+                        if (simulationState === 'running') return;
+                        setActiveRecipe(recipe);
+                        setSimulationState('idle');
+                        setSimulationStepIndex(-1);
+                        setLiveLogs([]);
+                      }}
+                    >
+                      <span className="recipe-emoji" style={{ background: `${recipe.iconColor}15` }}>
+                        {recipe.emoji}
+                      </span>
+                      <div className="recipe-details">
+                        <h5>{recipe.name}</h5>
+                        <p>{recipe.description}</p>
+                        <span className="recipe-time-saved">{recipe.timeSaved}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Terminal Logs */}
+              <div className="terminal-logs-card card">
+                <div className="terminal-header">
+                  <div className="window-dots">
+                    <span className="window-dot red"></span>
+                    <span className="window-dot yellow"></span>
+                    <span className="window-dot green"></span>
+                  </div>
+                  <span className="terminal-title">Execution Console - logs.sh</span>
+                </div>
+                <div className="terminal-body">
+                  {liveLogs.length === 0 ? (
+                    <div className="terminal-placeholder">
+                      <span>$ click "Simulate Workflow Pipeline" to run the logs...</span>
+                    </div>
+                  ) : (
+                    liveLogs.map((log, i) => (
+                      <div key={i} className="terminal-log-line">
+                        <span className="terminal-prompt">&gt;</span> {log}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Right side: Pipeline Canvas */}
+            <div className="workflow-right-panel card">
+              <div className="canvas-header">
                 <div className="window-dots">
                   <span className="window-dot red"></span>
                   <span className="window-dot yellow"></span>
                   <span className="window-dot green"></span>
                 </div>
-                <Cpu className="text-orange" size={18} />
-                <h3>Persona Configuration</h3>
-              </div>
-
-              <form onSubmit={(e) => e.preventDefault()} className="config-form">
-                {/* Agent Name */}
-                <div className="form-group">
-                  <label htmlFor="agent-name">Agent Name</label>
-                  <input
-                    type="text"
-                    id="agent-name"
-                    value={agentName}
-                    onChange={(e) => setAgentName(e.target.value)}
-                    className="form-input"
-                    placeholder="Enter agent name..."
-                  />
-                </div>
-
-                {/* Personality Tones */}
-                <div className="form-group">
-                  <label>Tone & Style Preset</label>
-                  <div className="presets-grid">
-                    {TONE_PRESETS.map((preset) => (
-                      <button
-                        key={preset.id}
-                        type="button"
-                        className={`preset-btn ${activeTone.id === preset.id ? 'active' : ''}`}
-                        onClick={() => setActiveTone(preset)}
-                      >
-                        <span className="preset-emoji">{preset.emoji}</span>
-                        <div className="preset-meta">
-                          <span className="preset-name">{preset.name}</span>
-                          <span className="preset-desc">{preset.desc}</span>
-                        </div>
-                        {activeTone.id === preset.id && <Check size={14} className="preset-check" />}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Memory Slider */}
-                <div className="form-group">
-                  <div className="label-row">
-                    <label>Long-Term Memory Depth</label>
-                    <span className="depth-value">{memoryDepth} messages</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="100"
-                    max="5000"
-                    step="100"
-                    value={memoryDepth}
-                    onChange={(e) => setMemoryDepth(Number(e.target.value))}
-                    className="form-range"
-                  />
-                  <span className="range-sub">Determines how far back the agent remembers previous conversations.</span>
-                </div>
-
-                {/* Custom Knowledge Bases */}
-                <div className="form-group">
-                  <label>Knowledge Sync Sources</label>
-                  <div className="knowledge-list">
-                    {knowledgeSources.map((src) => (
-                      <div key={src.id} className="knowledge-item">
-                        <Database size={14} className="text-cyan" />
-                        <span className="knowledge-name" title={src.name}>{src.name}</span>
-                        <span className="knowledge-size">{src.size}</span>
-                        <button
-                          type="button"
-                          className="knowledge-delete"
-                          onClick={() => handleDeleteKnowledge(src.id)}
-                          title="Remove source"
-                        >
-                          &times;
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="knowledge-add-row">
-                    <input
-                      type="text"
-                      placeholder="Add custom doc (e.g. bio.txt)..."
-                      value={newSourceName}
-                      onChange={(e) => setNewSourceName(e.target.value)}
-                      className="form-input form-input-sm"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleAddKnowledge}
-                      className="btn btn-secondary btn-sm"
-                      style={{ padding: '8px 16px' }}
-                    >
-                      <Plus size={16} />
-                    </button>
-                  </div>
-                </div>
-              </form>
-            </div>
-
-            {/* LIVE SIMULATOR CHAT PANEL */}
-            <div className="chat-panel card">
-               <div className="panel-header">
-                 <div className="window-dots">
-                   <span className="window-dot red"></span>
-                   <span className="window-dot yellow"></span>
-                   <span className="window-dot green"></span>
-                 </div>
-                 <div className="agent-status-indicator">
-                   <div className="status-dot pulsing"></div>
-                   <div className="simulator-avatar-wrap" style={{ display: 'flex', alignItems: 'center' }}>
-                     {getAgentIcon(agentName, 20)}
-                   </div>
-                   <div>
-                     <h3 className="agent-name-display">{agentName || 'Unnamed Agent'}</h3>
-                     <span className="agent-meta-display">Active • {activeTone.name} Mode</span>
-                   </div>
-                 </div>
-               </div>
- 
-               <div className="chat-viewport">
-                 <div className="chat-message-list">
-                   {chatMessages.map((msg, index) => (
-                     <div key={index} className={`chat-message ${msg.sender === 'user' ? 'chat-message--user' : 'chat-message--agent'}`}>
-                       <div className={`message-avatar ${msg.sender === 'user' ? 'user-avatar' : 'agent-avatar'}`}>
-                         {msg.sender === 'user' ? '👤' : getAgentIcon(agentName, 16)}
-                       </div>
-                       <div className="message-bubble">
-                         <p>{msg.text}</p>
-                         <span className="message-time">{msg.timestamp}</span>
-                       </div>
-                     </div>
-                   ))}
-                   {isTyping && (
-                     <div className="chat-message chat-message--agent">
-                       <div className="message-avatar agent-avatar">{getAgentIcon(agentName, 16)}</div>
-                       <div className="message-bubble typing-bubble">
-                         <div className="typing-indicator">
-                           <span></span>
-                           <span></span>
-                           <span></span>
-                         </div>
-                       </div>
-                     </div>
-                   )}
-                  <div ref={chatEndRef} />
-                </div>
-              </div>
-
-              <form onSubmit={handleSendMessage} className="chat-input-area">
-                <input
-                  type="text"
-                  placeholder={`Ask ${agentName || 'your agent'} anything...`}
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  className="chat-input-field"
-                  disabled={isTyping}
-                />
-                <button type="submit" className="chat-send-btn" disabled={!chatInput.trim() || isTyping}>
-                  <Send size={16} />
+                <span className="canvas-title">Pipeline Visualizer: {activeRecipe.name}</span>
+                <button
+                  className={`btn btn-primary run-sim-btn ${simulationState === 'running' ? 'disabled' : ''}`}
+                  onClick={runSimulation}
+                  disabled={simulationState === 'running'}
+                  style={{ display: 'flex', alignItems: 'center' }}
+                >
+                  {simulationState === 'running' ? (
+                    <>
+                      <RefreshCw className="spinning" size={14} style={{ marginRight: '6px' }} /> Simulating...
+                    </>
+                  ) : (
+                    <>
+                      <Play size={14} fill="currentColor" style={{ marginRight: '6px' }} /> Simulate Workflow Pipeline
+                    </>
+                  )}
                 </button>
-              </form>
+              </div>
+
+              <div className="pipeline-canvas-body">
+                <div className="pipeline-flow-container">
+                  {activeRecipe.steps.map((step, idx) => {
+                    const isActive = simulationStepIndex >= idx;
+                    const isProcessing = simulationStepIndex === idx && simulationState === 'running';
+                    const isCompleted = simulationStepIndex > idx || (simulationState === 'completed' && isActive);
+
+                    return (
+                      <React.Fragment key={step.id}>
+                        {/* Connecting Line (except for the first node) */}
+                        {idx > 0 && (
+                          <div className={`pipeline-connector ${isCompleted ? 'active' : ''} ${isProcessing ? 'pulsing' : ''}`}>
+                            <div className="connector-glow-dot"></div>
+                          </div>
+                        )}
+
+                        {/* Node Card */}
+                        <div className={`pipeline-node-card ${isActive ? 'active' : ''} ${isProcessing ? 'processing' : ''} ${isCompleted ? 'completed' : ''}`}>
+                          <div className="node-icon-wrap">
+                            {getAgentIcon(step.platform, 24)}
+                            {isCompleted && (
+                              <span className="node-check-badge">
+                                <CheckCircle size={14} fill="var(--color-green)" stroke="#ffffff" />
+                              </span>
+                            )}
+                          </div>
+                          <div className="node-meta">
+                            <span className="node-type-label">{step.type.toUpperCase()}</span>
+                            <h6>{step.label}</h6>
+                            <p>{step.details}</p>
+                          </div>
+                        </div>
+                      </React.Fragment>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </div>
         </div>
