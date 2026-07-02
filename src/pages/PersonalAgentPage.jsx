@@ -1064,7 +1064,7 @@ export default function PersonalAgentPage() {
       <section className="agent-pricing">
         <div className="container">
           <div className="section-header text-center">
-            <span className="section-tag" style={{ color: '#35e177', background: 'rgba(53, 225, 119, 0.08)' }}>Flexible Plans</span>
+
             <h2 className="section-title pricing-title">Simple, Transparent Pricing</h2>
             <p className="section-desc">
               Choose the perfect plan to scale your brand with automated AI agents. Switch or cancel anytime.
