@@ -1,6 +1,6 @@
 /* PersonalAgentPage — Interactive Agent Customization and Feature Showcase */
 import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import {
   Bot, Send, Sparkles, Database, Globe, RefreshCw,
   Upload, Check, ArrowRight, ShieldCheck, Cpu,
@@ -459,7 +459,8 @@ const getAgentIcon = (name, size = 22) => {
 };
 
 export default function PersonalAgentPage() {
-  const { state } = useApp();
+  const { state, setScroll, getScroll } = useApp();
+  const location = useLocation();
 
   // Builder configuration states
   const [agentName, setAgentName] = useState('Niti-Bot 1.0');
@@ -500,6 +501,34 @@ export default function PersonalAgentPage() {
       { sender: 'agent', text: activeTone.greeting, timestamp: 'Just now' }
     ]);
   }, [activeTone]);
+
+  // Restore and preserve scroll position + clear hash on mount
+  useEffect(() => {
+    if (location.hash) {
+      const id = location.hash.substring(1);
+      const el = document.getElementById(id);
+      if (el) {
+        setTimeout(() => el.scrollIntoView({ behavior: 'smooth' }), 100);
+      }
+      window.history.replaceState(null, '', window.location.pathname);
+    } else {
+      const savedPos = getScroll(location.pathname);
+      if (savedPos) {
+        setTimeout(() => window.scrollTo(0, savedPos), 100);
+      } else {
+        window.scrollTo(0, 0);
+      }
+    }
+
+    const handleScrollSave = () => {
+      setScroll(location.pathname, window.scrollY);
+    };
+
+    window.addEventListener('scroll', handleScrollSave, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScrollSave);
+    };
+  }, []);
 
   // Scroll to bottom of chat
   useEffect(() => {
