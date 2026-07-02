@@ -915,45 +915,14 @@ export default function PersonalAgentPage() {
       <section className="agent-workflow-comparison">
         <div className="container">
           <div className="section-header text-center">
-            <span className="section-tag" style={{ color: '#35e177', background: 'rgba(53, 225, 119, 0.08)' }}>Direct Vs. Chaotic Path</span>
             <h2 className="section-title comparison-title">How Prompt by Niti Works</h2>
             <p className="section-desc">
               Compare the manual, chaotic loop of content creation and platform management against our direct AI-agent autopilot path.
             </p>
           </div>
 
-          <div className="comparison-grid">
-            {/* Left side: The Manual Chaos */}
-            <div className="comparison-card card manual-chaos-card">
-              <div className="card-sketch-header">
-                <h3>The Usual Path</h3>
-                <span className="sketch-subtitle">Hours of manual copy-paste & editing</span>
-              </div>
-              <div className="sketch-viewport">
-                <img src="/agent1.png" alt="The Usual Path - Manual Chaos Sketch" className="sketch-image" />
-              </div>
-              <div className="comparison-bullets">
-                <div className="bullet-item text-red">✕ Wasting 4-6 hours per day on content creation</div>
-                <div className="bullet-item text-red">✕ Logging into 6 different tools and API services</div>
-                <div className="bullet-item text-red">✕ Dealing with delayed posts and broken templates</div>
-              </div>
-            </div>
-
-            {/* Right side: The Niti Autopilot */}
-            <div className="comparison-card card niti-autopilot-card">
-              <div className="card-sketch-header">
-                <h3 style={{ color: '#35e177' }}>Cutshort via Niti</h3>
-                <span className="sketch-subtitle">Instant automation & direct delivery</span>
-              </div>
-              <div className="sketch-viewport">
-                <img src="/agent2.png" alt="Cutshort via Niti Autopilot Sketch" className="sketch-image" />
-              </div>
-              <div className="comparison-bullets">
-                <div className="bullet-item text-green">✓ Setup once in 10 minutes & run forever</div>
-                <div className="bullet-item text-green">✓ Zero manual context switching or tab juggling</div>
-                <div className="bullet-item text-green">✓ Direct API delivery with 100% safety checks</div>
-              </div>
-            </div>
+          <div className="comparison-flow-image-wrap">
+            <img src="/Flow_of_work.jpeg" alt="Workflow comparison: Usual Path vs. Prompt by Niti Autopilot" className="comparison-flow-image" />
           </div>
         </div>
       </section>
