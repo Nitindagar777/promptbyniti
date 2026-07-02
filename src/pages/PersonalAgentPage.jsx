@@ -915,7 +915,7 @@ export default function PersonalAgentPage() {
       <section className="agent-workflow-comparison">
         <div className="container">
           <div className="section-header text-center">
-            <h2 className="section-title comparison-title">How Prompt by Niti Works</h2>
+            <h2 className="section-title comparison-title">How Ai Agents Work</h2>
             <p className="section-desc">
               Compare the manual, chaotic loop of content creation and platform management against our direct AI-agent autopilot path.
             </p>
@@ -945,6 +945,21 @@ export default function PersonalAgentPage() {
               </div>
               <h3>Context Preservation</h3>
               <p>Uses vector embedding trees to retain system prompts, past conversations, and facts. Your agent will never forget your identity.</p>
+              
+              <div className="feature-preview-panel terminal-style">
+                <div className="terminal-header">
+                  <span className="dot dot-red"></span>
+                  <span className="dot dot-yellow"></span>
+                  <span className="dot dot-green"></span>
+                  <span className="terminal-title">preservation.log</span>
+                </div>
+                <div className="terminal-body">
+                  <div className="log-line"><span className="text-muted">[02:14:02]</span> sys.init() <span className="text-orange">OK</span></div>
+                  <div className="log-line"><span className="text-muted">[02:14:03]</span> hydration tree loaded</div>
+                  <div className="log-line"><span className="text-muted">[02:14:05]</span> query: "What is my brand voice?"</div>
+                  <div className="log-line"><span className="text-orange">→ matched (similarity: 0.982)</span></div>
+                </div>
+              </div>
             </div>
 
             <div className="feature-card theme-cyan">
@@ -954,6 +969,25 @@ export default function PersonalAgentPage() {
               </div>
               <h3>Knowledge Hydration</h3>
               <p>Upload PDF documents, CSV files, raw text files, or direct Notion/Google Drive hooks to train your agent on complex data on the fly.</p>
+              
+              <div className="feature-preview-panel files-style">
+                <div className="file-item">
+                  <div className="file-icon text-cyan">📄</div>
+                  <div className="file-info">
+                    <span className="file-name">brand_identity_guide.pdf</span>
+                    <span className="file-size">4.8 MB</span>
+                  </div>
+                  <span className="file-status active">HYDRATED</span>
+                </div>
+                <div className="file-item">
+                  <div className="file-icon text-cyan">📊</div>
+                  <div className="file-info">
+                    <span className="file-name">Q3_target_audience.csv</span>
+                    <span className="file-size">1.2 MB</span>
+                  </div>
+                  <span className="file-status active">HYDRATED</span>
+                </div>
+              </div>
             </div>
 
             <div className="feature-card theme-purple">
@@ -963,6 +997,20 @@ export default function PersonalAgentPage() {
               </div>
               <h3>Multi-Platform Sync</h3>
               <p>Draft posts, reply to comments, direct message leads, and engage with users naturally in your exact tone across 6 social networks.</p>
+              
+              <div className="feature-preview-panel sync-style">
+                <div className="sync-node-wrapper">
+                  <div className="sync-center-node">
+                    <Bot size={14} style={{ color: 'var(--color-purple)' }} />
+                  </div>
+                  <div className="sync-line active"></div>
+                  <div className="sync-platform-badge">Slack</div>
+                  <div className="sync-line active"></div>
+                  <div className="sync-platform-badge">Instagram</div>
+                  <div className="sync-line active"></div>
+                  <div className="sync-platform-badge">Discord</div>
+                </div>
+              </div>
             </div>
 
             <div className="feature-card theme-pink">
@@ -972,6 +1020,21 @@ export default function PersonalAgentPage() {
               </div>
               <h3>Safety & Guardrails</h3>
               <p>Define custom rules, blacklisted phrases, and automated checks to guarantee your agent stays professional and on-brand.</p>
+              
+              <div className="feature-preview-panel safety-style">
+                <div className="safety-item">
+                  <span className="safety-indicator active">✓</span>
+                  <span className="safety-label">Blacklist phrases filtered</span>
+                </div>
+                <div className="safety-item">
+                  <span className="safety-indicator active">✓</span>
+                  <span className="safety-label">Strict brand voice guardrails</span>
+                </div>
+                <div className="safety-item">
+                  <span className="safety-indicator active">✓</span>
+                  <span className="safety-label">Fact-check source correlation</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
