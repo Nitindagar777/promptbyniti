@@ -1,6 +1,6 @@
 /* PricingPage Styles */
 .pricing-page {
-  padding-top: 60px;
+  padding-top: 24px;
   padding-bottom: 120px;
   min-height: 100vh;
 }
@@ -437,8 +437,12 @@
 /* Pricing Section Headers */
 .pricing-section-header {
   text-align: center;
-  margin-top: 60px;
+  margin-top: 40px;
   margin-bottom: 30px;
+}
+
+.pricing-section-header:first-of-type {
+  margin-top: 10px;
 }
 
 .pricing-section-title {
