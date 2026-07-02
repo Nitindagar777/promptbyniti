@@ -495,6 +495,8 @@ export default function PersonalAgentPage() {
   const [activeCategory, setActiveCategory] = useState(AI_EMPLOYEE_CATEGORIES[0].id);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedAgentForModal, setSelectedAgentForModal] = useState(null);
+  const [calcHours, setCalcHours] = useState(20);
+  const [calcRate, setCalcRate] = useState(40);
 
   // Restore and preserve scroll position + clear hash on mount
   useEffect(() => {
@@ -1183,42 +1185,80 @@ export default function PersonalAgentPage() {
       </section>
 
       {/* Autopilot Capabilities Showcase */}
-      <section className="agent-features-showcase">
+      {/* Autopilot Savings Calculator Showcase */}
+      <section className="agent-savings-calc">
         <div className="container">
           <div className="section-header text-center">
-            <span className="section-tag" style={{ color: '#ff7a30', background: 'rgba(255, 122, 48, 0.08)' }}>How It Works</span>
-            <h2 className="section-title showcase-title">Experience True Autopilot</h2>
+            <span className="section-tag" style={{ color: '#06b6d4', background: 'rgba(6, 182, 212, 0.08)' }}>Operational ROI</span>
+            <h2 className="section-title calculator-title">Calculate Your Autopilot Savings</h2>
             <p className="section-desc">
-              Get your custom AI agent configured, trained, and fully deployed in three simple steps.
+              Estimate the manual hours and operational capital you reclaim by delegating brand tasks to Niti AI Agents.
             </p>
           </div>
 
-          <div className="showcase-steps-grid">
-            <div className="showcase-step-card step-orange">
-              <div className="step-number">01</div>
-              <div className="step-icon-wrap">
-                <Bot size={28} />
+          <div className="calculator-split-box card">
+            <div className="calc-inputs-side">
+              <div className="slider-control-group">
+                <div className="slider-labels">
+                  <span className="slider-title">Manual Hours Spent / Week</span>
+                  <span className="slider-value-display text-orange">{calcHours} hrs</span>
+                </div>
+                <input
+                  type="range"
+                  min="5"
+                  max="80"
+                  step="5"
+                  value={calcHours}
+                  onChange={(e) => setCalcHours(Number(e.target.value))}
+                  className="calc-range-slider range-orange"
+                />
+                <div className="slider-hints">
+                  <span>5h (Light tasking)</span>
+                  <span>80h (Two full-time staff)</span>
+                </div>
               </div>
-              <h3>Define Core Rules</h3>
-              <p>Write custom system prompts, target voice guidelines, and strict safety guardrails in our interactive tone sandbox.</p>
+
+              <div className="slider-control-group" style={{ marginTop: '32px' }}>
+                <div className="slider-labels">
+                  <span className="slider-title">Your Hourly Rate / Value</span>
+                  <span className="slider-value-display text-cyan">${calcRate}/hr</span>
+                </div>
+                <input
+                  type="range"
+                  min="15"
+                  max="150"
+                  step="5"
+                  value={calcRate}
+                  onChange={(e) => setCalcRate(Number(e.target.value))}
+                  className="calc-range-slider range-cyan"
+                />
+                <div className="slider-hints">
+                  <span>$15/h (Standard task)</span>
+                  <span>$150/h (Director level)</span>
+                </div>
+              </div>
             </div>
 
-            <div className="showcase-step-card step-cyan">
-              <div className="step-number">02</div>
-              <div className="step-icon-wrap">
-                <Database size={28} />
+            <div className="calc-outputs-side">
+              <div className="output-stat-block block-cyan">
+                <span className="stat-label">MONTHLY HOURS RECLAIMED</span>
+                <div className="stat-value">
+                  {(calcHours * 4 * 0.85).toFixed(0)} <span className="stat-unit">Hours</span>
+                </div>
+                <p className="stat-hint">Based on 85% autopilot coverage of manual content curation, syncs & replies.</p>
               </div>
-              <h3>Hydrate Knowledge</h3>
-              <p>Upload PDFs, CSVs, or past text logs so your digital twin gains deep, authentic intelligence about your brand and products.</p>
-            </div>
 
-            <div className="showcase-step-card step-pink">
-              <div className="step-number">03</div>
-              <div className="step-icon-wrap">
-                <Zap size={28} />
+              <div className="output-stat-block block-green">
+                <span className="stat-label">ESTIMATED CAPITAL RECLAIMED</span>
+                <div className="stat-value text-green">
+                  ${(calcHours * 4 * 0.85 * calcRate).toLocaleString(undefined, { maximumFractionDigits: 0 })} <span className="stat-unit">/ month</span>
+                </div>
+                <p className="stat-hint">Reclaimed operational resources redirected to strategic product growth.</p>
               </div>
-              <h3>Launch Live Sync</h3>
-              <p>Turn on the autopilot track. Your agent actively drafts content, responds to community comments, and syncs profiles 24/7.</p>
+
+              <div className="efficiency-badge-bar">
+                <Zap size={14} style={{ fill: 'currentColor' }} /> <span><strong>5.4x</strong> Speed Multiplier Boost Unlocked</span>
+              </div>
             </div>
           </div>
         </div>
