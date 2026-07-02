@@ -787,6 +787,15 @@
   font-size: 1.1rem;
 }
 
+.workflow-title {
+  background: linear-gradient(135deg, var(--color-orange) 0%, var(--color-pink) 50%, var(--color-cyan) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
 /* Real-Time Operations Dashboard */
 .operations-dashboard {
   background: rgba(10, 10, 10, 0.5);
