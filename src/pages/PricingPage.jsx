@@ -136,34 +136,156 @@ export default function PricingPage() {
           </p>
         </div>
 
-        {/* Pricing Grid */}
-        <div className="pricing-grid">
+        {/* Section 1: AI Agent Autopilot Plans */}
+        <div className="pricing-section-header">
+          <h2 className="pricing-section-title">AI Agent Autopilot Plans</h2>
+          <p className="pricing-section-desc">Fully autonomous virtual models syncing with your ecosystems 24/7.</p>
+        </div>
+
+        <div className="pricing-grid pricing-grid--agents">
+          {/* Agent Tier 1: Starter */}
+          <div className="pricing-card pricing-card--agent theme-starter">
+            <span className="pricing-card__name">Starter Agent</span>
+            <p className="pricing-card__description">Perfect for creators looking to automate basic tasks.</p>
+            <div className="pricing-card__price">
+              <span className="pricing-card__currency">$</span>
+              <span className="pricing-card__amount">19</span>
+              <span className="pricing-card__period">/ month</span>
+            </div>
+            
+            <ul className="pricing-card__features">
+              <li>
+                <Check size={14} />
+                <span>1 Custom AI Agent</span>
+              </li>
+              <li>
+                <Check size={14} />
+                <span>1,000 Vector Memory Logs</span>
+              </li>
+              <li>
+                <Check size={14} />
+                <span>2 Connected Platforms</span>
+              </li>
+              <li>
+                <Check size={14} />
+                <span>Standard Execution Speed</span>
+              </li>
+            </ul>
+            
+            <button className="btn btn-secondary pricing-card__cta">
+              Get Started
+            </button>
+          </div>
+
+          {/* Agent Tier 2: Pro */}
+          <div className="pricing-card pricing-card--agent theme-pro pricing-card--popular">
+            <div className="pricing-card__popular-tag">
+              <Star size={12} /> Most Popular
+            </div>
+            <span className="pricing-card__name" style={{ color: '#35e177' }}>Pro Autopilot</span>
+            <p className="pricing-card__description">For professionals wanting fully autonomous 24/7 brand synchronization.</p>
+            <div className="pricing-card__price">
+              <span className="pricing-card__currency">$</span>
+              <span className="pricing-card__amount">49</span>
+              <span className="pricing-card__period">/ month</span>
+            </div>
+            
+            <ul className="pricing-card__features">
+              <li>
+                <Check size={14} />
+                <span>5 Custom AI Agents</span>
+              </li>
+              <li>
+                <Check size={14} />
+                <span>100,000 Vector Memory Logs</span>
+              </li>
+              <li>
+                <Check size={14} />
+                <span>Unlimited Platform Sync</span>
+              </li>
+              <li>
+                <Check size={14} />
+                <span>Advanced Guardrails & Safety</span>
+              </li>
+              <li>
+                <Check size={14} />
+                <span>Priority Queue Speed</span>
+              </li>
+            </ul>
+            
+            <button className="btn btn-primary pricing-card__cta">
+              Unlock Pro Autopilot <Zap size={14} style={{ fill: 'currentColor', marginLeft: '4px' }} />
+            </button>
+          </div>
+
+          {/* Agent Tier 3: Enterprise */}
+          <div className="pricing-card pricing-card--agent theme-enterprise">
+            <span className="pricing-card__name">Enterprise Scale</span>
+            <p className="pricing-card__description">For agencies and companies requiring custom SLAs.</p>
+            <div className="pricing-card__price">
+              <span className="pricing-card__currency">$</span>
+              <span className="pricing-card__amount">149</span>
+              <span className="pricing-card__period">/ month</span>
+            </div>
+            
+            <ul className="pricing-card__features">
+              <li>
+                <Check size={14} />
+                <span>Unlimited Custom Agents</span>
+              </li>
+              <li>
+                <Check size={14} />
+                <span>Dedicated Memory Clusters</span>
+              </li>
+              <li>
+                <Check size={14} />
+                <span>Custom API Integrations</span>
+              </li>
+              <li>
+                <Check size={14} />
+                <span>24/7 Dedicated Support SLA</span>
+              </li>
+            </ul>
+            
+            <button className="btn btn-secondary pricing-card__cta">
+              Contact Sales
+            </button>
+          </div>
+        </div>
+
+        {/* Section 2: Prompt Token Packs */}
+        <div className="pricing-section-header" style={{ marginTop: '80px' }}>
+          <h2 className="pricing-section-title">Prompt Pack Token Tiers</h2>
+          <p className="pricing-section-desc">One-time token packs to generate fully optimized, high-converting prompts.</p>
+        </div>
+
+        <div className="pricing-grid pricing-grid--prompts">
           {pricingPlans.map(plan => (
             <div
               key={plan.id}
-              className={`pricing-card card pricing-card--${plan.id} ${plan.popular ? 'pricing-card--popular' : ''} ${state.plan === plan.id ? 'pricing-card--current' : ''}`}
+              className={`pricing-card pricing-card--compact pricing-card--${plan.id} ${plan.popular ? 'pricing-card--popular' : ''} ${state.plan === plan.id ? 'pricing-card--current' : ''}`}
             >
               {plan.popular && (
                 <div className="pricing-card__popular-tag">
-                  <Star size={12} /> Most Popular
+                  <Star size={12} /> Best Value
                 </div>
               )}
               {state.plan === plan.id && (
-                <div className="pricing-card__current-tag">Current Plan</div>
+                <div className="pricing-card__current-tag">Current</div>
               )}
               
               <h3 className="pricing-card__name" dangerouslySetInnerHTML={{ __html: plan.name }}></h3>
-              <p className="pricing-card__description" dangerouslySetInnerHTML={{ __html: plan.description }}></p>
               <div className="pricing-card__price">
                 <span className="pricing-card__currency">$</span>
-                <span className="pricing-card__amount">{plan.price}</span>
+                <span className="pricing-card__amount" style={{ fontSize: '38px' }}>{plan.price}</span>
+                <span className="pricing-card__period">/ pack</span>
               </div>
-              <p className="pricing-card__credits">
-                <span className="text-orange">{plan.credits}</span> Complete Prompt Packs ({plan.credits} Tokens)
+              <p className="pricing-card__credits" style={{ marginBottom: '16px' }}>
+                <span className="text-orange">{plan.credits}</span> Packs
               </p>
               
               <ul className="pricing-card__features">
-                {plan.features.map((feat, i) => (
+                {plan.features.slice(0, 4).map((feat, i) => ( // limit list to keep it compact
                   <li key={i}>
                     <Check size={14} />
                     <span dangerouslySetInnerHTML={{ __html: feat }}></span>

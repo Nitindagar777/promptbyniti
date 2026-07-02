@@ -445,3 +445,69 @@
   margin-top: 12px;
   font-style: italic;
 }
+
+/* Pricing Section Headers */
+.pricing-section-header {
+  text-align: center;
+  margin-top: 60px;
+  margin-bottom: 30px;
+}
+
+.pricing-section-title {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 8px;
+}
+
+.pricing-section-desc {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+/* Agent Card Styles in Pricing Page */
+.pricing-card.theme-starter {
+  border-color: rgba(6, 182, 212, 0.22) !important;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.8) 0%, rgba(6, 182, 212, 0.015) 100%) !important;
+}
+
+.pricing-card.theme-starter:hover {
+  border-color: rgba(6, 182, 212, 0.45) !important;
+  box-shadow: 0 30px 60px -12px rgba(6, 182, 212, 0.15) !important;
+}
+
+.pricing-card.theme-pro {
+  border-color: rgba(53, 225, 119, 0.25) !important;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.8) 0%, rgba(53, 225, 119, 0.015) 100%) !important;
+}
+
+.pricing-card.theme-pro:hover {
+  border-color: rgba(53, 225, 119, 0.45) !important;
+  box-shadow: 0 30px 60px -12px rgba(53, 225, 119, 0.15) !important;
+}
+
+.pricing-card.theme-enterprise {
+  border-color: rgba(168, 85, 247, 0.22) !important;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.8) 0%, rgba(168, 85, 247, 0.015) 100%) !important;
+}
+
+.pricing-card.theme-enterprise:hover {
+  border-color: rgba(168, 85, 247, 0.45) !important;
+  box-shadow: 0 30px 60px -12px rgba(168, 85, 247, 0.15) !important;
+}
+
+/* Compact Prompt Cards Styling */
+.pricing-card--compact {
+  padding: 28px !important;
+  min-height: auto !important;
+}
+
+.pricing-card--compact .pricing-card__features {
+  margin-bottom: 24px !important;
+  padding-top: 20px !important;
+}
+
+.pricing-card--compact .pricing-card__features li {
+  margin-bottom: 12px !important;
+  font-size: 13px !important;
+}
