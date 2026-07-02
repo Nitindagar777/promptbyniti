@@ -1182,6 +1182,48 @@ export default function PersonalAgentPage() {
         </div>
       </section>
 
+      {/* Autopilot Capabilities Showcase */}
+      <section className="agent-features-showcase">
+        <div className="container">
+          <div className="section-header text-center">
+            <span className="section-tag" style={{ color: '#ff7a30', background: 'rgba(255, 122, 48, 0.08)' }}>How It Works</span>
+            <h2 className="section-title showcase-title">Experience True Autopilot</h2>
+            <p className="section-desc">
+              Get your custom AI agent configured, trained, and fully deployed in three simple steps.
+            </p>
+          </div>
+
+          <div className="showcase-steps-grid">
+            <div className="showcase-step-card step-orange">
+              <div className="step-number">01</div>
+              <div className="step-icon-wrap">
+                <Bot size={28} />
+              </div>
+              <h3>Define Core Rules</h3>
+              <p>Write custom system prompts, target voice guidelines, and strict safety guardrails in our interactive tone sandbox.</p>
+            </div>
+
+            <div className="showcase-step-card step-cyan">
+              <div className="step-number">02</div>
+              <div className="step-icon-wrap">
+                <Database size={28} />
+              </div>
+              <h3>Hydrate Knowledge</h3>
+              <p>Upload PDFs, CSVs, or past text logs so your digital twin gains deep, authentic intelligence about your brand and products.</p>
+            </div>
+
+            <div className="showcase-step-card step-pink">
+              <div className="step-number">03</div>
+              <div className="step-icon-wrap">
+                <Zap size={28} />
+              </div>
+              <h3>Launch Live Sync</h3>
+              <p>Turn on the autopilot track. Your agent actively drafts content, responds to community comments, and syncs profiles 24/7.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Pricing CTA Section */}
       <section className="agent-cta">
         <div className="container">
