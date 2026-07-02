@@ -893,7 +893,12 @@ export default function PersonalAgentPage() {
             {/* CONFIG PANEL */}
             <div className="config-panel card">
               <div className="panel-header">
-                <Cpu className="text-orange" size={20} />
+                <div className="window-dots">
+                  <span className="window-dot red"></span>
+                  <span className="window-dot yellow"></span>
+                  <span className="window-dot green"></span>
+                </div>
+                <Cpu className="text-orange" size={18} />
                 <h3>Persona Configuration</h3>
               </div>
 
@@ -994,44 +999,49 @@ export default function PersonalAgentPage() {
 
             {/* LIVE SIMULATOR CHAT PANEL */}
             <div className="chat-panel card">
-              <div className="panel-header">
-                <div className="agent-status-indicator">
-                  <div className="status-dot pulsing"></div>
-                  <div className="simulator-avatar-wrap" style={{ display: 'flex', alignItems: 'center' }}>
-                    {getAgentIcon(agentName, 20)}
-                  </div>
-                  <div>
-                    <h3 className="agent-name-display">{agentName || 'Unnamed Agent'}</h3>
-                    <span className="agent-meta-display">Active • {activeTone.name} Mode</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="chat-viewport">
-                <div className="chat-message-list">
-                  {chatMessages.map((msg, index) => (
-                    <div key={index} className={`chat-message ${msg.sender === 'user' ? 'chat-message--user' : 'chat-message--agent'}`}>
-                      <div className="message-avatar">
-                        {msg.sender === 'user' ? '👤' : activeTone.emoji}
-                      </div>
-                      <div className="message-bubble">
-                        <p>{msg.text}</p>
-                        <span className="message-time">{msg.timestamp}</span>
-                      </div>
-                    </div>
-                  ))}
-                  {isTyping && (
-                    <div className="chat-message chat-message--agent">
-                      <div className="message-avatar">{activeTone.emoji}</div>
-                      <div className="message-bubble typing-bubble">
-                        <div className="typing-indicator">
-                          <span></span>
-                          <span></span>
-                          <span></span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+               <div className="panel-header">
+                 <div className="window-dots">
+                   <span className="window-dot red"></span>
+                   <span className="window-dot yellow"></span>
+                   <span className="window-dot green"></span>
+                 </div>
+                 <div className="agent-status-indicator">
+                   <div className="status-dot pulsing"></div>
+                   <div className="simulator-avatar-wrap" style={{ display: 'flex', alignItems: 'center' }}>
+                     {getAgentIcon(agentName, 20)}
+                   </div>
+                   <div>
+                     <h3 className="agent-name-display">{agentName || 'Unnamed Agent'}</h3>
+                     <span className="agent-meta-display">Active • {activeTone.name} Mode</span>
+                   </div>
+                 </div>
+               </div>
+ 
+               <div className="chat-viewport">
+                 <div className="chat-message-list">
+                   {chatMessages.map((msg, index) => (
+                     <div key={index} className={`chat-message ${msg.sender === 'user' ? 'chat-message--user' : 'chat-message--agent'}`}>
+                       <div className={`message-avatar ${msg.sender === 'user' ? 'user-avatar' : 'agent-avatar'}`}>
+                         {msg.sender === 'user' ? '👤' : getAgentIcon(agentName, 16)}
+                       </div>
+                       <div className="message-bubble">
+                         <p>{msg.text}</p>
+                         <span className="message-time">{msg.timestamp}</span>
+                       </div>
+                     </div>
+                   ))}
+                   {isTyping && (
+                     <div className="chat-message chat-message--agent">
+                       <div className="message-avatar agent-avatar">{getAgentIcon(agentName, 16)}</div>
+                       <div className="message-bubble typing-bubble">
+                         <div className="typing-indicator">
+                           <span></span>
+                           <span></span>
+                           <span></span>
+                         </div>
+                       </div>
+                     </div>
+                   )}
                   <div ref={chatEndRef} />
                 </div>
               </div>
