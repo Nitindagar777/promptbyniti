@@ -911,7 +911,114 @@ export default function PersonalAgentPage() {
           </div>
         </div>
       </section>
-      <br></br><br></br><br></br>
+      {/* 2D Sketch Workflow Comparison Section */}
+      <section className="agent-workflow-comparison">
+        <div className="container">
+          <div className="section-header text-center">
+            <span className="section-tag" style={{ color: '#35e177', background: 'rgba(53, 225, 119, 0.08)' }}>Direct Vs. Chaotic Path</span>
+            <h2 className="section-title comparison-title">How Prompt by Niti Works</h2>
+            <p className="section-desc">
+              Compare the manual, chaotic loop of content creation and platform management against our direct AI-agent autopilot path.
+            </p>
+          </div>
+
+          <div className="comparison-grid">
+            {/* Left side: The Manual Chaos */}
+            <div className="comparison-card card manual-chaos-card">
+              <div className="card-sketch-header">
+                <h3>The Usual Path</h3>
+                <span className="sketch-subtitle">Hours of manual copy-paste & editing</span>
+              </div>
+              <div className="sketch-viewport">
+                <svg viewBox="0 0 400 400" className="sketch-svg">
+                  {/* Winding Path */}
+                  <path
+                    d="M 40 180 C 40 280, 160 260, 160 180 C 160 100, 240 100, 240 180 C 240 260, 80 280, 80 350 C 80 380, 200 380, 240 350 C 280 320, 360 300, 360 200"
+                    fill="none"
+                    stroke="rgba(239, 68, 68, 0.4)"
+                    strokeWidth="8"
+                    strokeLinecap="round"
+                    strokeDasharray="4 6"
+                  />
+                  
+                  {/* Start Point */}
+                  <circle cx="40" cy="180" r="12" fill="#ef4444" />
+                  <text x="35" y="155" fill="#ffffff" fontSize="12" fontWeight="bold" fontFamily="monospace">YOU</text>
+
+                  {/* Obstacle 1: Video Editor */}
+                  <g transform="translate(140, 120)">
+                    <rect x="0" y="0" width="80" height="40" rx="6" fill="#1f1f1f" stroke="#ef4444" strokeWidth="2" />
+                    <text x="10" y="24" fill="#ef4444" fontSize="10" fontWeight="bold">Video Editor</text>
+                  </g>
+
+                  {/* Obstacle 2: Social Networks (Multiple Doors) */}
+                  <g transform="translate(190, 210)">
+                    <rect x="0" y="0" width="90" height="45" rx="6" fill="#1f1f1f" stroke="#ef4444" strokeWidth="2" />
+                    <text x="12" y="26" fill="#ef4444" fontSize="10" fontWeight="bold">Manual Sync</text>
+                  </g>
+
+                  {/* Obstacle 3: Recruitment or manual drafts */}
+                  <g transform="translate(120, 320)">
+                    <rect x="0" y="0" width="100" height="40" rx="6" fill="#1f1f1f" stroke="#ef4444" strokeWidth="2" />
+                    <text x="15" y="24" fill="#ef4444" fontSize="10" fontWeight="bold">Copy-Paste Loop</text>
+                  </g>
+
+                  {/* End Point */}
+                  <polygon points="360,190 375,200 360,210" fill="#22c55e" />
+                  <text x="310" y="170" fill="#22c55e" fontSize="11" fontWeight="bold" fontFamily="monospace">THE GOAL</text>
+                </svg>
+              </div>
+              <div className="comparison-bullets">
+                <div className="bullet-item text-red">✕ Wasting 4-6 hours per day on content creation</div>
+                <div className="bullet-item text-red">✕ Logging into 6 different tools and API services</div>
+                <div className="bullet-item text-red">✕ Dealing with delayed posts and broken templates</div>
+              </div>
+            </div>
+
+            {/* Right side: The Niti Autopilot */}
+            <div className="comparison-card card niti-autopilot-card">
+              <div className="card-sketch-header">
+                <h3 style={{ color: '#35e177' }}>Cutshort via Niti</h3>
+                <span className="sketch-subtitle">Instant automation & direct delivery</span>
+              </div>
+              <div className="sketch-viewport">
+                <svg viewBox="0 0 400 400" className="sketch-svg">
+                  {/* Clean Arc Path */}
+                  <path
+                    d="M 50 280 Q 200 60, 350 280"
+                    fill="none"
+                    stroke="#35e177"
+                    strokeWidth="5"
+                    strokeLinecap="round"
+                    strokeDasharray="6 6"
+                  />
+                  
+                  {/* Start Point */}
+                  <circle cx="50" cy="280" r="12" fill="#35e177" />
+                  <text x="45" y="315" fill="#ffffff" fontSize="12" fontWeight="bold" fontFamily="monospace">YOU</text>
+
+                  {/* Animated Rocket Bot */}
+                  <g transform="translate(170, 95)" className="sketch-rocket-group">
+                    <circle cx="30" cy="30" r="25" fill="#111" stroke="#35e177" strokeWidth="2" />
+                    <Bot size={24} className="text-green" style={{ transform: 'translate(18px, 18px)' }} />
+                    <path d="M 5 30 L -10 25 L -10 35 Z" fill="#fbbf24" /> {/* Jet Flame */}
+                  </g>
+
+                  {/* End Point */}
+                  <circle cx="350" cy="280" r="12" fill="#35e177" />
+                  <text x="325" y="315" fill="#35e177" fontSize="12" fontWeight="bold" fontFamily="monospace">THE GOAL</text>
+                </svg>
+              </div>
+              <div className="comparison-bullets">
+                <div className="bullet-item text-green">✓ Setup once in 10 minutes & run forever</div>
+                <div className="bullet-item text-green">✓ Zero manual context switching or tab juggling</div>
+                <div className="bullet-item text-green">✓ Direct API delivery with 100% safety checks</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Feature Grid Section */}
       <section id="features" className="agent-features">
         <div className="container">
