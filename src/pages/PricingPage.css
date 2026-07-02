@@ -69,55 +69,29 @@
 }
 
 /* Starter Plan Styling */
-.pricing-card--starter {
-  border: 1px solid rgba(16, 185, 129, 0.2);
-}
-
-.pricing-card--starter:hover {
-  border-color: rgba(16, 185, 129, 0.4);
-  box-shadow: 0 30px 60px -12px rgba(16, 185, 129, 0.15);
-}
-
 .pricing-card--starter .pricing-card__features li svg {
-  color: #10b981;
-}
-
-.pricing-card--starter .pricing-card__cta {
-  border-color: rgba(16, 185, 129, 0.3) !important;
-}
-
-.pricing-card--starter .pricing-card__cta:hover {
-  background: rgba(16, 185, 129, 0.1) !important;
-  border-color: #10b981 !important;
-  color: #10b981 !important;
-  box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
-}
-
-/* Creator (Pro) Plan Styling - Cyan Color Scheme */
-.pricing-card--pro .pricing-card__features li svg {
   color: #06b6d4;
 }
 
+.pricing-card--starter .pricing-card__cta:hover {
+  background: rgba(6, 182, 212, 0.1) !important;
+  border-color: #06b6d4 !important;
+  color: #06b6d4 !important;
+  box-shadow: 0 0 15px rgba(6, 182, 212, 0.3);
+}
+
+/* Creator (Pro) Plan Styling - Green Color Scheme */
+.pricing-card--pro .pricing-card__features li svg {
+  color: #35e177;
+}
+
 .pricing-card--pro .pricing-card__cta:hover {
-  box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
+  box-shadow: 0 0 15px rgba(53, 225, 119, 0.4);
 }
 
 /* Studio (Unlimited) Plan Styling - Purple Color Scheme */
-.pricing-card--unlimited {
-  border: 1px solid rgba(139, 92, 246, 0.2);
-}
-
-.pricing-card--unlimited:hover {
-  border-color: rgba(139, 92, 246, 0.4);
-  box-shadow: 0 30px 60px -12px rgba(139, 92, 246, 0.15);
-}
-
 .pricing-card--unlimited .pricing-card__features li svg {
   color: #8b5cf6;
-}
-
-.pricing-card--unlimited .pricing-card__cta {
-  border-color: rgba(139, 92, 246, 0.3) !important;
 }
 
 .pricing-card--unlimited .pricing-card__cta:hover {
@@ -323,16 +297,16 @@
     flex-direction: column;
     align-items: center;
   }
-  
+
   .pricing-card {
     width: 100%;
     max-width: 450px;
   }
-  
+
   .pricing-card--popular {
     transform: none;
   }
-  
+
   .pricing-card--popular:hover {
     transform: translateY(-12px);
   }
@@ -340,6 +314,7 @@
 
 /* MOBILE — 480px and below */
 @media (max-width: 480px) {
+
   /* Page */
   .pricing-page {
     padding-top: 40px;
@@ -415,31 +390,43 @@
   border-radius: 20px;
   text-align: center;
 }
+
 .seller-earnings-box h3 {
   font-family: var(--font-display);
   font-size: 1.3rem;
   margin-bottom: 8px;
 }
-.seller-earnings-box > p {
+
+.seller-earnings-box>p {
   color: var(--text-secondary, #94a3b8);
   font-size: 0.9rem;
   margin-bottom: 20px;
 }
+
 .seller-earnings-example {
   background: rgba(15, 23, 42, 0.5);
   border-radius: 12px;
   padding: 16px;
   margin-bottom: 16px;
 }
+
 .seller-earnings-row {
   display: flex;
   justify-content: space-between;
   padding: 10px 0;
   font-size: 0.95rem;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
-.seller-earnings-row:last-child { border-bottom: none; }
-.seller-earnings-row--fee { opacity: 0.6; font-size: 0.85rem; }
+
+.seller-earnings-row:last-child {
+  border-bottom: none;
+}
+
+.seller-earnings-row--fee {
+  opacity: 0.6;
+  font-size: 0.85rem;
+}
+
 .seller-earnings-note {
   font-size: 0.8rem;
   color: var(--text-secondary, #94a3b8);
@@ -502,7 +489,7 @@
 }
 
 .title-agents {
-  color: #35e177 !important;
+  color: #78d7ff !important;
 }
 
 /* Compact Prompt Cards Styling */

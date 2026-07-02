@@ -146,7 +146,7 @@ export default function PricingPage() {
           {pricingPlans.map(plan => (
             <div
               key={plan.id}
-              className={`pricing-card pricing-card--compact pricing-card--${plan.id} ${plan.popular ? 'pricing-card--popular' : ''} ${state.plan === plan.id ? 'pricing-card--current' : ''}`}
+              className={`pricing-card pricing-card--compact pricing-card--${plan.id} ${plan.id === 'starter' ? 'theme-starter' : plan.id === 'pro' ? 'theme-pro pricing-card--popular' : 'theme-enterprise'} ${state.plan === plan.id ? 'pricing-card--current' : ''}`}
             >
               {plan.popular && (
                 <div className="pricing-card__popular-tag">
@@ -157,7 +157,9 @@ export default function PricingPage() {
                 <div className="pricing-card__current-tag">Current</div>
               )}
               
-              <h3 className="pricing-card__name" dangerouslySetInnerHTML={{ __html: plan.name }}></h3>
+              <h3 className="pricing-card__name" style={{ color: plan.id === 'starter' ? '#06b6d4' : plan.id === 'pro' ? '#35e177' : '#a855f7' }}>
+                {plan.id === 'starter' ? 'Starter' : plan.id === 'pro' ? 'Creator' : 'Studio'}
+              </h3>
               <div className="pricing-card__price">
                 <span className="pricing-card__currency">$</span>
                 <span className="pricing-card__amount" style={{ fontSize: '38px' }}>{plan.price}</span>
@@ -202,8 +204,7 @@ export default function PricingPage() {
         <div className="pricing-grid pricing-grid--agents">
           {/* Agent Tier 1: Starter */}
           <div className="pricing-card pricing-card--agent pricing-card--compact theme-starter">
-            <span className="pricing-card__name">Starter Agent</span>
-            <p className="pricing-card__description">Perfect for creators looking to automate basic tasks.</p>
+            <span className="pricing-card__name" style={{ color: '#06b6d4' }}>Starter Agent</span>
             <div className="pricing-card__price">
               <span className="pricing-card__currency">$</span>
               <span className="pricing-card__amount" style={{ fontSize: '38px' }}>19</span>
@@ -240,7 +241,6 @@ export default function PricingPage() {
               <Star size={12} /> Most Popular
             </div>
             <span className="pricing-card__name" style={{ color: '#35e177' }}>Pro Autopilot</span>
-            <p className="pricing-card__description">For professionals wanting fully autonomous 24/7 brand synchronization.</p>
             <div className="pricing-card__price">
               <span className="pricing-card__currency">$</span>
               <span className="pricing-card__amount" style={{ fontSize: '38px' }}>49</span>
@@ -277,8 +277,7 @@ export default function PricingPage() {
 
           {/* Agent Tier 3: Enterprise */}
           <div className="pricing-card pricing-card--agent pricing-card--compact theme-enterprise">
-            <span className="pricing-card__name">Enterprise Scale</span>
-            <p className="pricing-card__description">For agencies and companies requiring custom SLAs.</p>
+            <span className="pricing-card__name" style={{ color: '#a855f7' }}>Enterprise Scale</span>
             <div className="pricing-card__price">
               <span className="pricing-card__currency">$</span>
               <span className="pricing-card__amount" style={{ fontSize: '38px' }}>149</span>
