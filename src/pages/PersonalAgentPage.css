@@ -788,9 +788,7 @@
 }
 
 .workflow-title {
-  background: linear-gradient(135deg, var(--color-orange) 0%, var(--color-pink) 50%, var(--color-cyan) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #a855f7 !important; /* Unique neon purple that stands out from all other headings */
   display: inline-block;
   font-weight: 800;
   letter-spacing: -0.02em;
