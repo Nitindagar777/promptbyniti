@@ -598,9 +598,19 @@ export default function PersonalAgentPage() {
               </div>
 
               <div className="agent-hero__actions">
-                <a href="#agent-sandbox-section" className="btn btn-primary btn-xl">
-                  Launch Agent Creator <ArrowRight size={18} />
-                </a>
+                {state?.user ? (
+                  <a href="#agent-sandbox-section" className="btn btn-primary btn-xl">
+                    Launch Agent Creator <ArrowRight size={18} />
+                  </a>
+                ) : (
+                  <button 
+                    onClick={() => navigate('/login')}
+                    className="btn btn-primary btn-xl"
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', border: 'none' }}
+                  >
+                    Launch Agent Creator <ArrowRight size={18} />
+                  </button>
+                )}
                 <a href="#directory" className="btn btn-cyan btn-xl">
                   View 100+ Agent Catalog
                 </a>
