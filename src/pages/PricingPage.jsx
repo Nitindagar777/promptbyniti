@@ -17,7 +17,6 @@ export default function PricingPage() {
   const handleSelectPlan = async (planId) => {
     // Must be logged in
     if (!state.user) {
-      alert('Please login first to upgrade your plan.');
       navigate('/login');
       return;
     }

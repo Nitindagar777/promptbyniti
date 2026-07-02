@@ -477,7 +477,6 @@ export default function PersonalAgentPage() {
 
   const handleSelectPlan = (planId) => {
     if (!state?.user) {
-      alert('Please login first to access AI Autopilot plans.');
       navigate('/login');
     } else {
       navigate('/pricing');
