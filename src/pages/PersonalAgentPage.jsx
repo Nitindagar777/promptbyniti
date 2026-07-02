@@ -495,8 +495,19 @@ export default function PersonalAgentPage() {
   const [activeCategory, setActiveCategory] = useState(AI_EMPLOYEE_CATEGORIES[0].id);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedAgentForModal, setSelectedAgentForModal] = useState(null);
-  const [calcHours, setCalcHours] = useState(20);
-  const [calcRate, setCalcRate] = useState(40);
+  const [activeReviewTab, setActiveReviewTab] = useState('twitter');
+
+  // Auto-rotate social reviews every 4 seconds
+  useEffect(() => {
+    const platforms = ['twitter', 'linkedin', 'instagram', 'youtube', 'discord'];
+    const interval = setInterval(() => {
+      setActiveReviewTab(prev => {
+        const nextIdx = (platforms.indexOf(prev) + 1) % platforms.length;
+        return platforms[nextIdx];
+      });
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Restore and preserve scroll position + clear hash on mount
   useEffect(() => {
@@ -1184,80 +1195,171 @@ export default function PersonalAgentPage() {
         </div>
       </section>
 
-      {/* Autopilot Capabilities Showcase */}
-      {/* Autopilot Savings Calculator Showcase */}
-      <section className="agent-savings-calc">
+      {/* Rotating Platform Reviews Showcase */}
+      <section className="agent-reviews-marquee">
         <div className="container">
           <div className="section-header text-center">
-            <span className="section-tag" style={{ color: '#06b6d4', background: 'rgba(6, 182, 212, 0.08)' }}>Operational ROI</span>
-            <h2 className="section-title calculator-title">Calculate Your Autopilot Savings</h2>
+            <span className="section-tag" style={{ color: '#fbbf24', background: 'rgba(251, 191, 36, 0.08)' }}>Social Proof</span>
+            <h2 className="section-title reviews-title">Creator Reviews & Platforms</h2>
             <p className="section-desc">
-              Estimate the manual hours and operational capital you reclaim by delegating brand tasks to Niti AI Agents.
+              Explore authentic feedback from builders automating brand engagement across global networks.
             </p>
           </div>
 
-          <div className="calculator-split-box card">
-            <div className="calc-inputs-side">
-              <div className="slider-control-group">
-                <div className="slider-labels">
-                  <span className="slider-title">Manual Hours Spent / Week</span>
-                  <span className="slider-value-display text-orange">{calcHours} hrs</span>
+          {/* Platform Tab Buttons */}
+          <div className="review-tabs-container">
+            <button
+              onClick={() => setActiveReviewTab('twitter')}
+              className={`review-tab-btn ${activeReviewTab === 'twitter' ? 'active-twitter' : ''}`}
+            >
+              <span>X / Twitter</span>
+            </button>
+            <button
+              onClick={() => setActiveReviewTab('linkedin')}
+              className={`review-tab-btn ${activeReviewTab === 'linkedin' ? 'active-linkedin' : ''}`}
+            >
+              <span>LinkedIn</span>
+            </button>
+            <button
+              onClick={() => setActiveReviewTab('instagram')}
+              className={`review-tab-btn ${activeReviewTab === 'instagram' ? 'active-instagram' : ''}`}
+            >
+              <span>Instagram</span>
+            </button>
+            <button
+              onClick={() => setActiveReviewTab('youtube')}
+              className={`review-tab-btn ${activeReviewTab === 'youtube' ? 'active-youtube' : ''}`}
+            >
+              <span>YouTube</span>
+            </button>
+            <button
+              onClick={() => setActiveReviewTab('discord')}
+              className={`review-tab-btn ${activeReviewTab === 'discord' ? 'active-discord' : ''}`}
+            >
+              <span>Discord</span>
+            </button>
+          </div>
+
+          {/* Active Review Showcase Card */}
+          <div className="review-active-card-wrap">
+            {activeReviewTab === 'twitter' && (
+              <div className="review-active-card card highlight-twitter">
+                <div className="review-card-glow"></div>
+                <div className="review-avatar-wrap">🤖</div>
+                <div className="review-quote-content">
+                  <div className="review-rating">⭐⭐⭐⭐⭐</div>
+                  <p>"Prompt by Niti completely automated our daily coding prompts. We grew by 12,000 developer followers in 30 days."</p>
+                  <div className="review-author">
+                    <strong>@tech_innovator</strong>
+                    <span>X Content Creator</span>
+                  </div>
                 </div>
-                <input
-                  type="range"
-                  min="5"
-                  max="80"
-                  step="5"
-                  value={calcHours}
-                  onChange={(e) => setCalcHours(Number(e.target.value))}
-                  className="calc-range-slider range-orange"
-                />
-                <div className="slider-hints">
-                  <span>5h (Light tasking)</span>
-                  <span>80h (Two full-time staff)</span>
+                <div className="review-stat-badge">
+                  <span className="badge-value text-cyan">+12.4k</span>
+                  <span className="badge-label">Follower Growth</span>
                 </div>
               </div>
+            )}
 
-              <div className="slider-control-group" style={{ marginTop: '32px' }}>
-                <div className="slider-labels">
-                  <span className="slider-title">Your Hourly Rate / Value</span>
-                  <span className="slider-value-display text-cyan">${calcRate}/hr</span>
+            {activeReviewTab === 'linkedin' && (
+              <div className="review-active-card card highlight-linkedin">
+                <div className="review-card-glow"></div>
+                <div className="review-avatar-wrap">🏢</div>
+                <div className="review-quote-content">
+                  <div className="review-rating">⭐⭐⭐⭐⭐</div>
+                  <p>"Our agency syncs brand thought-leadership daily. Lead generation from LinkedIn has tripled since deploying Niti Autopilot."</p>
+                  <div className="review-author">
+                    <strong>Sarah Jenkins</strong>
+                    <span>B2B Growth Director</span>
+                  </div>
                 </div>
-                <input
-                  type="range"
-                  min="15"
-                  max="150"
-                  step="5"
-                  value={calcRate}
-                  onChange={(e) => setCalcRate(Number(e.target.value))}
-                  className="calc-range-slider range-cyan"
-                />
-                <div className="slider-hints">
-                  <span>$15/h (Standard task)</span>
-                  <span>$150/h (Director level)</span>
+                <div className="review-stat-badge">
+                  <span className="badge-value text-blue">3.2x</span>
+                  <span className="badge-label">Lead Conversion</span>
                 </div>
               </div>
-            </div>
+            )}
 
-            <div className="calc-outputs-side">
-              <div className="output-stat-block block-cyan">
-                <span className="stat-label">MONTHLY HOURS RECLAIMED</span>
-                <div className="stat-value">
-                  {(calcHours * 4 * 0.85).toFixed(0)} <span className="stat-unit">Hours</span>
+            {activeReviewTab === 'instagram' && (
+              <div className="review-active-card card highlight-instagram">
+                <div className="review-card-glow"></div>
+                <div className="review-avatar-wrap">📷</div>
+                <div className="review-quote-content">
+                  <div className="review-rating">⭐⭐⭐⭐⭐</div>
+                  <p>"The auto-generated caption prompts match my visual aesthetic perfectly. Direct message response rates are up 92%."</p>
+                  <div className="review-author">
+                    <strong>@creativespace</strong>
+                    <span>Visual Artist</span>
+                  </div>
                 </div>
-                <p className="stat-hint">Based on 85% autopilot coverage of manual content curation, syncs & replies.</p>
-              </div>
-
-              <div className="output-stat-block block-green">
-                <span className="stat-label">ESTIMATED CAPITAL RECLAIMED</span>
-                <div className="stat-value text-green">
-                  ${(calcHours * 4 * 0.85 * calcRate).toLocaleString(undefined, { maximumFractionDigits: 0 })} <span className="stat-unit">/ month</span>
+                <div className="review-stat-badge">
+                  <span className="badge-value text-pink">92%</span>
+                  <span className="badge-label">DM Engagement</span>
                 </div>
-                <p className="stat-hint">Reclaimed operational resources redirected to strategic product growth.</p>
               </div>
+            )}
 
-              <div className="efficiency-badge-bar">
-                <Zap size={14} style={{ fill: 'currentColor' }} /> <span><strong>5.4x</strong> Speed Multiplier Boost Unlocked</span>
+            {activeReviewTab === 'youtube' && (
+              <div className="review-active-card card highlight-youtube">
+                <div className="review-card-glow"></div>
+                <div className="review-avatar-wrap">🎥</div>
+                <div className="review-quote-content">
+                  <div className="review-rating">⭐⭐⭐⭐⭐</div>
+                  <p>"We use the agent to draft custom description timestamps and auto-respond to community comments. Reclaims 15 hours a week."</p>
+                  <div className="review-author">
+                    <strong>Dave Miller</strong>
+                    <span>Tech Educator</span>
+                  </div>
+                </div>
+                <div className="review-stat-badge">
+                  <span className="badge-value text-red">15h</span>
+                  <span className="badge-label">Saved / Week</span>
+                </div>
+              </div>
+            )}
+
+            {activeReviewTab === 'discord' && (
+              <div className="review-active-card card highlight-discord">
+                <div className="review-card-glow"></div>
+                <div className="review-avatar-wrap">👾</div>
+                <div className="review-quote-content">
+                  <div className="review-rating">⭐⭐⭐⭐⭐</div>
+                  <p>"Automated rules validation and prompt moderation filters. Our community of 40k stays safe 24/7 without manual review."</p>
+                  <div className="review-author">
+                    <strong>Alex Chen</strong>
+                    <span>Discord Mod Lead</span>
+                  </div>
+                </div>
+                <div className="review-stat-badge">
+                  <span className="badge-value text-purple">40k</span>
+                  <span className="badge-label">Members Synced</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Infinite Platforms Logo Marquee (Rotating Unique Thing) */}
+          <div className="platforms-marquee-wrap">
+            <div className="marquee-track">
+              <div className="marquee-slide">
+                <span>Twitter / X</span>
+                <span>Instagram</span>
+                <span>LinkedIn</span>
+                <span>Discord</span>
+                <span>Slack</span>
+                <span>Telegram</span>
+                <span>YouTube</span>
+                <span>TikTok</span>
+              </div>
+              <div className="marquee-slide">
+                <span>Twitter / X</span>
+                <span>Instagram</span>
+                <span>LinkedIn</span>
+                <span>Discord</span>
+                <span>Slack</span>
+                <span>Telegram</span>
+                <span>YouTube</span>
+                <span>TikTok</span>
               </div>
             </div>
           </div>
