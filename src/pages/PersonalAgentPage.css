@@ -1130,35 +1130,36 @@
   content: '';
   position: absolute;
   top: 0;
-  left: -50px;
-  width: 50px;
+  left: 0;
+  width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, var(--color-cyan), transparent);
-  animation: pipeline-pulse 2s infinite linear;
+  background: linear-gradient(90deg, transparent 42%, var(--color-cyan) 50%, transparent 58%);
+  will-change: transform;
+  transform: translateX(-100%) translateZ(0);
+  animation: pipeline-pulse-transform 2s infinite linear;
 }
 
 .ops-pipeline-track:nth-child(2) .ops-connector-line::after {
-  background: linear-gradient(90deg, transparent, var(--color-pink), transparent);
+  background: linear-gradient(90deg, transparent 42%, var(--color-pink) 50%, transparent 58%);
   animation-delay: 0.5s;
 }
 
 .ops-pipeline-track:nth-child(3) .ops-connector-line::after {
-  background: linear-gradient(90deg, transparent, var(--color-green), transparent);
+  background: linear-gradient(90deg, transparent 42%, var(--color-green) 50%, transparent 58%);
   animation-delay: 1s;
 }
 
 .ops-pipeline-track:nth-child(4) .ops-connector-line::after {
-  background: linear-gradient(90deg, transparent, var(--color-orange), transparent);
+  background: linear-gradient(90deg, transparent 42%, var(--color-orange) 50%, transparent 58%);
   animation-delay: 1.5s;
 }
 
-@keyframes pipeline-pulse {
+@keyframes pipeline-pulse-transform {
   0% {
-    left: -30%;
+    transform: translateX(-100%) translateZ(0);
   }
-
   100% {
-    left: 130%;
+    transform: translateX(100%) translateZ(0);
   }
 }
 
@@ -1616,18 +1617,20 @@
 }
 
 .comparison-title {
-  color: #35e177 !important;
+  color: #faae78 !important;
   font-weight: 800;
   letter-spacing: -0.02em;
 }
 
 .comparison-flow-image-wrap {
   width: 95%;
-  max-width: 1360px; /* Expands to widescreen size for full-screen legibility */
+  max-width: 1360px;
+  /* Expands to widescreen size for full-screen legibility */
   margin: var(--space-lg) auto 0 auto;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 28px;
-  background: #ffffff; /* Crisp white background for sketch illustration */
+  background: #ffffff;
+  /* Crisp white background for sketch illustration */
   padding: 24px;
   box-shadow: 0 35px 70px rgba(0, 0, 0, 0.65);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -1662,14 +1665,17 @@
   --card-accent: var(--color-orange);
   --card-accent-rgb: 249, 115, 22;
 }
+
 .feature-card.theme-cyan {
   --card-accent: var(--color-cyan);
   --card-accent-rgb: 6, 182, 212;
 }
+
 .feature-card.theme-purple {
   --card-accent: var(--color-purple);
   --card-accent-rgb: 168, 85, 247;
 }
+
 .feature-card.theme-pink {
   --card-accent: var(--color-pink);
   --card-accent-rgb: 236, 72, 153;
