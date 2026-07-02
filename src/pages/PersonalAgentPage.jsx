@@ -470,127 +470,9 @@ const getAgentIcon = (name, size = 22) => {
 };
 
 // Pre-built Automation Recipes for visual pipeline simulator
-const AUTOMATION_RECIPES = [
-  {
-    id: 'video-booster',
-    name: 'Cross-Platform Video Booster',
-    emoji: '🎥',
-    iconColor: '#ff0000',
-    description: 'Automatically repurposes new YouTube video uploads into LinkedIn posts, X threads, and Telegram broadcasts.',
-    timeSaved: '45 mins saved',
-    steps: [
-      { id: 'trigger', type: 'trigger', label: 'New Video Upload', platform: 'YouTube', icon: 'youtube', details: 'Trigger: Video Published' },
-      { id: 'processing', type: 'ai', label: 'Cognitive Engine', platform: 'AI Agent', icon: 'bot', details: 'Transcribe & Generate Posts' },
-      { id: 'action1', type: 'action', label: 'LinkedIn Post', platform: 'LinkedIn', icon: 'linkedin', details: 'Publish Article Outline' },
-      { id: 'action2', type: 'action', label: 'X Thread', platform: 'Twitter', icon: 'twitter', details: 'Post 5-Part Hook Thread' },
-      { id: 'action3', type: 'action', label: 'Telegram Broadcast', platform: 'Telegram', icon: 'telegram', details: 'Send Video Digest Alert' }
-    ],
-    logs: [
-      'Initializing Cross-Platform Video Booster...',
-      'Listening for new uploads on YouTube Channel...',
-      'SUCCESS: New video detected "Understanding AI Agent Swarms" (11:42 duration)',
-      'AI AGENT: Starting transcription & cognitive analysis...',
-      'AI AGENT: Core insights extracted. Formatting content for professional networks...',
-      'LINKEDIN: Draft post generated. Staging publishing...',
-      'LINKEDIN: Successfully posted update to Profile (Post ID: li_98231)',
-      'X (TWITTER): Generating 5-part hook thread...',
-      'X (TWITTER): Successfully published thread (Tweet ID: x_784321)',
-      'TELEGRAM: Formatting channel markdown alert...',
-      'TELEGRAM: Successfully broadcasted message to subscribers...',
-      'Automation workflow complete! Total execution time: 4.8 seconds.'
-    ]
-  },
-  {
-    id: 'support-autopilot',
-    name: 'Customer Support Autopilot',
-    emoji: '🎧',
-    iconColor: '#5865F2',
-    description: 'Intercepts incoming customer tickets, runs sentiment analysis, drafts responses, and updates CRM databases.',
-    timeSaved: '30 mins saved',
-    steps: [
-      { id: 'trigger', type: 'trigger', label: 'Discord Message', platform: 'Discord', icon: 'discord', details: 'Trigger: Support Ticket Raised' },
-      { id: 'processing', type: 'ai', label: 'Sentiment & Draft Agent', platform: 'AI Agent', icon: 'bot', details: 'Analyze Tone & Write Response' },
-      { id: 'action1', type: 'action', label: 'Slack Alert', platform: 'Slack', icon: 'slack', details: 'Notify Support Channel' },
-      { id: 'action2', type: 'action', label: 'CRM Sync', platform: 'Shopify', icon: 'shopify', details: 'Create HubSpot Customer Ticket' }
-    ],
-    logs: [
-      'Initializing Customer Support Autopilot...',
-      'Monitoring support channel hooks on Discord...',
-      'SUCCESS: Discord support ticket #4812 received: "Order shipment delayed"',
-      'AI AGENT: Analyzing sentiment... status: [FRUSTRATED, HIGH PRIORITY]',
-      'AI AGENT: Querying shipment API... status: [DELAYED AT PORT]',
-      'AI AGENT: Drafting apologetic response with tracking details...',
-      'SLACK: Alerting triage channel #support-alerts...',
-      'SLACK: Successfully posted alert with drafted reply (Channel ID: sl_4831)',
-      'SHOPIFY: Syncing ticket details to customer profile...',
-      'SHOPIFY: Successfully updated customer profile (Ticket ID: shop_90213)',
-      'Automation workflow complete! Total execution time: 3.2 seconds.'
-    ]
-  },
-  {
-    id: 'ecommerce-lister',
-    name: 'E-commerce Listing Promotor',
-    emoji: '🛒',
-    iconColor: '#96bf48',
-    description: 'Monitors new e-commerce store listings to instantly create creative copy and publish marketing visuals.',
-    timeSaved: '60 mins saved',
-    steps: [
-      { id: 'trigger', type: 'trigger', label: 'Shopify Product', platform: 'Shopify', icon: 'shopify', details: 'Trigger: Product Added' },
-      { id: 'processing', type: 'ai', label: 'Creative Content Agent', platform: 'AI Agent', icon: 'bot', details: 'Generate Product Copy & Assets' },
-      { id: 'action1', type: 'action', label: 'Pinterest Pin', platform: 'Pinterest', icon: 'pinterest', details: 'Pin Product Creative image' },
-      { id: 'action2', type: 'action', label: 'Instagram Post', platform: 'Instagram', icon: 'instagram', details: 'Post Product Carousel photo' }
-    ],
-    logs: [
-      'Initializing E-commerce Listing Promoter...',
-      'Listening for shop catalog changes on Shopify...',
-      'SUCCESS: New product detected "Quantum Ergonomic Chair" ($299)',
-      'AI AGENT: Generating SEO-optimized product copy...',
-      'AI AGENT: Creating promotional images for social media platforms...',
-      'PINTEREST: Uploading visual pins for board "Office Tech"...',
-      'PINTEREST: Successfully pinned image (Pin ID: pin_89412)',
-      'INSTAGRAM: Generating relevant hashtags and description...',
-      'INSTAGRAM: Successfully uploaded photo carousel (Post ID: ig_38210)',
-      'Automation workflow complete! Total execution time: 4.1 seconds.'
-    ]
-  },
-  {
-    id: 'research-newsletter',
-    name: 'Research & News Intelligence',
-    emoji: '📰',
-    iconColor: '#ff5722',
-    description: 'Tracks industry trends and news alerts, summarizes key details, and saves fact-checked outlines.',
-    timeSaved: '90 mins saved',
-    steps: [
-      { id: 'trigger', type: 'trigger', label: 'Substack News', platform: 'Substack', icon: 'substack', details: 'Trigger: RSS Feed Alert' },
-      { id: 'processing', type: 'ai', label: 'Fact-Check Agent', platform: 'AI Agent', icon: 'bot', details: 'Summarize, Extract & Check facts' },
-      { id: 'action1', type: 'action', label: 'Database Log', platform: 'Database', icon: 'database', details: 'Save to Notion Wiki' },
-      { id: 'action2', type: 'action', label: 'Email Broadcast', platform: 'Email', icon: 'substack', details: 'Send Newsletter to Team' }
-    ],
-    logs: [
-      'Initializing Research & News Intelligence...',
-      'Scanning Substack newsletters and RSS alerts...',
-      'SUCCESS: New article detected: "State of Agentic Systems in 2026"',
-      'AI AGENT: Parsing article text & extracting core findings...',
-      'AI AGENT: Cross-referencing claims with fact check database...',
-      'AI AGENT: Fact check: [VERIFIED]. Summary generated (400 words)',
-      'DATABASE: Formatting Notion database page properties...',
-      'DATABASE: Successfully added page to "Tech Trends wiki" (Page ID: db_7841)',
-      'EMAIL NEWSLETTER: Creating custom HTML alert template...',
-      'EMAIL NEWSLETTER: Successfully sent digest email to 12 team members...',
-      'Automation workflow complete! Total execution time: 5.2 seconds.'
-    ]
-  }
-];
-
 export default function PersonalAgentPage() {
   const { state, setScroll, getScroll } = useApp();
   const location = useLocation();
-
-  // Automation Visualizer States
-  const [activeRecipe, setActiveRecipe] = useState(AUTOMATION_RECIPES[0]);
-  const [simulationState, setSimulationState] = useState('idle'); // 'idle' | 'running' | 'completed'
-  const [simulationStepIndex, setSimulationStepIndex] = useState(-1);
-  const [liveLogs, setLiveLogs] = useState([]);
 
   // Ecosystem Synced Platforms State
   const [syncedPlatforms, setSyncedPlatforms] = useState({
@@ -641,42 +523,6 @@ export default function PersonalAgentPage() {
       window.removeEventListener('scroll', handleScrollSave);
     };
   }, []);
-
-  const runSimulation = () => {
-    if (simulationState === 'running') return;
-
-    setSimulationState('running');
-    setSimulationStepIndex(-1);
-    setLiveLogs([]);
-
-    let currentLogLine = 0;
-    const totalSteps = activeRecipe.steps.length;
-    const totalLogs = activeRecipe.logs.length;
-
-    const interval = setInterval(() => {
-      if (currentLogLine < totalLogs) {
-        setLiveLogs(prev => [...prev, activeRecipe.logs[currentLogLine]]);
-
-        if (currentLogLine === 1) {
-          setSimulationStepIndex(0);
-        } else if (currentLogLine === 3) {
-          setSimulationStepIndex(1);
-        } else if (currentLogLine === 5) {
-          setSimulationStepIndex(2);
-        } else if (currentLogLine === 7 && totalSteps > 3) {
-          setSimulationStepIndex(3);
-        } else if (currentLogLine === 9 && totalSteps > 4) {
-          setSimulationStepIndex(4);
-        }
-
-        currentLogLine++;
-      } else {
-        setSimulationState('completed');
-        setSimulationStepIndex(totalSteps);
-        clearInterval(interval);
-      }
-    }, 450);
-  };
 
   // Filter logic for AI employees catalog
   const getFilteredCategories = () => {
@@ -962,137 +808,105 @@ export default function PersonalAgentPage() {
         </div>
       </section>
 
-      {/* AI Automation Workflow Visualizer Section */}
-      <section id="agent-workflow-visualizer-section" className="agent-workflow-visualizer-section">
+      {/* Real-time AI Operations Center Section */}
+      <section id="agent-operations-dashboard" className="agent-workflow-visualizer-section">
         <div className="container">
           <div className="section-header text-center">
-            <span className="section-tag">Automation Pipeline</span>
+            <span className="section-tag">Operation Status</span>
             <h2 className="section-title workflow-title">Live AI Automation Pipelines</h2>
             <p className="section-desc">
-              Select an automation recipe on the left and trigger the simulation to watch how our pre-built AI Agents connect platforms, process data, and execute complex workflows in real-time.
+              Watch our specialized AI Agents run end-to-end background processes, sync social platforms, translate articles, and reconcile datasets automatically in real-time.
             </p>
           </div>
 
-          <div className="workflow-visualizer-grid">
-            {/* Left side: Recipe list & Terminal Console */}
-            <div className="workflow-left-panel">
-              <div className="recipe-selector-wrap card">
-                <h4>Select Automation Template</h4>
-                <div className="recipes-list">
-                  {AUTOMATION_RECIPES.map((recipe) => (
-                    <div
-                      key={recipe.id}
-                      className={`recipe-card ${activeRecipe.id === recipe.id ? 'active' : ''}`}
-                      onClick={() => {
-                        if (simulationState === 'running') return;
-                        setActiveRecipe(recipe);
-                        setSimulationState('idle');
-                        setSimulationStepIndex(-1);
-                        setLiveLogs([]);
-                      }}
-                    >
-                      <span className="recipe-emoji" style={{ background: `${recipe.iconColor}15` }}>
-                        {recipe.emoji}
-                      </span>
-                      <div className="recipe-details">
-                        <h5>{recipe.name}</h5>
-                        <p>{recipe.description}</p>
-                        <span className="recipe-time-saved">{recipe.timeSaved}</span>
-                      </div>
-                    </div>
-                  ))}
+          <div className="operations-dashboard">
+            {/* Pipeline 1: Social Repurposer */}
+            <div className="ops-pipeline-track">
+              <div className="ops-pipeline-flow">
+                <div className="ops-node" title="YouTube Source Node" style={{ border: '1px solid #ff0000', background: 'rgba(255, 0, 0, 0.05)' }}>
+                  {getAgentIcon('YouTube', 20)}
+                </div>
+                <div className="ops-connector-line"></div>
+                <div className="ops-node ai-node" title="AI Cognitive Summarizer">
+                  <Bot size={20} className="text-cyan" />
+                </div>
+                <div className="ops-connector-line"></div>
+                <div className="ops-node" title="LinkedIn Destination Node" style={{ border: '1px solid #0077b5', background: 'rgba(0, 119, 181, 0.05)' }}>
+                  {getAgentIcon('LinkedIn', 20)}
+                </div>
+                <div className="ops-node" title="X/Twitter Destination Node" style={{ border: '1px solid #ffffff', background: 'rgba(255, 255, 255, 0.05)' }}>
+                  {getAgentIcon('Twitter', 20)}
                 </div>
               </div>
-
-              {/* Terminal Logs */}
-              <div className="terminal-logs-card card">
-                <div className="terminal-header">
-                  <div className="window-dots">
-                    <span className="window-dot red"></span>
-                    <span className="window-dot yellow"></span>
-                    <span className="window-dot green"></span>
-                  </div>
-                  <span className="terminal-title">Execution Console - logs.sh</span>
-                </div>
-                <div className="terminal-body">
-                  {liveLogs.length === 0 ? (
-                    <div className="terminal-placeholder">
-                      <span>$ click "Simulate Workflow Pipeline" to run the logs...</span>
-                    </div>
-                  ) : (
-                    liveLogs.map((log, i) => (
-                      <div key={i} className="terminal-log-line">
-                        <span className="terminal-prompt">&gt;</span> {log}
-                      </div>
-                    ))
-                  )}
-                </div>
+              <div className="ops-metrics-card">
+                <span className="ops-badge active">● AUTO-REPURPOSING</span>
+                <span className="ops-stat">Output generated: <strong>LinkedIn Post & 5-Part Hook Thread</strong></span>
               </div>
             </div>
 
-            {/* Right side: Pipeline Canvas */}
-            <div className="workflow-right-panel card">
-              <div className="canvas-header">
-                <div className="window-dots">
-                  <span className="window-dot red"></span>
-                  <span className="window-dot yellow"></span>
-                  <span className="window-dot green"></span>
+            {/* Pipeline 2: Customer Service Loop */}
+            <div className="ops-pipeline-track">
+              <div className="ops-pipeline-flow">
+                <div className="ops-node" title="Discord Ticket Trigger" style={{ border: '1px solid #5865F2', background: 'rgba(88, 101, 242, 0.05)' }}>
+                  {getAgentIcon('Discord', 20)}
                 </div>
-                <span className="canvas-title">Pipeline Visualizer: {activeRecipe.name}</span>
-                <button
-                  className={`btn btn-primary run-sim-btn ${simulationState === 'running' ? 'disabled' : ''}`}
-                  onClick={runSimulation}
-                  disabled={simulationState === 'running'}
-                  style={{ display: 'flex', alignItems: 'center' }}
-                >
-                  {simulationState === 'running' ? (
-                    <>
-                      <RefreshCw className="spinning" size={14} style={{ marginRight: '6px' }} /> Simulating...
-                    </>
-                  ) : (
-                    <>
-                      <Play size={14} fill="currentColor" style={{ marginRight: '6px' }} /> Simulate Workflow Pipeline
-                    </>
-                  )}
-                </button>
+                <div className="ops-connector-line"></div>
+                <div className="ops-node ai-node" title="AI Sentiment Classifier" style={{ borderColor: 'var(--color-pink)', boxShadow: '0 0 15px rgba(236, 72, 153, 0.15)' }}>
+                  <Bot size={20} className="text-pink" />
+                </div>
+                <div className="ops-connector-line"></div>
+                <div className="ops-node" title="Slack Alert Destination" style={{ border: '1px solid #4a154b', background: 'rgba(74, 21, 75, 0.05)' }}>
+                  {getAgentIcon('Slack', 20)}
+                </div>
               </div>
+              <div className="ops-metrics-card">
+                <span className="ops-badge active" style={{ color: 'var(--color-pink)', background: 'rgba(236, 72, 153, 0.1)' }}>● SENTIMENT DISPATCH</span>
+                <span className="ops-stat">Sentiment response: <strong>[FRUSTRATED] Apology draft sent to Slack</strong></span>
+              </div>
+            </div>
 
-              <div className="pipeline-canvas-body">
-                <div className="pipeline-flow-container">
-                  {activeRecipe.steps.map((step, idx) => {
-                    const isActive = simulationStepIndex >= idx;
-                    const isProcessing = simulationStepIndex === idx && simulationState === 'running';
-                    const isCompleted = simulationStepIndex > idx || (simulationState === 'completed' && isActive);
-
-                    return (
-                      <React.Fragment key={step.id}>
-                        {/* Connecting Line (except for the first node) */}
-                        {idx > 0 && (
-                          <div className={`pipeline-connector ${isCompleted ? 'active' : ''} ${isProcessing ? 'pulsing' : ''}`}>
-                            <div className="connector-glow-dot"></div>
-                          </div>
-                        )}
-
-                        {/* Node Card */}
-                        <div className={`pipeline-node-card ${isActive ? 'active' : ''} ${isProcessing ? 'processing' : ''} ${isCompleted ? 'completed' : ''}`}>
-                          <div className="node-icon-wrap">
-                            {getAgentIcon(step.platform, 24)}
-                            {isCompleted && (
-                              <span className="node-check-badge">
-                                <CheckCircle size={14} fill="var(--color-green)" stroke="#ffffff" />
-                              </span>
-                            )}
-                          </div>
-                          <div className="node-meta">
-                            <span className="node-type-label">{step.type.toUpperCase()}</span>
-                            <h6>{step.label}</h6>
-                            <p>{step.details}</p>
-                          </div>
-                        </div>
-                      </React.Fragment>
-                    );
-                  })}
+            {/* Pipeline 3: E-commerce Listing Promoter */}
+            <div className="ops-pipeline-track">
+              <div className="ops-pipeline-flow">
+                <div className="ops-node" title="Shopify Product Trigger" style={{ border: '1px solid #96bf48', background: 'rgba(150, 191, 72, 0.05)' }}>
+                  {getAgentIcon('Shopify', 20)}
                 </div>
+                <div className="ops-connector-line"></div>
+                <div className="ops-node ai-node" title="AI Visual Generator" style={{ borderColor: 'var(--color-green)', boxShadow: '0 0 15px rgba(34, 197, 94, 0.15)' }}>
+                  <Bot size={20} className="text-green" />
+                </div>
+                <div className="ops-connector-line"></div>
+                <div className="ops-node" title="Pinterest Creative Pin" style={{ border: '1px solid #bd081c', background: 'rgba(189, 8, 28, 0.05)' }}>
+                  {getAgentIcon('Pinterest', 20)}
+                </div>
+                <div className="ops-node" title="Instagram Creative Photo" style={{ border: '1px solid #e1306c', background: 'rgba(225, 48, 108, 0.05)' }}>
+                  {getAgentIcon('Instagram', 20)}
+                </div>
+              </div>
+              <div className="ops-metrics-card">
+                <span className="ops-badge active" style={{ color: 'var(--color-green)', background: 'rgba(34, 197, 94, 0.1)' }}>● CREATIVE CAMPAIGN</span>
+                <span className="ops-stat">Assets published: <strong>Promotional Image Pinned & Carousel posted</strong></span>
+              </div>
+            </div>
+
+            {/* Pipeline 4: Intelligence Researcher */}
+            <div className="ops-pipeline-track">
+              <div className="ops-pipeline-flow">
+                <div className="ops-node" title="Substack News Alert" style={{ border: '1px solid #ff5722', background: 'rgba(255, 87, 34, 0.05)' }}>
+                  {getAgentIcon('Substack', 20)}
+                </div>
+                <div className="ops-connector-line"></div>
+                <div className="ops-node ai-node" title="AI Fact-Checker" style={{ borderColor: 'var(--color-orange)', boxShadow: '0 0 15px rgba(249, 115, 22, 0.15)' }}>
+                  <Bot size={20} className="text-orange" />
+                </div>
+                <div className="ops-connector-line"></div>
+                <div className="ops-node" title="Notion Database Store" style={{ border: '1px solid #ffffff', background: 'rgba(255, 255, 255, 0.05)' }}>
+                  {getAgentIcon('Database', 20)}
+                </div>
+              </div>
+              <div className="ops-metrics-card">
+                <span className="ops-badge active" style={{ color: 'var(--color-orange)', background: 'rgba(249, 115, 22, 0.1)' }}>● FACT-CHECK LOGGED</span>
+                <span className="ops-stat">Database entry: <strong>Summary verification [VERIFIED] wiki synced</strong></span>
               </div>
             </div>
           </div>
