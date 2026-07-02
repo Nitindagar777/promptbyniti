@@ -127,9 +127,8 @@ export default function PricingPage() {
         ]}
         noIndex={false}
       />
+      <br></br>
       <div className="container">
-
-
         {/* Section 1: Prompt Token Packs */}
         <div className="pricing-section-header">
           <h2 className="pricing-section-title title-prompts">Prompt Pack Token Tiers</h2>
