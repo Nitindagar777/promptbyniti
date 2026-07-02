@@ -1060,54 +1060,124 @@ export default function PersonalAgentPage() {
         </div>
       </section>
 
-      {/* Platforms Connect Section */}
-      <section className="agent-platforms">
+      {/* Pricing Plans Section */}
+      <section className="agent-pricing">
         <div className="container">
           <div className="section-header text-center">
-
-            <h2 className="section-title platforms-title">Deploy Agent to Your Ecosystem</h2>
+            <span className="section-tag" style={{ color: '#35e177', background: 'rgba(53, 225, 119, 0.08)' }}>Flexible Plans</span>
+            <h2 className="section-title pricing-title">Simple, Transparent Pricing</h2>
             <p className="section-desc">
-              Toggle platforms to link your custom agent API. We sync profiles with single-click OAuth verification.
+              Choose the perfect plan to scale your brand with automated AI agents. Switch or cancel anytime.
             </p>
           </div>
 
-          <div className="platforms-connect-grid">
-            {[
-              { id: 'twitter', name: 'Twitter / X', color: '#1da1f2', icon: <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg> },
-              { id: 'linkedin', name: 'LinkedIn Professional', color: '#0a66c2', icon: <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" /></svg> },
-              { id: 'instagram', name: 'Instagram Creator', color: '#e1306c', icon: <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg> },
-              { id: 'discord', name: 'Discord Community', color: '#5865f2', icon: <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.094 13.094 0 0 1-1.873-.894.077.077 0 0 1-.008-.128c.126-.093.252-.19.372-.287a.075.075 0 0 1 .077-.011c3.92 1.793 8.18 1.793 12.061 0a.073.073 0 0 1 .078.009c.12.099.246.195.373.289a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.156-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.156 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.156-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.156 2.418z" /></svg> },
-              { id: 'slack', name: 'Slack Enterprise', color: '#4a154b', icon: <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523 2.528 2.528 0 0 1-2.522-2.523 2.528 2.528 0 0 1 2.522-2.52h2.52v2.52zm1.261 0a2.528 2.528 0 0 1 2.52-2.52h5.043a2.528 2.528 0 0 1 2.522 2.52v5.042a2.528 2.528 0 0 1-2.522 2.52H8.823a2.528 2.528 0 0 1-2.52-2.52v-5.042zM8.823 5.043a2.528 2.528 0 0 1 2.52-2.522 2.528 2.528 0 0 1 2.522 2.522v2.52h-2.522a2.528 2.528 0 0 1-2.52-2.52zm0 1.261a2.528 2.528 0 0 1 2.52 2.52v5.043a2.528 2.528 0 0 1-2.522 2.522H3.78a2.528 2.528 0 0 1-2.522-2.522V8.824a2.528 2.528 0 0 1 2.522-2.52h5.043zm10.135 3.86a2.528 2.528 0 0 1 2.522-2.52 2.528 2.528 0 0 1 2.52 2.52 2.528 2.528 0 0 1-2.52 2.522h-2.522v-2.522zm-1.262 0a2.528 2.528 0 0 1-2.52 2.522h-5.043a2.528 2.528 0 0 1-2.522-2.522V5.043a2.528 2.528 0 0 1 2.522-2.52h5.043a2.528 2.528 0 0 1 2.52 2.52v5.042zM15.165 18.958a2.528 2.528 0 0 1-2.522 2.522 2.528 2.528 0 0 1-2.52-2.522v-2.52h2.52a2.528 2.528 0 0 1 2.522 2.52zm0-1.262a2.528 2.528 0 0 1-2.522-2.52v-5.043a2.528 2.528 0 0 1 2.52-2.522h5.043a2.528 2.528 0 0 1 2.522 2.522v5.043a2.528 2.528 0 0 1-2.522 2.52h-5.043z" /></svg> },
-              { id: 'telegram', name: 'Telegram Bot', color: '#0088cc', icon: <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.12.02-1.96 1.24-5.54 3.65-.52.36-.99.53-1.4.52-.46-.01-1.34-.26-2-.47-.8-.26-1.44-.4-1.39-.85.03-.24.36-.48.99-.74 3.86-1.68 6.44-2.78 7.74-3.3 3.69-1.49 4.45-1.75 4.95-1.76.11 0 .36.03.52.16.14.11.18.26.19.38.01.07.01.15-.01.22z" /></svg> }
-            ].map(plat => (
-              <div key={plat.id} className={`platform-card card ${syncedPlatforms[plat.id] ? 'connected' : ''}`}>
-                <div className="platform-header">
-                  <div className="platform-icon-wrap" style={{ color: plat.color, background: `${plat.color}15` }}>
-                    {plat.icon}
-                  </div>
-                  <div>
-                    <h4>{plat.name}</h4>
-                    <span className="platform-status">
-                      {syncedPlatforms[plat.id] ? 'Active Sync' : 'Disconnected'}
-                    </span>
-                  </div>
+          <div className="pricing-grid">
+            {/* Tier 1: Starter */}
+            <div className="pricing-card card theme-starter">
+              <div className="pricing-header">
+                <span className="pricing-badge">Starter</span>
+                <div className="pricing-price">
+                  <span className="currency">$</span>
+                  <span className="amount">19</span>
+                  <span className="period">/ month</span>
                 </div>
-                <button
-                  type="button"
-                  className={`btn btn-sm ${syncedPlatforms[plat.id] ? 'btn-secondary' : 'btn-secondary-outline'}`}
-                  onClick={() => handleTogglePlatform(plat.id)}
-                  style={{ width: '100%', marginTop: '16px' }}
-                >
-                  {syncedPlatforms[plat.id] ? (
-                    <>
-                      <Check size={14} /> Connected
-                    </>
-                  ) : (
-                    'Connect Account'
-                  )}
-                </button>
+                <p className="pricing-summary">Perfect for creators and side projects looking to automate basic tasks.</p>
               </div>
-            ))}
+              <div className="pricing-features">
+                <div className="pricing-feature-item">
+                  <Check size={16} className="text-green" />
+                  <span>1 Custom AI Agent</span>
+                </div>
+                <div className="pricing-feature-item">
+                  <Check size={16} className="text-green" />
+                  <span>1,000 Vector Memory Logs</span>
+                </div>
+                <div className="pricing-feature-item">
+                  <Check size={16} className="text-green" />
+                  <span>2 Connected Platforms</span>
+                </div>
+                <div className="pricing-feature-item">
+                  <Check size={16} className="text-green" />
+                  <span>Standard Execution Speed</span>
+                </div>
+              </div>
+              <div className="pricing-footer">
+                <button type="button" className="btn btn-secondary-outline w-100">Get Started</button>
+              </div>
+            </div>
+
+            {/* Tier 2: Pro */}
+            <div className="pricing-card card theme-pro featured">
+              <div className="pricing-header">
+                <div className="featured-tag">MOST POPULAR</div>
+                <span className="pricing-badge">Pro Autopilot</span>
+                <div className="pricing-price">
+                  <span className="currency">$</span>
+                  <span className="amount">49</span>
+                  <span className="period">/ month</span>
+                </div>
+                <p className="pricing-summary">For professionals wanting fully autonomous 24/7 brand synchronization.</p>
+              </div>
+              <div className="pricing-features">
+                <div className="pricing-feature-item">
+                  <Check size={16} className="text-green" />
+                  <span>5 Custom AI Agents</span>
+                </div>
+                <div className="pricing-feature-item">
+                  <Check size={16} className="text-green" />
+                  <span>100,000 Vector Memory Logs</span>
+                </div>
+                <div className="pricing-feature-item">
+                  <Check size={16} className="text-green" />
+                  <span>Unlimited Platform Sync</span>
+                </div>
+                <div className="pricing-feature-item">
+                  <Check size={16} className="text-green" />
+                  <span>Advanced Guardrails & Safety</span>
+                </div>
+                <div className="pricing-feature-item">
+                  <Check size={16} className="text-green" />
+                  <span>Priority Queue Speed</span>
+                </div>
+              </div>
+              <div className="pricing-footer">
+                <button type="button" className="btn btn-primary w-100">Unlock Pro Autopilot <Zap size={14} style={{ fill: 'currentColor', marginLeft: '4px' }} /></button>
+              </div>
+            </div>
+
+            {/* Tier 3: Enterprise */}
+            <div className="pricing-card card theme-enterprise">
+              <div className="pricing-header">
+                <span className="pricing-badge">Enterprise</span>
+                <div className="pricing-price">
+                  <span className="currency">$</span>
+                  <span className="amount">149</span>
+                  <span className="period">/ month</span>
+                </div>
+                <p className="pricing-summary">For agencies and companies requiring advanced controls and custom SLAs.</p>
+              </div>
+              <div className="pricing-features">
+                <div className="pricing-feature-item">
+                  <Check size={16} className="text-green" />
+                  <span>Unlimited Custom Agents</span>
+                </div>
+                <div className="pricing-feature-item">
+                  <Check size={16} className="text-green" />
+                  <span>Dedicated Memory Clusters</span>
+                </div>
+                <div className="pricing-feature-item">
+                  <Check size={16} className="text-green" />
+                  <span>Custom API Integrations</span>
+                </div>
+                <div className="pricing-feature-item">
+                  <Check size={16} className="text-green" />
+                  <span>24/7 Dedicated Support SLA</span>
+                </div>
+              </div>
+              <div className="pricing-footer">
+                <button type="button" className="btn btn-secondary-outline w-100">Contact Sales</button>
+              </div>
+            </div>
           </div>
         </div>
       </section>
