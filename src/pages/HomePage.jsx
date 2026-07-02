@@ -4,7 +4,7 @@ import { useApp } from '../context/AppContext';
 import { generatePrompt } from '../data/promptEngine';
 import { randomDescriptions } from '../data/promptData';
 import PromptOutput from '../components/PromptOutput';
-import { ArrowRight, Sparkles, Zap, Image, Layers, Heart, Wand2, Rocket, Star, Palette, MessageSquare, ShieldCheck, Zap as ZapIcon, ShoppingBag, Coins, DollarSign, Eye, Camera, Lock, Check, Repeat, Video, Info, Copy, ChevronDown, Code, FileText, Bot, Clock, RotateCw, ZoomIn, Activity, Film, Package } from 'lucide-react';
+import { ArrowRight, Sparkles, Zap, Image, Layers, Heart, Wand2, Rocket, Star, Palette, MessageSquare, ShieldCheck, Zap as ZapIcon, ShoppingBag, Coins, DollarSign, Eye, Camera, Lock, Check, Repeat, Video, Info, Copy, ChevronDown, Code, FileText, Bot, Clock, RotateCw, ZoomIn, Activity, Film, Package, Send, Mail, Globe } from 'lucide-react';
 import PreviewModal from '../components/PreviewModal';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -124,6 +124,40 @@ export default function HomePage() {
   const [activeImageMode, setActiveImageMode] = useState('sameScene'); // 'sameScene' | 'different' | 'fixed'
   const [activeVideoMode, setActiveVideoMode] = useState('sameSceneLoop'); // 'sameSceneLoop' | 'differentScenes' | 'fixedCharacterMotion'
   const [activeTextMode, setActiveTextMode] = useState('code'); // 'code' | 'copywriting' | 'agents'
+
+  const handleSelectFeature = (e, category, subMode) => {
+    e.preventDefault();
+    setActiveRefCategory(category);
+    if (category === 'image') {
+      setActiveImageMode(subMode);
+    } else if (category === 'video') {
+      setActiveVideoMode(subMode);
+    } else if (category === 'text') {
+      setActiveTextMode(subMode);
+    }
+    const el = document.getElementById('ref-modes');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const scrollContainerRef = useRef(null);
+
+  const scrollBannersLeft = (e) => {
+    e.preventDefault();
+    if (scrollContainerRef.current) {
+      const cardWidth = scrollContainerRef.current.offsetWidth / 3;
+      scrollContainerRef.current.scrollBy({ left: -cardWidth - 16, behavior: 'smooth' });
+    }
+  };
+
+  const scrollBannersRight = (e) => {
+    e.preventDefault();
+    if (scrollContainerRef.current) {
+      const cardWidth = scrollContainerRef.current.offsetWidth / 3;
+      scrollContainerRef.current.scrollBy({ left: cardWidth + 16, behavior: 'smooth' });
+    }
+  };
 
   // Video Reference Refs for play/pause control
   const videoRefs = {
@@ -389,6 +423,80 @@ export default function HomePage() {
       {/* 01. HERO */}
       <section className="p-hero">
         <div className="container">
+
+          {/* Mini Banners Row */}
+          <div className="p-hero__mini-banners-wrapper reveal" style={{ animationDelay: '0.05s' }}>
+            <button className="p-mini-banners__nav-btn p-mini-banners__nav-btn--prev" onClick={scrollBannersLeft} aria-label="Scroll left">
+              &lsaquo;
+            </button>
+
+            <div className="p-hero__mini-banners" ref={scrollContainerRef}>
+              {/* 1st banner: Personal Agent */}
+              <Link to="/personal-agent" className="p-mini-banner p-mini-banner--red">
+                <div className="p-mini-banner__top">
+                  <span className="p-mini-banner__tag p-mini-banner__tag--red">NEW</span>
+                  <Bot size={16} className="text-red" />
+                </div>
+                <div className="p-mini-banner__title-row">
+                  <h4 className="p-mini-banner__title">Personal Agent</h4>
+                  {/* Brand platforms custom inline SVG integrations row */}
+                  <div className="p-mini-banner__platforms">
+                    <span className="p-mini-banner__platform-icon instagram-color" title="Instagram">
+                      <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+                    </span>
+                    <span className="p-mini-banner__platform-icon facebook-color" title="Facebook">
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c4.56-.93 8-4.96 8-9.8z"/></svg>
+                    </span>
+                    <span className="p-mini-banner__platform-icon linkedin-color" title="LinkedIn">
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+                    </span>
+                    <span className="p-mini-banner__platform-icon twitter-color" title="Twitter / X">
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                    </span>
+                    <span className="p-mini-banner__platform-icon youtube-color" title="YouTube">
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                    </span>
+                    <span className="p-mini-banner__platform-icon tiktok-color" title="TikTok">
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.02 1.63 4.18 1.12.87 2.49 1.4 3.92 1.48v3.91a8.1 8.1 0 0 1-4.08-1.57c-.11-.08-.22-.16-.33-.25v6.52c-.08 3.84-2.82 7.15-6.63 7.63-3.66.52-7.14-1.63-8.22-5.17-1.37-3.89.87-8.15 4.88-9.02 1.05-.23 2.14-.15 3.14.23V.02zm-1.02 9.58c-2.31-.19-4.32 1.6-4.52 3.91-.23 2.65 1.94 4.88 4.6 4.65 2.19-.21 3.81-2.14 3.73-4.34-.02-1.92 0-3.84 0-5.76-1.12.56-2.39.81-3.81.54z"/></svg>
+                    </span>
+                  </div>
+                </div>
+                <p className="p-mini-banner__desc">Build custom AI agent personas with memory & rules.</p>
+              </Link>
+
+              {/* 2nd banner: Image Reference */}
+              <a href="#ref-modes" onClick={(e) => handleSelectFeature(e, 'image', 'sameScene')} className="p-mini-banner p-mini-banner--cyan" style={{ backgroundImage: "url('/same_scene_ref.png')" }}>
+                <div className="p-mini-banner__top">
+                  <Image size={16} className="text-cyan" />
+                </div>
+                <h4 className="p-mini-banner__title">Image Reference</h4>
+                <p className="p-mini-banner__desc">Lock faces, outfits, and styles across scenes.</p>
+              </a>
+
+              {/* 3rd banner: Video Reference */}
+              <a href="#ref-modes" onClick={(e) => handleSelectFeature(e, 'video', 'sameSceneLoop')} className="p-mini-banner p-mini-banner--orange" style={{ backgroundImage: "url('/fixed_character_ref.png')" }}>
+                <div className="p-mini-banner__top">
+                  <Video size={16} className="text-orange" />
+                </div>
+                <h4 className="p-mini-banner__title">Video Reference</h4>
+                <p className="p-mini-banner__desc">Generate cinematic motion loops and characters.</p>
+              </a>
+
+              {/* 4th banner: Text Reference */}
+              <a href="#ref-modes" onClick={(e) => handleSelectFeature(e, 'text', 'code')} className="p-mini-banner p-mini-banner--purple">
+                <div className="p-mini-banner__top">
+                  <Code size={16} className="text-purple" />
+                </div>
+                <h4 className="p-mini-banner__title">Text Reference</h4>
+                <p className="p-mini-banner__desc">Format react/python code & copywriting copy.</p>
+              </a>
+            </div>
+
+            <button className="p-mini-banners__nav-btn p-mini-banners__nav-btn--next" onClick={scrollBannersRight} aria-label="Scroll right">
+              &rsaquo;
+            </button>
+          </div>
+
           <div className="p-hero__split-grid">
             {/* Left Hero Content */}
             <div className="p-hero__content-col reveal" style={{ animationDelay: '0.1s' }}>
@@ -1071,20 +1179,56 @@ export default function HomePage() {
 
                   {/* Supported Text Prompt Categories List */}
                   <div className="p-ref-modes__text-categories-list">
-                    <span className="p-ref-modes__text-list-label">Supported Prompt Categories</span>
+                    <span className="p-ref-modes__text-list-label">
+                      {activeTextMode === 'agents' ? '12+ Platform Agent Personas' : 'Supported Prompt Categories'}
+                    </span>
                     <div className="p-ref-modes__text-list-chips">
-                      <span className="p-ref-modes__text-chip"><Bot size={12} /> AI Agents</span>
-                      <span className="p-ref-modes__text-chip"><Code size={12} /> Code</span>
-                      <span className="p-ref-modes__text-chip"><FileText size={12} /> Writing</span>
-                      <span className="p-ref-modes__text-chip"><ShoppingBag size={12} /> Marketing</span>
-                      <span className="p-ref-modes__text-chip"><Coins size={12} /> Business</span>
-                      <span className="p-ref-modes__text-chip"><Sparkles size={12} /> Research</span>
-                      <span className="p-ref-modes__text-chip"><Zap size={12} /> Education</span>
-                      <span className="p-ref-modes__text-chip"><Layers size={12} /> Productivity</span>
-                      <span className="p-ref-modes__text-chip"><Palette size={12} /> Creative</span>
-                      <span className="p-ref-modes__text-chip"><MessageSquare size={12} /> Social Media</span>
-                      <span className="p-ref-modes__text-chip"><DollarSign size={12} /> Ecommerce</span>
-                      <span className="p-ref-modes__text-chip"><Wand2 size={12} /> Other</span>
+                      {activeTextMode === 'agents' ? (
+                        <>
+                          <span className="p-ref-modes__text-chip p-ref-modes__text-chip--pink">
+                            <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+                            Instagram Growth Agent
+                          </span>
+                          <span className="p-ref-modes__text-chip p-ref-modes__text-chip--blue">
+                            <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c4.56-.93 8-4.96 8-9.8z"/></svg>
+                            Facebook Ads Agent
+                          </span>
+                          <span className="p-ref-modes__text-chip p-ref-modes__text-chip--blue">
+                            <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+                            LinkedIn Content Agent
+                          </span>
+                          <span className="p-ref-modes__text-chip p-ref-modes__text-chip--white">
+                            <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                            Twitter/X Growth Agent
+                          </span>
+                          <span className="p-ref-modes__text-chip p-ref-modes__text-chip--red">
+                            <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                            YouTube SEO Agent
+                          </span>
+                          <span className="p-ref-modes__text-chip p-ref-modes__text-chip--pink"><Video size={12} /> TikTok Scriptwriter</span>
+                          <span className="p-ref-modes__text-chip p-ref-modes__text-chip--yellow"><Mail size={12} /> Cold Outreach Agent</span>
+                          <span className="p-ref-modes__text-chip p-ref-modes__text-chip--cyan"><Globe size={12} /> SEO Writer Agent</span>
+                          <span className="p-ref-modes__text-chip p-ref-modes__text-chip--cyan"><Send size={12} /> Telegram Funnel Agent</span>
+                          <span className="p-ref-modes__text-chip p-ref-modes__text-chip--purple"><MessageSquare size={12} /> Support Chatbot Agent</span>
+                          <span className="p-ref-modes__text-chip p-ref-modes__text-chip--orange"><ShoppingBag size={12} /> Shopify Ecom Agent</span>
+                          <span className="p-ref-modes__text-chip p-ref-modes__text-chip--cyan"><Zap size={12} /> SaaS Product Agent</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="p-ref-modes__text-chip"><Bot size={12} /> AI Agents</span>
+                          <span className="p-ref-modes__text-chip"><Code size={12} /> Code</span>
+                          <span className="p-ref-modes__text-chip"><FileText size={12} /> Writing</span>
+                          <span className="p-ref-modes__text-chip"><ShoppingBag size={12} /> Marketing</span>
+                          <span className="p-ref-modes__text-chip"><Coins size={12} /> Business</span>
+                          <span className="p-ref-modes__text-chip"><Sparkles size={12} /> Research</span>
+                          <span className="p-ref-modes__text-chip"><Zap size={12} /> Education</span>
+                          <span className="p-ref-modes__text-chip"><Layers size={12} /> Productivity</span>
+                          <span className="p-ref-modes__text-chip"><Palette size={12} /> Creative</span>
+                          <span className="p-ref-modes__text-chip"><MessageSquare size={12} /> Social Media</span>
+                          <span className="p-ref-modes__text-chip"><DollarSign size={12} /> Ecommerce</span>
+                          <span className="p-ref-modes__text-chip"><Wand2 size={12} /> Other</span>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
