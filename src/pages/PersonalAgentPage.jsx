@@ -592,6 +592,23 @@ export default function PersonalAgentPage() {
   const [simulationStepIndex, setSimulationStepIndex] = useState(-1);
   const [liveLogs, setLiveLogs] = useState([]);
 
+  // Ecosystem Synced Platforms State
+  const [syncedPlatforms, setSyncedPlatforms] = useState({
+    twitter: false,
+    linkedin: false,
+    instagram: false,
+    discord: false,
+    slack: false,
+    telegram: false
+  });
+
+  const handleTogglePlatform = (platform) => {
+    setSyncedPlatforms(prev => ({
+      ...prev,
+      [platform]: !prev[platform]
+    }));
+  };
+
   // Directory filter states
   const [activeCategory, setActiveCategory] = useState(AI_EMPLOYEE_CATEGORIES[0].id);
   const [searchQuery, setSearchQuery] = useState('');
