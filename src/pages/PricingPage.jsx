@@ -128,13 +128,7 @@ export default function PricingPage() {
         noIndex={false}
       />
       <div className="container">
-        {/* Header */}
-        <div className="pricing-page__header">
-          <h1 className="section-title">Get More <span className="text-orange">Prompt Packs</span></h1>
-          <p className="section-desc">
-            Unlock the full power of Prompt by Niti. Generate unlimited, private, and optimized prompts.
-          </p>
-        </div>
+
 
         {/* Section 1: Prompt Token Packs */}
         <div className="pricing-section-header">
@@ -156,7 +150,7 @@ export default function PricingPage() {
               {state.plan === plan.id && (
                 <div className="pricing-card__current-tag">Current</div>
               )}
-              
+
               <h3 className="pricing-card__name" style={{ color: plan.id === 'starter' ? '#06b6d4' : plan.id === 'pro' ? '#35e177' : '#a855f7' }}>
                 {plan.id === 'starter' ? 'Starter' : plan.id === 'pro' ? 'Creator' : 'Studio'}
               </h3>
@@ -168,7 +162,7 @@ export default function PricingPage() {
               <p className="pricing-card__credits" style={{ marginBottom: '16px' }}>
                 <span className="text-orange">{plan.credits}</span> Packs
               </p>
-              
+
               <ul className="pricing-card__features">
                 {plan.features.slice(0, 4).map((feat, i) => ( // limit list to keep it compact
                   <li key={i}>
@@ -177,7 +171,7 @@ export default function PricingPage() {
                   </li>
                 ))}
               </ul>
-              
+
               <button
                 className={`btn ${plan.popular ? 'btn-primary' : 'btn-secondary'} pricing-card__cta`}
                 onClick={() => handleSelectPlan(plan.id)}
@@ -210,7 +204,7 @@ export default function PricingPage() {
               <span className="pricing-card__amount" style={{ fontSize: '38px' }}>19</span>
               <span className="pricing-card__period">/ month</span>
             </div>
-            
+
             <ul className="pricing-card__features">
               <li>
                 <Check size={14} />
@@ -229,7 +223,7 @@ export default function PricingPage() {
                 <span><span className="text-cyan">Standard</span> Execution Speed</span>
               </li>
             </ul>
-            
+
             <button className="btn btn-secondary pricing-card__cta">
               Get Started
             </button>
@@ -246,7 +240,7 @@ export default function PricingPage() {
               <span className="pricing-card__amount" style={{ fontSize: '38px' }}>49</span>
               <span className="pricing-card__period">/ month</span>
             </div>
-            
+
             <ul className="pricing-card__features">
               <li>
                 <Check size={14} />
@@ -269,7 +263,7 @@ export default function PricingPage() {
                 <span><span className="text-green">Priority</span> Queue Speed</span>
               </li>
             </ul>
-            
+
             <button className="btn btn-primary pricing-card__cta">
               Unlock Pro Autopilot <Zap size={14} style={{ fill: 'currentColor', marginLeft: '4px' }} />
             </button>
@@ -283,7 +277,7 @@ export default function PricingPage() {
               <span className="pricing-card__amount" style={{ fontSize: '38px' }}>149</span>
               <span className="pricing-card__period">/ month</span>
             </div>
-            
+
             <ul className="pricing-card__features">
               <li>
                 <Check size={14} />
@@ -302,7 +296,7 @@ export default function PricingPage() {
                 <span><span className="text-purple">24/7</span> Dedicated Support SLA</span>
               </li>
             </ul>
-            
+
             <button className="btn btn-secondary pricing-card__cta">
               Contact Sales
             </button>
