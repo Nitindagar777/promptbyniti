@@ -920,10 +920,10 @@ export default function PersonalAgentPage() {
               Compare the manual, chaotic loop of content creation and platform management against our direct AI-agent autopilot path.
             </p>
           </div>
+        </div>
 
-          <div className="comparison-flow-image-wrap">
-            <img src="/Flow_of_work.jpeg" alt="Workflow comparison: Usual Path vs. Prompt by Niti Autopilot" className="comparison-flow-image" />
-          </div>
+        <div className="comparison-flow-image-wrap">
+          <img src="/Flow_of_work.jpeg" alt="Workflow comparison: Usual Path vs. Prompt by Niti Autopilot" className="comparison-flow-image" />
         </div>
       </section>
 

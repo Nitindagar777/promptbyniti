@@ -1622,14 +1622,14 @@
 }
 
 .comparison-flow-image-wrap {
-  width: 100%;
-  max-width: 960px;
+  width: 95%;
+  max-width: 1360px; /* Expands to widescreen size for full-screen legibility */
   margin: var(--space-lg) auto 0 auto;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 24px;
+  border-radius: 28px;
   background: #ffffff; /* Crisp white background for sketch illustration */
   padding: 24px;
-  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 35px 70px rgba(0, 0, 0, 0.65);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
