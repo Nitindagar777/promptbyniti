@@ -475,6 +475,23 @@ export default function PersonalAgentPage() {
   const location = useLocation();
   const navigate = useNavigate();
 
+  const isAdminUser = state?.user?.email?.toLowerCase().trim() === 'nitindagar0800@gmail.com';
+
+  const displayCategories = isAdminUser ? AI_EMPLOYEE_CATEGORIES : AI_EMPLOYEE_CATEGORIES.map(cat => {
+    if (cat.id === 'creator') {
+      return {
+        ...cat,
+        agents: ['YouTube AI']
+      };
+    }
+    return {
+      ...cat,
+      agents: []
+    };
+  });
+
+  const [agentName, setAgentName] = useState('YouTube AI');
+
   const handleSelectPlan = (planId) => {
     if (!state?.user) {
       navigate('/login');
@@ -549,11 +566,11 @@ export default function PersonalAgentPage() {
   // Filter logic for AI employees catalog
   const getFilteredCategories = () => {
     if (!searchQuery.trim()) {
-      return AI_EMPLOYEE_CATEGORIES.filter(cat => cat.id === activeCategory);
+      return displayCategories.filter(cat => cat.id === activeCategory);
     }
 
     const query = searchQuery.toLowerCase().trim();
-    return AI_EMPLOYEE_CATEGORIES.map(cat => {
+    return displayCategories.map(cat => {
       const matchingAgents = cat.agents.filter(agent => agent.toLowerCase().includes(query));
       if (matchingAgents.length > 0) {
         return {
@@ -565,7 +582,7 @@ export default function PersonalAgentPage() {
     }).filter(Boolean);
   };
 
-  const totalAgentsCount = AI_EMPLOYEE_CATEGORIES.reduce((acc, cat) => acc + cat.agents.length, 0);
+  const totalAgentsCount = displayCategories.reduce((acc, cat) => acc + cat.agents.length, 0);
 
   return (
     <div className="personal-agent-page">
@@ -777,7 +794,7 @@ export default function PersonalAgentPage() {
             {/* Sidebar Categories TABS */}
             {!searchQuery && (
               <div className="categories-sidebar">
-                {AI_EMPLOYEE_CATEGORIES.map((cat) => (
+                {displayCategories.map((cat) => (
                   <button
                     key={cat.id}
                     className={`category-tab-btn ${activeCategory === cat.id ? 'active' : ''}`}
@@ -1451,10 +1468,15 @@ export default function PersonalAgentPage() {
                     setSelectedAgentForModal(null);
                     navigate('/login');
                   } else {
-                    setAgentName(selectedAgentForModal);
-                    setSelectedAgentForModal(null);
-                    const el = document.getElementById('agent-sandbox-section');
-                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    if (!isAdminUser) {
+                      alert('Agent is working. Coming soon!');
+                      setSelectedAgentForModal(null);
+                    } else {
+                      setAgentName(selectedAgentForModal);
+                      setSelectedAgentForModal(null);
+                      const el = document.getElementById('agent-sandbox-section');
+                      if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    }
                   }
                 }}
               >
