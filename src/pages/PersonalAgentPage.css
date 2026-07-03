@@ -1526,12 +1526,13 @@
   border: none;
   color: #ffffff;
   cursor: pointer;
-  transition: opacity 0.15s ease;
+  transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 10;
 }
 
 .agent-modal-close:hover {
-  opacity: 0.8;
+  color: #ef4444;
+  transform: rotate(90deg);
 }
 
 .modal-header-wrap {
