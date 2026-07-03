@@ -535,6 +535,18 @@ export default function PersonalAgentPage() {
     return () => clearInterval(interval);
   }, []);
 
+  // Disable body scroll when capabilities modal is open
+  useEffect(() => {
+    if (selectedAgentForModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [selectedAgentForModal]);
+
   // Restore and preserve scroll position + clear hash on mount
   useEffect(() => {
     if (location.hash) {
