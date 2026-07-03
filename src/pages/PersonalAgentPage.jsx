@@ -539,11 +539,14 @@ export default function PersonalAgentPage() {
   useEffect(() => {
     if (selectedAgentForModal) {
       document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
     }
     return () => {
       document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
     };
   }, [selectedAgentForModal]);
 
@@ -1441,7 +1444,12 @@ export default function PersonalAgentPage() {
 
       {/* CAPABILITIES DETAIL OVERLAY MODAL */}
       {selectedAgentForModal && (
-        <div className="agent-modal-overlay" onClick={() => setSelectedAgentForModal(null)}>
+        <div 
+          className="agent-modal-overlay" 
+          onClick={() => setSelectedAgentForModal(null)}
+          onWheel={(e) => e.stopPropagation()}
+          onTouchMove={(e) => e.stopPropagation()}
+        >
           <div className="agent-modal-content card" onClick={(e) => e.stopPropagation()}>
             <button
               className="agent-modal-close"
