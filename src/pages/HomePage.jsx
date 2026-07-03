@@ -547,6 +547,40 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* 03. EXPLORE FEED — PINTEREST STYLE */}
+      <section className="p-categories bg-secondary section-spacing">
+        <div className="container">
+          <div className="p-market-header reveal">
+            <h2 className="h-display">Viral <span className="text-pink">Feed</span></h2>
+            <Link to="/templates" className="btn btn-secondary">
+              Explore Feed <Sparkles size={18} style={{ marginLeft: '8px' }} />
+            </Link>
+          </div>
+
+          {loadingPrompts ? (
+            <div style={{ display: 'flex', gap: '16px', width: '100%', margin: '30px 0' }}>
+              {[...Array(4)].map((_, i) => (
+                <div key={i} style={{ flex: 1, height: '280px', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }} />
+              ))}
+            </div>
+          ) : feedItems.length > 0 ? (
+            <MasonryGrid
+              columns={4}
+              items={feedItems}
+              renderItem={(item, i) => (
+                <PinterestCard key={item.keyId} item={item} index={i} />
+              )}
+            />
+          ) : (
+            <div className="p-market-empty reveal" style={{ textAlign: 'center', padding: 'var(--space-2xl) 0' }}>
+              <Sparkles size={48} className="text-muted mb-4 mx-auto" />
+              <h3>No Prompts Found</h3>
+              <p>Be the first to post a prompt to the community feed!</p>
+            </div>
+          )}
+        </div>
+      </section>
+
       {/* UNIFIED AI REFERENCE MODES SECTION */}
       <section className="p-ref-modes section-spacing" id="ref-modes">
         <div className="container">
@@ -1387,39 +1421,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 03. EXPLORE FEED — PINTEREST STYLE */}
-      <section className="p-categories bg-secondary section-spacing">
-        <div className="container">
-          <div className="p-market-header reveal">
-            <h2 className="h-display">Viral <span className="text-pink">Feed</span></h2>
-            <Link to="/templates" className="btn btn-secondary">
-              Explore Feed <Sparkles size={18} style={{ marginLeft: '8px' }} />
-            </Link>
-          </div>
 
-          {loadingPrompts ? (
-            <div style={{ display: 'flex', gap: '16px', width: '100%', margin: '30px 0' }}>
-              {[...Array(4)].map((_, i) => (
-                <div key={i} style={{ flex: 1, height: '280px', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }} />
-              ))}
-            </div>
-          ) : feedItems.length > 0 ? (
-            <MasonryGrid
-              columns={4}
-              items={feedItems}
-              renderItem={(item, i) => (
-                <PinterestCard key={item.keyId} item={item} index={i} />
-              )}
-            />
-          ) : (
-            <div className="p-market-empty reveal" style={{ textAlign: 'center', padding: 'var(--space-2xl) 0' }}>
-              <Sparkles size={48} className="text-muted mb-4 mx-auto" />
-              <h3>No Prompts Found</h3>
-              <p>Be the first to post a prompt to the community feed!</p>
-            </div>
-          )}
-        </div>
-      </section>
 
       {/* ── Section: TESTIMONIALS ── */}
       <section className="p-section p-testimonials">
