@@ -794,17 +794,19 @@ export default function PersonalAgentPage() {
             {/* Sidebar Categories TABS */}
             {!searchQuery && (
               <div className="categories-sidebar">
-                {displayCategories.map((cat) => (
-                  <button
-                    key={cat.id}
-                    className={`category-tab-btn ${activeCategory === cat.id ? 'active' : ''}`}
-                    onClick={() => setActiveCategory(cat.id)}
-                  >
-                    <span className="category-emoji">{cat.emoji}</span>
-                    <span className="category-name">{cat.name}</span>
-                    <span className="category-count">{cat.agents.length}</span>
-                  </button>
-                ))}
+                {displayCategories
+                  .filter(cat => isAdminUser || cat.agents.length > 0)
+                  .map((cat) => (
+                    <button
+                      key={cat.id}
+                      className={`category-tab-btn ${activeCategory === cat.id ? 'active' : ''}`}
+                      onClick={() => setActiveCategory(cat.id)}
+                    >
+                      <span className="category-emoji">{cat.emoji}</span>
+                      <span className="category-name">{cat.name}</span>
+                      <span className="category-count">{cat.agents.length}</span>
+                    </button>
+                  ))}
               </div>
             )}
 
