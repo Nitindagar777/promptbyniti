@@ -603,7 +603,7 @@ export default function PersonalAgentPage() {
                     Launch Agent Creator <ArrowRight size={18} />
                   </a>
                 ) : (
-                  <button 
+                  <button
                     onClick={() => navigate('/login')}
                     className="btn btn-primary btn-xl"
                     style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', border: 'none' }}
@@ -1218,7 +1218,7 @@ export default function PersonalAgentPage() {
       <section className="agent-reviews-marquee">
         <div className="container">
           <div className="section-header text-center">
-            <span className="section-tag" style={{ color: '#fbbf24', background: 'rgba(251, 191, 36, 0.08)' }}>Social Proof</span>
+
             <h2 className="section-title reviews-title">Creator Reviews & Platforms</h2>
             <p className="section-desc">
               Explore authentic feedback from builders automating brand engagement across global networks.
@@ -1394,14 +1394,14 @@ export default function PersonalAgentPage() {
               <h2 className="cta-title">Ready to deploy your agent?</h2>
               <p>Personal Agent customization and cross-platform publishing are included in our PRO & CREATOR tiers.</p>
               <div className="cta-buttons">
-                <button 
+                <button
                   onClick={() => handleSelectPlan('pricing')}
                   className="btn btn-primary btn-xl"
                   style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', border: 'none' }}
                 >
                   View Tiers & Pricing <Zap size={18} style={{ fill: 'currentColor' }} />
                 </button>
-            
+
               </div>
             </div>
           </div>
@@ -1447,10 +1447,15 @@ export default function PersonalAgentPage() {
                 className="btn btn-primary"
                 style={{ width: '100%' }}
                 onClick={() => {
-                  setAgentName(selectedAgentForModal);
-                  setSelectedAgentForModal(null);
-                  const el = document.getElementById('agent-sandbox-section');
-                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  if (!state?.user) {
+                    setSelectedAgentForModal(null);
+                    navigate('/login');
+                  } else {
+                    setAgentName(selectedAgentForModal);
+                    setSelectedAgentForModal(null);
+                    const el = document.getElementById('agent-sandbox-section');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  }
                 }}
               >
                 Load Agent into Interactive Sandbox
