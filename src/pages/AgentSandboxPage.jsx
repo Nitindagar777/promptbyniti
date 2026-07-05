@@ -798,7 +798,7 @@ export default function AgentSandboxPage() {
   // --- GLOBAL SIDEBAR SIMULATION LOOP (For all other views) ---
   useEffect(() => {
     if (!isLoaded || !isSimActive) return;
-    if (activeTab === 'overview' || activeTab === 'chat' || activeTab === 'workflows' || activeTab === 'planner' || activeTab === 'ideas') return;
+    if (activeTab === 'overview' || activeTab === 'chat' || activeTab === 'workflows' || activeTab === 'planner' || activeTab === 'ideas' || activeTab === 'scripts') return;
 
     let globalSimStep = 0;
     const runGlobalStep = (step) => {
@@ -1031,6 +1031,155 @@ export default function AgentSandboxPage() {
 
     return () => {
       clearInterval(interval);
+    };
+  }, [isLoaded, activeTab, isSimActive]);
+
+  // --- VIDEO SCRIPTS TAB AUTOPLAY SIMULATION LOOP ---
+  useEffect(() => {
+    if (!isLoaded || activeTab !== 'scripts' || !isSimActive) return;
+
+    let scriptsSimStep = 0;
+    let typingInterval = null;
+
+    const fullTexts = {
+      title: 'I Hired a YouTube Manager (And It is An AI Agent)',
+      hook: '[0:00 - 0:30] Start with a massive hook! Hold a robot icon to the camera and say "This robot is currently planning my next 10 videos, editing my scripts, and writing my descriptions. I hired an AI employee, and here is how much money they saved me in week 1."',
+      intro: '[0:30 - 1:15] Introduce the concept of AI employees. Explain why standard chatbot interfaces are dead, and why a structured workspace platform is the future of content creation.',
+      body: '[1:15 - 4:30] Walk through the three columns of the manager. (1) The Left navigation channel database, (2) The interactive workflows, (3) The active logs and automated task execution tracker.',
+      outro: '[4:30 - 5:00] End with a call to action. Prompt users to subscribe to Tech With Nitin and unlock the agent sandbox using the links below.'
+    };
+
+    const runScriptsStep = (step) => {
+      if (typingInterval) clearInterval(typingInterval);
+      const current = step % 5;
+
+      if (current === 0) {
+        // Clear all script sections for typing
+        setActiveScript({ title: fullTexts.title, hook: '', intro: '', body: '', outro: '' });
+        setRunningWorkflow({
+          name: "Writing Video Hook (Section 1)",
+          progress: 15,
+          currentStep: "Formulating attention-grabbing statements..."
+        });
+        setTimelineLogs(prevLogs => {
+          const newLog = { time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: "Video Scripts: Outlining Section 1 Video Hook..." };
+          if (prevLogs.some(l => l.text === newLog.text)) return prevLogs;
+          return [...prevLogs, newLog];
+        });
+
+        let currentText = "";
+        let charIndex = 0;
+        typingInterval = setInterval(() => {
+          if (charIndex < fullTexts.hook.length) {
+            currentText += fullTexts.hook[charIndex];
+            setActiveScript(prev => ({ ...prev, hook: currentText }));
+            charIndex++;
+          } else {
+            clearInterval(typingInterval);
+          }
+        }, 10);
+      }
+      else if (current === 1) {
+        // Section 1 is full, type Section 2
+        setActiveScript(prev => ({ ...prev, hook: fullTexts.hook, intro: '', body: '', outro: '' }));
+        setRunningWorkflow({
+          name: "Writing Intro Segment (Section 2)",
+          progress: 40,
+          currentStep: "Structuring AI employee niche definitions..."
+        });
+        setTimelineLogs(prevLogs => {
+          const newLog = { time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: "Video Scripts: Drafting Section 2 Introduction..." };
+          if (prevLogs.some(l => l.text === newLog.text)) return prevLogs;
+          return [...prevLogs, newLog];
+        });
+
+        let currentText = "";
+        let charIndex = 0;
+        typingInterval = setInterval(() => {
+          if (charIndex < fullTexts.intro.length) {
+            currentText += fullTexts.intro[charIndex];
+            setActiveScript(prev => ({ ...prev, intro: currentText }));
+            charIndex++;
+          } else {
+            clearInterval(typingInterval);
+          }
+        }, 10);
+      }
+      else if (current === 2) {
+        // Section 1 & 2 are full, type Section 3
+        setActiveScript(prev => ({ ...prev, hook: fullTexts.hook, intro: fullTexts.intro, body: '', outro: '' }));
+        setRunningWorkflow({
+          name: "Writing Core Walkthrough (Section 3)",
+          progress: 70,
+          currentStep: "Detailing modular sandbox columns..."
+        });
+        setTimelineLogs(prevLogs => {
+          const newLog = { time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: "Video Scripts: Writing Section 3 Walkthrough..." };
+          if (prevLogs.some(l => l.text === newLog.text)) return prevLogs;
+          return [...prevLogs, newLog];
+        });
+
+        let currentText = "";
+        let charIndex = 0;
+        typingInterval = setInterval(() => {
+          if (charIndex < fullTexts.body.length) {
+            currentText += fullTexts.body[charIndex];
+            setActiveScript(prev => ({ ...prev, body: currentText }));
+            charIndex++;
+          } else {
+            clearInterval(typingInterval);
+          }
+        }, 10);
+      }
+      else if (current === 3) {
+        // Section 1, 2, 3 are full, type Section 4
+        setActiveScript(prev => ({ ...prev, hook: fullTexts.hook, intro: fullTexts.intro, body: fullTexts.body, outro: '' }));
+        setRunningWorkflow({
+          name: "Writing Outro CTA (Section 4)",
+          progress: 90,
+          currentStep: "Adding subscriber metrics optimization..."
+        });
+        setTimelineLogs(prevLogs => {
+          const newLog = { time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: "Video Scripts: Formulating Section 4 Outro..." };
+          if (prevLogs.some(l => l.text === newLog.text)) return prevLogs;
+          return [...prevLogs, newLog];
+        });
+
+        let currentText = "";
+        let charIndex = 0;
+        typingInterval = setInterval(() => {
+          if (charIndex < fullTexts.outro.length) {
+            currentText += fullTexts.outro[charIndex];
+            setActiveScript(prev => ({ ...prev, outro: currentText }));
+            charIndex++;
+          } else {
+            clearInterval(typingInterval);
+          }
+        }, 10);
+      }
+      else if (current === 4) {
+        // All complete
+        setActiveScript(fullTexts);
+        setRunningWorkflow(null);
+        setTimelineLogs(prevLogs => {
+          const newLog = { time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: "Video Scripts: Full outline compiled and ready for export." };
+          if (prevLogs.some(l => l.text === newLog.text)) return prevLogs;
+          return [...prevLogs, newLog];
+        });
+      }
+    };
+
+    // Run first step instantly
+    runScriptsStep(0);
+
+    const interval = setInterval(() => {
+      scriptsSimStep++;
+      runScriptsStep(scriptsSimStep);
+    }, 4200);
+
+    return () => {
+      clearInterval(interval);
+      if (typingInterval) clearInterval(typingInterval);
     };
   }, [isLoaded, activeTab, isSimActive]);
 
@@ -1938,7 +2087,17 @@ export default function AgentSandboxPage() {
                     navigator.clipboard.writeText(`Title: ${activeScript.title}\n\nHook:\n${activeScript.hook}\n\nIntroduction:\n${activeScript.intro}\n\nBody:\n${activeScript.body}\n\nOutro:\n${activeScript.outro}`);
                     alert('Script script template copied to clipboard!');
                   }} className="btn btn-secondary-outline w-100">📋 Copy Entire Script</button>
-                  <button onClick={() => alert('Script draft exported to project documents')} className="btn btn-primary w-100" style={{ marginTop: '10px' }}>Export to Docs</button>
+                  <button 
+                    onClick={() => alert('Script draft exported to project documents')} 
+                    className={`btn btn-primary w-100 ${(isSimActive && activeScript.hook && activeScript.intro && activeScript.body && activeScript.outro) ? 'animate-pulse' : ''}`} 
+                    style={{ 
+                      marginTop: '10px',
+                      boxShadow: (isSimActive && activeScript.hook && activeScript.intro && activeScript.body && activeScript.outro) ? '0 0 15px rgba(239, 68, 68, 0.6)' : 'none',
+                      borderColor: (isSimActive && activeScript.hook && activeScript.intro && activeScript.body && activeScript.outro) ? '#ef4444' : ''
+                    }}
+                  >
+                    Export to Docs
+                  </button>
                 </div>
               </div>
 
