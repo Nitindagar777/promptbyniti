@@ -1849,3 +1849,47 @@ tr.row-auditing td {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
+
+/* Mock Chart Drawing Animation for Simulation Mode */
+.growth-curve-svg path {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+}
+
+.is-simulating-chart path {
+  animation: drawChartPath 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes drawChartPath {
+  0% { stroke-dashoffset: 1000; }
+  50% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: 0; }
+}
+
+.growth-curve-svg circle {
+  opacity: 0;
+  transform: scale(0);
+  transform-origin: 300px 70px;
+}
+
+.is-simulating-chart circle {
+  animation: popChartCircle 4s ease-out infinite;
+}
+
+@keyframes popChartCircle {
+  0%, 25% { opacity: 0; transform: scale(0); }
+  50%, 100% { opacity: 1; transform: scale(1); }
+}
+
+.growth-curve-svg text {
+  opacity: 0;
+}
+
+.is-simulating-chart text {
+  animation: popChartText 4s ease-out infinite;
+}
+
+@keyframes popChartText {
+  0%, 25% { opacity: 0; }
+  50%, 100% { opacity: 1; }
+}

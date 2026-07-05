@@ -808,7 +808,7 @@ export default function AgentSandboxPage() {
   // --- GLOBAL SIDEBAR SIMULATION LOOP (For all other views) ---
   useEffect(() => {
     if (!isLoaded || !isSimActive) return;
-    if (activeTab === 'overview' || activeTab === 'chat' || activeTab === 'workflows' || activeTab === 'planner' || activeTab === 'ideas' || activeTab === 'scripts' || activeTab === 'thumbnails') return;
+    if (activeTab === 'overview' || activeTab === 'chat' || activeTab === 'workflows' || activeTab === 'planner' || activeTab === 'ideas' || activeTab === 'scripts' || activeTab === 'thumbnails' || activeTab === 'analytics') return;
 
     let globalSimStep = 0;
     const runGlobalStep = (step) => {
@@ -1310,6 +1310,68 @@ export default function AgentSandboxPage() {
     return () => {
       clearInterval(interval);
       if (typingInterval) clearInterval(typingInterval);
+    };
+  }, [isLoaded, activeTab, isSimActive]);
+
+  // --- CHANNEL PERFORMANCE ANALYTICS TAB AUTOPLAY SIMULATION LOOP ---
+  useEffect(() => {
+    if (!isLoaded || activeTab !== 'analytics' || !isSimActive) return;
+
+    let analyticsSimStep = 0;
+
+    const runAnalyticsStep = (step) => {
+      const current = step % 4;
+      if (current === 0) {
+        setRunningWorkflow({
+          name: "Syncing Channel Metrics",
+          progress: 30,
+          currentStep: "Querying YouTube API for watch hours..."
+        });
+        setTimelineLogs(prevLogs => {
+          const newLog = { time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: "Analytics Sync: Connecting to YouTube Data API endpoints..." };
+          if (prevLogs.some(l => l.text === newLog.text)) return prevLogs;
+          return [...prevLogs, newLog];
+        });
+      } 
+      else if (current === 1) {
+        setRunningWorkflow({
+          name: "Calculating Retentions",
+          progress: 65,
+          currentStep: "Analyzing viewer dropout timestamps..."
+        });
+        setTimelineLogs(prevLogs => {
+          const newLog = { time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: "Analytics Sync: Querying audience retention metrics database..." };
+          if (prevLogs.some(l => l.text === newLog.text)) return prevLogs;
+          return [...prevLogs, newLog];
+        });
+      } 
+      else if (current === 2) {
+        setRunningWorkflow({
+          name: "Compiling Growth Curve Map",
+          progress: 100,
+          currentStep: "Data structures synced successfully!"
+        });
+        setTimelineLogs(prevLogs => {
+          const newLog = { time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: "Analytics Sync complete: Channel performance indexes fully updated." };
+          if (prevLogs.some(l => l.text === newLog.text)) return prevLogs;
+          return [...prevLogs, newLog];
+        });
+      } 
+      else if (current === 3) {
+        setRunningWorkflow(null);
+      }
+    };
+
+    // Run first step instantly
+    runAnalyticsStep(0);
+
+    const interval = setInterval(() => {
+      analyticsSimStep++;
+      runAnalyticsStep(analyticsSimStep);
+    }, 2800);
+
+    return () => {
+      clearInterval(interval);
     };
   }, [isLoaded, activeTab, isSimActive]);
 
@@ -2314,7 +2376,7 @@ export default function AgentSandboxPage() {
             <div className="analytics-growth-graph card shadow-sm">
               <h4>Subscriber Milestones & Growth Curve</h4>
               {/* SVG Mock Chart */}
-              <div className="mock-svg-chart-container">
+              <div className={`mock-svg-chart-container ${isSimActive ? 'is-simulating-chart' : ''}`}>
                 <svg viewBox="0 0 500 150" className="growth-curve-svg">
                   <path
                     d="M 0 130 C 100 110, 200 90, 300 70 C 400 50, 450 30, 500 15"
