@@ -175,6 +175,12 @@ export default function AgentSandboxPage() {
     setSeoKeyword('');
     setSeoResults(null);
     setIsEditingMemory(false);
+    setIsUploading(false);
+    setDocuments([
+      { name: 'analytics_report_q2.pdf', size: '1.4 MB', date: 'Jul 2, 2026', status: 'Parsed & Hydrated' },
+      { name: 'brand_identity_guide.pdf', size: '820 KB', date: 'Jul 3, 2026', status: 'Loaded in Memory' },
+      { name: 'video_script_outline.docx', size: '45 KB', date: 'Jul 4, 2026', status: 'Active Draft' }
+    ]);
   }, [activeTab]);
 
   // Fetch memory and chats from API on load
@@ -454,6 +460,12 @@ export default function AgentSandboxPage() {
       setSeoKeyword('');
       setSeoResults(null);
       setIsEditingMemory(false);
+      setIsUploading(false);
+      setDocuments([
+        { name: 'analytics_report_q2.pdf', size: '1.4 MB', date: 'Jul 2, 2026', status: 'Parsed & Hydrated' },
+        { name: 'brand_identity_guide.pdf', size: '820 KB', date: 'Jul 3, 2026', status: 'Loaded in Memory' },
+        { name: 'video_script_outline.docx', size: '45 KB', date: 'Jul 4, 2026', status: 'Active Draft' }
+      ]);
     }
   }, [isSimActive]);
 
@@ -814,7 +826,7 @@ export default function AgentSandboxPage() {
   // --- GLOBAL SIDEBAR SIMULATION LOOP (For all other views) ---
   useEffect(() => {
     if (!isLoaded || !isSimActive) return;
-    if (activeTab === 'overview' || activeTab === 'chat' || activeTab === 'workflows' || activeTab === 'planner' || activeTab === 'ideas' || activeTab === 'scripts' || activeTab === 'thumbnails' || activeTab === 'analytics' || activeTab === 'seo' || activeTab === 'memory') return;
+    if (activeTab === 'overview' || activeTab === 'chat' || activeTab === 'workflows' || activeTab === 'planner' || activeTab === 'ideas' || activeTab === 'scripts' || activeTab === 'thumbnails' || activeTab === 'analytics' || activeTab === 'seo' || activeTab === 'memory' || activeTab === 'documents') return;
 
     let globalSimStep = 0;
     const runGlobalStep = (step) => {
@@ -1684,6 +1696,93 @@ export default function AgentSandboxPage() {
     return () => {
       clearInterval(interval);
       if (typingInterval) clearInterval(typingInterval);
+    };
+  }, [isLoaded, activeTab, isSimActive]);
+
+  // --- KNOWLEDGE BASE DOCUMENTS TAB AUTOPLAY SIMULATION LOOP ---
+  useEffect(() => {
+    if (!isLoaded || activeTab !== 'documents' || !isSimActive) return;
+
+    let docsSimStep = 0;
+
+    const runDocsStep = (step) => {
+      const current = step % 4;
+
+      if (current === 0) {
+        // Step 0: Reset documents back to default 3 and start uploading/parsing state
+        setDocuments([
+          { name: 'analytics_report_q2.pdf', size: '1.4 MB', date: 'Jul 2, 2026', status: 'Parsed & Hydrated' },
+          { name: 'brand_identity_guide.pdf', size: '820 KB', date: 'Jul 3, 2026', status: 'Loaded in Memory' },
+          { name: 'video_script_outline.docx', size: '45 KB', date: 'Jul 4, 2026', status: 'Active Draft' }
+        ]);
+        setIsUploading(true);
+
+        setRunningWorkflow({
+          name: "Uploading analytics_report_q3.pdf",
+          progress: 25,
+          currentStep: "Parsing document paragraphs..."
+        });
+        setTimelineLogs(prevLogs => {
+          const newLog = { time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: "Knowledge Base: Uploading file 'analytics_report_q3.pdf' to vector storage..." };
+          if (prevLogs.some(l => l.text === newLog.text)) return prevLogs;
+          return [...prevLogs, newLog];
+        });
+      }
+      else if (current === 1) {
+        // Step 1: Still uploading, chunking text segments
+        setIsUploading(true);
+        setRunningWorkflow({
+          name: "Parsing & Chunking File",
+          progress: 70,
+          currentStep: "Indexing semantic blocks into Pinecone DB..."
+        });
+        setTimelineLogs(prevLogs => {
+          const newLog = { time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: "Knowledge Base: Splitting 'analytics_report_q3.pdf' into chunk tokens..." };
+          if (prevLogs.some(l => l.text === newLog.text)) return prevLogs;
+          return [...prevLogs, newLog];
+        });
+      }
+      else if (current === 2) {
+        // Step 2: Stop uploading spinner, prepend new document card to active database list
+        setIsUploading(false);
+        const newDoc = {
+          name: 'analytics_report_q3.pdf',
+          size: '1.6 MB',
+          date: 'Jul 5, 2026',
+          status: 'Parsed & Hydrated'
+        };
+        setDocuments(prev => {
+          if (prev.some(d => d.name === newDoc.name)) return prev;
+          return [newDoc, ...prev];
+        });
+
+        setRunningWorkflow({
+          name: "Vector Index updated",
+          progress: 100,
+          currentStep: "Knowledge Base hydrated successfully!"
+        });
+        setTimelineLogs(prevLogs => {
+          const newLog = { time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: "Knowledge Base complete: 'analytics_report_q3.pdf' successfully parsed and indexed." };
+          if (prevLogs.some(l => l.text === newLog.text)) return prevLogs;
+          return [...prevLogs, newLog];
+        });
+      }
+      else if (current === 3) {
+        // Step 3: Wait and loop
+        setRunningWorkflow(null);
+      }
+    };
+
+    // Run first step instantly
+    runDocsStep(0);
+
+    const interval = setInterval(() => {
+      docsSimStep++;
+      runDocsStep(docsSimStep);
+    }, 3800);
+
+    return () => {
+      clearInterval(interval);
     };
   }, [isLoaded, activeTab, isSimActive]);
 
