@@ -28,6 +28,7 @@ export default function AgentSandboxPage() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isSimActive, setIsSimActive] = useState(true);
   const [chatSimStep, setChatSimStep] = useState(0);
+  const [auditingRowId, setAuditingRowId] = useState(null);
 
   // Onboarding Wizard Form State
   const [wizardData, setWizardData] = useState({
@@ -163,6 +164,7 @@ export default function AgentSandboxPage() {
     // Clear workflow running states on tab changes to avoid flickering/crossover
     setRunningWorkflow(null);
     setWorkflowResults(null);
+    setAuditingRowId(null);
   }, [activeTab]);
 
   // Fetch memory and chats from API on load
@@ -432,6 +434,7 @@ export default function AgentSandboxPage() {
       setChatMessages([]);
       setInputMessage('');
       setIsChatLoading(false);
+      setAuditingRowId(null);
     }
   }, [isSimActive]);
 
@@ -792,7 +795,7 @@ export default function AgentSandboxPage() {
   // --- GLOBAL SIDEBAR SIMULATION LOOP (For all other views) ---
   useEffect(() => {
     if (!isLoaded || !isSimActive) return;
-    if (activeTab === 'overview' || activeTab === 'chat' || activeTab === 'workflows') return;
+    if (activeTab === 'overview' || activeTab === 'chat' || activeTab === 'workflows' || activeTab === 'planner') return;
 
     let globalSimStep = 0;
     const runGlobalStep = (step) => {
@@ -880,6 +883,77 @@ export default function AgentSandboxPage() {
       workflowsSimStep++;
       runWorkflowsStep(workflowsSimStep);
     }, 7500);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [isLoaded, activeTab, isSimActive]);
+
+  // --- CONTENT PLANNER TAB AUTOPLAY SIMULATION LOOP ---
+  useEffect(() => {
+    if (!isLoaded || activeTab !== 'planner' || !isSimActive) return;
+
+    let plannerSimStep = 0;
+
+    const runPlannerStep = (step) => {
+      const current = step % 4;
+      if (current === 0) {
+        setAuditingRowId(1);
+        setRunningWorkflow({
+          name: "Auditing Calendar Metadata",
+          progress: 30,
+          currentStep: "Analyzing SEO keyword optimization tags..."
+        });
+        setTimelineLogs(prevLogs => {
+          const newLog = { time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: "Planner Audit: Analyzing SEO tags for 'I Hired a YouTube Manager'..." };
+          if (prevLogs.some(l => l.text === newLog.text)) return prevLogs;
+          return [...prevLogs, newLog];
+        });
+      } 
+      else if (current === 1) {
+        setAuditingRowId(2);
+        setRunningWorkflow({
+          name: "Drafting Script Outlines",
+          progress: 60,
+          currentStep: "Formulating hook variants for 'Why I Am Quitting NextJS'..."
+        });
+        setTimelineLogs(prevLogs => {
+          const newLog = { time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: "Planner Audit: Drafting script outline for 'Why I Am Quitting NextJS'..." };
+          if (prevLogs.some(l => l.text === newLog.text)) return prevLogs;
+          return [...prevLogs, newLog];
+        });
+      } 
+      else if (current === 2) {
+        setAuditingRowId(3);
+        setRunningWorkflow({
+          name: "Fetching Historical Metrics",
+          progress: 90,
+          currentStep: "Aggregating views and watchtime logs..."
+        });
+        setTimelineLogs(prevLogs => {
+          const newLog = { time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: "Planner Audit: Fetching historical stats for 'Automating developer tools'..." };
+          if (prevLogs.some(l => l.text === newLog.text)) return prevLogs;
+          return [...prevLogs, newLog];
+        });
+      } 
+      else if (current === 3) {
+        setAuditingRowId(null);
+        setRunningWorkflow(null);
+        setTimelineLogs(prevLogs => {
+          const newLog = { time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: "Planner Audit complete: calendar schedule fully optimized." };
+          if (prevLogs.some(l => l.text === newLog.text)) return prevLogs;
+          return [...prevLogs, newLog];
+        });
+      }
+    };
+
+    // Run first step instantly
+    runPlannerStep(0);
+
+    const interval = setInterval(() => {
+      plannerSimStep++;
+      runPlannerStep(plannerSimStep);
+    }, 2800);
 
     return () => {
       clearInterval(interval);
@@ -1666,26 +1740,50 @@ export default function AgentSandboxPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
+                  <tr className={auditingRowId === 1 ? 'row-auditing' : ''}>
                     <td><strong>Jul 5, 2026</strong></td>
                     <td>I Hired a YouTube Manager (AI Agent sandbox walk)</td>
                     <td>AI Agents</td>
                     <td><span className="status-label scheduled">Scheduled</span></td>
-                    <td><button onClick={() => setActiveTab('seo')} className="btn btn-secondary btn-xs">SEO tags</button></td>
+                    <td>
+                      <button 
+                        onClick={() => setActiveTab('seo')} 
+                        className={`btn btn-xs ${auditingRowId === 1 ? 'btn-danger' : 'btn-secondary'}`}
+                        disabled={auditingRowId && auditingRowId !== 1}
+                      >
+                        {auditingRowId === 1 ? '⏳ Auditing...' : 'SEO tags'}
+                      </button>
+                    </td>
                   </tr>
-                  <tr>
+                  <tr className={auditingRowId === 2 ? 'row-auditing' : ''}>
                     <td><strong>Jul 8, 2026</strong></td>
                     <td>Why I Am Quitting NextJS for Vite config</td>
                     <td>Web Dev</td>
                     <td><span className="status-label draft">Draft</span></td>
-                    <td><button onClick={() => { setActiveScript({ title: 'Why I Am Quitting NextJS for Vite config', hook: '[0:00 - 0:30] Hook about NextJS overheads.', intro: '[0:30 - 1:15] Vite dev speeds comparison.', body: '[1:15 - 4:30] Core bundle benchmarks and setup.', outro: '[4:30 - 5:00] End wrap.' }); setActiveTab('scripts'); }} className="btn btn-secondary btn-xs">Write Outline</button></td>
+                    <td>
+                      <button 
+                        onClick={() => { setActiveScript({ title: 'Why I Am Quitting NextJS for Vite config', hook: '[0:00 - 0:30] Hook about NextJS overheads.', intro: '[0:30 - 1:15] Vite dev speeds comparison.', body: '[1:15 - 4:30] Core bundle benchmarks and setup.', outro: '[4:30 - 5:00] End wrap.' }); setActiveTab('scripts'); }} 
+                        className={`btn btn-xs ${auditingRowId === 2 ? 'btn-danger' : 'btn-secondary'}`}
+                        disabled={auditingRowId && auditingRowId !== 2}
+                      >
+                        {auditingRowId === 2 ? '⏳ Writing...' : 'Write Outline'}
+                      </button>
+                    </td>
                   </tr>
-                  <tr>
+                  <tr className={auditingRowId === 3 ? 'row-auditing' : ''}>
                     <td><strong>Jun 28, 2026</strong></td>
                     <td>Automating developer tools with Antigravity</td>
                     <td>AI Coding</td>
                     <td><span className="status-label published">Published</span></td>
-                    <td><button onClick={() => setActiveTab('analytics')} className="btn btn-secondary btn-xs">Views stats</button></td>
+                    <td>
+                      <button 
+                        onClick={() => setActiveTab('analytics')} 
+                        className={`btn btn-xs ${auditingRowId === 3 ? 'btn-danger' : 'btn-secondary'}`}
+                        disabled={auditingRowId && auditingRowId !== 3}
+                      >
+                        {auditingRowId === 3 ? '⏳ Fetching...' : 'Views stats'}
+                      </button>
+                    </td>
                   </tr>
                 </tbody>
               </table>
