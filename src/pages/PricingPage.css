@@ -439,6 +439,7 @@
   text-align: center;
   margin-top: 40px;
   margin-bottom: 30px;
+  scroll-margin-top: 100px;
 }
 
 .pricing-section-header:first-of-type {
@@ -494,6 +495,7 @@
 
 .title-agents {
   color: #fbbf24 !important;
+  scroll-margin-top: 100px;
 }
 
 /* Compact Prompt Cards Styling */

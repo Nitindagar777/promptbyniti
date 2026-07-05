@@ -85,7 +85,7 @@ function GuestRoute({ children }) {
 
 function App() {
   const location = useLocation();
-  const hideFooter = location.pathname === '/templates';
+  const hideFooter = ['/templates', '/agent-sandbox', '/personal-agent'].includes(location.pathname);
 
   return (
     <div className="app">

@@ -1,6 +1,6 @@
 /* PricingPage — Monetization plans with Razorpay */
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { pricingPlans } from '../data/promptData';
 import { Crown, Check, Star, Shield, Zap, Sparkles, Loader } from 'lucide-react';
@@ -12,7 +12,20 @@ const API_URL = '/api';
 export default function PricingPage() {
   const { state, setPlan, login } = useApp();
   const navigate = useNavigate();
+  const location = useLocation();
   const [loadingPlan, setLoadingPlan] = useState(null);
+
+  useEffect(() => {
+    if (location.hash === '#agents' || location.state?.scrollTo === 'agents') {
+      const element = document.querySelector('.title-agents');
+      if (element) {
+        const timer = setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 250);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [location]);
 
   const handleSelectPlan = async (planId) => {
     // Must be logged in
