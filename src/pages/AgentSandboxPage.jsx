@@ -1521,8 +1521,13 @@ export default function AgentSandboxPage() {
     let typingInterval = null;
 
     const targetAudience = "Tech Enthusiasts";
+    const targetCountry = "United States";
     const targetGoal = "100K Subscribers Milestone";
+    const targetUploadFrequency = "2 Videos / Week";
+    const targetTone = "Energetic & Educational";
+    const targetEditingStyle = "Fast-paced, high retention";
     const targetColor = "#FF0000";
+    const targetCompetitors = ["TechWithNitin", "Fireship"];
 
     const runMemoryStep = (step) => {
       if (typingInterval) clearInterval(typingInterval);
@@ -1548,8 +1553,13 @@ export default function AgentSandboxPage() {
         setMemory(prev => ({
           ...prev,
           audience: '',
+          country: '',
           goal: '',
-          brandColor: ''
+          uploadFrequency: '',
+          tone: '',
+          editingStyle: '',
+          brandColor: '',
+          competitors: []
         }));
 
         setRunningWorkflow({
@@ -1576,9 +1586,13 @@ export default function AgentSandboxPage() {
           return [...prevLogs, newLog];
         });
 
-        // Type Target Audience first, then Goal, then Brand Color
+        // Type all properties character-by-character into editableMemory fields
         let audText = "";
+        let countryText = "";
         let goalText = "";
+        let freqText = "";
+        let toneText = "";
+        let editStyleText = "";
         let colorText = "";
         let charIndex = 0;
 
@@ -1587,9 +1601,25 @@ export default function AgentSandboxPage() {
             audText += targetAudience[charIndex];
             setEditableMemory(prev => ({ ...prev, audience: audText }));
           }
+          if (charIndex < targetCountry.length) {
+            countryText += targetCountry[charIndex];
+            setEditableMemory(prev => ({ ...prev, country: countryText }));
+          }
           if (charIndex < targetGoal.length) {
             goalText += targetGoal[charIndex];
             setEditableMemory(prev => ({ ...prev, goal: goalText }));
+          }
+          if (charIndex < targetUploadFrequency.length) {
+            freqText += targetUploadFrequency[charIndex];
+            setEditableMemory(prev => ({ ...prev, uploadFrequency: freqText }));
+          }
+          if (charIndex < targetTone.length) {
+            toneText += targetTone[charIndex];
+            setEditableMemory(prev => ({ ...prev, tone: toneText }));
+          }
+          if (charIndex < targetEditingStyle.length) {
+            editStyleText += targetEditingStyle[charIndex];
+            setEditableMemory(prev => ({ ...prev, editingStyle: editStyleText }));
           }
           if (charIndex < targetColor.length) {
             colorText += targetColor[charIndex];
@@ -1597,7 +1627,16 @@ export default function AgentSandboxPage() {
           }
 
           charIndex++;
-          if (charIndex >= Math.max(targetAudience.length, targetGoal.length, targetColor.length)) {
+          const maxLen = Math.max(
+            targetAudience.length,
+            targetCountry.length,
+            targetGoal.length,
+            targetUploadFrequency.length,
+            targetTone.length,
+            targetEditingStyle.length,
+            targetColor.length
+          );
+          if (charIndex >= maxLen) {
             clearInterval(typingInterval);
           }
         }, 30);
@@ -1607,8 +1646,13 @@ export default function AgentSandboxPage() {
         setMemory(prev => ({
           ...prev,
           audience: targetAudience,
+          country: targetCountry,
           goal: targetGoal,
-          brandColor: targetColor
+          uploadFrequency: targetUploadFrequency,
+          tone: targetTone,
+          editingStyle: targetEditingStyle,
+          brandColor: targetColor,
+          competitors: targetCompetitors
         }));
         setIsEditingMemory(false);
 
