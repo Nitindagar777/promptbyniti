@@ -160,6 +160,9 @@ export default function AgentSandboxPage() {
   // Persist active tab across refreshes
   useEffect(() => {
     localStorage.setItem('agent_sandbox_active_tab', activeTab);
+    // Clear workflow running states on tab changes to avoid flickering/crossover
+    setRunningWorkflow(null);
+    setWorkflowResults(null);
   }, [activeTab]);
 
   // Fetch memory and chats from API on load
@@ -316,17 +319,17 @@ export default function AgentSandboxPage() {
       }, 15);
     } 
     else if (step === 3) {
-      // Phase 3: Auto check off task 1 & CTR increase
+      // Complete Task 1 & Task 2
       setTasks(prevTasks => {
-        const firstUncompleted = prevTasks.find(t => !t.completed);
-        if (firstUncompleted) {
-          setTimelineLogs(prevLogs => [
-            ...prevLogs,
-            { time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: `Completed task: ${firstUncompleted.text}` }
-          ]);
-          return prevTasks.map(t => t.id === firstUncompleted.id ? { ...t, completed: true } : t);
-        }
-        return prevTasks;
+        const toComplete = prevTasks.filter(t => t.id === 1 || t.id === 2);
+        toComplete.forEach(t => {
+          setTimelineLogs(prevLogs => {
+            const newLog = { time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: `Completed task: ${t.text}` };
+            if (prevLogs.some(l => l.text === newLog.text)) return prevLogs;
+            return [...prevLogs, newLog];
+          });
+        });
+        return prevTasks.map(t => (t.id === 1 || t.id === 2) ? { ...t, completed: true } : t);
       });
 
       setMemory(prevMem => ({
@@ -340,31 +343,32 @@ export default function AgentSandboxPage() {
       }));
     } 
     else if (step === 4) {
-      // Phase 4: Auto check off task 2
+      // Complete Task 4
       setTasks(prevTasks => {
-        const firstUncompleted = prevTasks.find(t => !t.completed);
-        if (firstUncompleted) {
-          setTimelineLogs(prevLogs => [
-            ...prevLogs,
-            { time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: `Completed task: ${firstUncompleted.text}` }
-          ]);
-          return prevTasks.map(t => t.id === firstUncompleted.id ? { ...t, completed: true } : t);
+        const task4 = prevTasks.find(t => t.id === 4);
+        if (task4) {
+          setTimelineLogs(prevLogs => {
+            const newLog = { time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: `Completed task: ${task4.text}` };
+            if (prevLogs.some(l => l.text === newLog.text)) return prevLogs;
+            return [...prevLogs, newLog];
+          });
+          return prevTasks.map(t => t.id === 4 ? { ...t, completed: true } : t);
         }
         return prevTasks;
       });
     }
     else if (step === 5) {
-      // Phase 5: Auto check off task 3
+      // Complete Task 5 & Task 102
       setTasks(prevTasks => {
-        const firstUncompleted = prevTasks.find(t => !t.completed);
-        if (firstUncompleted) {
-          setTimelineLogs(prevLogs => [
-            ...prevLogs,
-            { time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: `Completed task: ${firstUncompleted.text}` }
-          ]);
-          return prevTasks.map(t => t.id === firstUncompleted.id ? { ...t, completed: true } : t);
-        }
-        return prevTasks;
+        const toComplete = prevTasks.filter(t => t.id === 5 || t.id === 102);
+        toComplete.forEach(t => {
+          setTimelineLogs(prevLogs => {
+            const newLog = { time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: `Completed task: ${t.text}` };
+            if (prevLogs.some(l => l.text === newLog.text)) return prevLogs;
+            return [...prevLogs, newLog];
+          });
+        });
+        return prevTasks.map(t => (t.id === 5 || t.id === 102) ? { ...t, completed: true } : t);
       });
     }
     else if (step === 6) {
@@ -788,7 +792,7 @@ export default function AgentSandboxPage() {
   // --- GLOBAL SIDEBAR SIMULATION LOOP (For all other views) ---
   useEffect(() => {
     if (!isLoaded || !isSimActive) return;
-    if (activeTab === 'overview' || activeTab === 'chat') return;
+    if (activeTab === 'overview' || activeTab === 'chat' || activeTab === 'workflows') return;
 
     let globalSimStep = 0;
     const runGlobalStep = (step) => {
@@ -844,6 +848,38 @@ export default function AgentSandboxPage() {
       globalSimStep++;
       runGlobalStep(globalSimStep);
     }, 2800);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [isLoaded, activeTab, isSimActive]);
+
+  // --- WORKFLOWS TAB AUTOPLAY SIMULATION LOOP ---
+  useEffect(() => {
+    if (!isLoaded || activeTab !== 'workflows' || !isSimActive) return;
+
+    let workflowsSimStep = 0;
+    
+    const runWorkflowsStep = (step) => {
+      const current = step % 4;
+      if (current === 0) {
+        runWorkflowSimulation('Launch Channel Strategy');
+      } else if (current === 1) {
+        runWorkflowSimulation('100 Video Ideas Generator');
+      } else if (current === 2) {
+        runWorkflowSimulation('Analyze Competitors & Gaps');
+      } else if (current === 3) {
+        runWorkflowSimulation('90-Day Channel Growth Plan');
+      }
+    };
+
+    // Run first step instantly
+    runWorkflowsStep(0);
+
+    const interval = setInterval(() => {
+      workflowsSimStep++;
+      runWorkflowsStep(workflowsSimStep);
+    }, 7500);
 
     return () => {
       clearInterval(interval);
@@ -965,7 +1001,17 @@ export default function AgentSandboxPage() {
         currentStepIndex++;
       } else {
         clearInterval(interval);
-        setRunningWorkflow(null);
+        setRunningWorkflow(prev => prev ? {
+          ...prev,
+          progress: 100,
+          currentStep: 'Completed workflow asset compilation!'
+        } : null);
+
+        if (!isSimActive) {
+          setTimeout(() => {
+            setRunningWorkflow(null);
+          }, 2000);
+        }
 
         // Populate mock strategy results card outputs
         let outputs = null;
@@ -1369,44 +1415,88 @@ export default function AgentSandboxPage() {
             </div>
 
             <div className="workflows-templates-grid">
-              <div className="workflow-temp-card card shadow-sm">
+              <div className={`workflow-temp-card card shadow-sm ${runningWorkflow?.name === 'Launch Channel Strategy' ? 'running-active' : ''}`}>
                 <div className="card-top">
                   <span className="badge">18 Steps | 2 min</span>
                   <Zap size={20} className="text-red" />
                 </div>
                 <h3>Launch Channel Strategy</h3>
                 <p>Audits niche, generates Midjourney branding prompt assets, and devises metadata structures.</p>
-                <button onClick={() => runWorkflowSimulation('Launch Channel Strategy')} className="btn btn-primary w-100" disabled={runningWorkflow}>Run Workflow</button>
+                <button 
+                  onClick={() => runWorkflowSimulation('Launch Channel Strategy')} 
+                  className={`btn w-100 ${runningWorkflow?.name === 'Launch Channel Strategy' ? 'btn-danger' : 'btn-primary'}`} 
+                  disabled={runningWorkflow && runningWorkflow?.name !== 'Launch Channel Strategy'}
+                >
+                  {runningWorkflow?.name === 'Launch Channel Strategy' ? (
+                    <span className="d-flex align-items-center justify-content-center gap-2">
+                      <RefreshCw size={16} className="spinner-icon" />
+                      Running...
+                    </span>
+                  ) : 'Run Workflow'}
+                </button>
               </div>
 
-              <div className="workflow-temp-card card shadow-sm">
+              <div className={`workflow-temp-card card shadow-sm ${runningWorkflow?.name === '100 Video Ideas Generator' ? 'running-active' : ''}`}>
                 <div className="card-top">
                   <span className="badge">AI Research</span>
                   <Sparkles size={20} className="text-red" />
                 </div>
                 <h3>100 Video Ideas Generator</h3>
                 <p>Mines keyword patterns and outlines content topics scoring highest for potential search CTR.</p>
-                <button onClick={() => runWorkflowSimulation('100 Video Ideas Generator')} className="btn btn-primary w-100" disabled={runningWorkflow}>Run Workflow</button>
+                <button 
+                  onClick={() => runWorkflowSimulation('100 Video Ideas Generator')} 
+                  className={`btn w-100 ${runningWorkflow?.name === '100 Video Ideas Generator' ? 'btn-danger' : 'btn-primary'}`} 
+                  disabled={runningWorkflow && runningWorkflow?.name !== '100 Video Ideas Generator'}
+                >
+                  {runningWorkflow?.name === '100 Video Ideas Generator' ? (
+                    <span className="d-flex align-items-center justify-content-center gap-2">
+                      <RefreshCw size={16} className="spinner-icon" />
+                      Running...
+                    </span>
+                  ) : 'Run Workflow'}
+                </button>
               </div>
 
-              <div className="workflow-temp-card card shadow-sm">
+              <div className={`workflow-temp-card card shadow-sm ${runningWorkflow?.name === 'Analyze Competitors & Gaps' ? 'running-active' : ''}`}>
                 <div className="card-top">
                   <span className="badge">5 Steps | 1 min</span>
                   <Database size={20} className="text-red" />
                 </div>
                 <h3>Analyze Competitors</h3>
                 <p>Audits competing channels to reveal untapped content schedule opportunities and metadata tags.</p>
-                <button onClick={() => runWorkflowSimulation('Analyze Competitors & Gaps')} className="btn btn-primary w-100" disabled={runningWorkflow}>Run Workflow</button>
+                <button 
+                  onClick={() => runWorkflowSimulation('Analyze Competitors & Gaps')} 
+                  className={`btn w-100 ${runningWorkflow?.name === 'Analyze Competitors & Gaps' ? 'btn-danger' : 'btn-primary'}`} 
+                  disabled={runningWorkflow && runningWorkflow?.name !== 'Analyze Competitors & Gaps'}
+                >
+                  {runningWorkflow?.name === 'Analyze Competitors & Gaps' ? (
+                    <span className="d-flex align-items-center justify-content-center gap-2">
+                      <RefreshCw size={16} className="spinner-icon" />
+                      Running...
+                    </span>
+                  ) : 'Run Workflow'}
+                </button>
               </div>
 
-              <div className="workflow-temp-card card shadow-sm">
+              <div className={`workflow-temp-card card shadow-sm ${runningWorkflow?.name === '90-Day Channel Growth Plan' ? 'running-active' : ''}`}>
                 <div className="card-top">
                   <span className="badge">24 Steps | 3 min</span>
                   <TrendingUp size={20} className="text-red" />
                 </div>
                 <h3>90-Day Growth Plan</h3>
                 <p>Compiles structured upload milestones, expansion benchmarks, and audience retention loops.</p>
-                <button onClick={() => runWorkflowSimulation('90-Day Channel Growth Plan')} className="btn btn-primary w-100" disabled={runningWorkflow}>Run Workflow</button>
+                <button 
+                  onClick={() => runWorkflowSimulation('90-Day Channel Growth Plan')} 
+                  className={`btn w-100 ${runningWorkflow?.name === '90-Day Channel Growth Plan' ? 'btn-danger' : 'btn-primary'}`} 
+                  disabled={runningWorkflow && runningWorkflow?.name !== '90-Day Channel Growth Plan'}
+                >
+                  {runningWorkflow?.name === '90-Day Channel Growth Plan' ? (
+                    <span className="d-flex align-items-center justify-content-center gap-2">
+                      <RefreshCw size={16} className="spinner-icon" />
+                      Running...
+                    </span>
+                  ) : 'Run Workflow'}
+                </button>
               </div>
             </div>
 
@@ -1425,107 +1515,125 @@ export default function AgentSandboxPage() {
             )}
 
             {/* Results Cards (Phase 7) */}
-            {workflowResults && (
+            {(workflowResults || runningWorkflow) && (
               <div className="workflow-results-container card shadow-sm">
                 <div className="results-header">
-                  <h3>{workflowResults.title}</h3>
-                  <div className="actions">
-                    <button onClick={() => alert('Strategy strategy results exported to project documents')} className="btn btn-secondary-outline btn-xs">Export to Docs</button>
-                  </div>
+                  <h3>{workflowResults ? workflowResults.title : `⚡ AI Compiler: ${runningWorkflow?.name}`}</h3>
+                  {workflowResults && (
+                    <div className="actions">
+                      <button onClick={() => alert('Strategy strategy results exported to project documents')} className="btn btn-secondary-outline btn-xs">Export to Docs</button>
+                    </div>
+                  )}
                 </div>
 
                 <div className="results-content-pane">
-                  {workflowResults.type === 'Launch Strategy' && (
-                    <div className="launch-results-cards">
-                      <div className="res-card">
-                        <h5>Channel Identity Setup</h5>
-                        <p><strong>Name:</strong> {workflowResults.branding.name}</p>
-                        <p><strong>Niche:</strong> {workflowResults.branding.niche}</p>
+                  {(!workflowResults || (runningWorkflow && runningWorkflow.progress < 100)) ? (
+                    <div className="workflow-processing-placeholder">
+                      <div className="processing-pulse-bar">
+                        <span className="dot animate-pulse"></span>
+                        <span>AI Agent is compiling real-time insights... ({runningWorkflow?.progress || 0}%)</span>
                       </div>
-                      <div className="res-card">
-                        <h5>AI Graphic Prompts</h5>
-                        <div className="prompt-block">
-                          <strong>Logo:</strong> <code>{workflowResults.branding.logoPrompt}</code>
-                        </div>
-                        <div className="prompt-block">
-                          <strong>Banner:</strong> <code>{workflowResults.branding.bannerPrompt}</code>
-                        </div>
-                      </div>
-                      <div className="res-card">
-                        <h5>Action Items Checklist</h5>
-                        <ul>
-                          {workflowResults.checklist.map((item, idx) => (
-                            <li key={idx}>✓ {item}</li>
-                          ))}
-                        </ul>
+                      <div className="mock-results-skeletons">
+                        <div className="skeleton-row line-long"></div>
+                        <div className="skeleton-row line-medium"></div>
+                        <div className="skeleton-row line-short"></div>
                       </div>
                     </div>
-                  )}
+                  ) : (
+                    <>
+                      {workflowResults.type === 'Launch Strategy' && (
+                        <div className="launch-results-cards">
+                          <div className="res-card">
+                            <h5>Channel Identity Setup</h5>
+                            <p><strong>Name:</strong> {workflowResults.branding.name}</p>
+                            <p><strong>Niche:</strong> {workflowResults.branding.niche}</p>
+                          </div>
+                          <div className="res-card">
+                            <h5>AI Graphic Prompts</h5>
+                            <div className="prompt-block">
+                              <strong>Logo:</strong> <code>{workflowResults.branding.logoPrompt}</code>
+                            </div>
+                            <div className="prompt-block">
+                              <strong>Banner:</strong> <code>{workflowResults.branding.bannerPrompt}</code>
+                            </div>
+                          </div>
+                          <div className="res-card">
+                            <h5>Action Items Checklist</h5>
+                            <ul>
+                              {workflowResults.checklist.map((item, idx) => (
+                                <li key={idx}>✓ {item}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                      )}
 
-                  {workflowResults.type === '100 Video Ideas' && (
-                    <table className="workflow-ideas-table">
-                      <thead>
-                        <tr>
-                          <th>Video Title</th>
-                          <th>Niche Cluster</th>
-                          <th>CTR Potential</th>
-                          <th>Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {workflowResults.ideas.map((idea, idx) => (
-                          <tr key={idx}>
-                            <td><strong>{idea.title}</strong></td>
-                            <td>{idea.niche}</td>
-                            <td><span className="badge-green">{idea.CTR}</span></td>
-                            <td>
-                              <button onClick={() => {
-                                setActiveScript({
-                                  title: idea.title,
-                                  hook: `[0:00 - 0:30] Massively hooks audience on ${idea.title}.`,
-                                  intro: `[0:30 - 1:15] Introduces ${idea.niche} concept details.`,
-                                  body: '[1:15 - 4:30] Expands on the core automation walkthrough points.',
-                                  outro: '[4:30 - 5:00] Subscribe call to action.'
-                                });
-                                setActiveTab('scripts');
-                              }} className="btn btn-secondary btn-xs">Outline Script</button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
+                      {workflowResults.type === '100 Video Ideas' && (
+                        <table className="workflow-ideas-table">
+                          <thead>
+                            <tr>
+                              <th>Video Title</th>
+                              <th>Niche Cluster</th>
+                              <th>CTR Potential</th>
+                              <th>Action</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {workflowResults.ideas.map((idea, idx) => (
+                              <tr key={idx}>
+                                <td><strong>{idea.title}</strong></td>
+                                <td>{idea.niche}</td>
+                                <td><span className="badge-green">{idea.CTR}</span></td>
+                                <td>
+                                  <button onClick={() => {
+                                    setActiveScript({
+                                      title: idea.title,
+                                      hook: `[0:00 - 0:30] Massively hooks audience on ${idea.title}.`,
+                                      intro: `[0:30 - 1:15] Introduces ${idea.niche} concept details.`,
+                                      body: '[1:15 - 4:30] Expands on the core automation walkthrough points.',
+                                      outro: '[4:30 - 5:00] Subscribe call to action.'
+                                    });
+                                    setActiveTab('scripts');
+                                  }} className="btn btn-secondary btn-xs">Outline Script</button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      )}
 
-                  {workflowResults.type === 'Competitor Audit' && (
-                    <div className="competitor-insights-wrap">
-                      <div className="res-card">
-                        <h5>Strategic Opportunities</h5>
-                        <ul>
-                          {workflowResults.insights.map((insight, idx) => (
-                            <li key={idx}>{insight}</li>
-                          ))}
-                        </ul>
-                      </div>
-                      <div className="res-card">
-                        <h5>Optimized Tag Keywords</h5>
-                        <div className="tag-chips-wrap">
-                          {workflowResults.keywords.map((tag, idx) => (
-                            <span key={idx} className="tag-chip">{tag}</span>
+                      {workflowResults.type === 'Competitor Audit' && (
+                        <div className="competitor-insights-wrap">
+                          <div className="res-card">
+                            <h5>Strategic Opportunities</h5>
+                            <ul>
+                              {workflowResults.insights.map((insight, idx) => (
+                                <li key={idx}>{insight}</li>
+                              ))}
+                            </ul>
+                          </div>
+                          <div className="res-card">
+                            <h5>Optimized Tag Keywords</h5>
+                            <div className="badge-grid">
+                              {workflowResults.keywords.map((kw, idx) => (
+                                <span key={idx} className="badge-tag">{kw}</span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {workflowResults.type === 'Growth Plan' && (
+                        <div className="growth-plan-roadmap">
+                          {workflowResults.calendar.map((item, idx) => (
+                            <div key={idx} className="roadmap-phase-card res-card">
+                              <h4>{item.phase}</h4>
+                              <p>{item.description}</p>
+                            </div>
                           ))}
                         </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {workflowResults.type === 'Growth Plan' && (
-                    <div className="growth-plan-roadmap">
-                      {workflowResults.calendar.map((item, idx) => (
-                        <div key={idx} className="roadmap-phase-card res-card">
-                          <h4>{item.phase}</h4>
-                          <p>{item.description}</p>
-                        </div>
-                      ))}
-                    </div>
+                      )}
+                    </>
                   )}
                 </div>
               </div>

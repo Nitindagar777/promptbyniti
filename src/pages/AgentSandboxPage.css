@@ -822,6 +822,31 @@
   border-color: rgba(239, 68, 68, 0.3);
 }
 
+.workflow-temp-card.running-active {
+  border-color: var(--youtube-red, #ff0000) !important;
+  box-shadow: 0 0 15px rgba(255, 0, 0, 0.2) !important;
+  animation: cardPulse 1.8s infinite alternate ease-in-out;
+}
+
+.spinner-icon {
+  animation: spin 1.2s linear infinite;
+}
+
+@keyframes cardPulse {
+  0% {
+    border-color: rgba(255, 0, 0, 0.4);
+    box-shadow: 0 0 8px rgba(255, 0, 0, 0.15);
+  }
+  100% {
+    border-color: rgba(255, 0, 0, 1);
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.35);
+  }
+}
+
+@keyframes spin {
+  100% { transform: rotate(360deg); }
+}
+
 .workflow-temp-card h3 {
   font-size: 1.1rem;
   font-weight: 700;
@@ -1758,4 +1783,59 @@
 .demo-sim-toggle-btn.stopped:hover {
   background: rgba(16, 185, 129, 0.1);
   border-color: rgba(16, 185, 129, 0.45);
+}
+
+/* Workflow compilation skeleton styles */
+.workflow-processing-placeholder {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 10px 5px;
+}
+
+.processing-pulse-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.95rem;
+  color: #a3a3a3;
+  font-weight: 500;
+}
+
+.processing-pulse-bar .dot {
+  width: 8px;
+  height: 8px;
+  background-color: var(--youtube-red, #ff0000);
+  border-radius: 50%;
+}
+
+.mock-results-skeletons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.skeleton-row {
+  height: 12px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%);
+  background-size: 200% 100%;
+  animation: loadingShimmer 1.5s infinite;
+  border-radius: 4px;
+}
+
+.skeleton-row.line-long {
+  width: 90%;
+}
+
+.skeleton-row.line-medium {
+  width: 65%;
+}
+
+.skeleton-row.line-short {
+  width: 40%;
+}
+
+@keyframes loadingShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
