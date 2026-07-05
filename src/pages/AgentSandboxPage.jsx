@@ -1239,8 +1239,8 @@ export default function AgentSandboxPage() {
         }, 15);
       }
       else if (current === 1) {
-        // Finalize typing and process prompt styles
-        setCustomThumbnailTitle(topicText);
+        // Finalize typing and process prompt styles, clear input prompt so it's removed during synthesis
+        setCustomThumbnailTitle('');
         setRunningWorkflow({
           name: "Generating Midjourney Prompt",
           progress: 60,
@@ -1262,7 +1262,6 @@ export default function AgentSandboxPage() {
           if (prev.some(p => p.title === topicText)) return prev;
           return [newCard, ...prev];
         });
-        setCustomThumbnailTitle('');
 
         setRunningWorkflow({
           name: "Prompt cached in system memory",
