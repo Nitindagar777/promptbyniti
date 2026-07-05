@@ -1253,10 +1253,10 @@ export default function AgentSandboxPage() {
         });
       }
       else if (current === 2) {
-        // Add generated prompt dynamically to list
+        // Add generated prompt dynamically to list (card is already visible with empty prompt first)
         const newCard = {
           title: topicText,
-          prompt: generatedPrompt
+          prompt: ""
         };
         setThumbnailPrompts(prev => {
           if (prev.some(p => p.title === topicText)) return prev;
@@ -1274,6 +1274,25 @@ export default function AgentSandboxPage() {
           if (prevLogs.some(l => l.text === newLog.text)) return prevLogs;
           return [...prevLogs, newLog];
         });
+
+        // Type out the prompt text-by-text inside the visible card!
+        let currentPromptText = "";
+        let charIndex = 0;
+        typingInterval = setInterval(() => {
+          if (charIndex < generatedPrompt.length) {
+            currentPromptText += generatedPrompt.substring(charIndex, charIndex + 2);
+            setThumbnailPrompts(prev => {
+              const updated = [...prev];
+              if (updated[0] && updated[0].title === topicText) {
+                updated[0] = { ...updated[0], prompt: currentPromptText };
+              }
+              return updated;
+            });
+            charIndex += 2;
+          } else {
+            clearInterval(typingInterval);
+          }
+        }, 10);
       }
       else if (current === 3) {
         // Idle between iterations
