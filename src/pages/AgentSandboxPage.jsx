@@ -29,6 +29,7 @@ export default function AgentSandboxPage() {
   const [isSimActive, setIsSimActive] = useState(true);
   const [chatSimStep, setChatSimStep] = useState(0);
   const [auditingRowId, setAuditingRowId] = useState(null);
+  const [evaluatingIdeaId, setEvaluatingIdeaId] = useState(null);
 
   // Onboarding Wizard Form State
   const [wizardData, setWizardData] = useState({
@@ -165,6 +166,7 @@ export default function AgentSandboxPage() {
     setRunningWorkflow(null);
     setWorkflowResults(null);
     setAuditingRowId(null);
+    setEvaluatingIdeaId(null);
   }, [activeTab]);
 
   // Fetch memory and chats from API on load
@@ -435,6 +437,7 @@ export default function AgentSandboxPage() {
       setInputMessage('');
       setIsChatLoading(false);
       setAuditingRowId(null);
+      setEvaluatingIdeaId(null);
     }
   }, [isSimActive]);
 
@@ -795,7 +798,7 @@ export default function AgentSandboxPage() {
   // --- GLOBAL SIDEBAR SIMULATION LOOP (For all other views) ---
   useEffect(() => {
     if (!isLoaded || !isSimActive) return;
-    if (activeTab === 'overview' || activeTab === 'chat' || activeTab === 'workflows' || activeTab === 'planner') return;
+    if (activeTab === 'overview' || activeTab === 'chat' || activeTab === 'workflows' || activeTab === 'planner' || activeTab === 'ideas') return;
 
     let globalSimStep = 0;
     const runGlobalStep = (step) => {
@@ -953,6 +956,77 @@ export default function AgentSandboxPage() {
     const interval = setInterval(() => {
       plannerSimStep++;
       runPlannerStep(plannerSimStep);
+    }, 2800);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [isLoaded, activeTab, isSimActive]);
+
+  // --- VIDEO IDEAS TAB AUTOPLAY SIMULATION LOOP ---
+  useEffect(() => {
+    if (!isLoaded || activeTab !== 'ideas' || !isSimActive) return;
+
+    let ideasSimStep = 0;
+
+    const runIdeasStep = (step) => {
+      const current = step % 4;
+      if (current === 0) {
+        setEvaluatingIdeaId(1);
+        setRunningWorkflow({
+          name: "Structuring Script Sections",
+          progress: 25,
+          currentStep: "Writing script hook templates..."
+        });
+        setTimelineLogs(prevLogs => {
+          const newLog = { time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: "Video Ideas: Generating outline for 'I Hired a YouTube Manager'..." };
+          if (prevLogs.some(l => l.text === newLog.text)) return prevLogs;
+          return [...prevLogs, newLog];
+        });
+      } 
+      else if (current === 1) {
+        setEvaluatingIdeaId(2);
+        setRunningWorkflow({
+          name: "Structuring Script Sections",
+          progress: 60,
+          currentStep: "Formulating core tutorial walkthrough segments..."
+        });
+        setTimelineLogs(prevLogs => {
+          const newLog = { time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: "Video Ideas: Generating outline for 'How to Build an AI Automation Pipeline'..." };
+          if (prevLogs.some(l => l.text === newLog.text)) return prevLogs;
+          return [...prevLogs, newLog];
+        });
+      } 
+      else if (current === 2) {
+        setEvaluatingIdeaId(3);
+        setRunningWorkflow({
+          name: "Structuring Script Sections",
+          progress: 90,
+          currentStep: "Structuring outro CTAs and subscription links..."
+        });
+        setTimelineLogs(prevLogs => {
+          const newLog = { time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: "Video Ideas: Generating outline for 'Vite vs NextJS 15'..." };
+          if (prevLogs.some(l => l.text === newLog.text)) return prevLogs;
+          return [...prevLogs, newLog];
+        });
+      } 
+      else if (current === 3) {
+        setEvaluatingIdeaId(null);
+        setRunningWorkflow(null);
+        setTimelineLogs(prevLogs => {
+          const newLog = { time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: "Video Ideas: All script templates drafted and cached in vector storage." };
+          if (prevLogs.some(l => l.text === newLog.text)) return prevLogs;
+          return [...prevLogs, newLog];
+        });
+      }
+    };
+
+    // Run first step instantly
+    runIdeasStep(0);
+
+    const interval = setInterval(() => {
+      ideasSimStep++;
+      runIdeasStep(ideasSimStep);
     }, 2800);
 
     return () => {
@@ -1812,22 +1886,28 @@ export default function AgentSandboxPage() {
                 </thead>
                 <tbody>
                   {ideas.map(idea => (
-                    <tr key={idea.id}>
+                    <tr key={idea.id} className={evaluatingIdeaId === idea.id ? 'row-auditing' : ''}>
                       <td><strong>{idea.title}</strong></td>
                       <td>{idea.views}</td>
                       <td><span className="badge-green">{idea.ctr}</span></td>
                       <td><span className={`difficulty-badge ${idea.difficulty.toLowerCase()}`}>{idea.difficulty}</span></td>
                       <td>
-                        <button onClick={() => {
-                          setActiveScript({
-                            title: idea.title,
-                            hook: `[0:00 - 0:30] Start with a massive hook about ${idea.title}.`,
-                            intro: `[0:30 - 1:15] Give introduction on the core theme.`,
-                            body: `[1:15 - 4:30] Walkthrough steps, tutorials, and practical developer insights.`,
-                            outro: `[4:30 - 5:00] Summary and subscriber call to action.`
-                          });
-                          setActiveTab('scripts');
-                        }} className="btn btn-primary btn-xs">Write Script</button>
+                        <button 
+                          onClick={() => {
+                            setActiveScript({
+                              title: idea.title,
+                              hook: `[0:00 - 0:30] Start with a massive hook about ${idea.title}.`,
+                              intro: `[0:30 - 1:15] Give introduction on the core theme.`,
+                              body: `[1:15 - 4:30] Walkthrough steps, tutorials, and practical developer insights.`,
+                              outro: `[4:30 - 5:00] Summary and subscriber call to action.`
+                            });
+                            setActiveTab('scripts');
+                          }} 
+                          className={`btn btn-xs ${evaluatingIdeaId === idea.id ? 'btn-danger' : 'btn-primary'}`}
+                          disabled={evaluatingIdeaId && evaluatingIdeaId !== idea.id}
+                        >
+                          {evaluatingIdeaId === idea.id ? '⏳ Outlining...' : 'Write Script'}
+                        </button>
                       </td>
                     </tr>
                   ))}
