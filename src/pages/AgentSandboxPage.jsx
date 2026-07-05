@@ -174,6 +174,7 @@ export default function AgentSandboxPage() {
     ]);
     setSeoKeyword('');
     setSeoResults(null);
+    setIsEditingMemory(false);
   }, [activeTab]);
 
   // Fetch memory and chats from API on load
@@ -452,6 +453,7 @@ export default function AgentSandboxPage() {
       ]);
       setSeoKeyword('');
       setSeoResults(null);
+      setIsEditingMemory(false);
     }
   }, [isSimActive]);
 
@@ -812,7 +814,7 @@ export default function AgentSandboxPage() {
   // --- GLOBAL SIDEBAR SIMULATION LOOP (For all other views) ---
   useEffect(() => {
     if (!isLoaded || !isSimActive) return;
-    if (activeTab === 'overview' || activeTab === 'chat' || activeTab === 'workflows' || activeTab === 'planner' || activeTab === 'ideas' || activeTab === 'scripts' || activeTab === 'thumbnails' || activeTab === 'analytics' || activeTab === 'seo') return;
+    if (activeTab === 'overview' || activeTab === 'chat' || activeTab === 'workflows' || activeTab === 'planner' || activeTab === 'ideas' || activeTab === 'scripts' || activeTab === 'thumbnails' || activeTab === 'analytics' || activeTab === 'seo' || activeTab === 'memory') return;
 
     let globalSimStep = 0;
     const runGlobalStep = (step) => {
@@ -1504,6 +1506,136 @@ export default function AgentSandboxPage() {
       seoSimStep++;
       runSeoStep(seoSimStep);
     }, 3800);
+
+    return () => {
+      clearInterval(interval);
+      if (typingInterval) clearInterval(typingInterval);
+    };
+  }, [isLoaded, activeTab, isSimActive]);
+
+  // --- CHANNEL PROFILE MEMORY ENGINE TAB AUTOPLAY SIMULATION LOOP ---
+  useEffect(() => {
+    if (!isLoaded || activeTab !== 'memory' || !isSimActive) return;
+
+    let memorySimStep = 0;
+    let typingInterval = null;
+
+    const targetAudience = "Tech Enthusiasts";
+    const targetGoal = "100K Subscribers Milestone";
+    const targetColor = "#FF0000";
+
+    const runMemoryStep = (step) => {
+      if (typingInterval) clearInterval(typingInterval);
+      const current = step % 4;
+
+      if (current === 0) {
+        // Step 0: Open edit mode and reset simulation values
+        setIsEditingMemory(true);
+        setEditableMemory({
+          channelName: '@promptbyniti',
+          niche: 'prompt generate',
+          language: 'English',
+          audience: '',
+          country: '',
+          goal: '',
+          tone: '',
+          editingStyle: '',
+          brandColor: '',
+          uploadFrequency: ''
+        });
+
+        // Set memory display variables back to defaults
+        setMemory(prev => ({
+          ...prev,
+          audience: '',
+          goal: '',
+          brandColor: ''
+        }));
+
+        setRunningWorkflow({
+          name: "Updating Channel Identity",
+          progress: 20,
+          currentStep: "Accessing Channel profile metadata form..."
+        });
+        setTimelineLogs(prevLogs => {
+          const newLog = { time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: "Memory Sync: Editing channel settings profile fields..." };
+          if (prevLogs.some(l => l.text === newLog.text)) return prevLogs;
+          return [...prevLogs, newLog];
+        });
+      }
+      else if (current === 1) {
+        // Step 1: Type missing values character-by-character into editableMemory fields
+        setRunningWorkflow({
+          name: "Populating Profile Parameters",
+          progress: 60,
+          currentStep: "Entering brand alignment color scheme..."
+        });
+        setTimelineLogs(prevLogs => {
+          const newLog = { time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: "Memory Sync: Populating color themes and viewer demographic data..." };
+          if (prevLogs.some(l => l.text === newLog.text)) return prevLogs;
+          return [...prevLogs, newLog];
+        });
+
+        // Type Target Audience first, then Goal, then Brand Color
+        let audText = "";
+        let goalText = "";
+        let colorText = "";
+        let charIndex = 0;
+
+        typingInterval = setInterval(() => {
+          if (charIndex < targetAudience.length) {
+            audText += targetAudience[charIndex];
+            setEditableMemory(prev => ({ ...prev, audience: audText }));
+          }
+          if (charIndex < targetGoal.length) {
+            goalText += targetGoal[charIndex];
+            setEditableMemory(prev => ({ ...prev, goal: goalText }));
+          }
+          if (charIndex < targetColor.length) {
+            colorText += targetColor[charIndex];
+            setEditableMemory(prev => ({ ...prev, brandColor: colorText }));
+          }
+
+          charIndex++;
+          if (charIndex >= Math.max(targetAudience.length, targetGoal.length, targetColor.length)) {
+            clearInterval(typingInterval);
+          }
+        }, 30);
+      }
+      else if (current === 2) {
+        // Step 2: Save settings and close edit form to show saved results
+        setMemory(prev => ({
+          ...prev,
+          audience: targetAudience,
+          goal: targetGoal,
+          brandColor: targetColor
+        }));
+        setIsEditingMemory(false);
+
+        setRunningWorkflow({
+          name: "Memory variables cached",
+          progress: 100,
+          currentStep: "Updating semantic profiles succeeded!"
+        });
+        setTimelineLogs(prevLogs => {
+          const newLog = { time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: "Memory Sync complete: AI agent channel memory successfully saved and synchronized." };
+          if (prevLogs.some(l => l.text === newLog.text)) return prevLogs;
+          return [...prevLogs, newLog];
+        });
+      }
+      else if (current === 3) {
+        // Step 3: Wait and loop
+        setRunningWorkflow(null);
+      }
+    };
+
+    // Run first step instantly
+    runMemoryStep(0);
+
+    const interval = setInterval(() => {
+      memorySimStep++;
+      runMemoryStep(memorySimStep);
+    }, 4500);
 
     return () => {
       clearInterval(interval);
