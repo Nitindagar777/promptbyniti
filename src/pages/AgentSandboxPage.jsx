@@ -167,6 +167,11 @@ export default function AgentSandboxPage() {
     setWorkflowResults(null);
     setAuditingRowId(null);
     setEvaluatingIdeaId(null);
+    setCustomThumbnailTitle('');
+    setThumbnailPrompts([
+      { title: 'AI YouTube Manager', prompt: 'A cinematic high-detail shot of a workspace. In the center is a glowing dark glass screen showing dashboard analytics, red and neon cyan lights, high-contrast, octane render, 8k, photorealistic --ar 16:9' },
+      { title: 'NextJS vs Vite Speed', prompt: 'A highly dynamic abstract comparison split screen. Left side glowing neon green lightning bolt, right side neon blue atomic spin logo, dark matte backgrounds, energetic motion trails --ar 16:9' }
+    ]);
   }, [activeTab]);
 
   // Fetch memory and chats from API on load
@@ -438,6 +443,11 @@ export default function AgentSandboxPage() {
       setIsChatLoading(false);
       setAuditingRowId(null);
       setEvaluatingIdeaId(null);
+      setCustomThumbnailTitle('');
+      setThumbnailPrompts([
+        { title: 'AI YouTube Manager', prompt: 'A cinematic high-detail shot of a workspace. In the center is a glowing dark glass screen showing dashboard analytics, red and neon cyan lights, high-contrast, octane render, 8k, photorealistic --ar 16:9' },
+        { title: 'NextJS vs Vite Speed', prompt: 'A highly dynamic abstract comparison split screen. Left side glowing neon green lightning bolt, right side neon blue atomic spin logo, dark matte backgrounds, energetic motion trails --ar 16:9' }
+      ]);
     }
   }, [isSimActive]);
 
@@ -798,7 +808,7 @@ export default function AgentSandboxPage() {
   // --- GLOBAL SIDEBAR SIMULATION LOOP (For all other views) ---
   useEffect(() => {
     if (!isLoaded || !isSimActive) return;
-    if (activeTab === 'overview' || activeTab === 'chat' || activeTab === 'workflows' || activeTab === 'planner' || activeTab === 'ideas' || activeTab === 'scripts') return;
+    if (activeTab === 'overview' || activeTab === 'chat' || activeTab === 'workflows' || activeTab === 'planner' || activeTab === 'ideas' || activeTab === 'scripts' || activeTab === 'thumbnails') return;
 
     let globalSimStep = 0;
     const runGlobalStep = (step) => {
@@ -1176,6 +1186,108 @@ export default function AgentSandboxPage() {
       scriptsSimStep++;
       runScriptsStep(scriptsSimStep);
     }, 4200);
+
+    return () => {
+      clearInterval(interval);
+      if (typingInterval) clearInterval(typingInterval);
+    };
+  }, [isLoaded, activeTab, isSimActive]);
+
+  // --- THUMBNAIL PROMPTS TAB AUTOPLAY SIMULATION LOOP ---
+  useEffect(() => {
+    if (!isLoaded || activeTab !== 'thumbnails' || !isSimActive) return;
+
+    let thumbSimStep = 0;
+    let typingInterval = null;
+
+    const topicText = "Python Automation Script Guide";
+    const generatedPrompt = "A high-impact cinematic rendering of a computer terminal glowing with vibrant Python code, cybernetic python snake made of neon circuit boards wrapped around the screen, dark futuristic setting, depth of field --ar 16:9";
+
+    const runThumbStep = (step) => {
+      if (typingInterval) clearInterval(typingInterval);
+      const current = step % 4;
+
+      if (current === 0) {
+        // Typing phase
+        setCustomThumbnailTitle('');
+        setThumbnailPrompts([
+          { title: 'AI YouTube Manager', prompt: 'A cinematic high-detail shot of a workspace. In the center is a glowing dark glass screen showing dashboard analytics, red and neon cyan lights, high-contrast, octane render, 8k, photorealistic --ar 16:9' },
+          { title: 'NextJS vs Vite Speed', prompt: 'A highly dynamic abstract comparison split screen. Left side glowing neon green lightning bolt, right side neon blue atomic spin logo, dark matte backgrounds, energetic motion trails --ar 16:9' }
+        ]);
+
+        setRunningWorkflow({
+          name: "Extracting Visual Style Tokens",
+          progress: 20,
+          currentStep: "Analyzing video topic keywords..."
+        });
+        setTimelineLogs(prevLogs => {
+          const newLog = { time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: "Thumbnails: Initializing visual keyword extraction for 'Python Automation Script Guide'..." };
+          if (prevLogs.some(l => l.text === newLog.text)) return prevLogs;
+          return [...prevLogs, newLog];
+        });
+
+        let currentText = "";
+        let charIndex = 0;
+        typingInterval = setInterval(() => {
+          if (charIndex < topicText.length) {
+            currentText += topicText[charIndex];
+            setCustomThumbnailTitle(currentText);
+            charIndex++;
+          } else {
+            clearInterval(typingInterval);
+          }
+        }, 15);
+      }
+      else if (current === 1) {
+        // Finalize typing and process prompt styles
+        setCustomThumbnailTitle(topicText);
+        setRunningWorkflow({
+          name: "Generating Midjourney Prompt",
+          progress: 60,
+          currentStep: "Formulating photorealistic render attributes..."
+        });
+        setTimelineLogs(prevLogs => {
+          const newLog = { time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: "Thumbnails: Synthesizing photorealistic rendering attributes..." };
+          if (prevLogs.some(l => l.text === newLog.text)) return prevLogs;
+          return [...prevLogs, newLog];
+        });
+      }
+      else if (current === 2) {
+        // Add generated prompt dynamically to list
+        const newCard = {
+          title: topicText,
+          prompt: generatedPrompt
+        };
+        setThumbnailPrompts(prev => {
+          if (prev.some(p => p.title === topicText)) return prev;
+          return [newCard, ...prev];
+        });
+        setCustomThumbnailTitle('');
+
+        setRunningWorkflow({
+          name: "Prompt cached in system memory",
+          progress: 100,
+          currentStep: "Caching prompt successful!"
+        });
+        setTimelineLogs(prevLogs => {
+          const newLog = { time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: "Thumbnails: Successfully generated and cached Midjourney prompt for 'Python Automation Script'!" };
+          if (prevLogs.some(l => l.text === newLog.text)) return prevLogs;
+          return [...prevLogs, newLog];
+        });
+      }
+      else if (current === 3) {
+        // Idle between iterations
+        setRunningWorkflow(null);
+      }
+    };
+
+    // Run first step instantly
+    runThumbStep(0);
+
+    const interval = setInterval(() => {
+      thumbSimStep++;
+      runThumbStep(thumbSimStep);
+    }, 3800);
 
     return () => {
       clearInterval(interval);
@@ -2141,7 +2253,13 @@ export default function AgentSandboxPage() {
                     <label>Video Title or Theme</label>
                     <input type="text" placeholder="e.g. Building an AI Youtube Manager" value={customThumbnailTitle} onChange={(e) => setCustomThumbnailTitle(e.target.value)} required />
                   </div>
-                  <button type="submit" className="btn btn-primary w-100">Build Thumbnail Prompt</button>
+                  <button 
+                    type="submit" 
+                    className={`btn w-100 ${(isSimActive && customThumbnailTitle) ? 'btn-danger animate-pulse' : 'btn-primary'}`}
+                    disabled={isSimActive && customThumbnailTitle}
+                  >
+                    {(isSimActive && customThumbnailTitle) ? '⏳ Synthesizing Prompt...' : 'Build Thumbnail Prompt'}
+                  </button>
                 </form>
               </div>
 
