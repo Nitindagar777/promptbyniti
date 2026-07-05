@@ -1389,8 +1389,9 @@ export default function AgentSandboxPage() {
     const targetKeyword = "Vite React Setup";
     const mockSeoResults = {
       keyword: "Vite React Setup",
-      volume: "High (45K monthly searches)",
-      competition: "Medium",
+      volume: "High (45K searches / mo)",
+      difficulty: "35/100 (Medium)",
+      ctrScore: "9.2% Average CTR",
       titles: [
         "How to Build a Vite React App in 2026",
         "Vite vs Create React App - The Ultimate Benchmark Guide",
@@ -1450,7 +1451,8 @@ export default function AgentSandboxPage() {
         setSeoResults({
           keyword: targetKeyword,
           volume: "",
-          competition: "",
+          difficulty: "",
+          ctrScore: "",
           titles: [],
           tags: []
         });
@@ -1466,28 +1468,29 @@ export default function AgentSandboxPage() {
           return [...prevLogs, newLog];
         });
 
-        // Type out the SEO stats and titles text-by-text inside the card
+        // Type out the SEO stats and titles text-by-text inside the card (800ms delay increments)
         setTimeout(() => {
           setSeoResults(prev => prev ? {
             ...prev,
             volume: mockSeoResults.volume,
-            competition: mockSeoResults.competition
+            difficulty: mockSeoResults.difficulty,
+            ctrScore: mockSeoResults.ctrScore
           } : null);
-        }, 300);
+        }, 800);
 
         setTimeout(() => {
           setSeoResults(prev => prev ? {
             ...prev,
             titles: mockSeoResults.titles
           } : null);
-        }, 600);
+        }, 1600);
 
         setTimeout(() => {
           setSeoResults(prev => prev ? {
             ...prev,
             tags: mockSeoResults.tags
           } : null);
-        }, 900);
+        }, 2400);
       }
       else if (current === 3) {
         setRunningWorkflow(null);
