@@ -172,6 +172,8 @@ export default function AgentSandboxPage() {
       { title: 'AI YouTube Manager', prompt: 'A cinematic high-detail shot of a workspace. In the center is a glowing dark glass screen showing dashboard analytics, red and neon cyan lights, high-contrast, octane render, 8k, photorealistic --ar 16:9' },
       { title: 'NextJS vs Vite Speed', prompt: 'A highly dynamic abstract comparison split screen. Left side glowing neon green lightning bolt, right side neon blue atomic spin logo, dark matte backgrounds, energetic motion trails --ar 16:9' }
     ]);
+    setSeoKeyword('');
+    setSeoResults(null);
   }, [activeTab]);
 
   // Fetch memory and chats from API on load
@@ -448,6 +450,8 @@ export default function AgentSandboxPage() {
         { title: 'AI YouTube Manager', prompt: 'A cinematic high-detail shot of a workspace. In the center is a glowing dark glass screen showing dashboard analytics, red and neon cyan lights, high-contrast, octane render, 8k, photorealistic --ar 16:9' },
         { title: 'NextJS vs Vite Speed', prompt: 'A highly dynamic abstract comparison split screen. Left side glowing neon green lightning bolt, right side neon blue atomic spin logo, dark matte backgrounds, energetic motion trails --ar 16:9' }
       ]);
+      setSeoKeyword('');
+      setSeoResults(null);
     }
   }, [isSimActive]);
 
@@ -808,7 +812,7 @@ export default function AgentSandboxPage() {
   // --- GLOBAL SIDEBAR SIMULATION LOOP (For all other views) ---
   useEffect(() => {
     if (!isLoaded || !isSimActive) return;
-    if (activeTab === 'overview' || activeTab === 'chat' || activeTab === 'workflows' || activeTab === 'planner' || activeTab === 'ideas' || activeTab === 'scripts' || activeTab === 'thumbnails' || activeTab === 'analytics') return;
+    if (activeTab === 'overview' || activeTab === 'chat' || activeTab === 'workflows' || activeTab === 'planner' || activeTab === 'ideas' || activeTab === 'scripts' || activeTab === 'thumbnails' || activeTab === 'analytics' || activeTab === 'seo') return;
 
     let globalSimStep = 0;
     const runGlobalStep = (step) => {
@@ -1372,6 +1376,135 @@ export default function AgentSandboxPage() {
 
     return () => {
       clearInterval(interval);
+    };
+  }, [isLoaded, activeTab, isSimActive]);
+
+  // --- SEO & TAGS TAB AUTOPLAY SIMULATION LOOP ---
+  useEffect(() => {
+    if (!isLoaded || activeTab !== 'seo' || !isSimActive) return;
+
+    let seoSimStep = 0;
+    let typingInterval = null;
+
+    const targetKeyword = "Vite React Setup";
+    const mockSeoResults = {
+      keyword: "Vite React Setup",
+      volume: "High (45K monthly searches)",
+      competition: "Medium",
+      titles: [
+        "How to Build a Vite React App in 2026",
+        "Vite vs Create React App - The Ultimate Benchmark Guide",
+        "Configuring React Ports in Vite (Step-by-Step Walkthrough)"
+      ],
+      tags: ["vite react", "vite config tutorial", "react dev server port", "npm create vite"]
+    };
+
+    const runSeoStep = (step) => {
+      if (typingInterval) clearInterval(typingInterval);
+      const current = step % 4;
+
+      if (current === 0) {
+        // Clear inputs and results first
+        setSeoKeyword('');
+        setSeoResults(null);
+
+        setRunningWorkflow({
+          name: "Analyzing Search Keyword Intent",
+          progress: 20,
+          currentStep: "Parsing target keyword characters..."
+        });
+        setTimelineLogs(prevLogs => {
+          const newLog = { time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: "SEO Audit: Analyzing search volumes for keyword 'Vite React Setup'..." };
+          if (prevLogs.some(l => l.text === newLog.text)) return prevLogs;
+          return [...prevLogs, newLog];
+        });
+
+        let currentText = "";
+        let charIndex = 0;
+        typingInterval = setInterval(() => {
+          if (charIndex < targetKeyword.length) {
+            currentText += targetKeyword[charIndex];
+            setSeoKeyword(currentText);
+            charIndex++;
+          } else {
+            clearInterval(typingInterval);
+          }
+        }, 15);
+      }
+      else if (current === 1) {
+        // Complete typing, clear title input text immediately, and start "Synthesizing"
+        setSeoKeyword('');
+        setRunningWorkflow({
+          name: "Compiling Niche Optimization Tags",
+          progress: 60,
+          currentStep: "Formulating title metrics comparison..."
+        });
+        setTimelineLogs(prevLogs => {
+          const newLog = { time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: "SEO Audit: Generating high-CTR title variations..." };
+          if (prevLogs.some(l => l.text === newLog.text)) return prevLogs;
+          return [...prevLogs, newLog];
+        });
+      }
+      else if (current === 2) {
+        // Show SEO Audit results
+        setSeoResults({
+          keyword: targetKeyword,
+          volume: "",
+          competition: "",
+          titles: [],
+          tags: []
+        });
+
+        setRunningWorkflow({
+          name: "Data Cached in Vector memory",
+          progress: 100,
+          currentStep: "Caching SEO data successfully!"
+        });
+        setTimelineLogs(prevLogs => {
+          const newLog = { time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: "SEO Audit: Successfully cached search volume indexes and meta tags." };
+          if (prevLogs.some(l => l.text === newLog.text)) return prevLogs;
+          return [...prevLogs, newLog];
+        });
+
+        // Type out the SEO stats and titles text-by-text inside the card
+        setTimeout(() => {
+          setSeoResults(prev => prev ? {
+            ...prev,
+            volume: mockSeoResults.volume,
+            competition: mockSeoResults.competition
+          } : null);
+        }, 300);
+
+        setTimeout(() => {
+          setSeoResults(prev => prev ? {
+            ...prev,
+            titles: mockSeoResults.titles
+          } : null);
+        }, 600);
+
+        setTimeout(() => {
+          setSeoResults(prev => prev ? {
+            ...prev,
+            tags: mockSeoResults.tags
+          } : null);
+        }, 900);
+      }
+      else if (current === 3) {
+        setRunningWorkflow(null);
+      }
+    };
+
+    // Run first step instantly
+    runSeoStep(0);
+
+    const interval = setInterval(() => {
+      seoSimStep++;
+      runSeoStep(seoSimStep);
+    }, 3800);
+
+    return () => {
+      clearInterval(interval);
+      if (typingInterval) clearInterval(typingInterval);
     };
   }, [isLoaded, activeTab, isSimActive]);
 
@@ -2431,7 +2564,13 @@ export default function AgentSandboxPage() {
                     <label>Target Keyword</label>
                     <input type="text" placeholder="e.g. NextJS 15 configurations" value={seoKeyword} onChange={(e) => setSeoKeyword(e.target.value)} required />
                   </div>
-                  <button type="submit" className="btn btn-primary w-100">Audit Keyword SEO</button>
+                  <button 
+                    type="submit" 
+                    className={`btn w-100 ${(isSimActive && seoKeyword) ? 'btn-danger animate-pulse' : 'btn-primary'}`}
+                    disabled={isSimActive && seoKeyword}
+                  >
+                    {(isSimActive && seoKeyword) ? '⏳ Auditing Keyword...' : 'Audit Keyword SEO'}
+                  </button>
                 </form>
               </div>
 
