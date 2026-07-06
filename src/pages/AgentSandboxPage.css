@@ -1989,6 +1989,12 @@ tr.row-auditing td {
   box-sizing: border-box;
 }
 
+.sandbox-modal-card h3 {
+  text-align: center;
+  margin-top: 10px;
+  margin-bottom: 8px;
+}
+
 .sandbox-modal-close-btn {
   position: absolute;
   top: 15px;
