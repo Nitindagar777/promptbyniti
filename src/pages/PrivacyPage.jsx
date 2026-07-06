@@ -74,7 +74,7 @@ export default function PrivacyPage() {
           </section>
 
           <div className="legal-footer-note">
-            <p>Questions about our Privacy Policy? Contact us at <strong>privacy@promptbyniti.com</strong></p>
+            <p>Questions about our Privacy Policy? Contact us at <strong>ndootweb@gmail.com</strong></p>
           </div>
         </div>
       </div>
