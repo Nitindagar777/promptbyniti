@@ -19,7 +19,6 @@ export default function AgentSandboxPage() {
   const navigate = useNavigate();
 
   // Premium & Channel Connection states
-  const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showConnectModal, setShowConnectModal] = useState(false);
   const [showChannelDetailsModal, setShowChannelDetailsModal] = useState(false);
   const [isChannelConnected, setIsChannelConnected] = useState(() => {
@@ -31,7 +30,6 @@ export default function AgentSandboxPage() {
   const [channelUrl, setChannelUrl] = useState('');
   const [integrationMethod, setIntegrationMethod] = useState('oauth');
   const [isConnecting, setIsConnecting] = useState(false);
-  const [isPaying, setIsPaying] = useState(false);
 
   // Onboarding & Active Tabs States
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -1803,36 +1801,7 @@ export default function AgentSandboxPage() {
 
   // Premium & Channel Connection handlers
   const handlePremiumClick = () => {
-    if (isPremium) {
-      setShowConnectModal(true);
-    } else {
-      setShowPremiumModal(true);
-    }
-  };
-
-  const handleCompletePayment = async () => {
-    setIsPaying(true);
-    setTimeout(async () => {
-      setIsPaying(false);
-      setShowPremiumModal(false);
-      setPlan('pro');
-
-      if (state.token) {
-        try {
-          await fetch('/api/user/plan', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${state.token}`
-            },
-            body: JSON.stringify({ plan: 'pro' })
-          });
-        } catch (e) {
-          console.error("Save plan on server failed:", e);
-        }
-      }
-      setShowConnectModal(true);
-    }, 1500);
+    navigate('/pricing', { state: { scrollTo: 'agents' } });
   };
 
   const handleEstablishConnection = (e) => {
@@ -3217,7 +3186,7 @@ export default function AgentSandboxPage() {
                     <button 
                       onClick={() => {
                         if (!isPremium) {
-                          setShowPremiumModal(true);
+                          handlePremiumClick();
                         } else {
                           setShowConnectModal(true);
                         }
@@ -3557,76 +3526,6 @@ export default function AgentSandboxPage() {
         </aside>
       </div>
 
-      {/* --- PREMIUM CHECKOUT MODAL --- */}
-      {showPremiumModal && (
-        <div className="sandbox-modal-overlay" style={{ zIndex: 99999 }}>
-          <div className="sandbox-modal-card premium-checkout-card animate-slide-up">
-            <button className="sandbox-modal-close-btn" onClick={() => setShowPremiumModal(false)}>
-              <CloseIcon size={20} />
-            </button>
-            <div className="premium-badge-tag">AUTOPILOT PREMIUM</div>
-            <h3>Upgrade to Premium</h3>
-            <p className="premium-subtitle" style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '4px 0 20px' }}>Connect your live YouTube channel & sync automation scripts instantly.</p>
-            
-            <div className="premium-perks-list" style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
-              <div className="perk-item" style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.85rem' }}>
-                <CheckCircle size={16} className="text-green" style={{ color: '#10b981' }} />
-                <span>🔌 <strong>Direct Channel Connection:</strong> Sync script titles & tags directly.</span>
-              </div>
-              <div className="perk-item" style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.85rem' }}>
-                <CheckCircle size={16} className="text-green" style={{ color: '#10b981' }} />
-                <span>🔄 <strong>Automated Indexing:</strong> Real-time uploads of PDFs and calendars.</span>
-              </div>
-              <div className="perk-item" style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.85rem' }}>
-                <CheckCircle size={16} className="text-green" style={{ color: '#10b981' }} />
-                <span>🤖 <strong>Unlimited AI Audits:</strong> Keep your channel CTR optimized 24/7.</span>
-              </div>
-            </div>
-
-            <hr className="modal-divider" style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.1)', margin: '15px 0' }} />
-
-            <div className="checkout-payment-details">
-              <div className="price-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                <span>Premium Access Plan</span>
-                <strong style={{ color: '#ff0000', fontSize: '1.2rem' }}>$29.00 / mo</strong>
-              </div>
-              
-              <div className="mock-card-form" style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
-                <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Card Number</label>
-                  <input type="text" placeholder="4242 4242 4242 4242" disabled style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', padding: '10px', borderRadius: '6px', color: '#fff', width: '100%', boxSizing: 'border-box' }} />
-                </div>
-                <div className="form-row-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                  <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Expiry Date</label>
-                    <input type="text" placeholder="12/28" disabled style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', padding: '10px', borderRadius: '6px', color: '#fff', width: '100%', boxSizing: 'border-box' }} />
-                  </div>
-                  <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>CVC</label>
-                    <input type="text" placeholder="123" disabled style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', padding: '10px', borderRadius: '6px', color: '#fff', width: '100%', boxSizing: 'border-box' }} />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <button 
-              className="btn btn-primary w-100 pay-now-btn"
-              onClick={handleCompletePayment}
-              disabled={isPaying}
-              style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
-            >
-              {isPaying ? (
-                <>
-                  <RefreshCw className="animate-spin" size={16} style={{ marginRight: '8px' }} />
-                  Processing payment...
-                </>
-              ) : (
-                "Complete Payment & Activate Premium"
-              )}
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* --- YOUTUBE CONNECTION MODAL --- */}
       {showConnectModal && (
