@@ -2476,36 +2476,19 @@ export default function AgentSandboxPage() {
   const renderCenterContent = () => {
     if (hasSandboxAccess && !isChannelConnected && !['overview', 'chat', 'settings'].includes(activeTab)) {
       return (
-        <div className="connection-required-view card" style={{
-          padding: '40px',
-          textAlign: 'center',
-          maxWidth: '600px',
-          margin: '40px auto',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          background: '#0f172a',
-          borderRadius: '12px',
-          boxShadow: '0 10px 25px rgba(0,0,0,0.5)'
-        }}>
-          <div style={{ fontSize: '3rem', marginBottom: '20px' }}>🔌</div>
-          <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '10px' }}>YouTube Channel Connection Required</h3>
-          <p style={{ color: 'var(--text-muted, #94a3b8)', marginBottom: '30px', fontSize: '0.95rem', lineHeight: '1.6' }}>
+        <div className="connection-required-view card animate-slide-up">
+          <div className="connection-required-icon-wrapper">
+            <Zap size={32} style={{ color: '#0066ff' }} fill="#0066ff" />
+          </div>
+          <h3>YouTube Connection Required</h3>
+          <p>
             To unlock the full agent strategic planner, SEO tag suite, scriptwriter, and analytics dashboard, connect your actual YouTube channel via Google OAuth.
           </p>
           <button 
             onClick={handleOAuthStart} 
-            className="btn btn-primary"
-            style={{ 
-              background: '#0066ff', 
-              border: 'none', 
-              padding: '12px 24px', 
-              borderRadius: '6px', 
-              fontWeight: 'bold',
-              color: '#fff',
-              cursor: 'pointer',
-              boxShadow: '0 4px 12px rgba(0, 102, 255, 0.3)'
-            }}
+            className="connection-required-btn"
           >
-            Authorize YouTube Account (OAuth)
+            <Zap size={16} fill="#ffffff" /> Authorize YouTube Account (OAuth)
           </button>
         </div>
       );
