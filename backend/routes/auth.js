@@ -135,7 +135,8 @@ router.post('/login', async (req, res) => {
           purchasedPrompts: user.purchasedPrompts || [],
           socialLinks: user.socialLinks || {},
           followers: user.followers || [],
-          following: user.following || []
+          following: user.following || [],
+          createdAt: user.createdAt
         }
       });
     }
@@ -183,7 +184,8 @@ router.post('/verify-otp', async (req, res) => {
         purchasedPrompts: user.purchasedPrompts || [],
         socialLinks: user.socialLinks || {},
         followers: user.followers || [],
-        following: user.following || []
+        following: user.following || [],
+        createdAt: user.createdAt
       }
     });
   } catch (err) {
@@ -236,7 +238,8 @@ router.post('/google', async (req, res) => {
         purchasedPrompts: user.purchasedPrompts || [],
         socialLinks: user.socialLinks || {},
         followers: user.followers || [],
-        following: user.following || []
+        following: user.following || [],
+        createdAt: user.createdAt
       }
     });
   } catch (err) {
@@ -270,7 +273,8 @@ router.get('/me', async (req, res) => {
         purchasedPrompts: user.purchasedPrompts || [],
         socialLinks: user.socialLinks || {},
         followers: user.followers || [],
-        following: user.following || []
+        following: user.following || [],
+        createdAt: user.createdAt
       }
     });
   } catch (err) {
@@ -328,7 +332,8 @@ router.put('/profile', async (req, res) => {
         purchasedPrompts: user.purchasedPrompts || [],
         socialLinks: user.socialLinks || {},
         followers: user.followers || [],
-        following: user.following || []
+        following: user.following || [],
+        createdAt: user.createdAt
       }
     });
   } catch (err) {
@@ -500,7 +505,8 @@ router.post('/reset-password', async (req, res) => {
         purchasedPrompts: user.purchasedPrompts || [],
         socialLinks: user.socialLinks || {},
         followers: user.followers || [],
-        following: user.following || []
+        following: user.following || [],
+        createdAt: user.createdAt
       }
     });
   } catch (err) {

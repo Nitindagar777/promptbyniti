@@ -196,6 +196,73 @@ export default function AgentSandboxPage() {
     ]);
   }, [activeTab]);
 
+  // Handle YouTube OAuth Code Verification Callback
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    if (code && state?.token) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+      
+      setRunningWorkflow({
+        name: "Connecting YouTube Channel",
+        progress: 40,
+        currentStep: "Exchanging credentials with Google OAuth..."
+      });
+
+      fetch('/api/youtube-agent/oauth/connect', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${state.token}`
+        },
+        body: JSON.stringify({
+          code,
+          redirectUri: `${window.location.origin}/agent-sandbox`
+        })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.channel) {
+            setIsChannelConnected(true);
+            setConnectedChannelName(data.channel.handle);
+            localStorage.setItem('agent_youtube_connected', 'true');
+            localStorage.setItem('agent_youtube_channel_name', data.channel.handle);
+            
+            setMemory(prev => ({
+              ...prev,
+              ...data.memory,
+              channelName: data.channel.handle,
+              subscribers: data.channel.subscribers,
+              analyticsData: data.memory.analyticsData || prev.analyticsData
+            }));
+            
+            setRunningWorkflow({
+              name: "YouTube Connected",
+              progress: 100,
+              currentStep: `Successfully synchronized ${data.channel.title}!`
+            });
+
+            setTimelineLogs(prev => [
+              ...prev,
+              { time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: `OAuth Success: Connected YouTube Channel ${data.channel.handle} (${data.channel.subscribers.toLocaleString()} subscribers).` }
+            ]);
+          } else {
+            setRunningWorkflow({
+              name: "OAuth Connection Failed",
+              progress: 100,
+              currentStep: data.message || "Failed to finalize YouTube connection."
+            });
+            alert("OAuth Error: " + (data.message || "Failed to retrieve channel data. Make sure to use a YouTube Google account."));
+          }
+        })
+        .catch(err => {
+          console.error("OAuth connect error:", err);
+          setRunningWorkflow(null);
+          alert("Connection error: Failed to connect to backend server.");
+        });
+    }
+  }, [state?.token]);
+
   // Fetch memory and chats from API on load
   useEffect(() => {
     if (state?.user) {
@@ -207,6 +274,10 @@ export default function AgentSandboxPage() {
         .then(data => {
           if (data.success && data.memory) {
             const loadedMemory = data.memory;
+            if (loadedMemory.channelName && loadedMemory.channelName !== '@promptbyniti') {
+              setIsChannelConnected(true);
+              setConnectedChannelName(loadedMemory.channelName);
+            }
             setMemory(prev => ({
               ...prev,
               ...loadedMemory,
@@ -1800,6 +1871,37 @@ export default function AgentSandboxPage() {
   }, [isLoaded, activeTab, isSimActive]);
 
   // Premium & Channel Connection handlers
+  const isTrialActive = () => {
+    if (!state.user?.createdAt) return true;
+    const created = new Date(state.user.createdAt);
+    const now = new Date();
+    const diffTime = Math.abs(now - created);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays <= 30;
+  };
+
+  const hasSandboxAccess = isPremium || 
+                           (state.user?.email?.toLowerCase().trim() === 'nitindagar0800@gmail.com') || 
+                           isTrialActive();
+
+  const handleOAuthStart = async () => {
+    try {
+      const res = await fetch('/api/youtube-agent/oauth/client-id');
+      const data = await res.json();
+      if (data.success && data.clientId) {
+        const redirectUri = `${window.location.origin}/agent-sandbox`;
+        const scope = 'https://www.googleapis.com/auth/youtube.readonly';
+        const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${data.clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&access_type=offline&prompt=consent`;
+        window.location.href = authUrl;
+      } else {
+        alert("Failed to initiate Google OAuth. Client ID not configured.");
+      }
+    } catch (err) {
+      console.error("OAuth init error:", err);
+      alert("Failed to connect to authentication backend.");
+    }
+  };
+
   const handlePremiumClick = () => {
     navigate('/pricing', { state: { scrollTo: 'agents' } });
   };
@@ -1836,12 +1938,36 @@ export default function AgentSandboxPage() {
     }, 1500);
   };
 
-  const handleDisconnectChannel = () => {
+  const handleDisconnectChannel = async () => {
     setIsChannelConnected(false);
     setConnectedChannelName('');
     localStorage.removeItem('agent_youtube_connected');
     localStorage.removeItem('agent_youtube_channel_name');
     setShowChannelDetailsModal(false);
+
+    if (state.token) {
+      try {
+        await fetch('/api/youtube-agent/memory', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${state.token}`
+          },
+          body: JSON.stringify({
+            channelName: '',
+            subscribers: 0,
+            analyticsData: {
+              views: 0,
+              ctr: 0,
+              watchTime: 0,
+              retention: 0
+            }
+          })
+        });
+      } catch (e) {
+        console.error("Disconnect channel on server failed:", e);
+      }
+    }
 
     setTimelineLogs(prev => [
       ...prev,
@@ -3185,10 +3311,10 @@ export default function AgentSandboxPage() {
                   ) : (
                     <button 
                       onClick={() => {
-                        if (!isPremium) {
+                        if (!hasSandboxAccess) {
                           handlePremiumClick();
                         } else {
-                          setShowConnectModal(true);
+                          handleOAuthStart();
                         }
                       }} 
                       className="btn btn-primary"
@@ -3356,23 +3482,53 @@ export default function AgentSandboxPage() {
           </svg>
           <span className="header-brand-title">YouTube Autopilot Workspace</span>
           
-          {isPremium ? (
+          {hasSandboxAccess ? (
             <div className="connection-header-pill">
               {isChannelConnected ? (
                 <button 
-                  className="connected-status-btn"
+                  className="sandbox-connected-blue-btn"
                   title="View connected channel details"
                   onClick={() => setShowChannelDetailsModal(true)}
+                  style={{
+                    background: '#0066ff',
+                    border: 'none',
+                    color: '#ffffff',
+                    padding: '8px 16px',
+                    borderRadius: '6px',
+                    fontWeight: 'bold',
+                    fontSize: '0.85rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    boxShadow: '0 2px 8px rgba(0, 102, 255, 0.3)',
+                    transition: 'all 0.2s ease'
+                  }}
                 >
-                  ✅ Connected: {connectedChannelName}
+                  ✅ {connectedChannelName}
                 </button>
               ) : (
                 <button 
-                  className="connect-channel-btn animate-pulse"
-                  title="Connect your YouTube Channel"
-                  onClick={() => setShowConnectModal(true)}
+                  className="sandbox-connect-blue-btn animate-pulse"
+                  title="Connect your YouTube Account"
+                  onClick={handleOAuthStart}
+                  style={{
+                    background: '#0066ff',
+                    border: 'none',
+                    color: '#ffffff',
+                    padding: '8px 16px',
+                    borderRadius: '6px',
+                    fontWeight: 'bold',
+                    fontSize: '0.85rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    boxShadow: '0 2px 8px rgba(0, 102, 255, 0.3)',
+                    transition: 'all 0.2s ease'
+                  }}
                 >
-                  🔌 Connect YouTube Channel
+                  🔌 Connect
                 </button>
               )}
             </div>
