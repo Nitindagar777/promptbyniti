@@ -15,8 +15,23 @@ import SEOHead from '../components/SEOHead';
 import './AgentSandboxPage.css';
 
 export default function AgentSandboxPage() {
-  const { state } = useApp();
+  const { state, isPremium, setPlan } = useApp();
   const navigate = useNavigate();
+
+  // Premium & Channel Connection states
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [showConnectModal, setShowConnectModal] = useState(false);
+  const [showChannelDetailsModal, setShowChannelDetailsModal] = useState(false);
+  const [isChannelConnected, setIsChannelConnected] = useState(() => {
+    return localStorage.getItem('agent_youtube_connected') === 'true';
+  });
+  const [connectedChannelName, setConnectedChannelName] = useState(() => {
+    return localStorage.getItem('agent_youtube_channel_name') || '';
+  });
+  const [channelUrl, setChannelUrl] = useState('');
+  const [integrationMethod, setIntegrationMethod] = useState('oauth');
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [isPaying, setIsPaying] = useState(false);
 
   // Onboarding & Active Tabs States
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -1786,6 +1801,85 @@ export default function AgentSandboxPage() {
     };
   }, [isLoaded, activeTab, isSimActive]);
 
+  // Premium & Channel Connection handlers
+  const handlePremiumClick = () => {
+    if (isPremium) {
+      setShowConnectModal(true);
+    } else {
+      setShowPremiumModal(true);
+    }
+  };
+
+  const handleCompletePayment = async () => {
+    setIsPaying(true);
+    setTimeout(async () => {
+      setIsPaying(false);
+      setShowPremiumModal(false);
+      setPlan('pro');
+
+      if (state.token) {
+        try {
+          await fetch('/api/user/plan', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${state.token}`
+            },
+            body: JSON.stringify({ plan: 'pro' })
+          });
+        } catch (e) {
+          console.error("Save plan on server failed:", e);
+        }
+      }
+      setShowConnectModal(true);
+    }, 1500);
+  };
+
+  const handleEstablishConnection = (e) => {
+    e.preventDefault();
+    if (!channelUrl.trim()) return;
+
+    setIsConnecting(true);
+    setTimeout(() => {
+      setIsConnecting(false);
+      setShowConnectModal(false);
+
+      let handle = channelUrl.trim();
+      if (!handle.startsWith('@')) {
+        const matches = handle.match(/youtube\.com\/(?:c\/|user\/)?@?([^\/\?]+)/);
+        if (matches && matches[1]) {
+          handle = `@${matches[1]}`;
+        } else {
+          // fallback
+          handle = `@${handle.replace(/[^a-zA-Z0-9_]/g, '')}`;
+        }
+      }
+
+      setIsChannelConnected(true);
+      setConnectedChannelName(handle);
+      localStorage.setItem('agent_youtube_connected', 'true');
+      localStorage.setItem('agent_youtube_channel_name', handle);
+
+      setTimelineLogs(prev => [
+        ...prev,
+        { time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: `Agent Sandbox connected to channel ${handle} successfully.` }
+      ]);
+    }, 1500);
+  };
+
+  const handleDisconnectChannel = () => {
+    setIsChannelConnected(false);
+    setConnectedChannelName('');
+    localStorage.removeItem('agent_youtube_connected');
+    localStorage.removeItem('agent_youtube_channel_name');
+    setShowChannelDetailsModal(false);
+
+    setTimelineLogs(prev => [
+      ...prev,
+      { time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: 'YouTube channel disconnected from agent workspace.' }
+    ]);
+  };
+
   // Save memory fields
   const handleSaveMemory = async (updatedFields) => {
     if (!state?.user) return;
@@ -3098,6 +3192,43 @@ export default function AgentSandboxPage() {
                   <label htmlFor="gemini"></label>
                 </div>
               </div>
+              <div className="setting-card card shadow-sm youtube-connection-setting-card" style={{ marginTop: '20px', borderTop: '2px solid var(--accent-glowing, #ff0000)' }}>
+                <div className="setting-details">
+                  <h4>🔌 Active YouTube Channel Connection</h4>
+                  <p style={{ margin: '4px 0 12px' }}>Check the integration status of the YouTube channel managed by your agent.</p>
+                  
+                  {isChannelConnected ? (
+                    <div className="connected-channel-mini-info" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <div className="info-badge" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#10b981', fontSize: '0.9rem', fontWeight: 'bold' }}>
+                        <span className="pulse-dot-green"></span> Connected to {connectedChannelName}
+                      </div>
+                      <span className="sync-text text-muted" style={{ fontSize: '0.8rem' }}>Sync Method: {integrationMethod === 'oauth' ? 'OAuth 2.0 API Integration' : 'RSS Public Indexer'}</span>
+                    </div>
+                  ) : (
+                    <p className="text-muted" style={{ fontSize: '0.8rem', margin: 0 }}>No active YouTube channel connected. Upgrade to Premium and connect your channel to synchronize analytics and automate video uploads.</p>
+                  )}
+                </div>
+                <div className="connection-actions" style={{ marginLeft: 'auto' }}>
+                  {isChannelConnected ? (
+                    <button onClick={handleDisconnectChannel} className="btn btn-secondary-outline" style={{ borderColor: '#ef4444', color: '#ef4444' }}>
+                      Disconnect Channel
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={() => {
+                        if (!isPremium) {
+                          setShowPremiumModal(true);
+                        } else {
+                          setShowConnectModal(true);
+                        }
+                      }} 
+                      className="btn btn-primary"
+                    >
+                      Connect Channel
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         );
@@ -3256,18 +3387,40 @@ export default function AgentSandboxPage() {
           </svg>
           <span className="header-brand-title">YouTube Autopilot Workspace</span>
           
-          <div className="mode-toggle-pill">
-            <button className="mode-toggle-btn active" title="Active demo workspace sandbox" disabled>
-              Demo Mode
-            </button>
-            <button 
-              className="mode-toggle-btn premium-btn" 
-              title="Unlock full Autopilot integrations"
-              onClick={() => navigate('/pricing', { state: { scrollTo: 'agents' } })}
-            >
-              Go Premium ✨
-            </button>
-          </div>
+          {isPremium ? (
+            <div className="connection-header-pill">
+              {isChannelConnected ? (
+                <button 
+                  className="connected-status-btn"
+                  title="View connected channel details"
+                  onClick={() => setShowChannelDetailsModal(true)}
+                >
+                  ✅ Connected: {connectedChannelName}
+                </button>
+              ) : (
+                <button 
+                  className="connect-channel-btn animate-pulse"
+                  title="Connect your YouTube Channel"
+                  onClick={() => setShowConnectModal(true)}
+                >
+                  🔌 Connect YouTube Channel
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="mode-toggle-pill">
+              <button className="mode-toggle-btn active" title="Active demo workspace sandbox" disabled>
+                Demo Mode
+              </button>
+              <button 
+                className="mode-toggle-btn premium-btn" 
+                title="Unlock full Autopilot integrations"
+                onClick={handlePremiumClick}
+              >
+                Go Premium ✨
+              </button>
+            </div>
+          )}
         </div>
         <div className="header-right">
           <span className="user-profile-badge">
@@ -3403,6 +3556,173 @@ export default function AgentSandboxPage() {
           </div>
         </aside>
       </div>
+
+      {/* --- PREMIUM CHECKOUT MODAL --- */}
+      {showPremiumModal && (
+        <div className="sandbox-modal-overlay" style={{ zIndex: 99999 }}>
+          <div className="sandbox-modal-card premium-checkout-card animate-slide-up">
+            <button className="sandbox-modal-close-btn" onClick={() => setShowPremiumModal(false)}>
+              <CloseIcon size={20} />
+            </button>
+            <div className="premium-badge-tag">AUTOPILOT PREMIUM</div>
+            <h3>Upgrade to Premium</h3>
+            <p className="premium-subtitle" style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '4px 0 20px' }}>Connect your live YouTube channel & sync automation scripts instantly.</p>
+            
+            <div className="premium-perks-list" style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
+              <div className="perk-item" style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.85rem' }}>
+                <CheckCircle size={16} className="text-green" style={{ color: '#10b981' }} />
+                <span>🔌 <strong>Direct Channel Connection:</strong> Sync script titles & tags directly.</span>
+              </div>
+              <div className="perk-item" style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.85rem' }}>
+                <CheckCircle size={16} className="text-green" style={{ color: '#10b981' }} />
+                <span>🔄 <strong>Automated Indexing:</strong> Real-time uploads of PDFs and calendars.</span>
+              </div>
+              <div className="perk-item" style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.85rem' }}>
+                <CheckCircle size={16} className="text-green" style={{ color: '#10b981' }} />
+                <span>🤖 <strong>Unlimited AI Audits:</strong> Keep your channel CTR optimized 24/7.</span>
+              </div>
+            </div>
+
+            <hr className="modal-divider" style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.1)', margin: '15px 0' }} />
+
+            <div className="checkout-payment-details">
+              <div className="price-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                <span>Premium Access Plan</span>
+                <strong style={{ color: '#ff0000', fontSize: '1.2rem' }}>$29.00 / mo</strong>
+              </div>
+              
+              <div className="mock-card-form" style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
+                <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Card Number</label>
+                  <input type="text" placeholder="4242 4242 4242 4242" disabled style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', padding: '10px', borderRadius: '6px', color: '#fff', width: '100%', boxSizing: 'border-box' }} />
+                </div>
+                <div className="form-row-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Expiry Date</label>
+                    <input type="text" placeholder="12/28" disabled style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', padding: '10px', borderRadius: '6px', color: '#fff', width: '100%', boxSizing: 'border-box' }} />
+                  </div>
+                  <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>CVC</label>
+                    <input type="text" placeholder="123" disabled style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', padding: '10px', borderRadius: '6px', color: '#fff', width: '100%', boxSizing: 'border-box' }} />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <button 
+              className="btn btn-primary w-100 pay-now-btn"
+              onClick={handleCompletePayment}
+              disabled={isPaying}
+              style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+            >
+              {isPaying ? (
+                <>
+                  <RefreshCw className="animate-spin" size={16} style={{ marginRight: '8px' }} />
+                  Processing payment...
+                </>
+              ) : (
+                "Complete Payment & Activate Premium"
+              )}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* --- YOUTUBE CONNECTION MODAL --- */}
+      {showConnectModal && (
+        <div className="sandbox-modal-overlay" style={{ zIndex: 99999 }}>
+          <div className="sandbox-modal-card connect-channel-card animate-slide-up">
+            <button className="sandbox-modal-close-btn" onClick={() => setShowConnectModal(false)}>
+              <CloseIcon size={20} />
+            </button>
+            <div className="icon-wrapper-header" style={{ fontSize: '2rem', textAlign: 'center', marginBottom: '10px' }}>🔌</div>
+            <h3>Connect YouTube Channel</h3>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textAlign: 'center', margin: '4px 0 20px' }}>Input your channel handle or URL to link your workspace to YouTube API.</p>
+
+            <form onSubmit={handleEstablishConnection} className="connect-channel-form" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>YouTube Channel Handle / URL</label>
+                <input 
+                  type="text" 
+                  placeholder="e.g. @techwithnitin or youtube.com/@techwithnitin" 
+                  value={channelUrl} 
+                  onChange={(e) => setChannelUrl(e.target.value)} 
+                  required 
+                  disabled={isConnecting}
+                  style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.2)', padding: '12px', borderRadius: '6px', color: '#fff', width: '100%', boxSizing: 'border-box' }}
+                />
+              </div>
+
+              <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Integration Method</label>
+                <select 
+                  value={integrationMethod} 
+                  onChange={(e) => setIntegrationMethod(e.target.value)}
+                  disabled={isConnecting}
+                  style={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.2)', padding: '12px', borderRadius: '6px', color: '#fff', width: '100%', boxSizing: 'border-box' }}
+                >
+                  <option value="oauth">OAuth 2.0 API Integration (Recommended)</option>
+                  <option value="rss">Public Channel RSS Feed Indexer</option>
+                </select>
+              </div>
+
+              <button 
+                type="submit" 
+                className="btn btn-primary w-100 connect-btn"
+                disabled={isConnecting || !channelUrl.trim()}
+                style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+              >
+                {isConnecting ? (
+                  <>
+                    <RefreshCw className="animate-spin" size={16} style={{ marginRight: '8px' }} />
+                    Establishing Secure API Link...
+                  </>
+                ) : (
+                  "Establish Agent Connection"
+                )}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- CHANNEL DETAILS MODAL --- */}
+      {showChannelDetailsModal && (
+        <div className="sandbox-modal-overlay" style={{ zIndex: 99999 }}>
+          <div className="sandbox-modal-card channel-details-card animate-slide-up">
+            <button className="sandbox-modal-close-btn" onClick={() => setShowChannelDetailsModal(false)}>
+              <CloseIcon size={20} />
+            </button>
+            <div className="success-badge-wrapper" style={{ fontSize: '2rem', textAlign: 'center', marginBottom: '10px' }}>✅</div>
+            <h3>YouTube Integration Active</h3>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textAlign: 'center', margin: '4px 0 20px' }}>Your AI Agent is connected to the YouTube Data API endpoint.</p>
+
+            <div className="integration-details-panel" style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '8px', padding: '15px', display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
+              <div className="details-entry" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                <span>Status</span>
+                <span className="badge-connected" style={{ color: '#10b981', fontWeight: 'bold' }}>CONNECTED</span>
+              </div>
+              <div className="details-entry" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                <span>Linked Handle</span>
+                <strong>{connectedChannelName}</strong>
+              </div>
+              <div className="details-entry" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                <span>Sync Mode</span>
+                <strong>{integrationMethod === 'oauth' ? 'OAuth API Sync' : 'Public RSS Feed'}</strong>
+              </div>
+            </div>
+
+            <div className="details-actions" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <button onClick={handleDisconnectChannel} className="btn btn-danger w-100 disconnect-btn" style={{ background: '#ef4444', color: '#fff', width: '100%' }}>
+                Disconnect YouTube Channel
+              </button>
+              <button onClick={() => setShowChannelDetailsModal(false)} className="btn btn-secondary-outline w-100" style={{ width: '100%' }}>
+                Close Panel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
