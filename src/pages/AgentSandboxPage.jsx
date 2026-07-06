@@ -3489,46 +3489,16 @@ export default function AgentSandboxPage() {
                   className="sandbox-connected-blue-btn"
                   title="View connected channel details"
                   onClick={() => setShowChannelDetailsModal(true)}
-                  style={{
-                    background: '#0066ff',
-                    border: 'none',
-                    color: '#ffffff',
-                    padding: '8px 16px',
-                    borderRadius: '6px',
-                    fontWeight: 'bold',
-                    fontSize: '0.85rem',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    boxShadow: '0 2px 8px rgba(0, 102, 255, 0.3)',
-                    transition: 'all 0.2s ease'
-                  }}
                 >
-                  ✅ {connectedChannelName}
+                  <Check size={14} /> {connectedChannelName}
                 </button>
               ) : (
                 <button 
                   className="sandbox-connect-blue-btn animate-pulse"
                   title="Connect your YouTube Account"
                   onClick={handleOAuthStart}
-                  style={{
-                    background: '#0066ff',
-                    border: 'none',
-                    color: '#ffffff',
-                    padding: '8px 16px',
-                    borderRadius: '6px',
-                    fontWeight: 'bold',
-                    fontSize: '0.85rem',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    boxShadow: '0 2px 8px rgba(0, 102, 255, 0.3)',
-                    transition: 'all 0.2s ease'
-                  }}
                 >
-                  🔌 Connect
+                  <Zap size={14} fill="#ffffff" /> Connect
                 </button>
               )}
             </div>
