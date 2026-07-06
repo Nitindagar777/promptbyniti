@@ -17,6 +17,7 @@ import './AgentSandboxPage.css';
 export default function AgentSandboxPage() {
   const { state, isPremium, setPlan } = useApp();
   const navigate = useNavigate();
+  const token = localStorage.getItem('promptbyniti_token');
 
   // Premium & Channel Connection states
   const [showConnectModal, setShowConnectModal] = useState(false);
@@ -41,9 +42,9 @@ export default function AgentSandboxPage() {
     return diffDays <= 30;
   };
 
-  const hasSandboxAccess = isPremium || 
-                           (state?.user?.email?.toLowerCase().trim() === 'nitindagar0800@gmail.com') || 
-                           isTrialActive();
+  const hasSandboxAccess = isPremium ||
+    (state?.user?.email?.toLowerCase().trim() === 'nitindagar0800@gmail.com') ||
+    isTrialActive();
 
   // Onboarding & Active Tabs States
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -152,8 +153,8 @@ export default function AgentSandboxPage() {
   const [newTaskText, setNewTaskText] = useState('');
 
   // Workflow Simulator States (Phases 6, 9, 10)
-  const [runningWorkflow, setRunningWorkflow] = useState(null); 
-  const [workflowResults, setWorkflowResults] = useState(null); 
+  const [runningWorkflow, setRunningWorkflow] = useState(null);
+  const [workflowResults, setWorkflowResults] = useState(null);
 
   // General timeline logs (Phase 5: Right Status Panel)
   const [timelineLogs, setTimelineLogs] = useState(() => {
@@ -255,9 +256,9 @@ export default function AgentSandboxPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const code = params.get('code');
-    if (code && state?.token) {
+    if (code && token) {
       window.history.replaceState({}, document.title, window.location.pathname);
-      
+
       setRunningWorkflow({
         name: "Connecting YouTube Channel",
         progress: 40,
@@ -268,7 +269,7 @@ export default function AgentSandboxPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${state.token}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           code,
@@ -282,7 +283,7 @@ export default function AgentSandboxPage() {
             setConnectedChannelName(data.channel.handle);
             localStorage.setItem('agent_youtube_connected', 'true');
             localStorage.setItem('agent_youtube_channel_name', data.channel.handle);
-            
+
             setMemory(prev => ({
               ...prev,
               ...data.memory,
@@ -290,7 +291,7 @@ export default function AgentSandboxPage() {
               subscribers: data.channel.subscribers,
               analyticsData: data.memory.analyticsData || prev.analyticsData
             }));
-            
+
             setRunningWorkflow({
               name: "YouTube Connected",
               progress: 100,
@@ -316,14 +317,14 @@ export default function AgentSandboxPage() {
           alert("Connection error: Failed to connect to backend server.");
         });
     }
-  }, [state?.token]);
+  }, [token]);
 
   // Fetch memory and chats from API on load
   useEffect(() => {
     if (state?.user) {
       // Memory
       fetch('/api/youtube-agent/memory', {
-        headers: { 'Authorization': `Bearer ${state.token}` }
+        headers: { 'Authorization': `Bearer ${token}` }
       })
         .then(res => res.json())
         .then(data => {
@@ -360,7 +361,7 @@ export default function AgentSandboxPage() {
 
       // Chat logs
       fetch('/api/youtube-agent/chat', {
-        headers: { 'Authorization': `Bearer ${state.token}` }
+        headers: { 'Authorization': `Bearer ${token}` }
       })
         .then(res => res.json())
         .then(data => {
@@ -387,7 +388,7 @@ export default function AgentSandboxPage() {
         ...prevLogs,
         { time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: "AI triggered automation audit." }
       ]);
-    } 
+    }
     else if (step === 1) {
       // Phase 1: Update progress & fluctuate metrics & Fast Typist Task 1
       setRunningWorkflow(prevWorkflow => prevWorkflow ? {
@@ -395,7 +396,7 @@ export default function AgentSandboxPage() {
         progress: 55,
         currentStep: "Evaluating keyword trends..."
       } : null);
-      
+
       setMemory(prevMem => ({
         ...prevMem,
         subscribers: 1262,
@@ -433,7 +434,7 @@ export default function AgentSandboxPage() {
           }, 200);
         }
       }, 15);
-    } 
+    }
     else if (step === 2) {
       // Phase 2: Complete AI workflow & Fast Typist Task 2 & Update Suggestions
       setRunningWorkflow(prevWorkflow => prevWorkflow ? {
@@ -441,7 +442,7 @@ export default function AgentSandboxPage() {
         progress: 100,
         currentStep: "Finished audit."
       } : null);
-      
+
       setTimeout(() => {
         setRunningWorkflow(null);
       }, 600);
@@ -480,7 +481,7 @@ export default function AgentSandboxPage() {
           }, 200);
         }
       }, 15);
-    } 
+    }
     else if (step === 3) {
       // Complete Task 1 & Task 2
       setTasks(prevTasks => {
@@ -504,7 +505,7 @@ export default function AgentSandboxPage() {
           views: 124690
         }
       }));
-    } 
+    }
     else if (step === 4) {
       // Complete Task 4
       setTasks(prevTasks => {
@@ -645,7 +646,7 @@ export default function AgentSandboxPage() {
             clearInterval(typingInterval);
           }
         }, 12);
-      } 
+      }
       else if (step === 1) {
         setInputMessage("");
         setChatMessages([
@@ -662,14 +663,14 @@ export default function AgentSandboxPage() {
           if (prevLogs.some(l => l.text === newLog.text)) return prevLogs;
           return [...prevLogs, newLog];
         });
-      } 
+      }
       else if (step === 2) {
         setIsChatLoading(false);
         setRunningWorkflow(null);
         setChatMessages([
           { sender: 'user', text: "Suggest 3 video ideas for @promptbyniti channel." },
-          { 
-            sender: 'agent', 
+          {
+            sender: 'agent',
             text: `Here are 3 high-impact video concepts tailored specifically for your channel '@promptbyniti' and niche 'prompt generate':
 
 1. 🚀 **"The Prompt Engineering Roadmap 2026"**
@@ -693,7 +694,7 @@ export default function AgentSandboxPage() {
           if (prevLogs.some(l => l.text === newLog.text)) return prevLogs;
           return [...prevLogs, newLog];
         });
-      } 
+      }
       else if (step === 3) {
         const textToType = "Can you outline the script for Vite vs Next.js?";
         let currentText = "";
@@ -707,13 +708,13 @@ export default function AgentSandboxPage() {
             clearInterval(typingInterval);
           }
         }, 12);
-      } 
+      }
       else if (step === 4) {
         setInputMessage("");
         setChatMessages([
           { sender: 'user', text: "Suggest 3 video ideas for @promptbyniti channel." },
-          { 
-            sender: 'agent', 
+          {
+            sender: 'agent',
             text: `Here are 3 high-impact video concepts tailored specifically for your channel '@promptbyniti' and niche 'prompt generate':
 
 1. 🚀 **"The Prompt Engineering Roadmap 2026"**
@@ -744,14 +745,14 @@ export default function AgentSandboxPage() {
           if (prevLogs.some(l => l.text === newLog.text)) return prevLogs;
           return [...prevLogs, newLog];
         });
-      } 
+      }
       else if (step === 5) {
         setIsChatLoading(false);
         setRunningWorkflow(null);
         setChatMessages([
           { sender: 'user', text: "Suggest 3 video ideas for @promptbyniti channel." },
-          { 
-            sender: 'agent', 
+          {
+            sender: 'agent',
             text: `Here are 3 high-impact video concepts tailored specifically for your channel '@promptbyniti' and niche 'prompt generate':
 
 1. 🚀 **"The Prompt Engineering Roadmap 2026"**
@@ -770,8 +771,8 @@ export default function AgentSandboxPage() {
    - **CTR Outlook:** 9.8% (Exceptional).`
           },
           { sender: 'user', text: "Can you outline the script for Vite vs Next.js?" },
-          { 
-            sender: 'agent', 
+          {
+            sender: 'agent',
             text: `Here is a comprehensive, high-retention video script outline for **"Vite vs Next.js 15: Ultimate SEO Prompt Guide"**:
 
 * 🎙️ **The Hook [0:00 - 0:45]**
@@ -815,8 +816,8 @@ export default function AgentSandboxPage() {
         setInputMessage("");
         setChatMessages([
           { sender: 'user', text: "Suggest 3 video ideas for @promptbyniti channel." },
-          { 
-            sender: 'agent', 
+          {
+            sender: 'agent',
             text: `Here are 3 high-impact video concepts tailored specifically for your channel '@promptbyniti' and niche 'prompt generate':
 
 1. 🚀 **"The Prompt Engineering Roadmap 2026"**
@@ -835,8 +836,8 @@ export default function AgentSandboxPage() {
    - **CTR Outlook:** 9.8% (Exceptional).`
           },
           { sender: 'user', text: "Can you outline the script for Vite vs Next.js?" },
-          { 
-            sender: 'agent', 
+          {
+            sender: 'agent',
             text: `Here is a comprehensive, high-retention video script outline for **"Vite vs Next.js 15: Ultimate SEO Prompt Guide"**:
 
 * 🎙️ **The Hook [0:00 - 0:45]**
@@ -874,8 +875,8 @@ export default function AgentSandboxPage() {
         setRunningWorkflow(null);
         setChatMessages([
           { sender: 'user', text: "Suggest 3 video ideas for @promptbyniti channel." },
-          { 
-            sender: 'agent', 
+          {
+            sender: 'agent',
             text: `Here are 3 high-impact video concepts tailored specifically for your channel '@promptbyniti' and niche 'prompt generate':
 
 1. 🚀 **"The Prompt Engineering Roadmap 2026"**
@@ -894,8 +895,8 @@ export default function AgentSandboxPage() {
    - **CTR Outlook:** 9.8% (Exceptional).`
           },
           { sender: 'user', text: "Can you outline the script for Vite vs Next.js?" },
-          { 
-            sender: 'agent', 
+          {
+            sender: 'agent',
             text: `Here is a comprehensive, high-retention video script outline for **"Vite vs Next.js 15: Ultimate SEO Prompt Guide"**:
 
 * 🎙️ **The Hook [0:00 - 0:45]**
@@ -976,7 +977,7 @@ export default function AgentSandboxPage() {
     let globalSimStep = 0;
     const runGlobalStep = (step) => {
       const currentStep = step % 4;
-      
+
       if (currentStep === 0) {
         setRunningWorkflow({
           name: "Background Vector Database Indexing",
@@ -1038,7 +1039,7 @@ export default function AgentSandboxPage() {
     if (!isLoaded || activeTab !== 'workflows' || !isSimActive) return;
 
     let workflowsSimStep = 0;
-    
+
     const runWorkflowsStep = (step) => {
       const current = step % 4;
       if (current === 0) {
@@ -1085,7 +1086,7 @@ export default function AgentSandboxPage() {
           if (prevLogs.some(l => l.text === newLog.text)) return prevLogs;
           return [...prevLogs, newLog];
         });
-      } 
+      }
       else if (current === 1) {
         setAuditingRowId(2);
         setRunningWorkflow({
@@ -1098,7 +1099,7 @@ export default function AgentSandboxPage() {
           if (prevLogs.some(l => l.text === newLog.text)) return prevLogs;
           return [...prevLogs, newLog];
         });
-      } 
+      }
       else if (current === 2) {
         setAuditingRowId(3);
         setRunningWorkflow({
@@ -1111,7 +1112,7 @@ export default function AgentSandboxPage() {
           if (prevLogs.some(l => l.text === newLog.text)) return prevLogs;
           return [...prevLogs, newLog];
         });
-      } 
+      }
       else if (current === 3) {
         setAuditingRowId(null);
         setRunningWorkflow(null);
@@ -1156,7 +1157,7 @@ export default function AgentSandboxPage() {
           if (prevLogs.some(l => l.text === newLog.text)) return prevLogs;
           return [...prevLogs, newLog];
         });
-      } 
+      }
       else if (current === 1) {
         setEvaluatingIdeaId(2);
         setRunningWorkflow({
@@ -1169,7 +1170,7 @@ export default function AgentSandboxPage() {
           if (prevLogs.some(l => l.text === newLog.text)) return prevLogs;
           return [...prevLogs, newLog];
         });
-      } 
+      }
       else if (current === 2) {
         setEvaluatingIdeaId(3);
         setRunningWorkflow({
@@ -1182,7 +1183,7 @@ export default function AgentSandboxPage() {
           if (prevLogs.some(l => l.text === newLog.text)) return prevLogs;
           return [...prevLogs, newLog];
         });
-      } 
+      }
       else if (current === 3) {
         setEvaluatingIdeaId(null);
         setRunningWorkflow(null);
@@ -1495,7 +1496,7 @@ export default function AgentSandboxPage() {
           if (prevLogs.some(l => l.text === newLog.text)) return prevLogs;
           return [...prevLogs, newLog];
         });
-      } 
+      }
       else if (current === 1) {
         setRunningWorkflow({
           name: "Calculating Retentions",
@@ -1507,7 +1508,7 @@ export default function AgentSandboxPage() {
           if (prevLogs.some(l => l.text === newLog.text)) return prevLogs;
           return [...prevLogs, newLog];
         });
-      } 
+      }
       else if (current === 2) {
         setRunningWorkflow({
           name: "Compiling Growth Curve Map",
@@ -1519,7 +1520,7 @@ export default function AgentSandboxPage() {
           if (prevLogs.some(l => l.text === newLog.text)) return prevLogs;
           return [...prevLogs, newLog];
         });
-      } 
+      }
       else if (current === 3) {
         setRunningWorkflow(null);
       }
@@ -1963,10 +1964,10 @@ export default function AgentSandboxPage() {
 
       // 2. Clear mock timeline logs (only keeping real OAuth or secure sync events)
       setTimelineLogs(prev => {
-        const realLogs = prev.filter(log => 
-          log.text.toLowerCase().includes("oauth") || 
-          log.text.toLowerCase().includes("connected") || 
-          log.text.toLowerCase().includes("established") || 
+        const realLogs = prev.filter(log =>
+          log.text.toLowerCase().includes("oauth") ||
+          log.text.toLowerCase().includes("connected") ||
+          log.text.toLowerCase().includes("established") ||
           log.text.toLowerCase().includes("activated")
         );
         if (realLogs.length === 0) {
@@ -2085,13 +2086,13 @@ export default function AgentSandboxPage() {
     localStorage.removeItem('agent_youtube_channel_name');
     setShowChannelDetailsModal(false);
 
-    if (state.token) {
+    if (token) {
       try {
         await fetch('/api/youtube-agent/memory', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${state.token}`
+            'Authorization': `Bearer ${token}`
           },
           body: JSON.stringify({
             channelName: '',
@@ -2123,7 +2124,7 @@ export default function AgentSandboxPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${state.token}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(updatedFields)
       });
@@ -2157,7 +2158,7 @@ export default function AgentSandboxPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${state.token}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(preparedMemory)
       });
@@ -2319,7 +2320,7 @@ export default function AgentSandboxPage() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${state.token}`
+            'Authorization': `Bearer ${token}`
           },
           body: JSON.stringify({
             fileData: base64Data,
@@ -2372,7 +2373,7 @@ export default function AgentSandboxPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${state.token}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ prompt: textToSend })
       });
@@ -2484,8 +2485,8 @@ export default function AgentSandboxPage() {
           <p>
             To unlock the full agent strategic planner, SEO tag suite, scriptwriter, and analytics dashboard, connect your actual YouTube channel via Google OAuth.
           </p>
-          <button 
-            onClick={handleOAuthStart} 
+          <button
+            onClick={handleOAuthStart}
             className="connection-required-btn"
           >
             <Zap size={16} fill="#ffffff" /> Authorize YouTube Account (OAuth)
@@ -2575,8 +2576,8 @@ export default function AgentSandboxPage() {
                   <p className="suggest-intro">Click any recommended action below to execute with your AI manager immediately:</p>
                   <div className="action-buttons-list">
                     {suggestions.map(s => (
-                      <button 
-                        key={s.id} 
+                      <button
+                        key={s.id}
                         onClick={() => {
                           if (s.actionType === 'workflows') {
                             setActiveTab('workflows');
@@ -2587,7 +2588,7 @@ export default function AgentSandboxPage() {
                           } else {
                             setActiveTab(s.actionType);
                           }
-                        }} 
+                        }}
                         className="suggest-card animate-fade-in"
                       >
                         <div className="suggest-title">{s.title}</div>
@@ -2677,9 +2678,9 @@ export default function AgentSandboxPage() {
                 </div>
                 <h3>Launch Channel Strategy</h3>
                 <p>Audits niche, generates Midjourney branding prompt assets, and devises metadata structures.</p>
-                <button 
-                  onClick={() => runWorkflowSimulation('Launch Channel Strategy')} 
-                  className={`btn w-100 ${runningWorkflow?.name === 'Launch Channel Strategy' ? 'btn-danger' : 'btn-primary'}`} 
+                <button
+                  onClick={() => runWorkflowSimulation('Launch Channel Strategy')}
+                  className={`btn w-100 ${runningWorkflow?.name === 'Launch Channel Strategy' ? 'btn-danger' : 'btn-primary'}`}
                   disabled={runningWorkflow && runningWorkflow?.name !== 'Launch Channel Strategy'}
                 >
                   {runningWorkflow?.name === 'Launch Channel Strategy' ? (
@@ -2698,9 +2699,9 @@ export default function AgentSandboxPage() {
                 </div>
                 <h3>100 Video Ideas Generator</h3>
                 <p>Mines keyword patterns and outlines content topics scoring highest for potential search CTR.</p>
-                <button 
-                  onClick={() => runWorkflowSimulation('100 Video Ideas Generator')} 
-                  className={`btn w-100 ${runningWorkflow?.name === '100 Video Ideas Generator' ? 'btn-danger' : 'btn-primary'}`} 
+                <button
+                  onClick={() => runWorkflowSimulation('100 Video Ideas Generator')}
+                  className={`btn w-100 ${runningWorkflow?.name === '100 Video Ideas Generator' ? 'btn-danger' : 'btn-primary'}`}
                   disabled={runningWorkflow && runningWorkflow?.name !== '100 Video Ideas Generator'}
                 >
                   {runningWorkflow?.name === '100 Video Ideas Generator' ? (
@@ -2719,9 +2720,9 @@ export default function AgentSandboxPage() {
                 </div>
                 <h3>Analyze Competitors</h3>
                 <p>Audits competing channels to reveal untapped content schedule opportunities and metadata tags.</p>
-                <button 
-                  onClick={() => runWorkflowSimulation('Analyze Competitors & Gaps')} 
-                  className={`btn w-100 ${runningWorkflow?.name === 'Analyze Competitors & Gaps' ? 'btn-danger' : 'btn-primary'}`} 
+                <button
+                  onClick={() => runWorkflowSimulation('Analyze Competitors & Gaps')}
+                  className={`btn w-100 ${runningWorkflow?.name === 'Analyze Competitors & Gaps' ? 'btn-danger' : 'btn-primary'}`}
                   disabled={runningWorkflow && runningWorkflow?.name !== 'Analyze Competitors & Gaps'}
                 >
                   {runningWorkflow?.name === 'Analyze Competitors & Gaps' ? (
@@ -2740,9 +2741,9 @@ export default function AgentSandboxPage() {
                 </div>
                 <h3>90-Day Growth Plan</h3>
                 <p>Compiles structured upload milestones, expansion benchmarks, and audience retention loops.</p>
-                <button 
-                  onClick={() => runWorkflowSimulation('90-Day Channel Growth Plan')} 
-                  className={`btn w-100 ${runningWorkflow?.name === '90-Day Channel Growth Plan' ? 'btn-danger' : 'btn-primary'}`} 
+                <button
+                  onClick={() => runWorkflowSimulation('90-Day Channel Growth Plan')}
+                  className={`btn w-100 ${runningWorkflow?.name === '90-Day Channel Growth Plan' ? 'btn-danger' : 'btn-primary'}`}
                   disabled={runningWorkflow && runningWorkflow?.name !== '90-Day Channel Growth Plan'}
                 >
                   {runningWorkflow?.name === '90-Day Channel Growth Plan' ? (
@@ -2927,8 +2928,8 @@ export default function AgentSandboxPage() {
                     <td>AI Agents</td>
                     <td><span className="status-label scheduled">Scheduled</span></td>
                     <td>
-                      <button 
-                        onClick={() => setActiveTab('seo')} 
+                      <button
+                        onClick={() => setActiveTab('seo')}
                         className={`btn btn-xs ${auditingRowId === 1 ? 'btn-danger' : 'btn-secondary'}`}
                         disabled={auditingRowId && auditingRowId !== 1}
                       >
@@ -2942,8 +2943,8 @@ export default function AgentSandboxPage() {
                     <td>Web Dev</td>
                     <td><span className="status-label draft">Draft</span></td>
                     <td>
-                      <button 
-                        onClick={() => { setActiveScript({ title: 'Why I Am Quitting NextJS for Vite config', hook: '[0:00 - 0:30] Hook about NextJS overheads.', intro: '[0:30 - 1:15] Vite dev speeds comparison.', body: '[1:15 - 4:30] Core bundle benchmarks and setup.', outro: '[4:30 - 5:00] End wrap.' }); setActiveTab('scripts'); }} 
+                      <button
+                        onClick={() => { setActiveScript({ title: 'Why I Am Quitting NextJS for Vite config', hook: '[0:00 - 0:30] Hook about NextJS overheads.', intro: '[0:30 - 1:15] Vite dev speeds comparison.', body: '[1:15 - 4:30] Core bundle benchmarks and setup.', outro: '[4:30 - 5:00] End wrap.' }); setActiveTab('scripts'); }}
                         className={`btn btn-xs ${auditingRowId === 2 ? 'btn-danger' : 'btn-secondary'}`}
                         disabled={auditingRowId && auditingRowId !== 2}
                       >
@@ -2957,8 +2958,8 @@ export default function AgentSandboxPage() {
                     <td>AI Coding</td>
                     <td><span className="status-label published">Published</span></td>
                     <td>
-                      <button 
-                        onClick={() => setActiveTab('analytics')} 
+                      <button
+                        onClick={() => setActiveTab('analytics')}
                         className={`btn btn-xs ${auditingRowId === 3 ? 'btn-danger' : 'btn-secondary'}`}
                         disabled={auditingRowId && auditingRowId !== 3}
                       >
@@ -2999,7 +3000,7 @@ export default function AgentSandboxPage() {
                       <td><span className="badge-green">{idea.ctr}</span></td>
                       <td><span className={`difficulty-badge ${idea.difficulty.toLowerCase()}`}>{idea.difficulty}</span></td>
                       <td>
-                        <button 
+                        <button
                           onClick={() => {
                             setActiveScript({
                               title: idea.title,
@@ -3009,7 +3010,7 @@ export default function AgentSandboxPage() {
                               outro: `[4:30 - 5:00] Summary and subscriber call to action.`
                             });
                             setActiveTab('scripts');
-                          }} 
+                          }}
                           className={`btn btn-xs ${evaluatingIdeaId === idea.id ? 'btn-danger' : 'btn-primary'}`}
                           disabled={evaluatingIdeaId && evaluatingIdeaId !== idea.id}
                         >
@@ -3045,10 +3046,10 @@ export default function AgentSandboxPage() {
                     navigator.clipboard.writeText(`Title: ${activeScript.title}\n\nHook:\n${activeScript.hook}\n\nIntroduction:\n${activeScript.intro}\n\nBody:\n${activeScript.body}\n\nOutro:\n${activeScript.outro}`);
                     alert('Script script template copied to clipboard!');
                   }} className="btn btn-secondary-outline w-100">📋 Copy Entire Script</button>
-                  <button 
-                    onClick={() => alert('Script draft exported to project documents')} 
-                    className={`btn btn-primary w-100 ${(isSimActive && activeScript.hook && activeScript.intro && activeScript.body && activeScript.outro) ? 'animate-pulse' : ''}`} 
-                    style={{ 
+                  <button
+                    onClick={() => alert('Script draft exported to project documents')}
+                    className={`btn btn-primary w-100 ${(isSimActive && activeScript.hook && activeScript.intro && activeScript.body && activeScript.outro) ? 'animate-pulse' : ''}`}
+                    style={{
                       marginTop: '10px',
                       boxShadow: (isSimActive && activeScript.hook && activeScript.intro && activeScript.body && activeScript.outro) ? '0 0 15px rgba(239, 68, 68, 0.6)' : 'none',
                       borderColor: (isSimActive && activeScript.hook && activeScript.intro && activeScript.body && activeScript.outro) ? '#ef4444' : ''
@@ -3099,8 +3100,8 @@ export default function AgentSandboxPage() {
                     <label>Video Title or Theme</label>
                     <input type="text" placeholder="e.g. Building an AI Youtube Manager" value={customThumbnailTitle} onChange={(e) => setCustomThumbnailTitle(e.target.value)} required />
                   </div>
-                  <button 
-                    type="submit" 
+                  <button
+                    type="submit"
                     className={`btn w-100 ${(isSimActive && customThumbnailTitle) ? 'btn-danger animate-pulse' : 'btn-primary'}`}
                     disabled={isSimActive && customThumbnailTitle}
                   >
@@ -3197,8 +3198,8 @@ export default function AgentSandboxPage() {
                     <label>Target Keyword</label>
                     <input type="text" placeholder="e.g. NextJS 15 configurations" value={seoKeyword} onChange={(e) => setSeoKeyword(e.target.value)} required />
                   </div>
-                  <button 
-                    type="submit" 
+                  <button
+                    type="submit"
                     className={`btn w-100 ${(isSimActive && seoKeyword) ? 'btn-danger animate-pulse' : 'btn-primary'}`}
                     disabled={isSimActive && seoKeyword}
                   >
@@ -3457,7 +3458,7 @@ export default function AgentSandboxPage() {
                 <div className="setting-details">
                   <h4>🔌 Active YouTube Channel Connection</h4>
                   <p style={{ margin: '4px 0 12px' }}>Check the integration status of the YouTube channel managed by your agent.</p>
-                  
+
                   {isChannelConnected ? (
                     <div className="connected-channel-mini-info" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       <div className="info-badge" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#10b981', fontSize: '0.9rem', fontWeight: 'bold' }}>
@@ -3475,14 +3476,14 @@ export default function AgentSandboxPage() {
                       Disconnect Channel
                     </button>
                   ) : (
-                    <button 
+                    <button
                       onClick={() => {
                         if (!hasSandboxAccess) {
                           handlePremiumClick();
                         } else {
                           handleOAuthStart();
                         }
-                      }} 
+                      }}
                       className="btn btn-primary"
                     >
                       Connect Channel
@@ -3647,11 +3648,11 @@ export default function AgentSandboxPage() {
             <path d="M23.498 6.163a3.003 3.003 0 0 0-2.11-2.11C19.517 3.545 12 3.545 12 3.545s-7.516 0-9.387.507A3.003 3.003 0 0 0 .502 6.163C0 8.07 0 12 0 12s0 3.93.502 5.837a3.003 3.003 0 0 0 2.11 2.11c1.871.507 9.387.507 9.387.507s7.517 0 9.387-.507a3.003 3.003 0 0 0 2.11-2.11C24 15.93 24 12 24 12s0-3.93-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
           </svg>
           <span className="header-brand-title">YouTube Autopilot Workspace</span>
-          
+
           {hasSandboxAccess ? (
             <div className="connection-header-pill">
               {isChannelConnected ? (
-                <button 
+                <button
                   className="sandbox-connected-blue-btn"
                   title="View connected channel details"
                   onClick={() => setShowChannelDetailsModal(true)}
@@ -3659,7 +3660,7 @@ export default function AgentSandboxPage() {
                   <Check size={14} /> {connectedChannelName}
                 </button>
               ) : (
-                <button 
+                <button
                   className="sandbox-connect-blue-btn animate-pulse"
                   title="Connect your YouTube Account"
                   onClick={handleOAuthStart}
@@ -3673,8 +3674,8 @@ export default function AgentSandboxPage() {
               <button className="mode-toggle-btn active" title="Active demo workspace sandbox" disabled>
                 Demo Mode
               </button>
-              <button 
-                className="mode-toggle-btn premium-btn" 
+              <button
+                className="mode-toggle-btn premium-btn"
                 title="Unlock full Autopilot integrations"
                 onClick={handlePremiumClick}
               >
@@ -3737,8 +3738,8 @@ export default function AgentSandboxPage() {
           {!hasSandboxAccess && (
             <div className="demo-control-panel">
               <div className="sidebar-section-title">Demo Control</div>
-              <button 
-                onClick={() => setIsSimActive(prev => !prev)} 
+              <button
+                onClick={() => setIsSimActive(prev => !prev)}
                 className={`demo-sim-toggle-btn ${isSimActive ? 'running' : 'stopped'}`}
                 title={isSimActive ? "Pause the automated demo walk" : "Resume the automated demo walk"}
               >
@@ -3835,12 +3836,12 @@ export default function AgentSandboxPage() {
             <form onSubmit={handleEstablishConnection} className="connect-channel-form" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
               <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>YouTube Channel Handle / URL</label>
-                <input 
-                  type="text" 
-                  placeholder="e.g. @techwithnitin or youtube.com/@techwithnitin" 
-                  value={channelUrl} 
-                  onChange={(e) => setChannelUrl(e.target.value)} 
-                  required 
+                <input
+                  type="text"
+                  placeholder="e.g. @techwithnitin or youtube.com/@techwithnitin"
+                  value={channelUrl}
+                  onChange={(e) => setChannelUrl(e.target.value)}
+                  required
                   disabled={isConnecting}
                   style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.2)', padding: '12px', borderRadius: '6px', color: '#fff', width: '100%', boxSizing: 'border-box' }}
                 />
@@ -3848,8 +3849,8 @@ export default function AgentSandboxPage() {
 
               <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Integration Method</label>
-                <select 
-                  value={integrationMethod} 
+                <select
+                  value={integrationMethod}
                   onChange={(e) => setIntegrationMethod(e.target.value)}
                   disabled={isConnecting}
                   style={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.2)', padding: '12px', borderRadius: '6px', color: '#fff', width: '100%', boxSizing: 'border-box' }}
@@ -3859,8 +3860,8 @@ export default function AgentSandboxPage() {
                 </select>
               </div>
 
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className="btn btn-primary w-100 connect-btn"
                 disabled={isConnecting || !channelUrl.trim()}
                 style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
