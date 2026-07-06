@@ -1906,6 +1906,60 @@ export default function AgentSandboxPage() {
     navigate('/pricing', { state: { scrollTo: 'agents' } });
   };
 
+  // Automatically clean up and hide all demo/mock simulation elements for premium/trial users
+  useEffect(() => {
+    if (hasSandboxAccess) {
+      // 1. Permanently stop automated background loops
+      setIsSimActive(false);
+
+      // 2. Clear mock timeline logs (only keeping real OAuth or secure sync events)
+      setTimelineLogs(prev => {
+        const realLogs = prev.filter(log => 
+          log.text.toLowerCase().includes("oauth") || 
+          log.text.toLowerCase().includes("connected") || 
+          log.text.toLowerCase().includes("established") || 
+          log.text.toLowerCase().includes("activated")
+        );
+        if (realLogs.length === 0) {
+          return [{ time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: "AI Agent Workspace activated securely." }];
+        }
+        return realLogs;
+      });
+
+      // 3. Wipes out default mock ideas list
+      setIdeas(prev => {
+        if (prev.length === 3 && prev.some(item => item.title.includes("I Hired a YouTube Manager"))) {
+          return [];
+        }
+        return prev;
+      });
+
+      // 4. Reset script contents back to empty slate
+      setActiveScript(prev => {
+        if (prev.title && prev.title.includes("I Hired a YouTube Manager")) {
+          return { title: '', hook: '', intro: '', body: '', outro: '' };
+        }
+        return prev;
+      });
+
+      // 5. Clear default demo thumbnail prompts
+      setThumbnailPrompts(prev => {
+        if (prev.length === 2 && prev.some(item => item.title === 'AI YouTube Manager')) {
+          return [];
+        }
+        return prev;
+      });
+
+      // 6. Empty knowledge base documents database
+      setDocuments(prev => {
+        if (prev.length === 3 && prev.some(item => item.name === 'analytics_report_q2.pdf')) {
+          return [];
+        }
+        return prev;
+      });
+    }
+  }, [hasSandboxAccess]);
+
   const handleEstablishConnection = (e) => {
     e.preventDefault();
     if (!channelUrl.trim()) return;
@@ -3568,16 +3622,18 @@ export default function AgentSandboxPage() {
             </button>
           </nav>
 
-          <div className="demo-control-panel">
-            <div className="sidebar-section-title">Demo Control</div>
-            <button 
-              onClick={() => setIsSimActive(prev => !prev)} 
-              className={`demo-sim-toggle-btn ${isSimActive ? 'running' : 'stopped'}`}
-              title={isSimActive ? "Pause the automated demo walk" : "Resume the automated demo walk"}
-            >
-              {isSimActive ? '⏹ Stop Demo Autoplay' : '▶ Start Demo Autoplay'}
-            </button>
-          </div>
+          {!hasSandboxAccess && (
+            <div className="demo-control-panel">
+              <div className="sidebar-section-title">Demo Control</div>
+              <button 
+                onClick={() => setIsSimActive(prev => !prev)} 
+                className={`demo-sim-toggle-btn ${isSimActive ? 'running' : 'stopped'}`}
+                title={isSimActive ? "Pause the automated demo walk" : "Resume the automated demo walk"}
+              >
+                {isSimActive ? '⏹ Stop Demo Autoplay' : '▶ Start Demo Autoplay'}
+              </button>
+            </div>
+          )}
         </aside>
 
         {/* Column 2: Center Content Area */}
