@@ -31,6 +31,20 @@ export default function AgentSandboxPage() {
   const [integrationMethod, setIntegrationMethod] = useState('oauth');
   const [isConnecting, setIsConnecting] = useState(false);
 
+  // Helper check methods declared early for conditional defaults
+  const isTrialActive = () => {
+    if (!state?.user?.createdAt) return true; // default to active trial for guest sessions
+    const created = new Date(state.user.createdAt);
+    const now = new Date();
+    const diffTime = Math.abs(now - created);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays <= 30;
+  };
+
+  const hasSandboxAccess = isPremium || 
+                           (state?.user?.email?.toLowerCase().trim() === 'nitindagar0800@gmail.com') || 
+                           isTrialActive();
+
   // Onboarding & Active Tabs States
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [wizardStep, setWizardStep] = useState(1);
@@ -39,7 +53,7 @@ export default function AgentSandboxPage() {
   });
   const [simStep, setSimStep] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [isSimActive, setIsSimActive] = useState(true);
+  const [isSimActive, setIsSimActive] = useState(!hasSandboxAccess);
   const [chatSimStep, setChatSimStep] = useState(0);
   const [auditingRowId, setAuditingRowId] = useState(null);
   const [evaluatingIdeaId, setEvaluatingIdeaId] = useState(null);
@@ -60,25 +74,49 @@ export default function AgentSandboxPage() {
   });
 
   // Long-Term Channel Memory State
-  const [memory, setMemory] = useState({
-    channelName: '@promptbyniti',
-    niche: 'prompt generate',
-    audience: '',
-    brandColor: '',
-    country: '',
-    goal: '',
-    tone: '',
-    editingStyle: '',
-    uploadFrequency: '',
-    subscribers: 1250,
-    competitors: [],
-    analyticsData: {
-      views: 124500,
-      ctr: 6.1,
-      watchTime: 4200,
-      retention: 62,
-      parsedAt: new Date()
+  const [memory, setMemory] = useState(() => {
+    if (hasSandboxAccess && !isChannelConnected) {
+      return {
+        channelName: 'Not Connected',
+        niche: 'No niche defined',
+        audience: 'Not defined',
+        brandColor: 'Not defined',
+        country: 'Not defined',
+        goal: 'Not defined',
+        tone: 'Not defined',
+        editingStyle: 'Not defined',
+        uploadFrequency: 'Not defined',
+        subscribers: 0,
+        competitors: [],
+        analyticsData: {
+          views: 0,
+          ctr: 0.0,
+          watchTime: 0,
+          retention: 0,
+          parsedAt: new Date()
+        }
+      };
     }
+    return {
+      channelName: '@promptbyniti',
+      niche: 'prompt generate',
+      audience: '',
+      brandColor: '',
+      country: '',
+      goal: '',
+      tone: '',
+      editingStyle: '',
+      uploadFrequency: '',
+      subscribers: 1250,
+      competitors: [],
+      analyticsData: {
+        views: 124500,
+        ctr: 6.1,
+        watchTime: 4200,
+        retention: 62,
+        parsedAt: new Date()
+      }
+    };
   });
 
   // Dynamic suggestions state
@@ -101,48 +139,65 @@ export default function AgentSandboxPage() {
   const chatEndRef = useRef(null);
 
   // Task List States (Phase 11)
-  const [tasks, setTasks] = useState([
-    { id: 1, text: 'Record Video: AI Automation Pipeline walkthrough', completed: false },
-    { id: 2, text: 'Make Thumbnail with YouTube accent colors', completed: false },
-    { id: 3, text: 'Upload new schedule and video script', completed: true },
-    { id: 4, text: 'Post interactive community poll on YouTube', completed: false },
-    { id: 5, text: 'Check real-time SEO rankings and CTR metrics', completed: false }
-  ]);
+  const [tasks, setTasks] = useState(() => {
+    if (hasSandboxAccess) return [];
+    return [
+      { id: 1, text: 'Record Video: AI Automation Pipeline walkthrough', completed: false },
+      { id: 2, text: 'Make Thumbnail with YouTube accent colors', completed: false },
+      { id: 3, text: 'Upload new schedule and video script', completed: true },
+      { id: 4, text: 'Post interactive community poll on YouTube', completed: false },
+      { id: 5, text: 'Check real-time SEO rankings and CTR metrics', completed: false }
+    ];
+  });
   const [newTaskText, setNewTaskText] = useState('');
 
   // Workflow Simulator States (Phases 6, 9, 10)
-  const [runningWorkflow, setRunningWorkflow] = useState(null); // { name, progress, currentStep }
-  const [workflowResults, setWorkflowResults] = useState(null); // Generated output cards
+  const [runningWorkflow, setRunningWorkflow] = useState(null); 
+  const [workflowResults, setWorkflowResults] = useState(null); 
 
   // General timeline logs (Phase 5: Right Status Panel)
-  const [timelineLogs, setTimelineLogs] = useState([
-    { time: '16:10', text: 'Channel settings loaded from memory' },
-    { time: '16:15', text: 'Connected to YouTube Data API securely' },
-    { time: '16:32', text: 'Audited channel CTR: 6.1% CTR is average' },
-    { time: '16:35', text: 'Checked uploads: detected 8-day inactivity gap' }
-  ]);
+  const [timelineLogs, setTimelineLogs] = useState(() => {
+    if (hasSandboxAccess) {
+      return [{ time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: isChannelConnected ? "AI Agent Workspace activated securely." : "Awaiting YouTube Channel link setup..." }];
+    }
+    return [
+      { time: '16:10', text: 'Channel settings loaded from memory' },
+      { time: '16:15', text: 'Connected to YouTube Data API securely' },
+      { time: '16:32', text: 'Audited channel CTR: 6.1% CTR is average' },
+      { time: '16:35', text: 'Checked uploads: detected 8-day inactivity gap' }
+    ];
+  });
 
   // Video Idea generator state
-  const [ideas, setIdeas] = useState([
-    { id: 1, title: 'I Hired a YouTube Manager (And It is An AI Agent)', views: '15.2K potential views', ctr: '9.2% potential CTR', difficulty: 'Low' },
-    { id: 2, title: 'How to Build an AI Automation Pipeline in 10 Mins', views: '42K potential views', ctr: '8.4% potential CTR', difficulty: 'Medium' },
-    { id: 3, title: 'Vite vs NextJS 15 - The Honest Creator Comparison', views: '12K potential views', ctr: '7.8% potential CTR', difficulty: 'High' }
-  ]);
+  const [ideas, setIdeas] = useState(() => {
+    if (hasSandboxAccess) return [];
+    return [
+      { id: 1, title: 'I Hired a YouTube Manager (And It is An AI Agent)', views: '15.2K potential views', ctr: '9.2% potential CTR', difficulty: 'Low' },
+      { id: 2, title: 'How to Build an AI Automation Pipeline in 10 Mins', views: '42K potential views', ctr: '8.4% potential CTR', difficulty: 'Medium' },
+      { id: 3, title: 'Vite vs NextJS 15 - The Honest Creator Comparison', views: '12K potential views', ctr: '7.8% potential CTR', difficulty: 'High' }
+    ];
+  });
 
   // Current Video Script State
-  const [activeScript, setActiveScript] = useState({
-    title: 'I Hired a YouTube Manager (And It is An AI Agent)',
-    hook: '[0:00 - 0:30] Start with a massive hook! Hold a robot icon to the camera and say "This robot is currently planning my next 10 videos, editing my scripts, and writing my descriptions. I hired an AI employee, and here is how much money they saved me in week 1."',
-    intro: '[0:30 - 1:15] Introduce the concept of AI employees. Explain why standard chatbot interfaces are dead, and why a structured workspace platform is the future of content creation.',
-    body: '[1:15 - 4:30] Walk through the three columns of the manager. (1) The Left navigation channel database, (2) The interactive workflows, (3) The active logs and automated task execution tracker.',
-    outro: '[4:30 - 5:00] End with a call to action. Prompt users to subscribe to Tech With Nitin and unlock the agent sandbox using the links below.'
+  const [activeScript, setActiveScript] = useState(() => {
+    if (hasSandboxAccess) return { title: '', hook: '', intro: '', body: '', outro: '' };
+    return {
+      title: 'I Hired a YouTube Manager (And It is An AI Agent)',
+      hook: '[0:00 - 0:30] Start with a massive hook! Hold a robot icon to the camera and say "This robot is currently planning my next 10 videos, editing my scripts, and writing my descriptions. I hired an AI employee, and here is how much money they saved me in week 1."',
+      intro: '[0:30 - 1:15] Introduce the concept of AI employees. Explain why standard chatbot interfaces are dead, and why a structured workspace platform is the future of content creation.',
+      body: '[1:15 - 4:30] Walk through the three columns of the manager. (1) The Left navigation channel database, (2) The interactive workflows, (3) The active logs and automated task execution tracker.',
+      outro: '[4:30 - 5:00] End with a call to action. Prompt users to subscribe to Tech With Nitin and unlock the agent sandbox using the links below.'
+    };
   });
 
   // Midjourney Thumbnail Prompts
-  const [thumbnailPrompts, setThumbnailPrompts] = useState([
-    { title: 'AI YouTube Manager', prompt: 'A cinematic high-detail shot of a workspace. In the center is a glowing dark glass screen showing dashboard analytics, red and neon cyan lights, high-contrast, octane render, 8k, photorealistic --ar 16:9' },
-    { title: 'NextJS vs Vite Speed', prompt: 'A highly dynamic abstract comparison split screen. Left side glowing neon green lightning bolt, right side neon blue atomic spin logo, dark matte backgrounds, energetic motion trails --ar 16:9' }
-  ]);
+  const [thumbnailPrompts, setThumbnailPrompts] = useState(() => {
+    if (hasSandboxAccess) return [];
+    return [
+      { title: 'AI YouTube Manager', prompt: 'A cinematic high-detail shot of a workspace. In the center is a glowing dark glass screen showing dashboard analytics, red and neon cyan lights, high-contrast, octane render, 8k, photorealistic --ar 16:9' },
+      { title: 'NextJS vs Vite Speed', prompt: 'A highly dynamic abstract comparison split screen. Left side glowing neon green lightning bolt, right side neon blue atomic spin logo, dark matte backgrounds, energetic motion trails --ar 16:9' }
+    ];
+  });
   const [customThumbnailTitle, setCustomThumbnailTitle] = useState('');
   const [customThumbnailPrompt, setCustomThumbnailPrompt] = useState('');
 
@@ -281,10 +336,16 @@ export default function AgentSandboxPage() {
             setMemory(prev => ({
               ...prev,
               ...loadedMemory,
-              channelName: loadedMemory.channelName || '@promptbyniti',
-              niche: loadedMemory.niche || 'prompt generate',
-              subscribers: loadedMemory.subscribers || 1250,
-              analyticsData: loadedMemory.analyticsData || prev.analyticsData
+              channelName: loadedMemory.channelName || (hasSandboxAccess ? 'Not Connected' : '@promptbyniti'),
+              niche: loadedMemory.niche || (hasSandboxAccess ? 'No niche defined' : 'prompt generate'),
+              subscribers: loadedMemory.subscribers || (hasSandboxAccess ? 0 : 1250),
+              analyticsData: loadedMemory.analyticsData || (hasSandboxAccess ? {
+                views: 0,
+                ctr: 0.0,
+                watchTime: 0,
+                retention: 0,
+                parsedAt: new Date()
+              } : prev.analyticsData)
             }));
             setShowOnboarding(false);
           } else {
@@ -1870,19 +1931,7 @@ export default function AgentSandboxPage() {
     };
   }, [isLoaded, activeTab, isSimActive]);
 
-  // Premium & Channel Connection handlers
-  const isTrialActive = () => {
-    if (!state.user?.createdAt) return true;
-    const created = new Date(state.user.createdAt);
-    const now = new Date();
-    const diffTime = Math.abs(now - created);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays <= 30;
-  };
 
-  const hasSandboxAccess = isPremium || 
-                           (state.user?.email?.toLowerCase().trim() === 'nitindagar0800@gmail.com') || 
-                           isTrialActive();
 
   const handleOAuthStart = async () => {
     try {
@@ -1921,7 +1970,7 @@ export default function AgentSandboxPage() {
           log.text.toLowerCase().includes("activated")
         );
         if (realLogs.length === 0) {
-          return [{ time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: "AI Agent Workspace activated securely." }];
+          return [{ time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: isChannelConnected ? "AI Agent Workspace activated securely." : "Awaiting YouTube Channel link setup..." }];
         }
         return realLogs;
       });
@@ -1957,8 +2006,45 @@ export default function AgentSandboxPage() {
         }
         return prev;
       });
+
+      // 7. Clear mock tasks checklist
+      setTasks(prev => {
+        if (prev.length === 5 && prev.some(item => item.text.includes("AI Automation Pipeline"))) {
+          return [];
+        }
+        return prev;
+      });
+
+      // 8. Wipes out default memory values if no YouTube channel is connected yet
+      if (!isChannelConnected) {
+        setMemory(prev => {
+          if (prev.channelName === '@promptbyniti' || prev.subscribers === 1250) {
+            return {
+              channelName: 'Not Connected',
+              niche: 'No niche defined',
+              audience: 'Not defined',
+              brandColor: 'Not defined',
+              country: 'Not defined',
+              goal: 'Not defined',
+              tone: 'Not defined',
+              editingStyle: 'Not defined',
+              uploadFrequency: 'Not defined',
+              subscribers: 0,
+              competitors: [],
+              analyticsData: {
+                views: 0,
+                ctr: 0.0,
+                watchTime: 0,
+                retention: 0,
+                parsedAt: new Date()
+              }
+            };
+          }
+          return prev;
+        });
+      }
     }
-  }, [hasSandboxAccess]);
+  }, [hasSandboxAccess, isChannelConnected]);
 
   const handleEstablishConnection = (e) => {
     e.preventDefault();
@@ -2388,6 +2474,43 @@ export default function AgentSandboxPage() {
 
   // --- RENDERING CENTER VIEWS ---
   const renderCenterContent = () => {
+    if (hasSandboxAccess && !isChannelConnected && !['overview', 'chat', 'settings'].includes(activeTab)) {
+      return (
+        <div className="connection-required-view card" style={{
+          padding: '40px',
+          textAlign: 'center',
+          maxWidth: '600px',
+          margin: '40px auto',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          background: '#0f172a',
+          borderRadius: '12px',
+          boxShadow: '0 10px 25px rgba(0,0,0,0.5)'
+        }}>
+          <div style={{ fontSize: '3rem', marginBottom: '20px' }}>🔌</div>
+          <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '10px' }}>YouTube Channel Connection Required</h3>
+          <p style={{ color: 'var(--text-muted, #94a3b8)', marginBottom: '30px', fontSize: '0.95rem', lineHeight: '1.6' }}>
+            To unlock the full agent strategic planner, SEO tag suite, scriptwriter, and analytics dashboard, connect your actual YouTube channel via Google OAuth.
+          </p>
+          <button 
+            onClick={handleOAuthStart} 
+            className="btn btn-primary"
+            style={{ 
+              background: '#0066ff', 
+              border: 'none', 
+              padding: '12px 24px', 
+              borderRadius: '6px', 
+              fontWeight: 'bold',
+              color: '#fff',
+              cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(0, 102, 255, 0.3)'
+            }}
+          >
+            Authorize YouTube Account (OAuth)
+          </button>
+        </div>
+      );
+    }
+
     switch (activeTab) {
       case 'overview':
         return (
@@ -2401,28 +2524,28 @@ export default function AgentSandboxPage() {
             <div className="metrics-summary-grid">
               <div className="metric-card shadow-sm">
                 <div className="card-lbl">Channel Name</div>
-                <div className="card-val text-red">{memory.channelName || 'Not configured'}</div>
-                <div className="card-sub">{memory.niche || 'Niche unselected'}</div>
+                <div className="card-val text-red">{hasSandboxAccess ? (isChannelConnected ? memory.channelName : 'Not Connected') : (memory.channelName || 'Not configured')}</div>
+                <div className="card-sub">{hasSandboxAccess ? (isChannelConnected ? (memory.niche || 'Niche active') : 'Link account via header') : (memory.niche || 'Niche unselected')}</div>
               </div>
               <div className="metric-card shadow-sm">
                 <div className="card-lbl">Subscribers</div>
-                <div className="card-val">{memory.subscribers?.toLocaleString() || '1,250'}</div>
-                <div className="card-sub text-green">● Growing Daily</div>
+                <div className="card-val">{hasSandboxAccess ? (isChannelConnected ? (memory.subscribers?.toLocaleString() || '0') : '0') : (memory.subscribers?.toLocaleString() || '1,250')}</div>
+                <div className="card-sub text-green">{hasSandboxAccess ? (isChannelConnected ? '● Live API Link' : 'Awaiting Connection') : '● Growing Daily'}</div>
               </div>
               <div className="metric-card shadow-sm">
                 <div className="card-lbl">Upload Goal</div>
-                <div className="card-val">{memory.uploadFrequency || '2 Videos / Week'}</div>
-                <div className="card-sub">Next scheduled: Tomorrow</div>
+                <div className="card-val">{hasSandboxAccess ? (isChannelConnected ? (memory.uploadFrequency || 'Not Configured') : 'Not Configured') : (memory.uploadFrequency || '2 Videos / Week')}</div>
+                <div className="card-sub">{hasSandboxAccess ? (isChannelConnected ? 'Scheduled Sync Active' : 'Define in settings') : 'Next scheduled: Tomorrow'}</div>
               </div>
               <div className="metric-card shadow-sm">
                 <div className="card-lbl">Average CTR</div>
-                <div className="card-val">{memory.analyticsData?.ctr ? `${memory.analyticsData.ctr}%` : '6.1%'}</div>
-                <div className="card-sub text-green">▲ 0.8% this week</div>
+                <div className="card-val">{hasSandboxAccess ? (isChannelConnected ? (memory.analyticsData?.ctr ? `${memory.analyticsData.ctr}%` : '0.0%') : '0.0%') : (memory.analyticsData?.ctr ? `${memory.analyticsData.ctr}%` : '6.1%')}</div>
+                <div className="card-sub text-green">{hasSandboxAccess ? (isChannelConnected ? 'Live Channel CTR' : 'Awaiting Connection') : '▲ 0.8% this week'}</div>
               </div>
               <div className="metric-card shadow-sm">
                 <div className="card-lbl">Retention</div>
-                <div className="card-val">{memory.analyticsData?.retention ? `${memory.analyticsData.retention}%` : '62%'}</div>
-                <div className="card-sub">Watch time: {memory.analyticsData?.watchTime || '4.2K'}h</div>
+                <div className="card-val">{hasSandboxAccess ? (isChannelConnected ? (memory.analyticsData?.retention ? `${memory.analyticsData.retention}%` : '0%') : '0%') : (memory.analyticsData?.retention ? `${memory.analyticsData.retention}%` : '62%')}</div>
+                <div className="card-sub">{hasSandboxAccess ? (isChannelConnected ? `Watch time: ${memory.analyticsData?.watchTime?.toLocaleString()}h` : 'Awaiting Connection') : `Watch time: ${memory.analyticsData?.watchTime || '4.2K'}h`}</div>
               </div>
             </div>
 
@@ -2436,15 +2559,21 @@ export default function AgentSandboxPage() {
                 </div>
                 <div className="pane-content">
                   <ul className="interactive-todo-list">
-                    {tasks.map(task => (
-                      <li key={task.id} className={task.completed ? 'completed' : ''}>
-                        <label className="checkbox-wrap">
-                          <input type="checkbox" checked={task.completed} onChange={() => toggleTask(task.id)} />
-                          <span className="checkbox-custom"></span>
-                          <span className="task-text">{task.text}</span>
-                        </label>
-                      </li>
-                    ))}
+                    {tasks.length === 0 ? (
+                      <p className="text-muted" style={{ fontSize: '0.85rem', margin: 0, padding: '10px 0' }}>
+                        No active tasks. Add a custom task below, or instruct the AI Agent in the Interactive Chat to build a growth strategy checklist!
+                      </p>
+                    ) : (
+                      tasks.map(task => (
+                        <li key={task.id} className={task.completed ? 'completed' : ''}>
+                          <label className="checkbox-wrap">
+                            <input type="checkbox" checked={task.completed} onChange={() => toggleTask(task.id)} />
+                            <span className="checkbox-custom"></span>
+                            <span className="task-text">{task.text}</span>
+                          </label>
+                        </li>
+                      ))
+                    )}
                   </ul>
                 </div>
                 <form onSubmit={handleAddTask} className="add-task-inline-form">
@@ -3663,7 +3792,7 @@ export default function AgentSandboxPage() {
           <div className="status-badges-card">
             <h4>Connected Systems</h4>
             <div className="badge-grid">
-              <div className={`status-badge ${integrations.youtubeDataApi ? 'connected' : 'disconnected'}`}>
+              <div className={`status-badge ${(hasSandboxAccess ? isChannelConnected : integrations.youtubeDataApi) ? 'connected' : 'disconnected'}`}>
                 <span>YouTube API</span>
                 <span className="badge-dot"></span>
               </div>
@@ -3682,7 +3811,7 @@ export default function AgentSandboxPage() {
             <h4>Workspace Overview</h4>
             <div className="stat-summary-row">
               <span>Channel Profile</span>
-              <strong>{memory.channelName ? 'Loaded' : 'Uninitialized'}</strong>
+              <strong>{hasSandboxAccess ? (isChannelConnected ? 'Connected' : 'Not Connected') : (memory.channelName ? 'Loaded' : 'Uninitialized')}</strong>
             </div>
             <div className="stat-summary-row">
               <span>Active Tasks</span>
