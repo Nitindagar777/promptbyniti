@@ -2481,7 +2481,7 @@ export default function AgentSandboxPage() {
           <div className="connection-required-icon-wrapper">
             <Zap size={32} style={{ color: '#0066ff' }} fill="#0066ff" />
           </div>
-          <h3>YouTube Connection Required</h3>
+          <h3 style={{ color: '#e43535ff' }} >YouTube Connection Required</h3>
           <p>
             To unlock the full agent strategic planner, SEO tag suite, scriptwriter, and analytics dashboard, connect your actual YouTube channel via Google OAuth.
           </p>

@@ -32,13 +32,14 @@ export default function TermsPage() {
           <section className="legal-section">
             <div className="section-heading">
               <FileText className="text-cyan" />
-              <h2>2. Feed Posting Guidelines</h2>
+              <h2>2. Feed Posting & Integrations</h2>
             </div>
-            <p>When posting prompts on our feed:</p>
+            <p>Guidelines for platform use and connecting external accounts:</p>
             <ul>
-              <li>You must have the legal right to post the content.</li>
-              <li>Prompts must be original and not violate any third-party intellectual property rights.</li>
-              <li>We reserve the right to remove any prompt that violates our community standards or quality guidelines.</li>
+              <li>You must own or have authorized management permissions for any YouTube channel you connect to the AI Agent Autopilot Workspace.</li>
+              <li>You must comply with YouTube's Terms of Service and Developer Policies when executing suggestions or strategies proposed by the AI Agent.</li>
+              <li>Prompts shared on the public feed must be original and not violate any third-party intellectual property rights.</li>
+              <li>We reserve the right to moderate, hide, or remove any public prompt that violates our community guidelines.</li>
             </ul>
           </section>
 
