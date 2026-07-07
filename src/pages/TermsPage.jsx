@@ -36,8 +36,6 @@ export default function TermsPage() {
             </div>
             <p>Guidelines for platform use and connecting external accounts:</p>
             <ul>
-              <li>You must own or have authorized management permissions for any YouTube channel you connect to the AI Agent Autopilot Workspace.</li>
-              <li>You must comply with YouTube's Terms of Service and Developer Policies when executing suggestions or strategies proposed by the AI Agent.</li>
               <li>Prompts shared on the public feed must be original and not violate any third-party intellectual property rights.</li>
               <li>We reserve the right to moderate, hide, or remove any public prompt that violates our community guidelines.</li>
             </ul>

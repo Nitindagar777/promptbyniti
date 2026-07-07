@@ -68,7 +68,6 @@ const buyerRoutes = require('./routes/buyer');
 const generateRoutes = require('./routes/generate');
 const loungeRoutes = require('./routes/lounge');
 const reviewRoutes = require('./routes/reviews');
-const youtubeAgentRoutes = require('./routes/youtubeAgent');
 
 // Mount Routes
 app.use('/api/auth', authRoutes);
@@ -80,7 +79,6 @@ app.use('/api/buyer', buyerRoutes);
 app.use('/api/generate', generateRoutes);
 app.use('/api/lounge', loungeRoutes);
 app.use('/api/reviews', reviewRoutes);
-app.use('/api/youtube-agent', youtubeAgentRoutes);
 
 // Health check
 app.get('/', async (req, res) => {

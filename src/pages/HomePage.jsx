@@ -431,38 +431,6 @@ export default function HomePage() {
             </button>
 
             <div className="p-hero__mini-banners" ref={scrollContainerRef}>
-              {/* 1st banner: Personal Agent */}
-              <Link to="/personal-agent" className="p-mini-banner p-mini-banner--red">
-                <div className="p-mini-banner__top">
-                  <span className="p-mini-banner__tag p-mini-banner__tag--red">NEW</span>
-                  <Bot size={16} className="text-red" />
-                </div>
-                <div className="p-mini-banner__title-row">
-                  <h4 className="p-mini-banner__title">Personal Agent</h4>
-                  {/* Brand platforms custom inline SVG integrations row */}
-                  <div className="p-mini-banner__platforms">
-                    <span className="p-mini-banner__platform-icon instagram-color" title="Instagram">
-                      <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
-                    </span>
-                    <span className="p-mini-banner__platform-icon facebook-color" title="Facebook">
-                      <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c4.56-.93 8-4.96 8-9.8z"/></svg>
-                    </span>
-                    <span className="p-mini-banner__platform-icon linkedin-color" title="LinkedIn">
-                      <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
-                    </span>
-                    <span className="p-mini-banner__platform-icon twitter-color" title="Twitter / X">
-                      <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-                    </span>
-                    <span className="p-mini-banner__platform-icon youtube-color" title="YouTube">
-                      <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-                    </span>
-                    <span className="p-mini-banner__platform-icon tiktok-color" title="TikTok">
-                      <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.02 1.63 4.18 1.12.87 2.49 1.4 3.92 1.48v3.91a8.1 8.1 0 0 1-4.08-1.57c-.11-.08-.22-.16-.33-.25v6.52c-.08 3.84-2.82 7.15-6.63 7.63-3.66.52-7.14-1.63-8.22-5.17-1.37-3.89.87-8.15 4.88-9.02 1.05-.23 2.14-.15 3.14.23V.02zm-1.02 9.58c-2.31-.19-4.32 1.6-4.52 3.91-.23 2.65 1.94 4.88 4.6 4.65 2.19-.21 3.81-2.14 3.73-4.34-.02-1.92 0-3.84 0-5.76-1.12.56-2.39.81-3.81.54z"/></svg>
-                    </span>
-                  </div>
-                </div>
-                <p className="p-mini-banner__desc">Build custom AI agent personas with memory & rules.</p>
-              </Link>
 
               {/* 2nd banner: Image Reference */}
               <a href="#ref-modes" onClick={(e) => handleSelectFeature(e, 'image', 'sameScene')} className="p-mini-banner p-mini-banner--cyan" style={{ backgroundImage: "url('/same_scene_ref.png')" }}>

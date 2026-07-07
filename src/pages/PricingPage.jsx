@@ -15,17 +15,7 @@ export default function PricingPage() {
   const location = useLocation();
   const [loadingPlan, setLoadingPlan] = useState(null);
 
-  useEffect(() => {
-    if (location.hash === '#agents' || location.state?.scrollTo === 'agents') {
-      const element = document.querySelector('.title-agents');
-      if (element) {
-        const timer = setTimeout(() => {
-          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 250);
-        return () => clearTimeout(timer);
-      }
-    }
-  }, [location]);
+
 
   const handleSelectPlan = async (planId) => {
     // Must be logged in
@@ -200,119 +190,7 @@ export default function PricingPage() {
           ))}
         </div>
 
-        {/* Section 2: AI Agent Autopilot Plans */}
-        <div className="pricing-section-header" style={{ marginTop: '80px' }}>
-          <h2 className="pricing-section-title title-agents">AI Agent Autopilot Plans</h2>
-          <p className="pricing-section-desc">Fully autonomous virtual models syncing with your ecosystems 24/7.</p>
-        </div>
 
-        <div className="pricing-grid pricing-grid--agents">
-          {/* Agent Tier 1: Starter */}
-          <div className="pricing-card pricing-card--agent pricing-card--compact theme-starter">
-            <span className="pricing-card__name" style={{ color: '#06b6d4' }}>Starter Agent</span>
-            <div className="pricing-card__price">
-              <span className="pricing-card__currency">$</span>
-              <span className="pricing-card__amount" style={{ fontSize: '38px' }}>19</span>
-              <span className="pricing-card__period">/ month</span>
-            </div>
-
-            <ul className="pricing-card__features">
-              <li>
-                <Check size={14} />
-                <span><span className="text-cyan">1</span> Custom AI Agent</span>
-              </li>
-              <li>
-                <Check size={14} />
-                <span><span className="text-cyan">1,000</span> Vector Memory Logs</span>
-              </li>
-              <li>
-                <Check size={14} />
-                <span><span className="text-cyan">2</span> Connected Platforms</span>
-              </li>
-              <li>
-                <Check size={14} />
-                <span><span className="text-cyan">Standard</span> Execution Speed</span>
-              </li>
-            </ul>
-
-            <button className="btn btn-secondary pricing-card__cta">
-              Get Started
-            </button>
-          </div>
-
-          {/* Agent Tier 2: Pro */}
-          <div className="pricing-card pricing-card--agent pricing-card--compact theme-pro pricing-card--popular">
-            <div className="pricing-card__popular-tag">
-              <Star size={12} /> Most Popular
-            </div>
-            <span className="pricing-card__name" style={{ color: '#35e177' }}>Pro Autopilot</span>
-            <div className="pricing-card__price">
-              <span className="pricing-card__currency">$</span>
-              <span className="pricing-card__amount" style={{ fontSize: '38px' }}>49</span>
-              <span className="pricing-card__period">/ month</span>
-            </div>
-
-            <ul className="pricing-card__features">
-              <li>
-                <Check size={14} />
-                <span><span className="text-green">5</span> Custom AI Agents</span>
-              </li>
-              <li>
-                <Check size={14} />
-                <span><span className="text-green">100,000</span> Vector Memory Logs</span>
-              </li>
-              <li>
-                <Check size={14} />
-                <span><span className="text-green">Unlimited</span> Platform Sync</span>
-              </li>
-              <li>
-                <Check size={14} />
-                <span><span className="text-green">Advanced</span> Guardrails & Safety</span>
-              </li>
-              <li>
-                <Check size={14} />
-                <span><span className="text-green">Priority</span> Queue Speed</span>
-              </li>
-            </ul>
-
-            <button className="btn btn-primary pricing-card__cta">
-              Unlock Pro Autopilot <Zap size={14} style={{ fill: 'currentColor', marginLeft: '4px' }} />
-            </button>
-          </div>
-
-          {/* Agent Tier 3: Enterprise */}
-          <div className="pricing-card pricing-card--agent pricing-card--compact theme-enterprise">
-            <span className="pricing-card__name" style={{ color: '#a855f7' }}>Enterprise Scale</span>
-            <div className="pricing-card__price">
-              <span className="pricing-card__currency">$</span>
-              <span className="pricing-card__amount" style={{ fontSize: '38px' }}>149</span>
-              <span className="pricing-card__period">/ month</span>
-            </div>
-
-            <ul className="pricing-card__features">
-              <li>
-                <Check size={14} />
-                <span><span className="text-purple">Unlimited</span> Custom Agents</span>
-              </li>
-              <li>
-                <Check size={14} />
-                <span><span className="text-purple">Dedicated</span> Memory Clusters</span>
-              </li>
-              <li>
-                <Check size={14} />
-                <span><span className="text-purple">Custom API</span> Integrations</span>
-              </li>
-              <li>
-                <Check size={14} />
-                <span><span className="text-purple">24/7</span> Dedicated Support SLA</span>
-              </li>
-            </ul>
-
-            <button className="btn btn-secondary pricing-card__cta">
-              Contact Sales
-            </button>
-          </div>
-        </div>
 
         {/* Social Media Growth Callout */}
         <div className="seller-earnings-box">

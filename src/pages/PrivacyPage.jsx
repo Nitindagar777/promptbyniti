@@ -26,12 +26,11 @@ export default function PrivacyPage() {
               <Eye className="text-cyan" />
               <h2>1. Information We Collect</h2>
             </div>
-            <p>We collect information you provide directly to us when you create an account, purchase tokens, post prompts to our feed, or utilize the AI Agent Autopilot Workspace. This includes:</p>
+            <p>We collect information you provide directly to us when you create an account, purchase tokens, or post prompts to our feed. This includes:</p>
             <ul>
               <li><strong>Personal Info:</strong> Name, email address, and profile biography.</li>
               <li><strong>Financial Info:</strong> Payment details processed securely via Razorpay (we do not store credit card numbers).</li>
               <li><strong>Content:</strong> The prompts, images, and descriptions you generate or upload.</li>
-              <li><strong>Connected YouTube Data:</strong> If you connect your YouTube channel, we retrieve read-only details via Google OAuth (such as your channel handle, subscriber count, video list, and basic upload frequency metrics).</li>
             </ul>
           </section>
 
@@ -45,7 +44,6 @@ export default function PrivacyPage() {
               <li>Processing transactions and sending related information.</li>
               <li>Personalizing your experience and providing content relevant to your interests.</li>
               <li>Monitoring and analyzing trends, usage, and activities.</li>
-              <li>Powering the AI Agent Workspace to draft video script concepts, formulate thumbnail ideas, audit keyword SEO tags, and suggest upload schedule strategies based on your connected channel statistics.</li>
             </ul>
           </section>
 

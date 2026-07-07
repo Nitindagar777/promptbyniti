@@ -23,8 +23,6 @@ import PrivacyPage from './pages/PrivacyPage';
 import TermsPage from './pages/TermsPage';
 import HelpPage from './pages/HelpPage';
 import LoungePage from './pages/LoungePage';
-import PersonalAgentPage from './pages/PersonalAgentPage';
-import AgentSandboxPage from './pages/AgentSandboxPage';
 
 
 import './App.css';
@@ -85,7 +83,7 @@ function GuestRoute({ children }) {
 
 function App() {
   const location = useLocation();
-  const hideFooter = ['/templates', '/agent-sandbox', '/personal-agent'].includes(location.pathname);
+  const hideFooter = ['/templates'].includes(location.pathname);
 
   return (
     <div className="app">
@@ -106,8 +104,6 @@ function App() {
           <Route path="/purchase-success/:id" element={<ProtectedRoute><PurchaseSuccess /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
           <Route path="/lounge" element={<ProtectedRoute><LoungePage /></ProtectedRoute>} />
-          <Route path="/personal-agent" element={<PersonalAgentPage />} />
-          <Route path="/agent-sandbox" element={<ProtectedRoute><AgentSandboxPage /></ProtectedRoute>} />
 
 
           {/* Public Legal Pages */}
