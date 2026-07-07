@@ -51,8 +51,21 @@ export default function PrivacyPage() {
 
           <section className="legal-section">
             <div className="section-heading">
+              <ShieldCheck className="text-orange" />
+              <h2>3. Cookies & Google AdSense Disclosures</h2>
+            </div>
+            <p>We use cookies and similar tracking technologies to analyze site traffic, personalize content, and serve advertisements through Google AdSense. Please review the following disclosures as required by Google:</p>
+            <ul>
+              <li><strong>Third-Party Advertising:</strong> Third-party vendors, including Google, use cookies to serve ads based on a user's prior visits to your website or other websites.</li>
+              <li><strong>DoubleClick Cookie:</strong> Google's use of advertising cookies enables it and its partners to serve ads to users based on their visit to your sites and/or other sites on the Internet.</li>
+              <li><strong>User Opt-Out:</strong> Users may opt out of personalized advertising by visiting <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-pink, #ff0055)', textDecoration: 'underline' }}>Google Ads Settings</a>. Alternatively, users can opt out of a third-party vendor's use of cookies for personalized advertising by visiting <a href="https://www.aboutads.info" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-pink, #ff0055)', textDecoration: 'underline' }}>www.aboutads.info</a>.</li>
+            </ul>
+          </section>
+
+          <section className="legal-section">
+            <div className="section-heading">
               <Server className="text-pink" />
-              <h2>3. Data Storage & Security</h2>
+              <h2>4. Data Storage & Security</h2>
             </div>
             <p>We use industry-standard security measures to protect your information. Your prompts and generated assets are stored on secure cloud servers with restricted access. YouTube OAuth session tokens are stored securely using encrypted storage. You can disconnect your YouTube channel at any any time via the workspace header, which instantly deletes all associated access tokens and channel metadata caches.</p>
           </section>
@@ -60,7 +73,7 @@ export default function PrivacyPage() {
           <section className="legal-section">
             <div className="section-heading">
               <Share2 className="text-orange" />
-              <h2>4. Sharing of Information</h2>
+              <h2>5. Sharing of Information</h2>
             </div>
             <p>We do not sell your personal data. We only share information with third-party service providers (like payment processors) necessary to complete your requests. <strong>Google API Scopes:</strong> Our app's use and transfer of information received from Google APIs to any other app will adhere to <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-pink, #ff0055)', textDecoration: 'underline' }}>Google API Services User Data Policy</a>, including the Limited Use requirements. We do not share or transfer any Google/YouTube user data with external third-party AI models or databases.</p>
           </section>
@@ -68,7 +81,7 @@ export default function PrivacyPage() {
           <section className="legal-section">
             <div className="section-heading">
               <Bell className="text-cyan" />
-              <h2>5. Your Rights</h2>
+              <h2>6. Your Rights</h2>
             </div>
             <p>You have the right to access, update, or delete your personal information at any time through your account settings or by contacting our support team.</p>
           </section>

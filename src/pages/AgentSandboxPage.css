@@ -211,7 +211,16 @@
   overflow: hidden;
 }
 
-.workflows-view, .planner-view, .ideas-view, .scripts-view, .thumbnails-view, .analytics-view, .seo-view, .memory-view, .documents-view, .settings-view {
+.workflows-view,
+.planner-view,
+.ideas-view,
+.scripts-view,
+.thumbnails-view,
+.analytics-view,
+.seo-view,
+.memory-view,
+.documents-view,
+.settings-view {
   height: 100%;
   overflow-y: auto;
   padding-right: 6px;
@@ -837,6 +846,7 @@
     border-color: rgba(255, 0, 0, 0.4);
     box-shadow: 0 0 8px rgba(255, 0, 0, 0.15);
   }
+
   100% {
     border-color: rgba(255, 0, 0, 1);
     box-shadow: 0 0 20px rgba(255, 0, 0, 0.35);
@@ -844,7 +854,9 @@
 }
 
 @keyframes spin {
-  100% { transform: rotate(360deg); }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .workflow-temp-card h3 {
@@ -1827,7 +1839,7 @@ tr.row-auditing td {
 
 .skeleton-row {
   height: 12px;
-  background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.03) 25%, rgba(255, 255, 255, 0.08) 50%, rgba(255, 255, 255, 0.03) 75%);
   background-size: 200% 100%;
   animation: loadingShimmer 1.5s infinite;
   border-radius: 4px;
@@ -1846,8 +1858,13 @@ tr.row-auditing td {
 }
 
 @keyframes loadingShimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 /* Mock Chart Drawing Animation for Simulation Mode */
@@ -1861,9 +1878,17 @@ tr.row-auditing td {
 }
 
 @keyframes drawChartPath {
-  0% { stroke-dashoffset: 1000; }
-  50% { stroke-dashoffset: 0; }
-  100% { stroke-dashoffset: 0; }
+  0% {
+    stroke-dashoffset: 1000;
+  }
+
+  50% {
+    stroke-dashoffset: 0;
+  }
+
+  100% {
+    stroke-dashoffset: 0;
+  }
 }
 
 .growth-curve-svg circle {
@@ -1877,8 +1902,18 @@ tr.row-auditing td {
 }
 
 @keyframes popChartCircle {
-  0%, 25% { opacity: 0; transform: scale(0); }
-  50%, 100% { opacity: 1; transform: scale(1); }
+
+  0%,
+  25% {
+    opacity: 0;
+    transform: scale(0);
+  }
+
+  50%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .growth-curve-svg text {
@@ -1890,8 +1925,16 @@ tr.row-auditing td {
 }
 
 @keyframes popChartText {
-  0%, 25% { opacity: 0; }
-  50%, 100% { opacity: 1; }
+
+  0%,
+  25% {
+    opacity: 0;
+  }
+
+  50%,
+  100% {
+    opacity: 1;
+  }
 }
 
 /* Connected YouTube Channel Buttons in Header */
@@ -1979,8 +2022,8 @@ tr.row-auditing td {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 
-              inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
   border-radius: 16px !important;
   padding: 30px;
   width: 100%;
@@ -2030,15 +2073,17 @@ tr.row-auditing td {
   animation: pulseDotGreen 1.6s infinite;
 }
 
-}
+
 
 @keyframes pulseDotGreen {
   0% {
     box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
   }
+
   70% {
     box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
   }
+
   100% {
     box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
   }
@@ -2050,9 +2095,9 @@ tr.row-auditing td {
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 0, 0, 0.15) !important;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 
-              inset 0 1px 0 rgba(255, 255, 255, 0.05),
-              0 0 40px rgba(255, 0, 0, 0.05) !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 0 40px rgba(255, 0, 0, 0.05) !important;
   border-radius: 16px !important;
   padding: 50px 40px !important;
   max-width: 580px !important;
@@ -2092,9 +2137,17 @@ tr.row-auditing td {
 }
 
 @keyframes floatIcon {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-6px); }
-  100% { transform: translateY(0px); }
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
 }
 
 .connection-required-view h3 {
