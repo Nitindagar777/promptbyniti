@@ -65,6 +65,7 @@ export default function HomePage() {
   const [loadingPrompts, setLoadingPrompts] = useState(!state.marketplace || state.marketplace.length === 0);
   const navigate = useNavigate();
   const [previewPrompt, setPreviewPrompt] = useState(null);
+  const [activeLightboxImg, setActiveLightboxImg] = useState(null);
 
   // Build, shuffle, and slice prompt sample cards to exactly 16 items (4 rows of 4 columns)
   const feedItems = useMemo(() => {
@@ -1566,60 +1567,150 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="p-seo-hub__articles-grid reveal">
-            <article className="p-seo-article glass-effect">
-              <div className="p-seo-article__icon text-cyan">
-                <Image size={28} />
+          <div className="p-seo-hub__guides-list reveal" style={{ display: 'flex', flexDirection: 'column', gap: '48px', marginTop: '40px', marginBottom: '48px' }}>
+            {/* 1. Text-to-Image */}
+            <div className="p-seo-guide-card p-seo-guide-card--image glass-effect">
+              <div className="p-seo-guide-card__content">
+                <div className="p-seo-guide-card__icon-box text-cyan">
+                  <Image size={24} />
+                </div>
+                <h3 className="p-seo-guide-card__title">
+                  <span className="text-cyan">Text-to-Image</span> Generation & Consistent Characters
+                </h3>
+                <p className="p-seo-guide-card__text">
+                  Creating consistent characters in text-to-image generators like Midjourney (v6), Stable Diffusion, and Flux has historically been a challenge. By utilizing specialized prompt formats and style/character reference anchors (like Midjourney's <code>--cref</code> and <code>--sref</code> parameters), creators can lock facial features, clothing, and environment.
+                </p>
+                <p className="p-seo-guide-card__text">
+                  Our AI Prompt Generator automates this by structure-formatting references, allowing you to generate seamless photoshoots, different camera angles, and alternate clothing configurations without losing character identity.
+                </p>
+                <div className="p-seo-guide-card__divider"></div>
+                <ul className="p-seo-guide-card__bullets">
+                  <li>
+                    <span className="p-seo-guide-card__bullet-spark text-cyan">✦</span>
+                    <span><strong>Cref (Character Reference):</strong> Focuses on face, hair, body shape, and attire.</span>
+                  </li>
+                  <li>
+                    <span className="p-seo-guide-card__bullet-spark text-cyan">✦</span>
+                    <span><strong>Sref (Style Reference):</strong> Focuses on color scheme, lighting, texture, and artistic medium.</span>
+                  </li>
+                  <li>
+                    <span className="p-seo-guide-card__bullet-spark text-cyan">✦</span>
+                    <span><strong>Weighting (Cw):</strong> Dynamically control reference strength from 0 (face only) to 100 (full costume/pose lock).</span>
+                  </li>
+                </ul>
               </div>
-              <h3><span className="text-cyan">Text-to-Image</span> Generation & Consistent Characters</h3>
-              <p>
-                Creating consistent characters in text-to-image generators like Midjourney (v6), Stable Diffusion, and Flux has historically been a challenge. By utilizing specialized prompt formats and style/character reference anchors (like Midjourney's <code>--cref</code> and <code>--sref</code> parameters), creators can lock facial features, clothing, and environment.
-              </p>
-              <p>
-                Our AI Prompt Generator automates this by structure-formatting references, allowing you to generate seamless photoshoots, different camera angles, and alternate clothing configurations without losing character identity.
-              </p>
-              <ul className="p-seo-article__bullets">
-                <li><strong>Cref (Character Reference):</strong> Focuses on face, hair, body shape, and attire.</li>
-                <li><strong>Sref (Style Reference):</strong> Focuses on color scheme, lighting, texture, and artistic medium.</li>
-                <li><strong>Weighting (Cw):</strong> Dynamically control reference strength from 0 (face only) to 100 (full costume/pose lock).</li>
-              </ul>
-            </article>
+              <div className="p-seo-guide-card__media">
+                <div 
+                  className="p-seo-guide-card__image-container"
+                  onClick={() => setActiveLightboxImg({ src: '/text_to_image_diagram.png', alt: 'AI Text to Image Prompt structure diagram blueprint' })}
+                >
+                  <img
+                    src="/text_to_image_diagram.png"
+                    alt="AI Text to Image Prompt structure diagram blueprint"
+                    className="p-seo-guide-card__diagram"
+                  />
+                  <button type="button" className="p-seo-guide-card__fullscreen-btn" title="View Fullscreen">
+                    <ZoomIn size={18} />
+                  </button>
+                </div>
+              </div>
+            </div>
 
-            <article className="p-seo-article glass-effect">
-              <div className="p-seo-article__icon text-orange">
-                <Video size={28} />
+            {/* 2. Image-to-Video */}
+            <div className="p-seo-guide-card p-seo-guide-card--video p-seo-guide-card--reverse glass-effect">
+              <div className="p-seo-guide-card__media">
+                <div 
+                  className="p-seo-guide-card__image-container"
+                  onClick={() => setActiveLightboxImg({ src: '/image_to_video_diagram.png', alt: 'AI Image to Video Motion Anchor structure diagram blueprint' })}
+                >
+                  <img
+                    src="/image_to_video_diagram.png"
+                    alt="AI Image to Video Motion Anchor structure diagram blueprint"
+                    className="p-seo-guide-card__diagram"
+                  />
+                  <button type="button" className="p-seo-guide-card__fullscreen-btn" title="View Fullscreen">
+                    <ZoomIn size={18} />
+                  </button>
+                </div>
               </div>
-              <h3><span className="text-orange">Image-to-Video</span> Generation & Motion Anchors</h3>
-              <p>
-                Converting a static character sheet or image into a fluid movie clip requires motion anchor prompting. AI video models such as Sora, Kling, Luma Dream Machine, and Runway Gen-3 utilize reference frames to guide video diffusion.
-              </p>
-              <p>
-                Writing an effective image-to-video consistency prompt requires defining the camera movement (e.g., pan, dolly zoom, orbit) along with the character's secondary actions (e.g., hair blowing in wind, walking under streetlights). Our engine creates templates specifically tailored to match these motion demands.
-              </p>
-              <ul className="p-seo-article__bullets">
-                <li><strong>Same Scene Loops:</strong> Seamlessly transition static images into cinematic 4K video clips.</li>
-                <li><strong>Subject-to-Subject Action:</strong> Maintain character features while performing complex tasks or motions.</li>
-                <li><strong>Fixed Character Motion:</strong> Lock the camera's focus on a subject while changing perspective or speed.</li>
-              </ul>
-            </article>
+              <div className="p-seo-guide-card__content">
+                <div className="p-seo-guide-card__icon-box text-orange">
+                  <Video size={24} />
+                </div>
+                <h3 className="p-seo-guide-card__title">
+                  <span className="text-orange">Image-to-Video</span> Generation & Motion Anchors
+                </h3>
+                <p className="p-seo-guide-card__text">
+                  Converting a static character sheet or image into a fluid movie clip requires motion anchor prompting. AI video models such as Sora, Kling, Luma Dream Machine, and Runway Gen-3 utilize reference frames to guide video diffusion.
+                </p>
+                <p className="p-seo-guide-card__text">
+                  Writing an effective image-to-video consistency prompt requires defining the camera movement (e.g., pan, dolly zoom, orbit) along with the character's secondary actions (e.g., hair blowing in wind, walking under streetlights). Our engine creates templates specifically tailored to match these motion demands.
+                </p>
+                <div className="p-seo-guide-card__divider"></div>
+                <ul className="p-seo-guide-card__bullets">
+                  <li>
+                    <span className="p-seo-guide-card__bullet-spark text-orange">✦</span>
+                    <span><strong>Same Scene Loops:</strong> Seamlessly transition static images into cinematic 4K video clips.</span>
+                  </li>
+                  <li>
+                    <span className="p-seo-guide-card__bullet-spark text-orange">✦</span>
+                    <span><strong>Subject-to-Subject Action:</strong> Maintain character features while performing complex tasks or motions.</span>
+                  </li>
+                  <li>
+                    <span className="p-seo-guide-card__bullet-spark text-orange">✦</span>
+                    <span><strong>Fixed Character Motion:</strong> Lock the camera's focus on a subject while changing perspective or speed.</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
 
-            <article className="p-seo-article glass-effect">
-              <div className="p-seo-article__icon text-purple">
-                <Code size={28} />
+            {/* 3. Text-to-Code/Text */}
+            <div className="p-seo-guide-card p-seo-guide-card--code glass-effect">
+              <div className="p-seo-guide-card__content">
+                <div className="p-seo-guide-card__icon-box text-purple">
+                  <Code size={24} />
+                </div>
+                <h3 className="p-seo-guide-card__title">
+                  <span className="text-purple">Text-to-Code & Text</span> Prompt Engineering
+                </h3>
+                <p className="p-seo-guide-card__text">
+                  Generating structured textual output like React components, Python scripts, system prompt instructions, or sales copy requires syntax-aware template rules. By using specific system instructions, anti-visions, and context variables, engineers can force the model to output production-ready structures without generic chat commentary.
+                </p>
+                <p className="p-seo-guide-card__text">
+                  Our AI Prompt Generator handles these parameters, wrapping your descriptions in structured frameworks like AIDA (Copywriting) or strictly constrained personas. This results in high-conversion sales copy, error-free code blocks, and reliable agent bots.
+                </p>
+                <div className="p-seo-guide-card__divider"></div>
+                <ul className="p-seo-guide-card__bullets">
+                  <li>
+                    <span className="p-seo-guide-card__bullet-spark text-purple">✦</span>
+                    <span><strong>AIDA & PAS Frameworks:</strong> Auto-structure copy with attention hooks, problem breakdowns, and clear call-to-actions.</span>
+                  </li>
+                  <li>
+                    <span className="p-seo-guide-card__bullet-spark text-purple">✦</span>
+                    <span><strong>Code Constraints:</strong> Restrict responses to raw, syntax-highlighted code output while omitting verbose conversational padding.</span>
+                  </li>
+                  <li>
+                    <span className="p-seo-guide-card__bullet-spark text-purple">✦</span>
+                    <span><strong>System Personas:</strong> Define strict rules, behavior boundaries, and memory states for custom AI agent flows.</span>
+                  </li>
+                </ul>
               </div>
-              <h3><span className="text-purple">Text-to-Code & Text</span> Prompt Engineering</h3>
-              <p>
-                Generating structured textual output like React components, Python scripts, system prompt instructions, or sales copy requires syntax-aware template rules. By using specific system instructions, anti-visions, and context variables, engineers can force the model to output production-ready structures without generic chat commentary.
-              </p>
-              <p>
-                Our AI Prompt Generator handles these parameters, wrapping your descriptions in structured frameworks like AIDA (Copywriting) or strictly constrained personas. This results in high-conversion sales copy, error-free code blocks, and reliable agent bots.
-              </p>
-              <ul className="p-seo-article__bullets">
-                <li><strong>AIDA & PAS Frameworks:</strong> Auto-structure copy with attention hooks, problem breakdowns, and clear call-to-actions.</li>
-                <li><strong>Code Constraints:</strong> Restrict responses to raw, syntax-highlighted code output while omitting verbose conversational padding.</li>
-                <li><strong>System Personas:</strong> Define strict rules, behavior boundaries, and memory states for custom AI agent flows.</li>
-              </ul>
-            </article>
+              <div className="p-seo-guide-card__media">
+                <div 
+                  className="p-seo-guide-card__image-container"
+                  onClick={() => setActiveLightboxImg({ src: '/text_to_code_diagram.png', alt: 'AI Text to Code prompt engineering flowchart diagram blueprint' })}
+                >
+                  <img
+                    src="/text_to_code_diagram.png"
+                    alt="AI Text to Code prompt engineering flowchart diagram blueprint"
+                    className="p-seo-guide-card__diagram"
+                  />
+                  <button type="button" className="p-seo-guide-card__fullscreen-btn" title="View Fullscreen">
+                    <ZoomIn size={18} />
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* 05. SEO CONTENT — Keyword-rich text for search engines */}
@@ -1752,6 +1843,68 @@ export default function HomePage() {
 
       {/* Preview Modal */}
       {previewPrompt && <PreviewModal prompt={previewPrompt} onClose={() => setPreviewPrompt(null)} />}
+
+      {/* Lightbox Modal */}
+      {activeLightboxImg && (
+        <div 
+          className="p-lightbox-overlay" 
+          onClick={() => setActiveLightboxImg(null)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'rgba(0, 0, 0, 0.95)',
+            backdropFilter: 'blur(12px)',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '24px',
+          }}
+        >
+          <button 
+            type="button" 
+            className="p-lightbox-close" 
+            onClick={() => setActiveLightboxImg(null)}
+            style={{
+              position: 'absolute',
+              top: '24px',
+              right: '24px',
+              background: 'rgba(255, 255, 255, 0.05)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              borderRadius: '50%',
+              width: '48px',
+              height: '48px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#fff',
+              fontSize: '24px',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              zIndex: 10000
+            }}
+          >
+            &times;
+          </button>
+          
+          <img 
+            src={activeLightboxImg.src} 
+            alt={activeLightboxImg.alt} 
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              maxWidth: '90%',
+              maxHeight: '90%',
+              objectFit: 'contain',
+              borderRadius: '12px',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              boxShadow: '0 24px 60px rgba(0, 0, 0, 0.8)',
+            }}
+          />
+        </div>
+      )}
 
       {/* Review Modal Form */}
       {showReviewForm && (
