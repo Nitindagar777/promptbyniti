@@ -621,6 +621,7 @@ export const motionActions = [
 
 export const aiModels = [
   // --- IMAGE MODELS ---
+  { id: 'gemini-image', label: 'Google Gemini', icon: '♊', type: 'image' },
   { id: 'midjourney', label: 'Midjourney', icon: '🎨', type: 'image' },
   { id: 'stable-diffusion', label: 'Stable Diffusion', icon: '🖥️', type: 'image' },
   { id: 'dall-e', label: 'DALL·E 3', icon: '🤖', type: 'image' },

@@ -111,11 +111,35 @@ async function getOrCreateModel() {
 /**
  * Build a dynamic system instruction based on rules, aiPower tier, characterMode, promptType, and duration.
  */
-function buildSystemInstruction(rulesStr, aiPower, characterMode, promptType, duration, hasRefImage, aspectRatio, category, subcategory) {
+function buildSystemInstruction(rulesStr, aiPower, characterMode, promptType, duration, hasRefImage, aspectRatio, category, subcategory, isDirectPromptOnly, targetModel) {
   const power = aiPower || 'normal';
   const isVideo = promptType === 'video';
   const isText = promptType === 'text';
   const resolvedAR = aspectRatio ? aspectRatio.trim() : (isVideo ? '16:9' : '1:1');
+  
+  if (isDirectPromptOnly) {
+    return `You are an expert AI Prompt Engineer for a premium prompt marketplace called "Prompt by Niti".
+    
+YOUR MISSION:
+Generate a single, direct, ready-to-use AI prompt based on the user's description (and optional reference image).
+
+CRITICAL RULES:
+1. NO VARIABLES: The prompt MUST be completely ready to use immediately. DO NOT include any bracketed variables or placeholders (e.g. DO NOT use [subject], [clothing], etc.).
+2. DIRECT PROMPT: Write the complete, detailed final prompt directly for the specific subject, scene, and style described or shown.
+3. Target AI Model: ${targetModel || 'Midjourney'} — optimize the prompt syntax and keywords for this model.
+4. Aspect Ratio: ${resolvedAR} (For Image/Video prompts, ensure the prompt ends with --ar ${resolvedAR}).
+5. If promptType is 'video', ensure the prompt starts with "Generate a video of: " or "Generate a video of ".
+
+OUTPUT FORMAT:
+You must return a VALID JSON object with these fields:
+{
+  "title": "A catchy 3-5 word title for the prompt",
+  "description": "A professional 1-2 sentence description of what this prompt achieves",
+  "mainPrompt": "The complete, ready-to-use prompt."
+}
+
+Return ONLY the JSON object. No markdown fences, no explanation.`;
+  }
   
   // Resolve characterMode dynamically for video/image compatibility
   const resolvedCharMode = isVideo 
@@ -697,9 +721,12 @@ ${outputFormatInstruction}`;
 // POST /api/generate
 router.post('/', async (req, res) => {
   try {
-    const { description, characterImage, promptType, model, mode, modelLabel, aiPower, characterMode, aspectRatio, category, subcategory } = req.body;
+    const { description, characterImage, promptType, model, mode, modelLabel, aiPower, characterMode, aspectRatio, category, subcategory, generatePack } = req.body;
     // Use human-readable model name if available, otherwise fall back to model id
     const targetModel = modelLabel || model || 'Midjourney';
+
+    // Default to direct prompt only (no variables) if generatePack is not explicitly true
+    const isDirectPromptOnly = !generatePack;
 
     if (!description || !description.trim()) {
       return res.status(400).json({ message: 'Description or Template is required.' });
@@ -711,7 +738,7 @@ router.post('/', async (req, res) => {
     const hasRefImage = characterImage && characterImage.startsWith('data:image');
 
     // Build the system instruction dynamically based on the requested aiPower level
-    const systemInstruction = buildSystemInstruction(cached.rulesStr, aiPower, characterMode, promptType, req.body.duration, hasRefImage, aspectRatio, category, subcategory);
+    const systemInstruction = buildSystemInstruction(cached.rulesStr, aiPower, characterMode, promptType, req.body.duration, hasRefImage, aspectRatio, category, subcategory, isDirectPromptOnly, targetModel);
     console.log(`🎭 Character Mode: ${characterMode || 'not set (no image)'}`);
 
     // 2. Build lightweight user message (NO rules, NO characteristics repeated)
@@ -1169,9 +1196,16 @@ DO NOT exceed 5 bracketed variables under any circumstances. Keep the majority o
       promptData.promptType = promptType || 'image';
       promptData.model = targetModel;
 
+      if (isDirectPromptOnly) {
+        promptData.promptTemplate = null;
+        promptData.negativePrompt = promptData.negativePrompt || '';
+        promptData.instructions = promptData.instructions || '';
+        promptData.samples = [];
+      }
+
       // Ensure samples (min 3, max 5)
       if (!Array.isArray(promptData.samples)) promptData.samples = [];
-      const requiredCount = mode === 'example' ? 5 : 3;
+      const requiredCount = isDirectPromptOnly ? 0 : (mode === 'example' ? 5 : 3);
       
       while (promptData.samples.length < requiredCount) {
         promptData.samples.push(promptData.mainPrompt || 'Generate a variation here.');

@@ -72,8 +72,29 @@ export default function PromptOutput({ result, mode }) {
         </div>
       )}
 
+      {/* Direct Ready-To-Use Prompt (only if promptTemplate is null/empty, meaning Direct Prompt Mode) */}
+      {!result.promptTemplate && (
+        <div className="prompt-output__section prompt-output__section--template">
+          <div className="prompt-output__header">
+            <div className="prompt-output__label">
+              <Sparkles size={16} color="var(--color-orange)" />
+              <span style={{ color: 'var(--color-orange)', fontWeight: 'bold' }}>Direct Ready-to-Use Prompt</span>
+            </div>
+            <button
+              className={`prompt-output__copy ${copied === 'mainPrompt' ? 'prompt-output__copy--copied' : ''}`}
+              onClick={() => copyToClipboard(result.mainPrompt, 'mainPrompt')}
+            >
+              {copied === 'mainPrompt' ? <><Check size={14} /> Copied!</> : <><Copy size={14} /> Copy Prompt</>}
+            </button>
+          </div>
+          <div className="prompt-output__text" style={{ fontSize: '1.05rem', lineHeight: '1.6', color: 'var(--text-primary)' }}>
+            {result.mainPrompt}
+          </div>
+        </div>
+      )}
+
       {/* Prompt Template Section */}
-      {mode !== 'example' && (
+      {mode !== 'example' && result.promptTemplate && (
         <div className="prompt-output__section prompt-output__section--template">
           <div className="prompt-output__header">
             <div className="prompt-output__label">
@@ -94,7 +115,7 @@ export default function PromptOutput({ result, mode }) {
       )}
 
       {/* 3 Sample Examples (Replaced Variables) */}
-      {(result.samples || []).map((sample, idx) => (
+      {result.promptTemplate && (result.samples || []).map((sample, idx) => (
         <div className="prompt-output__section" key={idx}>
           <div className="prompt-output__header">
             <div className="prompt-output__label">
@@ -115,7 +136,7 @@ export default function PromptOutput({ result, mode }) {
       ))}
 
       {/* Negative Prompt */}
-      {mode !== 'example' && (
+      {mode !== 'example' && result.promptTemplate && (
         <>
           <div className="prompt-output__section prompt-output__section--negative">
         <div className="prompt-output__header">

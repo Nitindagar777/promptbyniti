@@ -34,6 +34,88 @@ const categoryIconMap = {
   'settings': Settings
 };
 
+function CustomSelect({ value, onChange, options, icon: Icon, iconColor, title, isRefMode, result, isGenerating, isRefModeClass, disabled }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, []);
+
+  const selectedOption = options.find(opt => opt.value === value) || options[0];
+
+  return (
+    <div className={`console-select-wrapper ${isRefModeClass ? 'ref-mode-select-wrapper' : ''} ${disabled ? 'disabled' : ''}`} ref={containerRef} title={title}>
+      {Icon && <Icon size={14} className="console-select-icon" style={{ color: disabled ? 'var(--text-muted)' : iconColor }} />}
+      <button
+        type="button"
+        className={`console-select-trigger ${isOpen ? 'active' : ''}`}
+        onClick={() => {
+          if (disabled) return;
+          setIsOpen(!isOpen);
+        }}
+        disabled={disabled}
+      >
+        <span>{selectedOption?.label}</span>
+      </button>
+
+      {isOpen && (
+        <div className="console-select-dropdown-menu">
+          {options.map((opt) => {
+            const isSelected = opt.value === value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                className={`console-select-dropdown-item ${isSelected ? 'selected' : ''}`}
+                onClick={() => {
+                  if (opt.disabled) return;
+                  onChange(opt.value);
+                  setIsOpen(false);
+                }}
+                disabled={opt.disabled}
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {isRefMode && !result && !isGenerating && (
+        <div className="ref-mode-pointer-arrow">
+          <svg width="200" height="220" viewBox="0 0 200 220" fill="none">
+            <path
+              d="M160,0 Q60,110 40,210"
+              stroke="var(--color-pink)"
+              strokeWidth="2.5"
+              strokeDasharray="6 4"
+              strokeLinecap="round"
+              fill="none"
+              className="ref-arrow-path"
+            />
+            <path
+              d="M33,202 L40,213 L47,202 Z"
+              stroke="var(--color-pink)"
+              strokeWidth="2.5"
+              fill="var(--color-pink)"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="ref-arrow-head"
+            />
+          </svg>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function GeneratePage() {
   const { state, canGenerate, useCredit, addPrompt, isPremium } = useApp();
   const isGuest = !state.user;
@@ -53,25 +135,25 @@ export default function GeneratePage() {
             description: '',
             characterImage: null,
             promptType: 'image',
-            model: 'midjourney',
+            model: 'gemini-image',
             aspectRatio: '1:1',
             ...(parsed.form || {})
           },
           result: parsed.result || null,
           generatorMode: parsed.generatorMode || 'prompt',
           exampleTemplate: parsed.exampleTemplate || '',
-          characterMode: parsed.characterMode || 'fixed',
+          characterMode: parsed.characterMode || 'sameScene',
           activeCategory: parsed.activeCategory || null,
           selectedSubcategory: parsed.selectedSubcategory || null
         };
       }
     } catch { }
     return {
-      form: { description: '', characterImage: null, promptType: 'image', model: 'midjourney', aspectRatio: '1:1' },
+      form: { description: '', characterImage: null, promptType: 'image', model: 'gemini-image', aspectRatio: '1:1' },
       result: null,
       generatorMode: 'prompt',
       exampleTemplate: '',
-      characterMode: 'fixed',
+      characterMode: 'sameScene',
       activeCategory: null,
       selectedSubcategory: null
     };
@@ -90,6 +172,7 @@ export default function GeneratePage() {
   const [customModel, setCustomModel] = useState('');
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [isGenerating, setIsGenerating] = useState(() => sessionStorage.getItem('isGenerating') === 'true');
+  const [isPackGenerating, setIsPackGenerating] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
   const [aiPower, setAiPower] = useState('normal'); // 'normal', 'super', 'power'
@@ -189,7 +272,10 @@ export default function GeneratePage() {
     setForm(prev => ({ ...prev, [key]: value }));
   };
 
-  const handleGenerate = async () => {
+  const handleGenerate = async (forcePack = false) => {
+    // Ensure forcePack is strictly a boolean and not a React event object
+    const isPack = forcePack === true;
+
     if (generatorMode === 'prompt') {
       const hasDescription = form.description && form.description.trim();
       const hasSelection = !!selectedSubcategory;
@@ -209,16 +295,22 @@ export default function GeneratePage() {
       return;
     }
 
-    const creditCost = aiPower === 'power' ? 5 : aiPower === 'super' ? 3 : 1;
-    const hasEnoughCredits = state.plan === 'unlimited' || state.credits >= creditCost;
+    const fullCost = aiPower === 'power' ? 5 : aiPower === 'super' ? 3 : 1;
+    const requiredCredits = isPack ? Math.max(0, fullCost - 1) : 1;
+    const hasEnoughCredits = state.plan === 'unlimited' || state.credits >= requiredCredits;
 
     if (!canGenerate || !hasEnoughCredits) {
       setShowPaywall(true);
       return;
     }
     setIsGenerating(true);
+    if (isPack) {
+      setIsPackGenerating(true);
+    }
     sessionStorage.setItem('isGenerating', 'true');
-    setResult(null);
+    if (!isPack) {
+      setResult(null);
+    }
     try {
       // Resolve human-readable model name for the API
       const modelEntry = aiModels.find(m => m.id === form.model);
@@ -236,7 +328,8 @@ export default function GeneratePage() {
         duration,
         selectedCategory: selectedSubcategory ? selectedSubcategory.category : null,
         selectedSubcategory: selectedSubcategory ? selectedSubcategory.name : null,
-        selectedTemplate: selectedSubcategory ? selectedSubcategory.template : null
+        selectedTemplate: selectedSubcategory ? selectedSubcategory.template : null,
+        generatePack: isPack
       };
 
       if (generatorMode !== 'prompt') {
@@ -266,14 +359,27 @@ export default function GeneratePage() {
       } catch (e) {}
 
       setResult(promptResult);
-      const creditCost = aiPower === 'power' ? 5 : aiPower === 'super' ? 3 : 1;
-      await useCredit(creditCost);
+
+      // Smoothly scroll down to the generated prompt output
+      setTimeout(() => {
+        const outputElement = document.getElementById('prompt-output');
+        if (outputElement) {
+          outputElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 150);
+      
+      // Credit deduction:
+      // Direct prompt costs 1 credit.
+      // Upgrading to Pack costs (fullCost - 1).
+      const finalCost = isPack ? Math.max(0, fullCost - 1) : 1;
+      await useCredit(finalCost);
       addPrompt(promptResult);
     } catch (error) {
       console.error('Generation Error:', error);
       alert(error.message || 'Failed to generate prompt. Please try again.');
     } finally {
       setIsGenerating(false);
+      setIsPackGenerating(false);
       sessionStorage.removeItem('isGenerating');
     }
   };
@@ -347,13 +453,13 @@ export default function GeneratePage() {
 
   // ── Refresh: clear everything ──
   const handleRefresh = () => {
-    setForm({ description: '', characterImage: null, promptType: 'image', model: 'midjourney', aspectRatio: '1:1' });
+    setForm({ description: '', characterImage: null, promptType: 'image', model: 'gemini-image', aspectRatio: '1:1' });
     setResult(null);
     setExampleTemplate('');
     setCustomModel('');
     setShowCustomInput(false);
     setSaveMessage('');
-    setCharacterMode('fixed');
+    setCharacterMode('sameScene');
     setActiveCategory(null);
     setSelectedSubcategory(null);
     sessionStorage.removeItem(SESSION_KEY);
@@ -532,6 +638,64 @@ export default function GeneratePage() {
     );
   };
 
+  const referenceModeOptions = form.promptType === 'video' ? [
+    { value: 'sameSceneLoop', label: 'Same Scene Loop' },
+    { value: 'differentScenes', label: 'Different Scenes' },
+    { value: 'fixedCharacterMotion', label: 'Fixed Character + Motion' }
+  ] : [
+    { value: 'sameScene', label: 'Same Scene' },
+    { value: 'different', label: 'Different Characters' },
+    { value: 'fixed', label: 'Fixed Character' }
+  ];
+
+  const aspectRatioOptions = form.promptType === 'video' ? [
+    { value: '9:16', label: '9:16 (Vertical)' },
+    { value: '16:9', label: '16:9 (Landscape)' }
+  ] : [
+    { value: '16:9', label: '16:9 (Landscape)' },
+    { value: '4:3', label: '4:3 (Standard)' },
+    { value: '1:1', label: '1:1 (Square)' },
+    { value: '3:4', label: '3:4 (Portrait)' },
+    { value: '9:16', label: '9:16 (Story)' }
+  ];
+
+  const modelOptions = [
+    ...filteredModels.map(m => ({ value: m.id, label: m.label })),
+    { value: 'custom', label: 'Other Model...' }
+  ];
+
+  const aiPowerOptions = form.promptType === 'video' ? [
+    { value: 'normal', label: '5s (1 Credit)' },
+    { value: 'super', label: '10s (3 Credits)', disabled: isGuest },
+    { value: 'power', label: '20s (5 Credits)', disabled: isGuest }
+  ] : [
+    { value: 'normal', label: 'Normal (1 Credit)' },
+    { value: 'super', label: 'Super (3 Credits)', disabled: isGuest },
+    { value: 'power', label: 'Power (5 Credits)', disabled: isGuest }
+  ];
+
+  const categoryOptions = [
+    { value: '', label: 'Choose Category' },
+    ...Object.keys(textCategories).map(catName => ({
+      value: catName,
+      label: catName
+    }))
+  ];
+
+  const subcategoryOptions = [
+    { value: '', label: 'Choose Subcategory' },
+    ...(activeCategory && textCategories[activeCategory]
+      ? textCategories[activeCategory].items.map(item => ({
+          value: item.name,
+          label: item.name
+        }))
+      : [])
+  ];
+
+  const activeCatData = textCategories[activeCategory];
+  const activeCatIcon = activeCatData ? categoryIconMap[activeCatData.icon] : Layers;
+  const activeCatColor = activeCatData ? activeCatData.color : 'var(--text-secondary)';
+
   return (
     <div className="generate-page" id="generate-page">
       <SEOHead
@@ -565,1069 +729,493 @@ export default function GeneratePage() {
           )}
         </div>
 
-        {/* Generator Form */}
-        <div className="generate-page__grid">
-          <div className="generate-page__form">
-
-            {/* Clean Page Button (Dynamic Visibility) */}
-            {(form.description.trim() || form.characterImage || exampleTemplate.trim() || result) && (
-              <div 
-                style={{ 
-                  display: 'flex', 
-                  justifyContent: 'flex-end', 
-                  marginBottom: '16px', 
-                  gridColumn: '1 / -1',
-                  animation: 'fadeIn 0.3s ease'
-                }}
-              >
+        {/* Centered Console Layout */}
+        <div className="generate-page__console-container">
+          
+          {/* Main Prompt Console Card */}
+          <div className="prompt-console-card">
+            {/* TOP ROW: Mode Toggle + Prompt Type Tabs */}
+            <div className="console-top-row">
+              {/* Mode switch (Prompt vs Example) */}
+              <div className="console-mode-toggle">
                 <button
-                  className="btn btn-sm"
-                  onClick={handleRefresh}
-                  style={{
-                    fontSize: '0.8rem',
-                    padding: '8px 16px',
-                    borderRadius: '12px',
-                    background: '#ef4444',
-                    color: 'white',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    border: 'none',
-                    boxShadow: '0 4px 12px rgba(239, 68, 68, 0.2)',
-                    fontWeight: 'bold',
-                    transition: 'all 0.2s ease',
-                    cursor: 'pointer'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                    e.currentTarget.style.background = '#dc2626';
-                    e.currentTarget.style.boxShadow = '0 6px 16px rgba(239, 68, 68, 0.3)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.background = '#ef4444';
-                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.2)';
-                  }}
+                  type="button"
+                  className={`console-mode-btn ${generatorMode === 'prompt' ? 'active active-prompt' : ''}`}
+                  onClick={() => setGeneratorMode('prompt')}
                 >
-                  <RotateCcw size={14} />
-                  Clean Page
+                  <Sparkles size={14} />
+                  <span>Prompt Mode</span>
+                </button>
+                <button
+                  type="button"
+                  className={`console-mode-btn ${generatorMode === 'example' ? 'active active-example' : ''}`}
+                  onClick={() => setGeneratorMode('example')}
+                >
+                  <Type size={14} />
+                  <span>Example Mode</span>
                 </button>
               </div>
-            )}
 
-            {/* Mode Toggle */}
-            <div className="gen-section gen-section--expanded" style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', gap: '10px', background: 'var(--bg-secondary)', padding: '8px', borderRadius: '16px' }}>
-                <button
-                  className={`btn ${generatorMode === 'prompt' ? '' : 'btn-ghost'}`}
-                  style={{
-                    flex: 1,
-                    borderRadius: '12px',
-                    padding: '12px',
-                    background: generatorMode === 'prompt' ? 'var(--color-cyan)' : 'transparent',
-                    color: generatorMode === 'prompt' ? 'white' : 'var(--text-muted)',
-                    fontWeight: 'bold',
-                    border: 'none',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onClick={() => { setGeneratorMode('prompt'); }}
-                >
-                  <Sparkles size={18} color={generatorMode === 'prompt' ? '#001a1e' : 'var(--color-cyan)'} />
-                  Prompt Generator
-                </button>
-                <button
-                  className={`btn ${generatorMode === 'example' ? '' : 'btn-ghost'}`}
-                  style={{
-                    flex: 1,
-                    borderRadius: '12px',
-                    padding: '12px',
-                    background: generatorMode === 'example' ? 'var(--color-orange)' : 'transparent',
-                    color: generatorMode === 'example' ? '#1e0d00' : 'var(--text-muted)',
-                    fontWeight: 'bold',
-                    border: 'none',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onClick={() => { setGeneratorMode('example'); }}
-                >
-                  <Type size={18} color={generatorMode === 'example' ? '#1e0d00' : 'var(--color-orange)'} />
-                  Example Generator
-                </button>
-              </div>
+              {/* Prompt Type selector (Image, Video, Text) - only in Prompt mode */}
+              {generatorMode === 'prompt' && (
+                <div className="console-type-selector">
+                  {[
+                    { id: 'image', label: 'Image', icon: <ImageIcon size={14} /> },
+                    { id: 'video', label: 'Video', icon: <Video size={14} /> },
+                    { id: 'text', label: 'Text', icon: <Type size={14} /> }
+                  ].map(t => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      className={`console-type-btn ${form.promptType === t.id ? 'active' : ''}`}
+                      onClick={() => handlePromptTypeChange(t.id)}
+                      title={`${t.label} Prompt`}
+                    >
+                      {t.icon}
+                      <span>{t.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {generatorMode === 'prompt' ? (
-              <>
-                {/* 1. Which kind of prompt do you want? */}
-                <div className="gen-section gen-section--expanded" id="gen-prompt-type">
-                  <h3 className="gen-section__title mb-4" style={{ color: '#ff0080', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Zap size={20} color="#ff0080" /> Which kind of prompt do you want?
-                  </h3>
-                  <div className="prompt-type-selector">
-                    {['image', 'video', 'text'].map((type) => (
-                      <button
-                        key={type}
-                        className={`prompt-type-btn ${form.promptType === type ? 'active' : ''}`}
-                        onClick={() => handlePromptTypeChange(type)}
-                      >
-                        <div className="prompt-type-btn__icon">
-                          {type === 'image' && <ImageIcon size={20} />}
-                          {type === 'video' && <Video size={20} />}
-                          {type === 'text' && <Type size={20} />}
-                        </div>
-                        <span className="capitalize">{type} Prompt</span>
-                      </button>
-                    ))}
-                  </div>
+            {/* MAIN TEXT AREA BLOCK */}
+            <div className="console-input-area">
+              {generatorMode === 'prompt' ? (
+                <textarea
+                  ref={descriptionRef}
+                  className="console-textarea"
+                  placeholder={
+                    form.promptType === 'text' 
+                      ? "Describe the role, task, or prompt you want to build... (e.g., A customer support agent that handles refund requests, or a Python script that automates backups)"
+                      : form.promptType === 'video'
+                        ? "Describe your video scene here... (e.g., A drone shot soaring over a volcanic eruption, realistic motion)"
+                        : "Describe your image scene here... (e.g., A futuristic cyberpunk city with neon rainy streets, cinematic lighting)"
+                  }
+                  value={form.description}
+                  onChange={(e) => {
+                    if (e.target.value.length <= 450) {
+                      updateForm('description', e.target.value);
+                    }
+                  }}
+                  maxLength={450}
+                  id="gen-main-description"
+                />
+              ) : (
+                <textarea
+                  className="console-textarea"
+                  placeholder="Enter your prompt template with variables (e.g. A [size] [subject] in the [location]...)"
+                  value={exampleTemplate}
+                  onChange={(e) => setExampleTemplate(e.target.value)}
+                  id="gen-example-template"
+                />
+              )}
+
+              {/* Character image preview thumbnail (if uploaded) */}
+              {form.characterImage && form.promptType !== 'text' && (
+                <div className="console-image-preview">
+                  <img src={form.characterImage} alt="Reference Preview" />
+                  <button
+                    type="button"
+                    className="console-image-clear"
+                    onClick={() => updateForm('characterImage', null)}
+                    title="Remove reference image"
+                  >
+                    ✕
+                  </button>
                 </div>
+              )}
 
-
-                {/* 2. Upload Image */}
-                <div className="gen-section gen-section--expanded" id="gen-consistency">
-                  <h3 className="gen-section__title mb-4" style={{ color: '#ff0080', fontSize: '1.2rem' }}>Upload Image</h3>
-                  <div className="consistency-upload">
-                    <label className="upload-placeholder" style={{ cursor: 'pointer' }}>
-                      <input
-                        type="file"
-                        style={{ display: 'none' }}
-                        accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files[0];
-                          if (file) {
-                            const img = new Image();
-                            const reader = new FileReader();
-                            reader.onload = (ev) => {
-                              img.onload = () => {
-                                const canvas = document.createElement('canvas');
-                                const MAX_SIZE = 1024;
-                                let w = img.width, h = img.height;
-                                if (w > MAX_SIZE || h > MAX_SIZE) {
-                                  if (w > h) { h = Math.round(h * MAX_SIZE / w); w = MAX_SIZE; }
-                                  else { w = Math.round(w * MAX_SIZE / h); h = MAX_SIZE; }
-                                }
-                                canvas.width = w;
-                                canvas.height = h;
-                                const ctx = canvas.getContext('2d');
-                                ctx.drawImage(img, 0, 0, w, h);
-                                const compressed = canvas.toDataURL('image/jpeg', 0.85);
-                                updateForm('characterImage', compressed);
-                              };
-                              img.src = ev.target.result;
-                            };
-                            reader.readAsDataURL(file);
-                          }
-                        }}
-                      />
-                      {form.characterImage ? (
-                        <img src={form.characterImage} alt="Reference" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
-                      ) : (
-                        <>
-                          <ImageIcon size={24} />
-                          <p className="text-sm">Upload Reference Image</p>
-                          <span className="text-xs text-muted">Supports JPG, PNG</span>
-                        </>
-                      )}
-                    </label>
-                    <div className="consistency-info">
-                      <div className="info-badge">
-                        <Info size={12} /> <span>How it works</span>
-                      </div>
-                      <p className="text-xs text-muted mt-2">
-                        Our AI identifies the character in your reference image and maintains their
-                        identity across different scenes and styles.
-                      </p>
-                    </div>
-                  </div>
+              {/* Text Counter */}
+              {generatorMode === 'prompt' && (
+                <div className="console-char-counter">
+                  {form.description.length}/450
                 </div>
+              )}
+            </div>
 
-                {/* Character Mode Toggle — only show when reference image is uploaded and prompt type is not text */}
-                {form.characterImage && form.promptType !== 'text' && (
-                  <div className="gen-section gen-section--expanded gen-section--full character-mode-section" id="gen-character-mode" style={{ animation: 'fadeInUp 0.4s ease' }}>
-                    <h3 className="gen-section__title mb-3" style={{ color: '#a855f7', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <Repeat size={20} className="icon-pulse" style={{ color: '#a855f7' }} /> Reference Mode
-                    </h3>
-                    <p className="text-sm text-muted mb-4">
-                      Choose how the AI uses your reference image when generating prompt variations.
-                    </p>
-                    <div className="character-mode-toggle character-mode-toggle--three">
-                      {(form.promptType === 'video' ? [
-                        {
-                          id: 'sameSceneLoop',
-                          styleClass: 'sameScene',
-                          icon: <Video size={22} />,
-                          label: 'Same Scene Loop',
-                          desc: 'Everything identical — only motion & timing changes'
-                        },
-                        {
-                          id: 'differentScenes',
-                          styleClass: 'different',
-                          icon: <Repeat size={22} />,
-                          label: 'Different Scenes',
-                          desc: 'Same art style & character, completely different locations/actions'
-                        },
-                        {
-                          id: 'fixedCharacterMotion',
-                          styleClass: 'fixed',
-                          icon: <Lock size={22} />,
-                          label: 'Fixed Character + Motion',
-                          desc: 'Same character & outfit, camera moves around them'
-                        }
-                      ] : [
-                        {
-                          id: 'sameScene',
-                          styleClass: 'sameScene',
-                          icon: <Camera size={22} />,
-                          label: 'Same Scene',
-                          desc: 'Everything identical — only pose & gesture changes'
-                        },
-                        {
-                          id: 'different',
-                          styleClass: 'different',
-                          icon: <Repeat size={22} />,
-                          label: 'Different Characters',
-                          desc: 'Same art style & composition, completely different characters'
-                        },
-                        {
-                          id: 'fixed',
-                          styleClass: 'fixed',
-                          icon: <Lock size={22} />,
-                          label: 'Fixed Character',
-                          desc: 'Same character & outfit, different locations & backgrounds'
-                        }
-                      ]).map((mode) => (
-                        <button
-                          key={mode.id}
-                          type="button"
-                          className={`character-mode-btn ${characterMode === mode.id ? `character-mode-btn--active character-mode-btn--${mode.styleClass}` : ''}`}
-                          onClick={() => setCharacterMode(mode.id)}
-                          onMouseEnter={() => setHoveredMode(mode.id)}
-                          onMouseLeave={() => setHoveredMode(null)}
-                        >
-                          <div className={`character-mode-btn__icon-wrap character-mode-btn__icon-wrap--${mode.styleClass}`}>
-                            {mode.icon}
-                          </div>
-                          <div className="character-mode-btn__content">
-                            <span className="character-mode-btn__label">{mode.label}</span>
-                            <span className="character-mode-btn__desc">{mode.desc}</span>
-                          </div>
-                          {characterMode === mode.id && (
-                            <div className="character-mode-btn__check">
-                              <Check size={16} />
-                            </div>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                    {renderVisualGuide()}
-                  </div>
-                )}
-
-                {/* 3. Description */}
-                <div className={`gen-section gen-section--full ${form.description ? 'gen-section--expanded' : ''}`} id="gen-description">
-                  <h3 className="gen-section__title mb-4" style={{ color: '#ff0080', fontSize: '1.2rem' }}>Your Description</h3>
-                  <div style={{ position: 'relative' }}>
-                    <textarea
-                      ref={descriptionRef}
-                      className="gen-textarea"
-                      placeholder={
-                        form.promptType === 'text' 
-                          ? "Describe the role, task, or prompt you want to build... (e.g., A customer support agent that handles refund requests, or a Python script that automates backups)"
-                          : form.promptType === 'video'
-                            ? "Describe your video scene here... (e.g., A drone shot soaring over a volcanic eruption, realistic motion)"
-                            : "Describe your image scene here... (e.g., A futuristic cyberpunk city with neon rainy streets, cinematic lighting)"
+            {/* BOTTOM CONTROLS TOOLBAR */}
+            <div className="console-toolbar">
+              {/* Upload Image Button (Not for Text mode) */}
+              {form.promptType !== 'text' && (
+                <label className="console-tool-btn upload-btn" title="Upload Reference Image" style={{ cursor: 'pointer' }}>
+                  <input
+                    type="file"
+                    style={{ display: 'none' }}
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        const img = new Image();
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                          img.onload = () => {
+                            const canvas = document.createElement('canvas');
+                            const MAX_SIZE = 1024;
+                            let w = img.width, h = img.height;
+                            if (w > MAX_SIZE || h > MAX_SIZE) {
+                              if (w > h) { h = Math.round(h * MAX_SIZE / w); w = MAX_SIZE; }
+                              else { w = Math.round(w * MAX_SIZE / h); h = MAX_SIZE; }
+                            }
+                            canvas.width = w;
+                            canvas.height = h;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, w, h);
+                            const compressed = canvas.toDataURL('image/jpeg', 0.85);
+                            updateForm('characterImage', compressed);
+                          };
+                          img.src = ev.target.result;
+                        };
+                        reader.readAsDataURL(file);
                       }
-                      value={form.description}
-                      onChange={(e) => {
-                        if (e.target.value.length <= 450) {
-                          updateForm('description', e.target.value);
-                        }
-                      }}
-                      maxLength={450}
-                      style={{ minHeight: '120px', fontSize: '1.1rem' }}
-                      id="gen-main-description"
-                    ></textarea>
-                    <div style={{
-                      position: 'absolute', bottom: '10px', right: '14px',
-                      fontSize: '0.75rem', fontFamily: 'var(--font-display)',
-                      color: form.description.length >= 420 ? '#ef4444' : 'var(--text-muted)',
-                      opacity: 0.7
-                    }}>
-                      {form.description.length}/450
-                    </div>
-                  </div>
-                </div>
+                    }}
+                  />
+                  <Camera size={14} style={{ color: '#f43f5e' }} />
+                  <span>Upload Image</span>
+                </label>
+              )}
 
-                {/* Aspect Ratio */}
-                {form.promptType !== 'text' && (
-                  <div className="gen-section gen-section--expanded" id="gen-aspect-ratio" style={{ animation: 'fadeInUp 0.3s ease' }}>
-                    <h3 className="gen-section__title mb-4" style={{ color: '#ff0080', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <LayoutGrid size={20} color="#ff0080" /> Aspect Ratio
-                    </h3>
-                    <div className="aspect-ratio-selector">
-                      {(form.promptType === 'video' ? ['9:16', '16:9'] : ['16:9', '4:3', '1:1', '3:4', '9:16']).map((ratio) => (
-                        <button
-                          key={ratio}
-                          className={`aspect-ratio-btn ${form.aspectRatio === ratio ? 'active' : ''}`}
-                          onClick={() => updateForm('aspectRatio', ratio)}
-                          type="button"
-                        >
-                          <div className={`aspect-ratio-icon ratio-${ratio.replace(':', '-')}`} />
-                          <span className="aspect-ratio-label">{ratio}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+              {/* Reference Mode Dropdown (Small & visible if image uploaded, or generally show it with alert if no image uploaded) */}
+              {form.promptType !== 'text' && (
+                <CustomSelect
+                  value={characterMode}
+                  onChange={(val) => setCharacterMode(val)}
+                  options={referenceModeOptions}
+                  icon={Repeat}
+                  iconColor="#a855f7"
+                  title="Reference Mode Consistency"
+                  isRefMode={generatorMode === 'prompt'}
+                  result={result}
+                  isGenerating={isGenerating}
+                  isRefModeClass={true}
+                />
+              )}
+
+              {/* Aspect Ratio Dropdown (Not for Text mode) */}
+              {form.promptType !== 'text' && (
+                <CustomSelect
+                  value={form.aspectRatio}
+                  onChange={(val) => updateForm('aspectRatio', val)}
+                  options={aspectRatioOptions}
+                  icon={LayoutGrid}
+                  iconColor="#06b6d4"
+                  title="Aspect Ratio"
+                />
+              )}
+
+              {/* Category Dropdown (Only for Text mode in Prompt mode) */}
+              {form.promptType === 'text' && generatorMode === 'prompt' && (
+                <CustomSelect
+                  value={activeCategory || ''}
+                  onChange={(val) => {
+                    setActiveCategory(val || null);
+                    setSelectedSubcategory(null);
+                  }}
+                  options={categoryOptions}
+                  icon={activeCatIcon}
+                  iconColor={activeCatColor}
+                  title="Prompt Category"
+                />
+              )}
+
+              {/* Subcategory Dropdown (Only for Text mode in Prompt mode) */}
+              {form.promptType === 'text' && generatorMode === 'prompt' && (
+                <CustomSelect
+                  value={selectedSubcategory?.name || ''}
+                  onChange={(val) => {
+                    if (!val) {
+                      setSelectedSubcategory(null);
+                    } else {
+                      const item = textCategories[activeCategory]?.items.find(i => i.name === val);
+                      if (item) {
+                        setSelectedSubcategory({
+                          category: activeCategory,
+                          name: item.name,
+                          template: item.template
+                        });
+                      }
+                    }
+                  }}
+                  options={subcategoryOptions}
+                  icon={Type}
+                  iconColor="#a855f7"
+                  title="Prompt Subcategory"
+                  disabled={!activeCategory}
+                />
+              )}
+
+              {/* Target AI Model Dropdown */}
+              <CustomSelect
+                value={showCustomInput ? 'custom' : form.model}
+                onChange={(val) => {
+                  if (val === 'custom') {
+                    setShowCustomInput(true);
+                    updateForm('model', customModel || '');
+                  } else {
+                    setShowCustomInput(false);
+                    updateForm('model', val);
+                  }
+                }}
+                options={modelOptions}
+                icon={Bot}
+                iconColor="#10b981"
+                title="Target AI Model"
+              />
+
+              {/* AI Power Dropdown */}
+              <CustomSelect
+                value={aiPower}
+                onChange={(val) => {
+                  if (isGuest && val !== 'normal') {
+                    setShowPaywall(true);
+                    return;
+                  }
+                  setAiPower(val);
+                }}
+                options={aiPowerOptions}
+                icon={Zap}
+                iconColor="#eab308"
+                title="Power of AI Strength"
+              />
+
+              {/* Toolbar Right Actions (Surprise Me, Reset) */}
+              <div className="console-toolbar-actions" style={{ marginLeft: 'auto', display: 'flex', gap: '6px', alignItems: 'center' }}>
+                {/* Surprise Me Button (Only for Prompt mode and NOT for Text mode) */}
+                {generatorMode === 'prompt' && form.promptType !== 'text' && (
+                  <button
+                    type="button"
+                    className="console-icon-btn"
+                    onClick={() => handleRandomize()}
+                    disabled={isGenerating}
+                    title="Surprise Me (Random Prompt)"
+                  >
+                    <Dices size={15} style={{ color: '#f97316' }} />
+                  </button>
                 )}
 
-                {/* 4. Select target AI model */}
-                <div className="gen-section gen-section--expanded gen-section--full" id="gen-target-model">
-                  <h3 className="gen-section__title mb-4" style={{ color: '#a855f7', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Zap size={20} color="#a855f7" /> Select target AI model
-                  </h3>
-                  <div className="model-selector">
-                    {filteredModels.map((m) => (
-                      <button
-                        key={m.id}
-                        className={`model-chip ${form.model === m.id && !showCustomInput ? 'model-chip--active' : ''}`}
-                        onClick={() => {
-                          updateForm('model', m.id);
-                          setShowCustomInput(false);
-                          setCustomModel('');
-                        }}
-                      >
-                        <span>{m.icon}</span>
-                        <span>{m.label}</span>
-                      </button>
-                    ))}
-                    <button
-                      className={`model-chip model-chip--custom ${showCustomInput ? 'model-chip--active' : ''}`}
-                      onClick={() => {
-                        setShowCustomInput(true);
-                        updateForm('model', customModel || '');
-                      }}
-                    >
-                      <Search size={14} />
-                      <span>Other</span>
-                    </button>
-                  </div>
-                  {showCustomInput && (
-                    <input
-                      className="model-custom-input"
-                      type="text"
-                      placeholder="Type your model name... (e.g., Pixart-α, SDXL Turbo)"
-                      value={customModel}
-                      onChange={(e) => {
-                        setCustomModel(e.target.value);
-                        updateForm('model', e.target.value);
-                      }}
-                      autoFocus
-                    />
-                  )}
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="gen-section gen-section--expanded gen-section--full" id="gen-example-mode">
-                <h3 className="gen-section__title mb-4" style={{ color: 'var(--color-orange)', fontSize: '1.2rem' }}>Example Prompt Generator</h3>
-                <p className="text-sm text-muted mb-4">
-                  Enter a prompt template using variables in brackets, and the AI will generate 5 diverse sample variations. <br />
-                  <strong>Example:</strong> A [color] [animal] riding a [vehicle] in a [setting].
-                </p>
-                <br></br>
-                <div style={{ position: 'relative' }}>
-                  <textarea
-                    className="gen-textarea"
-                    placeholder="Enter your prompt template with variables (e.g. A [size] [subject] in the [location]...)"
-                    value={exampleTemplate}
-                    onChange={(e) => setExampleTemplate(e.target.value)}
-                    style={{ minHeight: '160px', fontSize: '1.1rem', borderColor: 'var(--color-orange)' }}
-                  ></textarea>
-                </div>
-                <br></br>
-                {/* Unlocked Prompts Library for Example Mode */}
-                <div className="mt-6">
-                  <h4 className="text-xs uppercase text-muted mb-4 font-bold tracking-widest flex items-center gap-2">
-                    <Layers size={14} color="var(--color-orange)" /> Choice from Unlocked Prompts
-                  </h4>
-                  <br></br>
-                  <div className="purchased-mini-grid custom-scrollbar" style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))',
-                    gap: '12px',
-                    maxHeight: '300px', // Perfectly fits ~2 rows (8 cards) before scrolling
-                    overflowY: 'auto',
-                    padding: '4px',
-                    scrollbarWidth: 'thin',
-                    scrollbarColor: 'var(--color-orange) transparent'
-                  }}>
-                    {state.library && state.library.length > 0 ? (
-                      state.library.map((p) => {
-                        const promptName = p.name || p.title || 'Untitled';
-                        const promptType = p.generateType || p.promptType || p.type || 'image';
-                        const promptThumb = p.thumbnail || p.coverImage || p.video || (p.samples?.[0]?.output || p.samples?.[0]);
-
-                        return (
-                          <div
-                            key={p.id || p._id}
-                            className="purchased-mini-card"
-                            onClick={() => {
-                              const secretPrompt = p.template || p.promptTemplate || p.mainPrompt || '';
-                              setExampleTemplate(secretPrompt);
-                              
-                            }}
-                            style={{
-                              aspectRatio: '1/1',
-                              borderRadius: '12px',
-                              background: 'var(--dark-lighter)',
-                              border: '1px solid var(--dark-accent)',
-                              cursor: 'pointer',
-                              overflow: 'hidden',
-                              position: 'relative',
-                              transition: 'all 0.2s ease',
-                              display: 'flex',
-                              flexDirection: 'column',
-                              boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.borderColor = 'var(--color-orange)';
-                              e.currentTarget.style.transform = 'translateY(-2px)';
-                              e.currentTarget.style.boxShadow = '0 6px 16px rgba(251, 146, 60, 0.2)';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.borderColor = 'var(--dark-accent)';
-                              e.currentTarget.style.transform = 'translateY(0)';
-                              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
-                            }}
-                          >
-                            <div style={{ flex: 1, background: '#000', position: 'relative' }}>
-                              <PromptThumbnail
-                                src={promptThumb}
-                                alt={promptName}
-                                title={promptName}
-                                type={promptType}
-                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                              />
-                            </div>
-                            <div style={{ padding: '6px', fontSize: '10px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', background: 'rgba(0,0,0,0.8)', textAlign: 'center', fontWeight: '500' }}>
-                              {promptName}
-                            </div>
-                          </div>
-                        );
-                      })
-                    ) : (
-                      <div className="text-muted text-xs p-4 border border-dashed border-dark-accent rounded-lg text-center col-span-full">
-                        You haven't unlocked any prompts yet.
-                      </div>
-                    )}
-                  </div>
-                </div>
+                {/* Clean Page / Refresh Button */}
+                {(form.description.trim() || form.characterImage || exampleTemplate.trim() || result) && (
+                  <button
+                    type="button"
+                    className="console-icon-btn console-icon-btn--danger"
+                    onClick={handleRefresh}
+                    title="Clean Page (Reset All)"
+                  >
+                    <RotateCcw size={15} style={{ color: '#ef4444' }} />
+                  </button>
+                )}
               </div>
+            </div>
+          </div>
 
-              {/* Reference Mode Toggle for Example Generator */}
-              <div className="gen-section gen-section--expanded gen-section--full character-mode-section" id="gen-character-mode-example" style={{ marginTop: '24px', animation: 'fadeInUp 0.4s ease' }}>
-                <h3 className="gen-section__title mb-3" style={{ color: '#a855f7', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Repeat size={20} className="icon-pulse" style={{ color: '#a855f7' }} /> Reference Mode
-                </h3>
-                <p className="text-sm text-muted mb-4">
-                  Choose how the AI handles variables in your template when generating 5 unique variations.
-                </p>
-                <div className="character-mode-toggle character-mode-toggle--three">
-                  {/* Button 1: Same Scene */}
-                  <button
-                    type="button"
-                    className={`character-mode-btn ${characterMode === 'sameScene' ? 'character-mode-btn--active character-mode-btn--sameScene' : ''}`}
-                    onClick={() => setCharacterMode('sameScene')}
-                    onMouseEnter={() => setHoveredMode('sameScene')}
-                    onMouseLeave={() => setHoveredMode(null)}
-                  >
-                    <div className="character-mode-btn__icon-wrap character-mode-btn__icon-wrap--sameScene">
-                      <Camera size={22} />
-                    </div>
-                    <div className="character-mode-btn__content">
-                      <span className="character-mode-btn__label">Same Scene</span>
-                      <span className="character-mode-btn__desc">
-                        Lock subject, outfit, background, and style variables — only vary pose/action variables
-                      </span>
-                    </div>
-                    {characterMode === 'sameScene' && (
-                      <div className="character-mode-btn__check">
-                        <Check size={16} />
-                      </div>
-                    )}
-                  </button>
-                  {/* Button 2: Different Characters */}
-                  <button
-                    type="button"
-                    className={`character-mode-btn ${characterMode === 'different' ? 'character-mode-btn--active character-mode-btn--different' : ''}`}
-                    onClick={() => setCharacterMode('different')}
-                    onMouseEnter={() => setHoveredMode('different')}
-                    onMouseLeave={() => setHoveredMode(null)}
-                  >
-                    <div className="character-mode-btn__icon-wrap character-mode-btn__icon-wrap--different">
-                      <Repeat size={22} />
-                    </div>
-                    <div className="character-mode-btn__content">
-                      <span className="character-mode-btn__label">Different Characters</span>
-                      <span className="character-mode-btn__desc">
-                        Vary all variables (subjects, outfits, backgrounds) completely per sample
-                      </span>
-                    </div>
-                    {characterMode === 'different' && (
-                      <div className="character-mode-btn__check">
-                        <Check size={16} />
-                      </div>
-                    )}
-                  </button>
-                  {/* Button 3: Fixed Character */}
-                  <button
-                    type="button"
-                    className={`character-mode-btn ${characterMode === 'fixed' ? 'character-mode-btn--active character-mode-btn--fixed' : ''}`}
-                    onClick={() => setCharacterMode('fixed')}
-                    onMouseEnter={() => setHoveredMode('fixed')}
-                    onMouseLeave={() => setHoveredMode(null)}
-                  >
-                    <div className="character-mode-btn__icon-wrap character-mode-btn__icon-wrap--fixed">
-                      <Lock size={22} />
-                    </div>
-                    <div className="character-mode-btn__content">
-                      <span className="character-mode-btn__label">Fixed Character</span>
-                      <span className="character-mode-btn__desc">
-                        Lock subject and outfit variables — vary backgrounds, poses, and locations per sample
-                      </span>
-                    </div>
-                    {characterMode === 'fixed' && (
-                      <div className="character-mode-btn__check">
-                        <Check size={16} />
-                      </div>
-                    )}
-                  </button>
-                </div>
-                {renderVisualGuide()}
-              </div>
-            </>)}
+          {/* Custom Model Input (shown under Console Card if custom model chosen) */}
+          {showCustomInput && (
+            <div className="console-custom-model-box animate-fade-in-up">
+              <input
+                className="model-custom-input"
+                type="text"
+                placeholder="Type your model name... (e.g., Pixart-α, SDXL Turbo)"
+                value={customModel}
+                onChange={(e) => {
+                  setCustomModel(e.target.value);
+                  updateForm('model', e.target.value);
+                }}
+                autoFocus
+              />
+            </div>
+          )}
 
-            {/* Power of AI Selection */}
-            {!result && (
-              <div className="gen-section gen-section--expanded gen-section--full" style={{ marginBottom: '24px', animation: 'fadeIn 0.4s ease' }}>
-                {form.promptType === 'video' ? (
+          {/* Generate / Action Buttons Row */}
+          <div className="console-action-row">
+            {result ? (
+              <div className="console-post-actions">
+                {generatorMode !== 'example' && !isGuest && (
+                  <button
+                    className="btn btn-lg console-post-btn console-post-btn--save"
+                    onClick={handleSavePrompt}
+                    id="gen-save-btn"
+                  >
+                    {saveMessage ? <Check size={18} /> : <Save size={18} />}
+                    <span>{saveMessage || 'Save Prompt'}</span>
+                  </button>
+                )}
+
+                {generatorMode !== 'example' ? (
                   <>
-                    <h3 className="gen-section__title mb-3" style={{ color: '#06b6d4', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <Video size={20} className="icon-pulse text-cyan" /> Power of AI (Duration)
-                    </h3>
-                    <p className="text-sm text-muted mb-4">
-                      Select the video duration. Longer duration requires more credit computational power.
-                    </p>
-                    <br></br>
-                    <div className="power-selector-container" style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
-                      {/* Top Row: 5s and 10s */}
-                      <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', width: '100%' }}>
-                        {[
-                          { id: 'normal', label: '5s', credits: 1, color: 'var(--color-green)', desc: '1 credit' },
-                          { id: 'super', label: '10s', credits: 3, color: 'var(--color-cyan)', desc: '3 credits', locked: isGuest }
-                        ].map((p) => (
-                          <button
-                            key={p.id}
-                            type="button"
-                            disabled={p.locked}
-                            title={p.locked ? 'Sign up to unlock' : undefined}
-                            onClick={() => !p.locked && setAiPower(p.id)}
-                            style={{
-                              padding: '12px 8px',
-                              borderRadius: '16px',
-                              background: aiPower === p.id ? 'var(--bg-secondary)' : 'rgba(255, 255, 255, 0.02)',
-                              border: aiPower === p.id ? `2px solid ${p.color}` : '2px solid var(--border-color)',
-                              color: aiPower === p.id ? 'white' : 'var(--text-muted)',
-                              cursor: 'pointer',
-                              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                              display: 'flex',
-                              flexDirection: 'column',
-                              alignItems: 'center',
-                              gap: '4px',
-                              boxShadow: aiPower === p.id ? `0 8px 24px rgba(0, 0, 0, 0.3)` : 'none',
-                              position: 'relative',
-                              overflow: 'hidden',
-                              width: 'calc(50% - 8px)',
-                              minWidth: '140px'
-                            }}
-                            className="power-btn"
-                          >
-                            <span style={{ 
-                              fontSize: '1.05rem', 
-                              fontFamily: 'var(--font-display)', 
-                              color: aiPower === p.id ? 'white' : 'var(--text-secondary)',
-                              transition: 'color 0.3s'
-                            }}>
-                              Duration — {p.label}
-                            </span>
-                            <span style={{ 
-                              fontSize: '0.7rem', 
-                              opacity: 0.7, 
-                              textAlign: 'center', 
-                              fontWeight: 'normal',
-                              fontFamily: 'var(--font-body)'
-                            }}>
-                              {p.desc}
-                            </span>
-                            {aiPower === p.id && (
-                              <div style={{
-                                position: 'absolute',
-                                top: 0,
-                                right: 0,
-                                width: '0',
-                                height: '0',
-                                borderStyle: 'solid',
-                                borderWidth: '0 24px 24px 0',
-                                borderColor: `transparent ${p.color} transparent transparent`
-                              }} />
-                            )}
-                          </button>
-                        ))}
-                      </div>
+                    <button
+                      className="btn btn-lg console-post-btn console-post-btn--refresh"
+                      onClick={() => setResult(null)}
+                      id="gen-new-prompt-btn"
+                      style={{ background: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.15)', color: '#fff' }}
+                    >
+                      <RotateCcw size={18} style={{ color: 'var(--color-cyan)' }} />
+                      <span>New Prompt</span>
+                    </button>
 
-                      {/* Bottom Row: 20s centered */}
-                      <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-                        {[
-                          { id: 'power', label: '20s', credits: 5, color: 'var(--color-purple)', desc: '5 credits', locked: isGuest }
-                        ].map((p) => (
-                          <button
-                            key={p.id}
-                            type="button"
-                            disabled={p.locked}
-                            title={p.locked ? 'Sign up to unlock' : undefined}
-                            onClick={() => !p.locked && setAiPower(p.id)}
-                            style={{
-                              padding: '12px 8px',
-                              borderRadius: '16px',
-                              background: aiPower === p.id ? 'var(--bg-secondary)' : 'rgba(255, 255, 255, 0.02)',
-                              border: aiPower === p.id ? `2px solid ${p.color}` : '2px solid var(--border-color)',
-                              color: aiPower === p.id ? 'white' : 'var(--text-muted)',
-                              cursor: 'pointer',
-                              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                              display: 'flex',
-                              flexDirection: 'column',
-                              alignItems: 'center',
-                              gap: '4px',
-                              boxShadow: aiPower === p.id ? `0 8px 24px rgba(0, 0, 0, 0.3)` : 'none',
-                              position: 'relative',
-                              overflow: 'hidden',
-                              width: 'calc(50% - 8px)',
-                              minWidth: '140px',
-                              margin: '0 auto'
-                            }}
-                            className="power-btn"
-                          >
-                            <span style={{ 
-                              fontSize: '1.05rem', 
-                              fontFamily: 'var(--font-display)', 
-                              color: aiPower === p.id ? 'white' : 'var(--text-secondary)',
-                              transition: 'color 0.3s'
-                            }}>
-                              Duration — {p.label}
-                            </span>
-                            <span style={{ 
-                              fontSize: '0.7rem', 
-                              opacity: 0.7, 
-                              textAlign: 'center', 
-                              fontWeight: 'normal',
-                              fontFamily: 'var(--font-body)'
-                            }}>
-                              {p.desc}
-                            </span>
-                            {aiPower === p.id && (
-                              <div style={{
-                                position: 'absolute',
-                                top: 0,
-                                right: 0,
-                                width: '0',
-                                height: '0',
-                                borderStyle: 'solid',
-                                borderWidth: '0 24px 24px 0',
-                                borderColor: `transparent ${p.color} transparent transparent`
-                              }} />
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+                    <button
+                      className="btn btn-lg console-post-btn console-post-btn--danger"
+                      onClick={handleRefresh}
+                      id="gen-clear-btn"
+                      style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.35)', color: '#ef4444' }}
+                    >
+                      <RotateCcw size={18} style={{ color: '#ef4444' }} />
+                      <span>Clear Page</span>
+                    </button>
                   </>
                 ) : (
-                  <>
-                    <h3 className="gen-section__title mb-3" style={{ color: '#06b6d4', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <Zap size={20} className="icon-pulse text-cyan" /> Power of AI
-                    </h3>
-                    <p className="text-sm text-muted mb-4">
-                      Select the computational strength and creativity depth of the AI generation.
-                    </p>
-                    <br></br>
-                    <div className="power-selector-container" style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
-                      {/* Top Row: Normal and Super */}
-                      <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', width: '100%' }}>
-                        {[
-                          { id: 'normal', label: 'Normal', credits: 1, color: 'var(--color-green)', desc: 'Standard quality' },
-                          { id: 'super', label: 'Super', credits: 3, color: 'var(--color-cyan)', desc: 'Enhanced details', locked: isGuest }
-                        ].map((p) => (
-                          <button
-                            key={p.id}
-                            type="button"
-                            disabled={p.locked}
-                            title={p.locked ? 'Sign up to unlock' : undefined}
-                            onClick={() => !p.locked && setAiPower(p.id)}
-                            style={{
-                              padding: '12px 8px',
-                              borderRadius: '16px',
-                              background: aiPower === p.id ? 'var(--bg-secondary)' : 'rgba(255, 255, 255, 0.02)',
-                              border: aiPower === p.id ? `2px solid ${p.color}` : '2px solid var(--border-color)',
-                              color: aiPower === p.id ? 'white' : 'var(--text-muted)',
-                              cursor: 'pointer',
-                              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                              display: 'flex',
-                              flexDirection: 'column',
-                              alignItems: 'center',
-                              gap: '4px',
-                              boxShadow: aiPower === p.id ? `0 8px 24px rgba(0, 0, 0, 0.3)` : 'none',
-                              position: 'relative',
-                              overflow: 'hidden',
-                              width: 'calc(50% - 8px)',
-                              minWidth: '140px'
-                            }}
-                            className="power-btn"
-                          >
-                            <span style={{ 
-                              fontSize: '1.05rem', 
-                              fontFamily: 'var(--font-display)', 
-                              color: aiPower === p.id ? 'white' : 'var(--text-secondary)',
-                              transition: 'color 0.3s'
-                            }}>
-                              {p.credits} Credit{p.credits > 1 ? 's' : ''} — {p.label}
-                            </span>
-                            <span style={{ 
-                              fontSize: '0.7rem', 
-                              opacity: 0.7, 
-                              textAlign: 'center', 
-                              fontWeight: 'normal',
-                              fontFamily: 'var(--font-body)'
-                            }}>
-                              {p.desc}
-                            </span>
-                            {aiPower === p.id && (
-                              <div style={{
-                                position: 'absolute',
-                                top: 0,
-                                right: 0,
-                                width: '0',
-                                height: '0',
-                                borderStyle: 'solid',
-                                borderWidth: '0 24px 24px 0',
-                                borderColor: `transparent ${p.color} transparent transparent`
-                              }} />
-                            )}
-                          </button>
-                        ))}
-                      </div>
-
-                      {/* Bottom Row: Power centered */}
-                      <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-                        {[
-                          { id: 'power', label: 'Power', credits: 5, color: 'var(--color-purple)', desc: 'Maximum precision', locked: isGuest }
-                        ].map((p) => (
-                          <button
-                            key={p.id}
-                            type="button"
-                            disabled={p.locked}
-                            title={p.locked ? 'Sign up to unlock' : undefined}
-                            onClick={() => !p.locked && setAiPower(p.id)}
-                            style={{
-                              padding: '12px 8px',
-                              borderRadius: '16px',
-                              background: aiPower === p.id ? 'var(--bg-secondary)' : 'rgba(255, 255, 255, 0.02)',
-                              border: aiPower === p.id ? `2px solid ${p.color}` : '2px solid var(--border-color)',
-                              color: aiPower === p.id ? 'white' : 'var(--text-muted)',
-                              cursor: 'pointer',
-                              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                              display: 'flex',
-                              flexDirection: 'column',
-                              alignItems: 'center',
-                              gap: '4px',
-                              boxShadow: aiPower === p.id ? `0 8px 24px rgba(0, 0, 0, 0.3)` : 'none',
-                              position: 'relative',
-                              overflow: 'hidden',
-                              width: 'calc(50% - 8px)',
-                              minWidth: '140px',
-                              margin: '0 auto'
-                            }}
-                            className="power-btn"
-                          >
-                            <span style={{ 
-                              fontSize: '1.05rem', 
-                              fontFamily: 'var(--font-display)', 
-                              color: aiPower === p.id ? 'white' : 'var(--text-secondary)',
-                              transition: 'color 0.3s'
-                            }}>
-                              {p.credits} Credit{p.credits > 1 ? 's' : ''} — {p.label}
-                            </span>
-                            <span style={{ 
-                              fontSize: '0.7rem', 
-                              opacity: 0.7, 
-                              textAlign: 'center', 
-                              fontWeight: 'normal',
-                              fontFamily: 'var(--font-body)'
-                            }}>
-                              {p.desc}
-                            </span>
-                            {aiPower === p.id && (
-                              <div style={{
-                                position: 'absolute',
-                                top: 0,
-                                right: 0,
-                                width: '0',
-                                height: '0',
-                                borderStyle: 'solid',
-                                borderWidth: '0 24px 24px 0',
-                                borderColor: `transparent ${p.color} transparent transparent`
-                              }} />
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
-
-            {/* Action Buttons — change based on state */}
-            <div className="gen-actions">
-              {result ? (
-                /* ── Post-generation buttons ── */
-                <>
-                  {generatorMode !== 'example' && !isGuest && (
-                    <button
-                      className="btn btn-lg gen-action-btn gen-action-btn--save"
-                      onClick={handleSavePrompt}
-                      id="gen-save-btn"
-                    >
-                      {saveMessage ? <Check size={18} /> : <Save size={18} />}
-                      <span>{saveMessage || 'Save Prompt'}</span>
-                    </button>
-                  )}
- 
                   <button
-                    className="btn btn-lg gen-action-btn gen-action-btn--refresh"
+                    className="btn btn-lg console-post-btn console-post-btn--refresh"
                     onClick={handleRefresh}
                     id="gen-refresh-btn"
                   >
                     <RotateCcw size={18} />
-                    <span>{generatorMode === 'example' ? 'Clear' : 'New Prompt'}</span>
+                    <span>Clear</span>
                   </button>
- 
-                  {generatorMode === 'example' && (
-                    <button
-                      className="btn btn-lg gen-action-btn gen-action-btn--save"
-                      style={{ background: 'var(--color-orange)', border: 'none' }}
-                      onClick={handleGenerate}
-                      disabled={isGenerating}
-                    >
-                      <Sparkles size={18} />
-                      <span>Generate More 5</span>
-                    </button>
+                )}
+
+                {generatorMode === 'example' && (
+                  <button
+                    className="btn btn-lg console-post-btn console-post-btn--save"
+                    style={{ background: 'var(--color-orange)', border: 'none', color: '#fff' }}
+                    onClick={handleGenerate}
+                    disabled={isGenerating}
+                  >
+                    <Sparkles size={18} />
+                    <span>Generate More 5</span>
+                  </button>
+                )}
+              </div>
+            ) : (
+              <button
+                className={`btn btn-primary btn-lg console-submit-btn ${isGenerating ? 'loading' : ''} ${form.description.length > 5 ? 'glow' : ''}`}
+                onClick={handleGenerate}
+                disabled={isGenerating}
+                id="gen-submit-btn"
+              >
+                {isGenerating ? (
+                  <><RefreshCw size={18} className="gen-spin" /> Crafting...</>
+                ) : (
+                  <>
+                    <Sparkles size={18} />
+                    <span>Generate {generatorMode === 'example' ? 'Examples' : 'Prompt'}</span>
+                    {state.plan !== 'unlimited' && (
+                      <span style={{ fontSize: '0.8rem', opacity: 0.7, marginLeft: '8px' }}>
+                        {` (-${aiPower === 'power' ? 5 : aiPower === 'super' ? 3 : 1} credit${(aiPower === 'power' || aiPower === 'super') ? 's' : ''})`}
+                      </span>
+                    )}
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+
+          {/* Unlocked Prompts Library for Example Mode */}
+          {generatorMode === 'example' && !result && (
+            <div className="console-library-section animate-fade-in-up">
+              <h4 className="text-xs uppercase text-muted mb-4 font-bold tracking-widest flex items-center gap-2">
+                <Layers size={14} color="var(--color-orange)" /> Choice from Unlocked Prompts
+              </h4>
+              <div className="purchased-mini-grid custom-scrollbar">
+                {state.library && state.library.length > 0 ? (
+                  state.library.map((p) => {
+                    const promptName = p.name || p.title || 'Untitled';
+                    const promptType = p.generateType || p.promptType || p.type || 'image';
+                    const promptThumb = p.thumbnail || p.coverImage || p.video || (p.samples?.[0]?.output || p.samples?.[0]);
+
+                    return (
+                      <div
+                        key={p.id || p._id}
+                        className="purchased-mini-card"
+                        onClick={() => {
+                          const secretPrompt = p.template || p.promptTemplate || p.mainPrompt || '';
+                          setExampleTemplate(secretPrompt);
+                        }}
+                      >
+                        <div style={{ flex: 1, background: '#000', position: 'relative' }}>
+                          <PromptThumbnail
+                            src={promptThumb}
+                            alt={promptName}
+                            title={promptName}
+                            type={promptType}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
+                        </div>
+                        <div style={{ padding: '6px', fontSize: '10px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', background: 'rgba(0,0,0,0.8)', textAlign: 'center', fontWeight: '500' }}>
+                          {promptName}
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="text-muted text-xs p-4 border border-dashed border-dark-accent rounded-lg text-center col-span-full" style={{ width: '100%' }}>
+                    You haven't unlocked any prompts yet.
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Reference Mode Visual Guide */}
+          {form.promptType !== 'text' && !result && !isGenerating && (
+            <div className="console-visual-guide-wrap animate-fade-in-up">
+              {renderVisualGuide()}
+            </div>
+          )}
+
+          {/* Output / Preview panel (takes complete page width below the console) */}
+          {(result || isGenerating) && (
+            <div className="generate-page__output">
+              {result ? (
+                <>
+                  <PromptOutput result={result} mode={generatorMode} />
+                  {!result.promptTemplate && generatorMode === 'prompt' && (
+                    <div className="generate-pack-upgrade-wrap animate-fade-in-up" style={{ display: 'flex', justifyContent: 'center', marginTop: '24px' }}>
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        style={{
+                          background: 'linear-gradient(135deg, var(--color-orange), var(--color-pink))',
+                          border: 'none',
+                          color: '#000000',
+                          padding: '12px 28px',
+                          borderRadius: '30px',
+                          fontWeight: '800',
+                          boxShadow: '0 4px 15px rgba(249, 115, 22, 0.4)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          cursor: 'pointer',
+                          fontSize: '0.85rem'
+                        }}
+                        onClick={() => handleGenerate(true)}
+                        disabled={isGenerating}
+                      >
+                        {isGenerating ? (
+                          <RefreshCw size={16} className="gen-spin" style={{ color: '#000000' }} />
+                        ) : (
+                          <Sparkles size={16} style={{ color: '#000000' }} />
+                        )}
+                        <span style={{ color: '#000000' }}>
+                          {isGenerating ? "Generating Pack..." : "Want a Complete Pack? Generate Complete Pack"}
+                        </span>
+                      </button>
+                    </div>
                   )}
                 </>
               ) : (
-                /* ── Pre-generation buttons ── */
-                <>
-                  {generatorMode === 'prompt' && (
-                    <button
-                      className="btn btn-secondary btn-lg gen-random"
-                      onClick={() => handleRandomize()}
-                      disabled={isGenerating}
-                    >
-                      <div>
-                        <div className="flex items-center gap-2 justify-center">
-                          <Dices size={20} /> Surprise Me
-                        </div>
-                        <span className="text-xs opacity-70 block mt-1" style={{ fontSize: '0.75rem', fontWeight: 400 }}>Random Generate</span>
-                      </div>
-                    </button>
-                  )}
- 
-                  <button
-                    className={`btn btn-primary btn-lg gen-submit ${isGenerating ? 'gen-submit--loading' : ''} ${form.description.length > 5 ? 'gen-submit--glow' : ''}`}
-                    onClick={handleGenerate}
-                    disabled={isGenerating}
-                    id="gen-submit-btn"
-                  >
-                    {isGenerating ? (
-                      <><RefreshCw size={18} className="gen-spin" /> Crafting...</>
-                    ) : (
-                      <>
-                        <Sparkles size={18} />
-                        Generate {generatorMode === 'example' ? 'Examples' : 'Prompt'}
-                        {state.plan !== 'unlimited' && (
-                          <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>
-                            {` (-${aiPower === 'power' ? 5 : aiPower === 'super' ? 3 : 1} credit${(aiPower === 'power' || aiPower === 'super') ? 's' : ''})`}
-                          </span>
-                        )}
-                      </>
-                    )}
-                  </button>
-                </>
+                <div className="generate-page__preview animate-pulse">
+                  <RefreshCw size={24} className="gen-spin text-cyan mb-2" style={{ margin: '0 auto' }} />
+                  <h3>
+                    <span className="text-cyan">
+                      {isPackGenerating ? "Crafting Your Complete Prompt Pack..." : "Crafting Your AI Prompt..."}
+                    </span>
+                  </h3>
+                  <p>Our AI is analyzing your inputs and generating consistent metadata, instructions, and samples.</p>
+                </div>
               )}
             </div>
-          </div>
+          )}
 
-          {/* Output / Preview panel */}
-          <div className="generate-page__output">
-            {result ? (
-              <PromptOutput result={result} mode={generatorMode} />
-            ) : form.promptType === 'text' && generatorMode === 'prompt' && !isGenerating ? (
-              /* ── Text Prompt Categories Browser ── */
-              <div className="text-cat-panel">
-                <div className="text-cat-panel__header">
-                  <h3 className="text-cat-panel__title">
-                    <Type size={20} /> Text Prompt <span style={{ color: '#a855f7' }}>Categories</span>
-                  </h3>
-                  <p className="text-cat-panel__subtitle">Choose any working type of prompt you want, choose it</p>
-                </div>
-                <div className="text-cat-panel__list custom-scrollbar">
-                  {!activeCategory ? (
-                    <div className="text-cat-grid">
-                      {Object.entries(textCategories).map(([catName, catData]) => {
-                        const hasSelection = selectedSubcategory && selectedSubcategory.category === catName;
-                        return (
-                          <div
-                            key={catName}
-                            className={`text-cat-card ${hasSelection ? 'text-cat-card--selected' : ''}`}
-                            style={{ '--cat-color': catData.color }}
-                            onClick={() => setActiveCategory(catName)}
-                          >
-                            <span className="text-cat-card__name">
-                              {catName}
-                              {hasSelection && <span className="text-cat-card__select-dot" />}
-                            </span>
-                            <div className="text-cat-card__meta-below">
-                              <div className="text-cat-card__icon-wrap">
-                                {(() => {
-                                  const IconComponent = categoryIconMap[catData.icon];
-                                  return IconComponent ? <IconComponent size={14} /> : null;
-                                })()}
-                              </div>
-                              <span className="text-cat-card__count">
-                                {hasSelection ? 'Selected' : `${catData.items.length} Prompts`}
-                              </span>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    (() => {
-                      const activeCatData = textCategories[activeCategory];
-                      if (!activeCatData) return null;
-                      return (
-                        <div className="text-cat-detail-view" style={{ '--cat-color': activeCatData.color }}>
-                          <div className="text-cat-detail-header-row">
-                            {!selectedSubcategory && (
-                              <button
-                                type="button"
-                                className="text-cat-back-btn"
-                                onClick={() => setActiveCategory(null)}
-                              >
-                                <span className="text-cat-back-btn__text">← Back to Categories</span>
-                                <span className="text-cat-back-btn__arrow">←</span>
-                              </button>
-                            )}
-                            <div className="text-cat-detail-header">
-                              <span className="text-cat-detail-icon">
-                                {(() => {
-                                  const IconComponent = categoryIconMap[activeCatData.icon];
-                                  return IconComponent ? <IconComponent size={20} /> : null;
-                                })()}
-                              </span>
-                              <h4 className="text-cat-detail-title">{activeCategory}</h4>
-                            </div>
-                          </div>
-                          <div className="text-cat-item-list">
-                            {activeCatData.items
-                              .filter((item) => {
-                                const isSelectionActiveInThisCat = selectedSubcategory && selectedSubcategory.category === activeCategory;
-                                if (isSelectionActiveInThisCat) {
-                                  return selectedSubcategory.name === item.name;
-                                }
-                                return true;
-                              })
-                              .map((item) => {
-                                const isSelected = selectedSubcategory && 
-                                                   selectedSubcategory.category === activeCategory && 
-                                                   selectedSubcategory.name === item.name;
-                                if (isSelected) {
-                                  return (
-                                    <div key={item.name} className="text-cat-selected-container">
-                                      <span className="text-cat-selected-label">Selected:</span>
-                                      <div className="text-cat-selected-wrapper">
-                                        <button
-                                          type="button"
-                                          className="text-cat-item text-cat-item--selected"
-                                          onClick={() => setSelectedSubcategory(null)}
-                                        >
-                                          <span className="text-cat-item__dot" />
-                                          <span className="text-cat-item__name">{item.name}</span>
-                                        </button>
-                                        <button
-                                          type="button"
-                                          className="text-cat-item-clear-btn"
-                                          onClick={() => setSelectedSubcategory(null)}
-                                          title="Clear selection"
-                                        >
-                                          ✕
-                                        </button>
-                                      </div>
-                                    </div>
-                                  );
-                                }
-                                return (
-                                  <button
-                                    key={item.name}
-                                    type="button"
-                                    className="text-cat-item"
-                                    onClick={() => {
-                                      setSelectedSubcategory({
-                                        category: activeCategory,
-                                        name: item.name,
-                                        template: item.template
-                                      });
-                                    }}
-                                  >
-                                    <span className="text-cat-item__dot" />
-                                    <span className="text-cat-item__name">{item.name}</span>
-                                  </button>
-                                );
-                              })}
-                          </div>
-                        </div>
-                      );
-                    })()
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="generate-page__preview">
-                {generatorMode === 'prompt' ? (
-                  <>
-                    <h3>
-                      <span className="text-cyan">Your Prompt Will Appear Here</span>
-                    </h3>
-                    <p>Describe your vision and hit Generate to create a professional AI prompt</p>
-                  </>
-                ) : (
-                  <>
-                    <h3>
-                      <span className="text-orange">Your 5 Sample Variations Will Appear Here</span>
-                    </h3>
-                    <p>Enter your prompt template with variables and hit Generate to create 5 unique examples</p>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
         </div>
       </div>
 
