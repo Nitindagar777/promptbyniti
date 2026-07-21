@@ -118,43 +118,19 @@ export default function TemplatesPage() {
     });
 
     templates.forEach((tmpl, tmplIdx) => {
-      if (tmpl.generateType === 'text') {
-        items.push({
-          prompt: tmpl,
-          mediaSrc: null,
-          isTextOnly: true,
-          sampleIndex: 0,
-          keyId: tmpl.id || tmpl._id || `tmpl-${tmplIdx}`
-        });
-      } else {
-        const samples = tmpl.samples || [];
-        if (samples.length > 0) {
-          samples.forEach((sample, idx) => {
-            const src = sample.output || sample;
-            if (src) {
-              items.push({
-                prompt: tmpl,
-                mediaSrc: src,
-                isTextOnly: false,
-                sampleIndex: idx,
-                keyId: `${tmpl.id || tmpl._id || `tmpl-${tmplIdx}`}-sample-${idx}`
-              });
-            }
-          });
-        } else {
-          const src = tmpl.video || tmpl.thumbnail;
-          items.push({
-            prompt: tmpl,
-            mediaSrc: src,
-            isTextOnly: !src,
-            sampleIndex: 0,
-            keyId: `${tmpl.id || tmpl._id || `tmpl-${tmplIdx}`}-fallback`
-          });
-        }
-      }
+      const isText = tmpl.generateType === 'text';
+      const mainCover = tmpl.thumbnail || tmpl.video || (tmpl.samples?.[0]?.output || tmpl.samples?.[0]) || tmpl.image;
+
+      items.push({
+        prompt: tmpl,
+        mediaSrc: isText ? null : mainCover,
+        isTextOnly: isText || !mainCover,
+        sampleIndex: 0,
+        keyId: tmpl.id || tmpl._id || `tmpl-${tmplIdx}`
+      });
     });
 
-    return randomShuffle(items);
+    return items;
   }, [prompts, searchTerm, selectedCat]);
 
   const [visibleCount, setVisibleCount] = useState(12);
