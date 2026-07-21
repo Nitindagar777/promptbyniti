@@ -1319,6 +1319,135 @@ DO NOT exceed 5 bracketed variables under any circumstances. Keep the majority o
   }
 });
 
+/* ================================================================
+   POST /api/generate/ai-image
+   Generates a single AI image using Cloudflare Workers AI REST API
+   Model: FLUX.1 Schnell (@cf/black-forest-labs/flux-1-schnell)
+   ================================================================ */
+router.post('/ai-image', async (req, res) => {
+  try {
+    const { prompt, model } = req.body;
+    if (!prompt || !prompt.trim()) {
+      return res.status(400).json({ success: false, message: 'Prompt is required' });
+    }
+
+    const cfAccountId = process.env.CF_ACCOUNT_ID || '6f39a31a781da47af7aba76763c17c21';
+    const cfApiToken = process.env.CF_API_TOKEN || 'cfut_pOuSsb1cwqeGmQzfH8Axv48x50FT2LuCCMB49h5jc6413efb';
+    
+    // Default model: FLUX.1 Schnell
+    const selectedModel = model || '@cf/black-forest-labs/flux-1-schnell';
+    const modelDisplayName = selectedModel.includes('flux') ? 'FLUX.1 Schnell (Cloudflare Workers AI)' : 'SDXL Lightning (Cloudflare Workers AI)';
+
+    console.log(`🎨 [Cloudflare Workers AI] Generating image using model: ${selectedModel} for prompt: "${prompt.substring(0, 60)}..."`);
+
+    const cfResponse = await fetch(`https://api.cloudflare.com/client/v4/accounts/${cfAccountId}/ai/run/${selectedModel}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${cfApiToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ prompt: prompt.trim() })
+    });
+
+    if (!cfResponse.ok) {
+      const errText = await cfResponse.text();
+      console.error(`❌ Cloudflare Workers AI Error (${cfResponse.status}):`, errText);
+      return res.status(500).json({ success: false, message: `Cloudflare AI failed: ${cfResponse.statusText}`, error: errText });
+    }
+
+    const contentType = cfResponse.headers.get('content-type') || '';
+
+    let imageUrl = '';
+    if (contentType.includes('application/json')) {
+      const data = await cfResponse.json();
+      if (data.result && data.result.image) {
+        imageUrl = `data:image/png;base64,${data.result.image}`;
+      } else if (data.result && typeof data.result === 'string') {
+        imageUrl = `data:image/png;base64,${data.result}`;
+      }
+    } else {
+      const arrayBuffer = await cfResponse.arrayBuffer();
+      const base64 = Buffer.from(arrayBuffer).toString('base64');
+      const mime = contentType.includes('jpeg') ? 'image/jpeg' : 'image/png';
+      imageUrl = `data:${mime};base64,${base64}`;
+    }
+
+    if (!imageUrl) {
+      return res.status(500).json({ success: false, message: 'Failed to extract image output from Cloudflare AI' });
+    }
+
+    return res.json({
+      success: true,
+      imageUrl,
+      modelId: selectedModel,
+      modelName: modelDisplayName
+    });
+  } catch (err) {
+    console.error('❌ Error generating AI image via Cloudflare:', err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+/* ================================================================
+   POST /api/generate/batch-ai-images
+   Generates AI images for an array of sample prompts in parallel
+   ================================================================ */
+router.post('/batch-ai-images', async (req, res) => {
+  try {
+    const { prompts, model } = req.body;
+    if (!Array.isArray(prompts) || prompts.length === 0) {
+      return res.status(400).json({ success: false, message: 'Prompts array is required' });
+    }
+
+    const cfAccountId = process.env.CF_ACCOUNT_ID || '6f39a31a781da47af7aba76763c17c21';
+    const cfApiToken = process.env.CF_API_TOKEN || 'cfut_pOuSsb1cwqeGmQzfH8Axv48x50FT2LuCCMB49h5jc6413efb';
+    const selectedModel = model || '@cf/black-forest-labs/flux-1-schnell';
+    const modelDisplayName = selectedModel.includes('flux') ? 'FLUX.1 Schnell (Cloudflare Workers AI)' : 'SDXL Lightning (Cloudflare Workers AI)';
+
+    console.log(`🚀 [Cloudflare Workers AI] Batch generating ${prompts.length} images using model: ${selectedModel}...`);
+
+    const imageResults = await Promise.all(prompts.map(async (promptText, idx) => {
+      try {
+        if (!promptText || !promptText.trim()) return { idx, imageUrl: null };
+        const cfResponse = await fetch(`https://api.cloudflare.com/client/v4/accounts/${cfAccountId}/ai/run/${selectedModel}`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${cfApiToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ prompt: promptText.trim() })
+        });
+        if (!cfResponse.ok) return { idx, imageUrl: null };
+        const contentType = cfResponse.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+          const data = await cfResponse.json();
+          if (data.result && data.result.image) {
+            return { idx, imageUrl: `data:image/png;base64,${data.result.image}` };
+          }
+        } else {
+          const arrayBuffer = await cfResponse.arrayBuffer();
+          const base64 = Buffer.from(arrayBuffer).toString('base64');
+          return { idx, imageUrl: `data:image/png;base64,${base64}` };
+        }
+      } catch (err) {
+        console.error(`Error in batch image ${idx}:`, err);
+        return { idx, imageUrl: null };
+      }
+      return { idx, imageUrl: null };
+    }));
+
+    return res.json({
+      success: true,
+      images: imageResults.map(r => r.imageUrl),
+      modelId: selectedModel,
+      modelName: modelDisplayName
+    });
+  } catch (err) {
+    console.error('❌ Error in batch AI image generation:', err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 router.buildSystemInstruction = buildSystemInstruction;
 module.exports = router;
 

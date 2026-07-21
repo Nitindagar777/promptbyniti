@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import {
-  Upload, CheckCircle, Info, Sparkles, ArrowLeft, ShieldCheck, Trash2, X, Image as ImageIcon, Ban, BookOpen
+  Upload, CheckCircle, Info, Sparkles, ArrowLeft, ShieldCheck, Trash2, X, Image as ImageIcon, Ban, BookOpen, Loader2
 } from 'lucide-react';
 import SEOHead from '../components/SEOHead';
 import './SellPage.css';
@@ -59,6 +59,84 @@ export default function SellPage() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [editId, setEditId] = useState(null);
   const [dragOverIdx, setDragOverIdx] = useState(null);
+  const [generatingIdx, setGeneratingIdx] = useState(null); // idx of sample generating or 'all'
+  const [cfModelName, setCfModelName] = useState('FLUX.1 Schnell (Cloudflare Workers AI)');
+
+  // Cloudflare Workers AI Single Sample Image Generator
+  const handleGenerateSingleCloudflareImage = async (idx) => {
+    const sampleInput = samples[idx]?.input;
+    if (!sampleInput || !sampleInput.trim()) {
+      alert(`Please enter the input prompt text for Sample #${idx + 1} first!`);
+      return;
+    }
+
+    try {
+      setGeneratingIdx(idx);
+      const res = await fetch('/api/generate/ai-image', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('promptbyniti_token')}`
+        },
+        body: JSON.stringify({
+          prompt: sampleInput.trim(),
+          model: '@cf/black-forest-labs/flux-1-schnell'
+        })
+      });
+      const data = await res.json();
+      if (data.success && data.imageUrl) {
+        updateSampleOutput(idx, data.imageUrl);
+        if (data.modelName) setCfModelName(data.modelName);
+      } else {
+        alert(data.message || 'Failed to generate image via Cloudflare AI');
+      }
+    } catch (err) {
+      console.error('Single image gen error:', err);
+      alert('Network error while generating image with Cloudflare AI.');
+    } finally {
+      setGeneratingIdx(null);
+    }
+  };
+
+  // Cloudflare Workers AI Batch (All 4) Image Generator
+  const handleGenerateAllCloudflareImages = async () => {
+    const validPrompts = samples.map(s => s.input);
+    const hasAnyInput = validPrompts.some(p => p && p.trim());
+    if (!hasAnyInput) {
+      alert('Please enter sample input prompt texts first before generating images!');
+      return;
+    }
+
+    try {
+      setGeneratingIdx('all');
+      const res = await fetch('/api/generate/batch-ai-images', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('promptbyniti_token')}`
+        },
+        body: JSON.stringify({
+          prompts: validPrompts,
+          model: '@cf/black-forest-labs/flux-1-schnell'
+        })
+      });
+      const data = await res.json();
+      if (data.success && Array.isArray(data.images)) {
+        setSamples(prev => prev.map((s, idx) => ({
+          ...s,
+          output: data.images[idx] || s.output
+        })));
+        if (data.modelName) setCfModelName(data.modelName);
+      } else {
+        alert(data.message || 'Failed to batch generate images via Cloudflare AI');
+      }
+    } catch (err) {
+      console.error('Batch image gen error:', err);
+      alert('Network error while batch generating images with Cloudflare AI.');
+    } finally {
+      setGeneratingIdx(null);
+    }
+  };
 
   // Pre-fill from generator state if navigated from /generate
   useEffect(() => {
@@ -452,6 +530,49 @@ export default function SellPage() {
               Provide 4 sample input prompts and their output images. Sample 1 will be used as the primary cover photo for the prompt store.
             </p>
 
+            {/* Cloudflare Workers AI Generator Control Banner */}
+            <div style={{ background: 'rgba(6, 182, 212, 0.08)', border: '1px solid rgba(6, 182, 212, 0.25)', borderRadius: '14px', padding: '14px 18px', marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600, fontSize: '0.92rem', color: '#38bdf8' }}>
+                  <Sparkles size={16} /> Cloudflare Workers AI Generator Engine
+                </div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '3px' }}>
+                  Engine Model: <strong style={{ color: '#ffffff' }}>FLUX.1 Schnell</strong> (<span style={{ fontFamily: 'monospace', color: '#f97316' }}>@cf/black-forest-labs/flux-1-schnell</span>)
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleGenerateAllCloudflareImages}
+                disabled={generatingIdx !== null}
+                style={{
+                  background: 'linear-gradient(135deg, #f97316, #ec4899)',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '9px 20px',
+                  borderRadius: '20px',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  cursor: generatingIdx !== null ? 'not-allowed' : 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  boxShadow: '0 4px 14px rgba(249, 115, 22, 0.35)'
+                }}
+              >
+                {generatingIdx === 'all' ? (
+                  <>
+                    <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />
+                    <span>Generating 4 Images with FLUX...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={16} />
+                    <span>⚡ Auto-Generate All 4 Images</span>
+                  </>
+                )}
+              </button>
+            </div>
+
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
               {samples.map((s, idx) => (
                 <div key={idx} className="card" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '16px' }}>
@@ -459,6 +580,37 @@ export default function SellPage() {
                     <span style={{ fontWeight: 'bold', fontSize: '0.9rem', color: idx === 0 ? 'var(--color-orange)' : 'var(--text-primary)' }}>
                       Sample #{idx + 1} {idx === 0 ? '(Main Cover)' : ''}
                     </span>
+                    <button
+                      type="button"
+                      onClick={() => handleGenerateSingleCloudflareImage(idx)}
+                      disabled={generatingIdx !== null}
+                      style={{
+                        background: 'rgba(249, 115, 22, 0.15)',
+                        border: '1px solid rgba(249, 115, 22, 0.35)',
+                        color: '#f97316',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        padding: '4px 10px',
+                        borderRadius: '12px',
+                        cursor: generatingIdx !== null ? 'not-allowed' : 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '5px'
+                      }}
+                      title="Generate image from this sample input using Cloudflare FLUX.1 Schnell"
+                    >
+                      {generatingIdx === idx ? (
+                        <>
+                          <Loader2 size={12} style={{ animation: 'spin 1s linear infinite' }} />
+                          <span>Generating...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles size={12} />
+                          <span>⚡ Generate Image</span>
+                        </>
+                      )}
+                    </button>
                   </div>
 
                   {/* Image Drop / Preview Box */}
