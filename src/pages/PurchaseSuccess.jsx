@@ -73,7 +73,7 @@ const PurchaseSuccess = () => {
   const [alreadyReviewedBefore, setAlreadyReviewedBefore] = useState(false);
   const [isSeller, setIsSeller] = useState(false);
 
-  const modelLabel = prompt ? (aiModels.find(m => m.id === prompt.model)?.label || prompt.model) : '';
+  const modelLabel = prompt ? (aiModels.find(m => m.id === prompt.model)?.label || (prompt.model === 'flux-1' || prompt.model === 'flux' ? 'FLUX.1 Schnell' : prompt.model)) : '';
 
   const API_BASE = '/api';
 

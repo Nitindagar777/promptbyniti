@@ -41,8 +41,8 @@ export default function SellPage() {
   const [negativePrompt, setNegativePrompt] = useState('');
   const [instructions, setInstructions] = useState('');
   const [mediaType, setMediaType] = useState('image'); // 'image' | 'video' | 'text'
-  const [selectedModel, setSelectedModel] = useState('midjourney-v6');
-  const [priceTokens, setPriceTokens] = useState(5);
+  const [selectedModel, setSelectedModel] = useState('flux-1');
+  const [priceTokens, setPriceTokens] = useState(4);
   const [tags, setTags] = useState([]);
   const [tagInput, setTagInput] = useState('');
 
@@ -62,82 +62,6 @@ export default function SellPage() {
   const [generatingIdx, setGeneratingIdx] = useState(null); // idx of sample generating or 'all'
   const [cfModelName, setCfModelName] = useState('FLUX.1 Schnell (Cloudflare Workers AI)');
 
-  // Cloudflare Workers AI Single Sample Image Generator
-  const handleGenerateSingleCloudflareImage = async (idx) => {
-    const sampleInput = samples[idx]?.input;
-    if (!sampleInput || !sampleInput.trim()) {
-      alert(`Please enter the input prompt text for Sample #${idx + 1} first!`);
-      return;
-    }
-
-    try {
-      setGeneratingIdx(idx);
-      const res = await fetch('/api/generate/ai-image', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('promptbyniti_token')}`
-        },
-        body: JSON.stringify({
-          prompt: sampleInput.trim(),
-          model: '@cf/black-forest-labs/flux-1-schnell'
-        })
-      });
-      const data = await res.json();
-      if (data.success && data.imageUrl) {
-        updateSampleOutput(idx, data.imageUrl);
-        if (data.modelName) setCfModelName(data.modelName);
-      } else {
-        alert(data.message || 'Failed to generate image via Cloudflare AI');
-      }
-    } catch (err) {
-      console.error('Single image gen error:', err);
-      alert('Network error while generating image with Cloudflare AI.');
-    } finally {
-      setGeneratingIdx(null);
-    }
-  };
-
-  // Cloudflare Workers AI Batch (All 4) Image Generator
-  const handleGenerateAllCloudflareImages = async () => {
-    const validPrompts = samples.map(s => s.input);
-    const hasAnyInput = validPrompts.some(p => p && p.trim());
-    if (!hasAnyInput) {
-      alert('Please enter sample input prompt texts first before generating images!');
-      return;
-    }
-
-    try {
-      setGeneratingIdx('all');
-      const res = await fetch('/api/generate/batch-ai-images', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('promptbyniti_token')}`
-        },
-        body: JSON.stringify({
-          prompts: validPrompts,
-          model: '@cf/black-forest-labs/flux-1-schnell'
-        })
-      });
-      const data = await res.json();
-      if (data.success && Array.isArray(data.images)) {
-        setSamples(prev => prev.map((s, idx) => ({
-          ...s,
-          output: data.images[idx] || s.output
-        })));
-        if (data.modelName) setCfModelName(data.modelName);
-      } else {
-        alert(data.message || 'Failed to batch generate images via Cloudflare AI');
-      }
-    } catch (err) {
-      console.error('Batch image gen error:', err);
-      alert('Network error while batch generating images with Cloudflare AI.');
-    } finally {
-      setGeneratingIdx(null);
-    }
-  };
-
   // Pre-fill from generator state if navigated from /generate
   useEffect(() => {
     if (location.state?.promptData) {
@@ -148,9 +72,9 @@ export default function SellPage() {
       if (data.negativePrompt) setNegativePrompt(data.negativePrompt);
       if (data.instructions) setInstructions(data.instructions);
       if (data.keywords && Array.isArray(data.keywords)) setTags(data.keywords);
-      if (data.priceTokens || data.tokens) setPriceTokens(data.priceTokens || data.tokens || 5);
+      setPriceTokens(data.priceTokens || data.tokens || 4);
       if (data.generateType || data.promptType) setMediaType(data.generateType || data.promptType);
-      if (data.model) setSelectedModel(data.model);
+      setSelectedModel(data.model || 'flux-1');
 
       if (data.samples && Array.isArray(data.samples)) {
         const loaded = data.samples.slice(0, 4).map((s, idx) => ({
@@ -171,6 +95,98 @@ export default function SellPage() {
       }
     }
   }, [location.state]);
+
+  // Auto-Pipeline for Admin: Auto-Generate 4 FLUX Images & Auto-Post Prompt
+  useEffect(() => {
+    if (location.state?.autoPublishPack && location.state?.promptData) {
+      const data = location.state.promptData;
+      if (data.samples && Array.isArray(data.samples) && data.samples.length > 0) {
+        const sampleInputs = data.samples.slice(0, 4).map(s =>
+          typeof s === 'object' ? (s.input || s.prompt || '') : (typeof s === 'string' ? s : '')
+        );
+
+        if (sampleInputs.some(p => p && p.trim())) {
+          console.log('🚀 [Admin Auto-Pipeline] Starting auto Cloudflare 4-image generation & auto-post...');
+          autoGenerateAndPublish(sampleInputs, data);
+        }
+      }
+    }
+  }, [location.state]);
+
+  const autoGenerateAndPublish = async (sampleInputs, promptData) => {
+    try {
+      setLoading(true);
+      setGeneratingIdx('all');
+
+      // 1. Call Cloudflare Workers AI for 4 images
+      const imgRes = await fetch('/api/generate/batch-ai-images', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('promptbyniti_token')}`
+        },
+        body: JSON.stringify({
+          prompts: sampleInputs,
+          model: '@cf/black-forest-labs/flux-1-schnell'
+        })
+      });
+
+      const imgData = await imgRes.json();
+      let finalImages = ['', '', '', ''];
+      if (imgData.success && Array.isArray(imgData.images)) {
+        finalImages = imgData.images;
+      }
+
+      const updatedSamples = sampleInputs.map((inputStr, i) => ({
+        input: inputStr,
+        output: finalImages[i] || ''
+      }));
+      setSamples(updatedSamples);
+
+      // 2. Auto-Publish to MongoDB Store
+      const payload = {
+        name: promptData.name || promptData.title || name,
+        description: promptData.description || description,
+        prompt: promptData.template || promptData.promptTemplate || prompt,
+        negativePrompt: promptData.negativePrompt || negativePrompt || '',
+        instructions: promptData.instructions || instructions || '',
+        generateType: promptData.generateType || promptData.promptType || mediaType || 'image',
+        model: promptData.model || 'flux-1',
+        priceTokens: 4,
+        tags: promptData.keywords || tags || [],
+        samples: updatedSamples,
+        thumbnail: finalImages[0] || ''
+      };
+
+      console.log('🚀 [Admin Auto-Pipeline] Auto-publishing prompt to store...', payload.name);
+
+      const token = localStorage.getItem('promptbyniti_token');
+      const publishRes = await fetch('/api/prompts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const pubData = await publishRes.json();
+      if (publishRes.ok) {
+        console.log('✅ [Admin Auto-Pipeline] Prompt pack published successfully!');
+        setSubmitted(true);
+        setTimeout(() => {
+          navigate('/templates');
+        }, 1200);
+      } else {
+        alert(pubData.message || 'Auto-publish failed. Please review fields and click Post Prompt.');
+      }
+    } catch (err) {
+      console.error('❌ Error in auto-generate & publish pipeline:', err);
+    } finally {
+      setLoading(false);
+      setGeneratingIdx(null);
+    }
+  };
 
   // Pre-fill edit data if edit query param is present
   useEffect(() => {
@@ -256,6 +272,82 @@ export default function SellPage() {
       updateSampleOutput(idx, e.target.result);
     };
     reader.readAsDataURL(file);
+  };
+
+  // Cloudflare Workers AI Single Sample Image Generator
+  const handleGenerateSingleCloudflareImage = async (idx) => {
+    const sampleInput = samples[idx]?.input;
+    if (!sampleInput || !sampleInput.trim()) {
+      alert(`Please enter the input prompt text for Sample #${idx + 1} first!`);
+      return;
+    }
+
+    try {
+      setGeneratingIdx(idx);
+      const res = await fetch('/api/generate/ai-image', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('promptbyniti_token')}`
+        },
+        body: JSON.stringify({
+          prompt: sampleInput.trim(),
+          model: '@cf/black-forest-labs/flux-1-schnell'
+        })
+      });
+      const data = await res.json();
+      if (data.success && data.imageUrl) {
+        updateSampleOutput(idx, data.imageUrl);
+        if (data.modelName) setCfModelName(data.modelName);
+      } else {
+        alert(data.message || 'Failed to generate image via Cloudflare AI');
+      }
+    } catch (err) {
+      console.error('Single image gen error:', err);
+      alert('Network error while generating image with Cloudflare AI.');
+    } finally {
+      setGeneratingIdx(null);
+    }
+  };
+
+  // Cloudflare Workers AI Batch (All 4) Image Generator
+  const handleGenerateAllCloudflareImages = async () => {
+    const validPrompts = samples.map(s => s.input);
+    const hasAnyInput = validPrompts.some(p => p && p.trim());
+    if (!hasAnyInput) {
+      alert('Please enter sample input prompt texts first before generating images!');
+      return;
+    }
+
+    try {
+      setGeneratingIdx('all');
+      const res = await fetch('/api/generate/batch-ai-images', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('promptbyniti_token')}`
+        },
+        body: JSON.stringify({
+          prompts: validPrompts,
+          model: '@cf/black-forest-labs/flux-1-schnell'
+        })
+      });
+      const data = await res.json();
+      if (data.success && Array.isArray(data.images)) {
+        setSamples(prev => prev.map((s, idx) => ({
+          ...s,
+          output: data.images[idx] || s.output
+        })));
+        if (data.modelName) setCfModelName(data.modelName);
+      } else {
+        alert(data.message || 'Failed to batch generate images via Cloudflare AI');
+      }
+    } catch (err) {
+      console.error('Batch image gen error:', err);
+      alert('Network error while batch generating images with Cloudflare AI.');
+    } finally {
+      setGeneratingIdx(null);
+    }
   };
 
   const handleSubmit = async (e) => {

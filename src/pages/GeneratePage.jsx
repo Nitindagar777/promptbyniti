@@ -367,12 +367,12 @@ export default function GeneratePage() {
       await useCredit(finalCost);
       addPrompt(promptResult);
 
-      // Auto-open post page for Admin IMMEDIATELY with pre-filled generated prompt data
+      // Auto-open post page for Admin IMMEDIATELY with pre-filled generated prompt data and auto-publish pipeline
       if (isAdmin) {
         setIsGenerating(false);
         setIsPackGenerating(false);
         sessionStorage.removeItem('isGenerating');
-        navigate('/sell', { state: { promptData: promptResult } });
+        navigate('/sell', { state: { promptData: promptResult, autoPublishPack: true } });
         return;
       }
 
