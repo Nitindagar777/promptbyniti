@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { Zap, Eye, Share2, Download, X, Check } from 'lucide-react';
+import { useApp } from '../context/AppContext';
 import PromptThumbnail from './PromptThumbnail';
 
 /**
@@ -10,8 +11,11 @@ import PromptThumbnail from './PromptThumbnail';
  * already loaded cards and video/image elements from reloading on parent scroll.
  */
 const PinterestCardComponent = ({ item, index }) => {
+  const { state } = useApp();
   const [showShowcaseModal, setShowShowcaseModal] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+
+  const isAdmin = state?.user?.email?.toLowerCase().trim() === 'nitindagar0800@gmail.com' || state?.user?.role === 'admin' || state?.user?.isAdmin;
 
   const tmpl = item.prompt;
   const promptId = tmpl?.id || tmpl?._id || 'unknown';
@@ -467,14 +471,14 @@ const PinterestCardComponent = ({ item, index }) => {
               ))}
             </div>
 
-            {/* Action Buttons: Share Link & Download Card Image */}
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '6px', flexWrap: 'wrap' }}>
+            {/* Action Buttons: Share Link (Center for all users) & Download Card Image (Admin Only) */}
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', alignItems: 'center', marginTop: '6px', flexWrap: 'wrap', width: '100%' }}>
               <button
                 type="button"
                 onClick={handleShareLink}
                 style={{
-                  padding: '10px 22px',
-                  fontSize: '0.88rem',
+                  padding: '10px 24px',
+                  fontSize: '0.9rem',
                   fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
                   fontWeight: 600,
                   color: '#ffffff',
@@ -494,30 +498,32 @@ const PinterestCardComponent = ({ item, index }) => {
                 <span>{copiedLink ? 'Link Copied!' : 'Share Link'}</span>
               </button>
 
-              <button
-                type="button"
-                onClick={handleDownloadCard}
-                style={{
-                  padding: '10px 22px',
-                  fontSize: '0.88rem',
-                  fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-                  fontWeight: 600,
-                  color: '#ffffff',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  border: '1px solid rgba(255, 255, 255, 0.22)',
-                  borderRadius: '24px',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '7px',
-                  cursor: 'pointer',
-                  textShadow: 'none',
-                  boxShadow: 'none',
-                  letterSpacing: 'normal'
-                }}
-              >
-                <Download size={16} />
-                <span>Download Card Image</span>
-              </button>
+              {isAdmin && (
+                <button
+                  type="button"
+                  onClick={handleDownloadCard}
+                  style={{
+                    padding: '10px 22px',
+                    fontSize: '0.9rem',
+                    fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+                    fontWeight: 600,
+                    color: '#ffffff',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    border: '1px solid rgba(255, 255, 255, 0.22)',
+                    borderRadius: '24px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '7px',
+                    cursor: 'pointer',
+                    textShadow: 'none',
+                    boxShadow: 'none',
+                    letterSpacing: 'normal'
+                  }}
+                >
+                  <Download size={16} />
+                  <span>Download Card Image</span>
+                </button>
+              )}
             </div>
           </div>
         </div>,
