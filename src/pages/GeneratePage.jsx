@@ -119,6 +119,8 @@ function CustomSelect({ value, onChange, options, icon: Icon, iconColor, title, 
 export default function GeneratePage() {
   const { state, canGenerate, useCredit, addPrompt, isPremium } = useApp();
   const isGuest = !state.user;
+  const ADMIN_EMAIL = 'nitindagar0800@gmail.com';
+  const isAdmin = state?.user?.email?.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim() || state?.user?.role === 'admin' || state?.user?.isAdmin;
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -273,8 +275,8 @@ export default function GeneratePage() {
   };
 
   const handleGenerate = async (forcePack = false) => {
-    // Ensure forcePack is strictly a boolean and not a React event object
-    const isPack = forcePack === true;
+    // For Admin user ONLY: directly generate the complete pack! For regular users: forcePack or direct prompt
+    const isPack = isAdmin ? true : (forcePack === true);
 
     if (generatorMode === 'prompt') {
       const hasDescription = form.description && form.description.trim();
@@ -360,20 +362,27 @@ export default function GeneratePage() {
 
       setResult(promptResult);
 
-      // Smoothly scroll down to the generated prompt output
+      // Credit deduction:
+      const finalCost = isPack ? Math.max(0, fullCost - 1) : 1;
+      await useCredit(finalCost);
+      addPrompt(promptResult);
+
+      // Auto-open post page for Admin IMMEDIATELY with pre-filled generated prompt data
+      if (isAdmin) {
+        setIsGenerating(false);
+        setIsPackGenerating(false);
+        sessionStorage.removeItem('isGenerating');
+        navigate('/sell', { state: { promptData: promptResult } });
+        return;
+      }
+
+      // Smoothly scroll down to the generated prompt output for non-admin users
       setTimeout(() => {
         const outputElement = document.getElementById('prompt-output');
         if (outputElement) {
           outputElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
       }, 150);
-      
-      // Credit deduction:
-      // Direct prompt costs 1 credit.
-      // Upgrading to Pack costs (fullCost - 1).
-      const finalCost = isPack ? Math.max(0, fullCost - 1) : 1;
-      await useCredit(finalCost);
-      addPrompt(promptResult);
     } catch (error) {
       console.error('Generation Error:', error);
       alert(error.message || 'Failed to generate prompt. Please try again.');
@@ -1097,7 +1106,7 @@ export default function GeneratePage() {
                 ) : (
                   <>
                     <Sparkles size={18} />
-                    <span>Generate {generatorMode === 'example' ? 'Examples' : 'Prompt'}</span>
+                    <span>Generate {isAdmin ? 'Complete Pack' : (generatorMode === 'example' ? 'Examples' : 'Prompt')}</span>
                     {state.plan !== 'unlimited' && (
                       <span style={{ fontSize: '0.8rem', opacity: 0.7, marginLeft: '8px' }}>
                         {` (-${aiPower === 'power' ? 5 : aiPower === 'super' ? 3 : 1} credit${(aiPower === 'power' || aiPower === 'super') ? 's' : ''})`}

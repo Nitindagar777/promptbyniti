@@ -1287,3 +1287,64 @@
   from { opacity: 0; transform: translateY(-8px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* Carousel Arrows on main preview */
+.carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  width: 46px;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+
+.carousel-arrow:hover {
+  background: var(--color-cyan, #06b6d4);
+  color: black;
+  border-color: transparent;
+  transform: translateY(-50%) scale(1.08);
+}
+
+.carousel-arrow--left {
+  left: 16px;
+}
+
+.carousel-arrow--right {
+  right: 16px;
+}
+
+/* Lightbox Close styles */
+.lightbox-close {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  font-size: 24px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  transition: all 0.2s;
+}
+
+.lightbox-close:hover {
+  background: #ef4444;
+  color: white;
+  border-color: transparent;
+}

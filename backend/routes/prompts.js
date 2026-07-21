@@ -176,7 +176,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
     res.json({ 
       success: true, 
       prompt: promptObj, 
-      isPurchased: true 
+      isPurchased: isAuthorized 
     });
   } catch (err) {
     console.error("Error fetching/updating prompt:", err);

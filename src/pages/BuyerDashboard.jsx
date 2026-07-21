@@ -116,7 +116,7 @@ export default function BuyerDashboard() {
           </div>
           <div className="dash-header-actions">
             <Link to="/templates" className="btn btn-secondary btn-glow">
-              <ShoppingBag size={18} /> Feed
+              <ShoppingBag size={18} /> Store
             </Link>
             <button onClick={() => navigate(-1)} className="btn btn-back-premium">
               <ArrowLeft size={18} /> <span>Back</span>

@@ -85,22 +85,34 @@ const PurchaseSuccess = () => {
     try {
       const token = localStorage.getItem('promptbyniti_token');
       const res = await fetch(`${API_BASE}/prompts/${id}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
       });
-      const data = await res.json();
-      if (data.success) {
-        setPrompt(data.prompt);
-        // Check if user already reviewed or is seller
-        const currentUserId = state.user?._id || state.user?.id;
-        const sellerMatch = data.prompt.seller?._id?.toString() === currentUserId?.toString() || 
-                           data.prompt.seller?.toString() === currentUserId?.toString();
-        const hasReviewed = data.prompt.reviews?.some(r => r.user?.toString() === currentUserId?.toString());
-        
-        setIsSeller(sellerMatch);
-        setAlreadyReviewedBefore(hasReviewed);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          setPrompt(data.prompt);
+          // Check if user already reviewed or is seller
+          const currentUserId = state.user?._id || state.user?.id;
+          const sellerMatch = data.prompt.seller?._id?.toString() === currentUserId?.toString() || 
+                             data.prompt.seller?.toString() === currentUserId?.toString();
+          const hasReviewed = data.prompt.reviews?.some(r => r.user?.toString() === currentUserId?.toString());
+          
+          setIsSeller(sellerMatch);
+          setAlreadyReviewedBefore(hasReviewed);
+          return;
+        }
+      }
+      // Fallback for local state / mock items
+      const localPrompt = (state.marketplace || []).find(t => (t.id || t._id) === id);
+      if (localPrompt) {
+        setPrompt(localPrompt);
       }
     } catch (err) {
       console.error('Fetch error:', err);
+      const localPrompt = (state.marketplace || []).find(t => (t.id || t._id) === id);
+      if (localPrompt) {
+        setPrompt(localPrompt);
+      }
     } finally {
       setLoading(false);
     }

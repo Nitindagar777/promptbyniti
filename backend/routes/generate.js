@@ -66,7 +66,7 @@ function limitVariables(promptTemplate, mainPrompt, maxVars = 5) {
 let cachedModel = null;
 let cachedRulesHash = null;   // detect when admin edits rules
 let cachedApiKey = null;
-const SYSTEM_PROMPT_VERSION = 'v21-character-mode-fixed-different'; // bump this when system prompt changes
+const SYSTEM_PROMPT_VERSION = 'v23-force-4-samples-always'; // bump this when system prompt changes
 
 // Fallback chain: try best model first, fall back if unavailable
 const MODEL_CHAIN = ['gemini-3.5-flash', 'gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
@@ -277,7 +277,7 @@ When a reference image is provided in SAME SCENE LOOP mode, you MUST strictly en
    - Include a specific subtle motion/animation per scene (NO brackets).
 2. Create promptTemplate: Take the mainPrompt and replace ONLY the motion/animation in each scene with a bracketed variable (e.g., [animation/motion_1], [animation/motion_2]).
    - CRITICAL: All other parts of the prompt (subject, clothing, background, style, colors, lighting) MUST remain as FIXED, detailed, non-variable text in the promptTemplate. DO NOT put them in brackets!
-3. For each of the samples (Sample A, Sample B, Sample C), copy the promptTemplate and replace ONLY the motion variables.
+3. For each of the 4 samples (Sample A, Sample B, Sample C, Sample D), copy the promptTemplate and replace ONLY the motion variables.
    - CRITICAL: The subject, clothing, background, style, etc. MUST be 100% IDENTICAL and repeated word-for-word across all samples! Only the animations must vary.
 4. ZERO TOLERANCE FOR BRACKETS IN SAMPLES: Samples and mainPrompt MUST NOT contain any [BRACKETS]. Only promptTemplate has brackets.
 5. Every prompt and sample MUST end with "--ar ${resolvedAR}".`;
@@ -311,7 +311,7 @@ When a reference image is provided in DIFFERENT SCENES mode, you MUST:
    - Describe a completely different scene/background setting, camera movement, and action per scene.
 2. Create promptTemplate: Take the mainPrompt and replace ONLY the background setting and camera/action in each scene with bracketed variables (e.g., [location_1/action_1], [camera_movement_1]).
    - CRITICAL: The subject description and clothing/outfit MUST remain as FIXED, detailed, non-variable text in the promptTemplate. DO NOT put them in brackets!
-3. For each of the samples (Sample A, Sample B, Sample C), copy the promptTemplate and replace the bracketed variables.
+3. For each of the 4 samples (Sample A, Sample B, Sample C, Sample D), copy the promptTemplate and replace the bracketed variables.
    - CRITICAL: The subject description and clothing/outfit MUST be 100% IDENTICAL and repeated word-for-word across all samples!
    - The location/action and camera movement MUST vary completely per sample to show the same character in different video scenes.
 4. ZERO TOLERANCE FOR BRACKETS IN SAMPLES: Samples and mainPrompt MUST NOT contain any [BRACKETS]. Only promptTemplate has brackets.
@@ -348,7 +348,7 @@ When a reference image is provided in FIXED CHARACTER + MOTION mode, you MUST:
    - Describe the exact character, clothing, background, and lighting from the reference, followed by "Character does not move."
 2. Create promptTemplate: Take the mainPrompt and replace ONLY the camera movement in each scene with a bracketed variable (e.g. [camera_movement_1]).
    - CRITICAL: The subject, clothing, background, style, colors, and lighting MUST remain as FIXED, detailed, non-variable text in the promptTemplate. DO NOT put them in brackets!
-3. For each of the samples (Sample A, Sample B, Sample C), copy the promptTemplate and replace ONLY the camera movement variables.
+3. For each of the 4 samples (Sample A, Sample B, Sample C, Sample D), copy the promptTemplate and replace ONLY the camera movement variables.
    - CRITICAL: The subject, clothing, background, style, etc. MUST be 100% IDENTICAL and repeated word-for-word across all samples! Only the camera movement varies.
 4. ZERO TOLERANCE FOR BRACKETS IN SAMPLES: Samples and mainPrompt MUST NOT contain any [BRACKETS]. Only promptTemplate has brackets.
 5. Every prompt and sample MUST end with "--ar ${resolvedAR}".`;
@@ -367,7 +367,7 @@ Every prompt and sample MUST start with "Generate a video of: " or "Generate a v
    - For 20s: Scene 1 (0 to 4 seconds), Scene 2 (4 to 8 seconds), Scene 3 (8 to 12 seconds), Scene 4 (12 to 16 seconds), Scene 5 (16 to 20 seconds).
    - Describe a detailed, continuous video progression with scene actions, lighting, and camera.
 2. Create promptTemplate: Take the mainPrompt and replace only the key action, environment, or camera movement in each scene with a bracketed variable (e.g., [action_1], [camera_1]).
-3. For each of the samples (Sample A, Sample B, Sample C), copy the promptTemplate and replace the bracketed variables with unique creative details.
+3. For each of the 4 samples (Sample A, Sample B, Sample C, Sample D), copy the promptTemplate and replace the bracketed variables with unique creative details.
 4. ZERO TOLERANCE FOR BRACKETS IN SAMPLES: Samples and mainPrompt MUST NOT contain any [BRACKETS]. Only promptTemplate has brackets.
 5. Every prompt and sample MUST end with "--ar ${resolvedAR}".`;
     }
@@ -385,9 +385,9 @@ CRITICAL — TEXT PROMPT RULES:
 1. Write the mainPrompt first. It must be a complete, ready-to-use sample prompt with all bracketed variables replaced by real, creative values (like detailed coding specifications or copywriting briefs).
    - CRITICAL: Do NOT append any camera settings, lens details, or Midjourney "--ar" suffixes to text prompts.
 2. Create promptTemplate: Take the mainPrompt and replace 1 to 5 key parameters with bracketed variables (e.g. [brand_name], [programming_language], [tone], etc.).
-3. For each of the samples (Sample A, Sample B, Sample C), copy the promptTemplate and replace the bracketed variables with unique creative details.
+3. For each of the 4 samples (Sample A, Sample B, Sample C, Sample D), copy the promptTemplate and replace the bracketed variables with unique creative details.
 4. ZERO TOLERANCE FOR BRACKETS IN SAMPLES: Samples and mainPrompt MUST NOT contain any [BRACKETS]. Only promptTemplate has brackets.
-5. SAMPLE COUNT: Generate exactly 3 samples for standard generations. Generate exactly 5 samples ONLY when "Example Generator" mode is requested.`;
+5. SAMPLE COUNT: Generate exactly 4 samples for complete prompt packs (Sample A, Sample B, Sample C, Sample D).`;
   } else {
     // Image reference rules
     if (resolvedCharMode === 'fixed') {
@@ -437,7 +437,7 @@ When a reference image is provided in FIXED CHARACTER mode, you MUST:
 
 4. THE mainPrompt MUST RECREATE THE EXACT SAME SCENE from the reference image with one specific pose.
 
-5. ALL 3 SAMPLES MUST LOOK LIKE THEY ARE FROM THE SAME PHOTOSHOOT:
+5. ALL 4 SAMPLES MUST LOOK LIKE THEY ARE FROM THE SAME PHOTOSHOOT (Sample A, Sample B, Sample C, Sample D):
    - Same character, same clothes, same location, same style — ONLY the pose/action/gesture changes.
    - If the reference shows two girls in colorful outfits at a theme park, ALL samples show those SAME two girls in those SAME outfits at that SAME theme park — just in different poses (arms spread, making heart shapes, jumping, etc.)
    - If the reference shows a girl in a flower field with doodle overlays, ALL samples show that SAME girl in that SAME field with those SAME doodle overlays — just doing different actions.
@@ -453,11 +453,11 @@ When a reference image is provided in FIXED CHARACTER mode, you MUST:
    - End with "--ar ${resolvedAR}".
 2. Create promptTemplate: Take the mainPrompt and replace ONLY the pose/action, background setting, and lighting/colors with bracketed variables (e.g., [pose/action], [background_setting], [lighting/colors]).
    - CRITICAL: The subject description and clothing/outfit MUST remain as FIXED, detailed, non-variable text in the promptTemplate. DO NOT put them in brackets!
-3. For each of the samples (Sample A, Sample B, Sample C), copy the promptTemplate and replace the bracketed variables.
+3. For each of the 4 samples (Sample A, Sample B, Sample C, Sample D), copy the promptTemplate and replace the bracketed variables.
    - CRITICAL: The subject description and clothing/outfit MUST be 100% IDENTICAL and repeated word-for-word across all samples! DO NOT vary them! E.g., never generate different subjects like a "Nordic fisherman" or "fantasy elf" in any sample! All samples must feature the EXACT SAME young woman in the EXACT SAME outfit.
    - The pose/action, background setting, and lighting/colors MUST vary completely per sample to show the same character in different locations/scenes (e.g. in a cozy library, in snowy mountains, on a sunny beach).
 4. ZERO TOLERANCE FOR BRACKETS IN SAMPLES: Samples and mainPrompt MUST NOT contain any [BRACKETS]. Only promptTemplate has brackets.
-5. SAMPLE COUNT: Generate exactly 3 samples for standard generations. Generate exactly 5 samples ONLY when "Example Generator" mode is requested.
+5. SAMPLE COUNT: Generate exactly 4 samples for complete prompt packs (Sample A, Sample B, Sample C, Sample D).
 6. CRITICAL CHARACTER LENGTH CONSTRAINT (MANDATORY):
    The generated promptTemplate MUST strictly comply with these length limits based on the Credit Tier:
    - 1 Credit (Normal): promptTemplate MUST be at least 400 to 500 characters long (detailed and perfect to best describe the scene).
@@ -512,11 +512,11 @@ When a reference image is provided in SAME SCENE mode, you MUST strictly enforce
    - End with "--ar ${resolvedAR}".
 2. Create promptTemplate: Take the mainPrompt and replace ONLY the pose/action and facial expression with bracketed variables (e.g., [pose/action] and [facial_expression]).
    - CRITICAL: All other parts of the prompt (the subject description, clothing/outfit, background setting, art style, color palette, lighting) MUST remain as FIXED, detailed, non-variable text in the promptTemplate. DO NOT put them in brackets!
-3. For each of the samples (Sample A, Sample B, Sample C), copy the promptTemplate and replace ONLY the pose/action and facial expression variables.
+3. For each of the 4 samples (Sample A, Sample B, Sample C, Sample D), copy the promptTemplate and replace ONLY the pose/action and facial expression variables.
    - CRITICAL: The subject, clothing, background setting, art style, color palette, and lighting MUST be 100% IDENTICAL and repeated word-for-word across all samples! DO NOT vary them! E.g., never generate different subjects like a "Nordic fisherman" or "fantasy elf" in any sample! All samples must feature the EXACT SAME young woman in the EXACT SAME outfit and the EXACT SAME yellow wildflower field.
    - ONLY the poses, actions, gestures, and expressions must vary completely between the samples (e.g., winking and waving vs sitting cross-legged on a blanket vs leaning forward smiling).
 4. ZERO TOLERANCE FOR BRACKETS IN SAMPLES: Samples and mainPrompt MUST NOT contain any [BRACKETS]. Only promptTemplate has brackets.
-5. SAMPLE COUNT: Generate exactly 3 samples for standard generations. Generate exactly 5 samples ONLY when "Example Generator" mode is requested.
+5. SAMPLE COUNT: Generate exactly 4 samples for complete prompt packs (Sample A, Sample B, Sample C, Sample D).
 6. CRITICAL CHARACTER LENGTH CONSTRAINT (MANDATORY):
    The generated promptTemplate MUST strictly comply with these length limits based on the Credit Tier:
    - 1 Credit (Normal): promptTemplate MUST be at least 400 to 500 characters long (detailed and perfect to best describe the scene).
@@ -579,7 +579,7 @@ When a reference image is provided in DIFFERENT CHARACTERS mode, you MUST:
 
 4. THE mainPrompt MUST DESCRIBE THE EXACT CHARACTER from the reference image as Sample A.
 
-5. ALL 3 SAMPLES MUST LOOK LIKE THEY BELONG TO THE SAME ART SERIES:
+5. ALL 4 SAMPLES MUST LOOK LIKE THEY BELONG TO THE SAME ART SERIES (Sample A, Sample B, Sample C, Sample D):
    - The art style, technique, and visual approach are IDENTICAL across all samples.
    - ONLY the character/subject changes — and each must be a COMPLETELY DIFFERENT character.
    - If the reference shows a geometric mosaic snow leopard, the samples might show a geometric mosaic fox, a geometric mosaic owl, etc.
@@ -601,7 +601,7 @@ When a reference image is provided in DIFFERENT CHARACTERS mode, you MUST:
 5. For each sample (A, B, C, etc.), take the promptTemplate and replace every [BRACKET] variable.
 6. ZERO TOLERANCE FOR REPETITION: Every variable MUST be 100% unique across all samples.
 7. ZERO TOLERANCE FOR BRACKETS IN SAMPLES: Samples and mainPrompt MUST NOT contain any [BRACKETS]. Only promptTemplate has brackets.
-8. SAMPLE COUNT: Generate exactly 3 samples for standard generations. Generate exactly 5 samples ONLY when "Example Generator" mode is requested.
+8. SAMPLE COUNT: Generate exactly 4 samples for complete prompt packs (Sample A, Sample B, Sample C, Sample D).
 9. CRITICAL CHARACTER LENGTH CONSTRAINT (MANDATORY):
    The generated promptTemplate MUST strictly comply with these length limits based on the Credit Tier:
    - 1 Credit (Normal): promptTemplate MUST be at least 400 to 500 characters long (detailed and perfect to best describe the scene).
@@ -664,7 +664,8 @@ You must return a VALID JSON object with these fields:
   "samples": [
     "Sample A: unique variation...",
     "Sample B: unique variation...",
-    "Sample C: unique variation..."
+    "Sample C: unique variation...",
+    "Sample D: unique variation..."
   ],
   "keywords": ["keyword1", "keyword2", "keyword3", "keyword4"],
   "instructions": "Step-by-step instructions on how to use this prompt effectively."
@@ -685,7 +686,8 @@ You must return a VALID JSON object with these fields:
   "samples": [
     "Sample A: unique variation...",
     "Sample B: unique variation...",
-    "Sample C: unique variation..."
+    "Sample C: unique variation...",
+    "Sample D: unique variation..."
   ],
   "keywords": ["keyword1", "keyword2", "keyword3", "keyword4"],
   "instructions": "Step-by-step instructions on how to use this prompt effectively."
@@ -980,7 +982,7 @@ CRITICAL INSTRUCTIONS FOR TEMPLATE GENERATION:
    
 3. HOW TO GENERATE SAMPLES:
    Since the subject, outfit, background, style, etc. are written as fixed text in the promptTemplate, they will automatically be 100% identical and repeated word-for-word across all generated samples.
-   You only need to replace the [pose/action] and [facial_expression] variables with unique, diverse, and creative poses and expressions for Sample A, B, and C.
+   You only need to replace the [pose/action] and [facial_expression] variables with unique, diverse, and creative poses and expressions for Sample A, B, C, and D.
    E.g.
    - promptTemplate: "A high-quality lifestyle photograph of a young East Asian woman with short black hair in a [pose/action], wearing a blue checkered wrap, set in a rapeseed flower field under a clear bright sky, soft cinematic lighting, natural skin textures --ar 1:1"
    - Sample A: "...in a [pose/action: pensive pose resting her chin on her hand]..."
@@ -1035,14 +1037,14 @@ CRITICAL INSTRUCTIONS FOR TEMPLATE GENERATION:
 The user has selected DIFFERENT CHARACTERS mode. This means the art style and visual aesthetic from the reference image stay identical, but the character changes.
 Therefore, when replacing the [BRACKETED] variables:
 1. Analyze the art style of the reference image (medium, visual technique, composition approach).
-2. The variables describing the subject, clothing, colors, and poses (e.g., [subject], [pose], [outfit], [color]) SHOULD vary completely in each of the 3 samples (e.g. generating completely different subjects like a rugged Nordic fisherman, a fantasy elf, a street artist) while keeping the overall art style described by the fixed text identical.`;
+2. The variables describing the subject, clothing, colors, and poses (e.g., [subject], [pose], [outfit], [color]) SHOULD vary completely in each of the 4 samples (e.g. generating completely different subjects like a rugged Nordic fisherman, a fantasy elf, a street artist) while keeping the overall art style described by the fixed text identical.`;
       }
 
       userParts.push({
         text: `I have attached a REFERENCE IMAGE above. This is the primary visual source and the most important input.
 
 YOUR MISSION:
-Deeply analyze the attached reference image (its subject, clothing, style, lighting, composition, colors, medium) and generate a perfect, highly detailed prompt template and 3 distinct samples from scratch, in accordance with the character consistency rules below.
+Deeply analyze the attached reference image (its subject, clothing, style, lighting, composition, colors, medium) and generate a perfect, highly detailed prompt template and 4 distinct samples from scratch, in accordance with the character consistency rules below.
 
 ${modeSpecificPromptRules}
 

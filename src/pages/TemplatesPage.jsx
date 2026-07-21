@@ -182,21 +182,21 @@ export default function TemplatesPage() {
   return (
     <div className="templates-page" id="templates-page">
       <SEOHead
-        title="Explore Prompts — Free Midjourney, Sora, ChatGPT & Flux Feed"
-        description="Browse and discover premium AI prompts for Midjourney, ChatGPT, DALL·E, Stable Diffusion, Flux, Sora, Kling & more. Verified prompt templates with sample outputs. The best free community-driven prompt feed."
-        keywords="prompt feed, free prompts, explore prompts, AI prompts, Midjourney prompts, ChatGPT prompts, DALL-E prompts, Sora video prompts, Flux prompts, prompt templates, prompt ideas, prompt shop, AI art prompts, premium prompts, image prompts, video prompts, text prompts, code prompts"
+        title="Prompt Store — Premium AI Prompts & Templates"
+        description="Browse and discover high-converting, professional AI prompt templates for Midjourney, ChatGPT, DALL·E, Stable Diffusion, Flux, Sora, Kling & more. Verified prompt templates with sample outputs."
+        keywords="prompt store, prompt marketplace, AI prompts, Midjourney prompts, ChatGPT prompts, DALL-E prompts, Sora video prompts, Flux prompts, prompt templates, prompt shop, AI art prompts, premium prompts"
         breadcrumbs={[
           { name: 'Home', url: '/' },
-          { name: 'Explore Feed', url: '/templates' }
+          { name: 'Store', url: '/templates' }
         ]}
       />
       <div className="container">
         {/* Header */}
         <div className="templates-page__header">
-          <h1 className="section-title">Explore <span className="text-cyan">Feed</span></h1>
+          <h1 className="section-title">Prompt <span className="text-orange">Store</span></h1>
           <div className="templates-page__header-row">
             <p className="section-desc">
-              Community-driven Prompt Feed. Discover and copy the industry's most powerful, ready-to-generate prompt configurations for free.
+              Discover and unlock high-converting, professional AI prompt templates for any model.
             </p>
 
             <div className="templates-page__search-container" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>

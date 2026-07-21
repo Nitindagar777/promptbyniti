@@ -7,7 +7,7 @@ import {
   Sparkles, Image, MessageSquare, Play,
   Download, Share2, Heart, ShieldCheck,
   ChevronLeft, ChevronRight, Eye, ArrowRight, Star,
-  Unlock, Lock, Maximize2, Globe, Users, Loader2
+  Unlock, Lock, Maximize2, Globe, Users, Loader2, CheckCircle
 } from 'lucide-react';
 import PromptThumbnail from '../components/PromptThumbnail';
 import MasonryGrid from '../components/MasonryGrid';
@@ -120,6 +120,63 @@ const getPlatformConfig = (platformId, url = '') => {
     placeholder: 'https://link.com',
     icon: <Globe size={22} className="text-cyan" style={{ display: 'inline-block', verticalAlign: 'middle' }} />
   };
+};
+
+const FALLBACK_STORE_ITEMS = [];
+
+const getStoreCardSamples = (tmpl) => {
+  const list = [];
+  const samples = tmpl.samples || [];
+  
+  samples.forEach(s => {
+    const src = s.output || s;
+    if (src && typeof src === 'string') {
+      list.push(src);
+    }
+  });
+
+  if (list.length === 0) {
+    list.push(tmpl.thumbnail || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=300&auto=format&fit=crop&q=80');
+    
+    const name = (tmpl.name || '').toLowerCase();
+    if (name.includes('cyberpunk') || name.includes('metropolis')) {
+      list.push(
+        'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=300&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1542838132-92c53300491e?w=300&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1508739773434-c26b3d09e071?w=300&auto=format&fit=crop&q=80'
+      );
+    } else if (name.includes('character') || name.includes('portrait') || name.includes('headshot')) {
+      list.push(
+        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&auto=format&fit=crop&q=80'
+      );
+    } else if (name.includes('architecture') || name.includes('interior') || name.includes('forest') || name.includes('islands')) {
+      list.push(
+        'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=300&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=300&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1511497584788-876760111969?w=300&auto=format&fit=crop&q=80'
+      );
+    } else if (name.includes('product') || name.includes('leather') || name.includes('cosmetic') || name.includes('shoes')) {
+      list.push(
+        'https://images.unsplash.com/photo-1524805444758-089113d48a6d?w=300&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=300&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300&auto=format&fit=crop&q=80'
+      );
+    } else {
+      list.push(
+        'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=300&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=300&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=300&auto=format&fit=crop&q=80'
+      );
+    }
+  }
+  
+  while (list.length < 4) {
+    list.push(tmpl.thumbnail || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=300&auto=format&fit=crop&q=80');
+  }
+  
+  return list.slice(0, 4);
 };
 
 export default function PromptDetailPage() {
@@ -325,6 +382,37 @@ export default function PromptDetailPage() {
   const [copiedStates, setCopiedStates] = useState({});
   const [lightboxMedia, setLightboxMedia] = useState(null);
 
+  // Unlock with Tokens states
+  const [unlockingWithTokens, setUnlockingWithTokens] = useState(false);
+  const [purchaseError, setPurchaseError] = useState('');
+
+  const handleTokenUnlock = async () => {
+    if (!state.user) {
+      navigate('/login');
+      return;
+    }
+    
+    const price = template.priceTokens || template.tokens || 5;
+    if (state.user.credits < price) {
+      setPurchaseError(`Insufficient tokens. You need ${price} tokens to unlock this prompt.`);
+      return;
+    }
+    
+    setUnlockingWithTokens(true);
+    setPurchaseError('');
+    try {
+      await useCredit(price, template._id || template.id);
+      setIsPromptPurchased(true);
+      setTaskMessage({ text: 'Prompt unlocked successfully!', type: 'success' });
+      window.open(`/purchase-success/${template._id || template.id}`, '_blank');
+    } catch (err) {
+      console.error('Purchase error:', err);
+      setPurchaseError(err.message || 'Failed to unlock prompt. Please try again.');
+    } finally {
+      setUnlockingWithTokens(false);
+    }
+  };
+
   const linksSource = useMemo(() => {
     if (!template) return {};
     const merged = { ...template.socialLinks };
@@ -371,6 +459,13 @@ export default function PromptDetailPage() {
     const rules = template.unlockRules || {};
     return Object.values(rules).filter(Boolean).length;
   }, [template]);
+
+  // Unlocked & Purchased Checks
+  const currentUserId = state.user?._id?.toString() || state.user?.id?.toString();
+  const sellerId = template ? (template.seller?._id?.toString() || template.seller?.id?.toString() || template.seller?.toString()) : null;
+  const isCreator = !!(currentUserId && sellerId && currentUserId === sellerId);
+  const isPaidPrompt = template && (template.priceTokens > 0 || template.tokens > 0);
+  const isUnlocked = isCreator || (isPaidPrompt ? isPromptPurchased : (isPromptUnlocked || isPromptPurchased));
 
   // Title expansion states for titles longer than 5 lines
   const [isTitleExpanded, setIsTitleExpanded] = useState(false);
@@ -697,6 +792,47 @@ export default function PromptDetailPage() {
     setIsPromptUnlocked(!hasAnyActive);
   }, [template, id]);
 
+  const relatedStorePrompts = useMemo(() => {
+    if (!template) return [];
+    
+    const allPaid = [
+      ...(state.marketplace || []).filter(t => t.priceTokens > 0 || t.tokens > 0),
+      ...FALLBACK_STORE_ITEMS
+    ];
+    
+    const uniquePaid = [];
+    const seen = new Set();
+    allPaid.forEach(t => {
+      const key = t._id || t.id;
+      if (!seen.has(key)) {
+        seen.add(key);
+        uniquePaid.push(t);
+      }
+    });
+
+    const list = uniquePaid.filter(t => {
+      const isSelf = (t.id || t._id) === (template.id || template._id);
+      if (isSelf) return false;
+      return t.category === template.category;
+    });
+
+    if (list.length === 0) {
+      return uniquePaid.filter(t => (t.id || t._id) !== (template.id || template._id));
+    }
+
+    return list;
+  }, [template, state.marketplace]);
+
+  const relatedStoreFeedItems = useMemo(() => {
+    return (relatedStorePrompts || []).slice(0, 12).map((tmpl, idx) => ({
+      keyId: `related-store-${tmpl._id || tmpl.id || idx}`,
+      prompt: tmpl,
+      sampleIndex: 0,
+      mediaSrc: tmpl.thumbnail || tmpl.samples?.[0]?.output || tmpl.samples?.[0] || '',
+      isTextOnly: false
+    }));
+  }, [relatedStorePrompts]);
+
   const relatedFeedItems = useMemo(() => {
     if (!template) return [];
     let related = (state.marketplace || []).filter(t => {
@@ -801,10 +937,16 @@ export default function PromptDetailPage() {
   useEffect(() => {
     const fetchTemplate = async () => {
       // Find cached prompt from global marketplace state if available when id changes
-      const cached = (state.marketplace || []).find(t => (t.id || t._id) === id) || null;
+      const cached = (state.marketplace || []).find(t => (t.id || t._id) === id) || 
+                     FALLBACK_STORE_ITEMS.find(t => t._id === id) || null;
       setTemplate(cached);
       setLoading(!cached);
       setError(null);
+
+      if (cached) {
+        const hasPurchased = state.user?.purchasedPrompts?.some(pId => pId.toString() === id.toString()) || false;
+        setIsPromptPurchased(hasPurchased);
+      }
 
       // Try fetching from Database
       try {
@@ -829,30 +971,30 @@ export default function PromptDetailPage() {
         }
         
         // Fallback to local state if server fails or returns success: false
-        if (!cached) {
-          const localPrompt = (state.marketplace || []).find(t => (t.id || t._id) === id);
-          if (localPrompt) {
-            console.log('⚡ Fallback: Loaded prompt from local state cache');
-            setTemplate(localPrompt);
-            setReviews(localPrompt.reviews || []);
-            setIsPromptPurchased(true);
-          } else {
-            setError("Prompt not found");
-          }
+        const localPrompt = (state.marketplace || []).find(t => (t.id || t._id) === id) || 
+                            FALLBACK_STORE_ITEMS.find(t => t._id === id);
+        if (localPrompt) {
+          console.log('⚡ Fallback: Loaded prompt from local state cache');
+          setTemplate(localPrompt);
+          setReviews(localPrompt.reviews || []);
+          const hasPurchased = state.user?.purchasedPrompts?.some(pId => pId.toString() === id.toString()) || false;
+          setIsPromptPurchased(hasPurchased);
+        } else if (!cached) {
+          setError("Prompt not found");
         }
       } catch (err) {
         console.error("Fetch error:", err);
         // Fallback to local state on network error
-        if (!cached) {
-          const localPrompt = (state.marketplace || []).find(t => (t.id || t._id) === id);
-          if (localPrompt) {
-            console.log('⚡ Fallback: Loaded prompt from local state cache on network error');
-            setTemplate(localPrompt);
-            setReviews(localPrompt.reviews || []);
-            setIsPromptPurchased(true);
-          } else {
-            setError("Failed to load prompt details");
-          }
+        const localPrompt = (state.marketplace || []).find(t => (t.id || t._id) === id) || 
+                            FALLBACK_STORE_ITEMS.find(t => t._id === id);
+        if (localPrompt) {
+          console.log('⚡ Fallback: Loaded prompt from local state cache on network error');
+          setTemplate(localPrompt);
+          setReviews(localPrompt.reviews || []);
+          const hasPurchased = state.user?.purchasedPrompts?.some(pId => pId.toString() === id.toString()) || false;
+          setIsPromptPurchased(hasPurchased);
+        } else if (!cached) {
+          setError("Failed to load prompt details");
         }
       } finally {
         setLoading(false);
@@ -966,7 +1108,7 @@ export default function PromptDetailPage() {
             <ArrowLeft size={20} /> Back
           </button>
           <div className="p-detail__breadcrumbs">
-            <Link to="/">Home</Link> / <Link to="/templates">Feed</Link> / <span>{template.title || template.name}</span>
+            <Link to="/">Home</Link> / <Link to="/templates">Store</Link> / <span>{template.title || template.name}</span>
           </div>
         </div>
 
@@ -975,9 +1117,22 @@ export default function PromptDetailPage() {
           <div className="p-detail__media-section">
             {isVisual ? (
               <div className="visual-display card" style={{ marginBottom: '20px' }}>
-                <div
-                  className="visual-main"
-                >
+                <div className="visual-main">
+                  {/* Left Carousel Arrow */}
+                  {template.samples && template.samples.length > 1 && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        setActiveImage(prev => (prev === 0 ? template.samples.length - 1 : prev - 1));
+                      }}
+                      className="carousel-arrow carousel-arrow--left"
+                      title="Previous Image"
+                    >
+                      <ChevronLeft size={24} />
+                    </button>
+                  )}
+
                   {template.video || template.generateType === 'video' ? (
                     <video
                       src={template.video || (template.samples?.[activeImage]?.output || template.samples?.[activeImage])}
@@ -997,7 +1152,70 @@ export default function PromptDetailPage() {
                     />
                   )}
 
-                  {isPromptUnlocked && (
+                  {/* Right Carousel Arrow */}
+                  {template.samples && template.samples.length > 1 && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        setActiveImage(prev => (prev === template.samples.length - 1 ? 0 : prev + 1));
+                      }}
+                      className="carousel-arrow carousel-arrow--right"
+                      title="Next Image"
+                    >
+                      <ChevronRight size={24} />
+                    </button>
+                  )}
+
+                  {/* Fullscreen Button */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      const isVideo = template.video || template.generateType === 'video';
+                      const url = template.samples
+                        ? (template.samples[activeImage]?.output || template.samples[activeImage])
+                        : template.thumbnail;
+                      setLightboxMedia({
+                        url,
+                        type: isVideo ? 'video' : 'image'
+                      });
+                    }}
+                    style={{
+                      position: 'absolute',
+                      bottom: '16px',
+                      right: '16px',
+                      background: 'rgba(0, 0, 0, 0.7)',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      borderRadius: '50%',
+                      width: '44px',
+                      height: '44px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'white',
+                      cursor: 'pointer',
+                      zIndex: 10,
+                      transition: 'all 0.2s',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
+                    }}
+                    onMouseOver={e => {
+                      e.currentTarget.style.background = 'var(--color-cyan, #06b6d4)';
+                      e.currentTarget.style.color = 'black';
+                      e.currentTarget.style.transform = 'scale(1.05)';
+                    }}
+                    onMouseOut={e => {
+                      e.currentTarget.style.background = 'rgba(0, 0, 0, 0.7)';
+                      e.currentTarget.style.color = 'white';
+                      e.currentTarget.style.transform = 'scale(1)';
+                    }}
+                    title="Fullscreen Preview"
+                  >
+                    <Maximize2 size={20} />
+                  </button>
+
+                  {/* Download Button (Only visible if unlocked) */}
+                  {isUnlocked && (
                     <button
                       onClick={handleDownloadMedia}
                       style={{
@@ -1033,7 +1251,59 @@ export default function PromptDetailPage() {
                       <Download size={20} />
                     </button>
                   )}
-                </div>
+                 </div>
+                 {/* Thumbnail Carousel Tray */}
+                 {template.samples && template.samples.length > 1 && (
+                   <div className="visual-thumbnails" style={{
+                     display: 'flex',
+                     gap: '8px',
+                     marginTop: '12px',
+                     overflowX: 'auto',
+                     padding: '4px 0',
+                     scrollbarWidth: 'thin'
+                   }}>
+                     {template.samples.map((sample, idx) => {
+                       const url = sample?.output || (typeof sample === 'string' ? sample : '') || template.thumbnail;
+                       const isActive = idx === activeImage;
+                       return (
+                         <div
+                           key={idx}
+                           onClick={() => {
+                             setActiveImage(idx);
+                             setImageRatio(null);
+                           }}
+                           style={{
+                             width: '60px',
+                             height: '60px',
+                             borderRadius: '8px',
+                             overflow: 'hidden',
+                             border: isActive ? '2px solid var(--color-cyan, #06b6d4)' : '2px solid transparent',
+                             cursor: 'pointer',
+                             opacity: isActive ? 1 : 0.6,
+                             transition: 'all 0.2s ease',
+                             flexShrink: 0
+                           }}
+                           onMouseOver={e => {
+                             if (!isActive) e.currentTarget.style.opacity = '1';
+                           }}
+                           onMouseOut={e => {
+                             if (!isActive) e.currentTarget.style.opacity = '0.6';
+                           }}
+                         >
+                           <img
+                             src={url}
+                             alt={`Thumbnail ${idx + 1}`}
+                             style={{
+                               width: '100%',
+                               height: '100%',
+                               objectFit: 'cover'
+                             }}
+                           />
+                         </div>
+                       );
+                     })}
+                   </div>
+                 )}
               </div>
             ) : (
               <div className="text-display card" style={{ marginBottom: '20px' }}>
@@ -1306,145 +1576,156 @@ export default function PromptDetailPage() {
                   })}
                 </div>
               )}
-            </div>
 
-            <div className="p-detail__stats card">
-              <div className="stat-item" style={{
-                gridColumn: '1 / -1',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'stretch',
-                gap: '16px'
-              }}>
-                {(() => {
-                  const currentUserId = state.user?._id?.toString() || state.user?.id?.toString();
-                  const sellerId = template.seller?._id?.toString() || template.seller?.id?.toString() || template.seller?.toString();
-                  const isCreator = currentUserId && sellerId && (currentUserId === sellerId);
-                  const avatarUrl = (isCreator ? state.user?.avatar : null) || template.seller?.avatar || `https://ui-avatars.com/api/?name=${template.seller?.name || 'C'}&background=random`;
-                  const sellerName = (isCreator ? state.user?.name : null) || template.seller?.name || 'Unknown Creator';
-                  
-                  // Real-time followers count and follow state used from component hooks
-                  
-                  // end profile helpers
 
-                  return (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                          <img
-                            src={avatarUrl}
-                            alt="Creator Avatar"
-                            style={{ width: '54px', height: '54px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--color-cyan)', boxShadow: '0 0 15px rgba(0, 255, 255, 0.2)' }}
-                          />
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                            <span style={{ fontSize: '1.15rem', color: 'white', fontWeight: 'bold', fontFamily: 'var(--font-display)' }}>{sellerName}</span>
-                            <span style={{ fontSize: '0.75rem', color: 'var(--color-cyan)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                              <Users size={12} /> {followersCount} {followersCount === 1 ? 'follower' : 'followers'}
-                            </span>
-                          </div>
-                        </div>
-                        
-                        {!isCreator && (
-                          <button 
-                            className={`btn ${isFollowing ? 'btn-secondary' : 'btn-primary'}`} 
-                            style={{ 
-                              padding: '6px 14px', 
-                              fontSize: '0.8rem', 
-                              borderRadius: '20px', 
-                              minWidth: '80px',
-                              height: '32px',
-                              lineHeight: '20px',
-                              boxShadow: isFollowing ? 'none' : '0 0 10px rgba(6, 182, 212, 0.4)'
-                            }}
-                            onClick={handleFollowClick}
-                          >
-                            {isFollowing ? 'Following' : 'Follow'}
-                          </button>
-                        )}
-                      </div>
-
-                      {(() => {
-                        const filledPlatforms = Object.keys(linksSource).filter(platformId => {
-                          const url = linksSource[platformId];
-                          return url && url.trim() !== '';
-                        });
-                        
-                        if (filledPlatforms.length === 0) return null;
-                        
-                        return (
-                          <div style={{ 
-                            display: 'flex', 
-                            gap: '10px', 
-                            flexWrap: 'wrap',
-                            background: 'rgba(255,255,255,0.02)', 
-                            border: '1px solid rgba(255,255,255,0.05)', 
-                            borderRadius: '12px', 
-                            padding: '14px', 
-                            justifyContent: 'center', 
-                            alignItems: 'center',
-                            marginTop: '16px',
-                            width: '100%'
-                          }}>
-                            {filledPlatforms.map(platformId => {
-                              const url = linksSource[platformId];
-                              const config = getPlatformConfig(platformId, url);
-                              
-                              return (
-                                <a 
-                                  key={platformId}
-                                  href={url} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer" 
-                                  style={{ 
-                                    color: config.color, 
-                                    transition: 'all 0.2s', 
-                                    display: 'flex', 
-                                    alignItems: 'center', 
-                                    justifyContent: 'center',
-                                    width: '38px',
-                                    height: '38px',
-                                    borderRadius: '50%',
-                                    background: `${config.color}14`, // 14 hex = 8% opacity
-                                    border: `1px solid ${config.color}26` // 26 hex = 15% opacity
-                                  }}
-                                  onMouseOver={e => {
-                                    e.currentTarget.style.color = config.color;
-                                    e.currentTarget.style.background = `${config.color}33`; // 33 hex = 20% opacity
-                                    e.currentTarget.style.borderColor = `${config.color}4D`; // 4D hex = 30% opacity
-                                  }}
-                                  onMouseOut={e => {
-                                    e.currentTarget.style.color = config.color;
-                                    e.currentTarget.style.background = `${config.color}14`;
-                                    e.currentTarget.style.borderColor = `${config.color}26`;
-                                  }}
-                                  title={config.name}
-                                >
-                                  {config.icon}
-                                </a>
-                              );
-                            })}
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  );
-                })()}
-              </div>
             </div>
 
             {!state.user && (
-              <div className="p-detail__actions">
+              <div className="p-detail__actions" style={{ marginTop: '20px' }}>
                 <div className="p-detail__auth-gate">
                   <Link to="/login" className="btn btn-primary btn-xl w-full" style={{ width: '100%' }}>
-                    Login or Register <ArrowRight size={20} />
+                    Login or Register to Unlock <ArrowRight size={20} />
                   </Link>
                 </div>
               </div>
             )}
 
-            {state.user && (
+            {state.user && isPaidPrompt && !isPromptPurchased && !isCreator && (
               <div className="unlock-rules-card card animate-slide-up" style={{ 
                 marginTop: '20px', 
+                marginBottom: '20px',
+                padding: '24px', 
+                background: 'rgba(255,255,255,0.02)', 
+                border: '1px solid rgba(255,255,255,0.05)', 
+                borderRadius: '16px',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+                textAlign: 'center'
+              }}>
+                <h3 style={{ 
+                  fontSize: '1.25rem', 
+                  marginBottom: '20px', 
+                  color: 'white', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  gap: '8px', 
+                  fontFamily: 'var(--font-display)' 
+                }}>
+                  <Lock size={20} className="text-orange" /> Premium Store Prompt
+                </h3>
+                
+                <div style={{ 
+                  background: 'rgba(0,0,0,0.2)', 
+                  border: '1px solid rgba(255,255,255,0.03)', 
+                  borderRadius: '12px', 
+                  padding: '16px', 
+                  marginBottom: '20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
+                }}>
+                  <Zap size={22} className="text-orange" fill="var(--color-orange)" />
+                  <span style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--color-orange)' }}>
+                    {template.priceTokens || template.tokens || 5}
+                  </span>
+                  <span style={{ fontSize: '0.95rem', color: '#94a3b8', fontWeight: '500' }}>Tokens Required</span>
+                </div>
+
+                {purchaseError && (
+                  <div style={{
+                    padding: '10px 14px',
+                    borderRadius: '8px',
+                    background: 'rgba(239, 68, 68, 0.1)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    color: '#fca5a5',
+                    fontSize: '0.8rem',
+                    marginBottom: '16px',
+                    textAlign: 'left'
+                  }}>
+                    ⚠️ {purchaseError}
+                    {purchaseError.includes('Insufficient') && (
+                      <div style={{ marginTop: '8px' }}>
+                        <Link to="/pricing" className="text-cyan" style={{ textDecoration: 'underline', fontWeight: 'bold' }}>
+                          Buy Tokens Now
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <button 
+                  onClick={handleTokenUnlock}
+                  disabled={unlockingWithTokens}
+                  className="btn btn-primary w-full"
+                  style={{ width: '100%', height: '48px', fontSize: '1rem', fontWeight: 'bold', gap: '8px', color: 'black' }}
+                >
+                  {unlockingWithTokens ? (
+                    <>
+                      <Loader2 size={18} className="spin" /> Unlocking...
+                    </>
+                  ) : (
+                    <>
+                      <Unlock size={18} /> Unlock Prompt
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+
+            {state.user && isPaidPrompt && (isPromptPurchased || isCreator) && (
+              <div className="unlock-rules-card card animate-slide-up" style={{ 
+                marginTop: '20px', 
+                marginBottom: '20px',
+                padding: '24px', 
+                background: 'rgba(16, 185, 129, 0.04)', 
+                border: '1px solid rgba(16, 185, 129, 0.2)', 
+                borderRadius: '16px',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+                textAlign: 'center'
+              }}>
+                <h3 style={{ 
+                  fontSize: '1.2rem', 
+                  marginBottom: '10px', 
+                  color: '#34d399', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  gap: '8px', 
+                  fontFamily: 'var(--font-display)' 
+                }}>
+                  <CheckCircle size={22} style={{ color: '#10b981' }} /> You Already Purchased This Prompt
+                </h3>
+                <p style={{ fontSize: '0.85rem', color: '#94a3b8', marginBottom: '20px', lineHeight: '1.4' }}>
+                  You have full lifetime access to the secret prompt template, instructions, and download assets.
+                </p>
+
+                <button 
+                  onClick={() => window.open(`/purchase-success/${template._id || template.id}`, '_blank')}
+                  className="btn btn-primary w-full"
+                  style={{ 
+                    width: '100%', 
+                    height: '48px', 
+                    fontSize: '0.95rem', 
+                    fontWeight: 'bold', 
+                    gap: '8px', 
+                    color: 'black',
+                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                    border: 'none',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)'
+                  }}
+                >
+                  <Unlock size={18} /> View Purchased Prompt Details
+                </button>
+              </div>
+            )}
+
+            {state.user && (!isPaidPrompt || isPromptPurchased || isCreator) && activeTasksCount > 0 && !isPromptUnlocked && (
+              <div className="unlock-rules-card card animate-slide-up" style={{ 
+                marginTop: '20px', 
+                marginBottom: '20px',
                 padding: '24px', 
                 background: 'rgba(255,255,255,0.02)', 
                 border: '1px solid rgba(255,255,255,0.05)', 
@@ -1612,54 +1893,133 @@ export default function PromptDetailPage() {
                 </div>
               </div>
             )}
+
+            <div className="p-detail__stats card" style={{ marginTop: '20px' }}>
+              <div className="stat-item" style={{
+                gridColumn: '1 / -1',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'stretch',
+                gap: '16px'
+              }}>
+                {(() => {
+                  const currentUserId = state.user?._id?.toString() || state.user?.id?.toString();
+                  const sellerId = template.seller?._id?.toString() || template.seller?.id?.toString() || template.seller?.toString();
+                  const isCreator = currentUserId && sellerId && (currentUserId === sellerId);
+                  const avatarUrl = (isCreator ? state.user?.avatar : null) || template.seller?.avatar || `https://ui-avatars.com/api/?name=${template.seller?.name || 'C'}&background=random`;
+                  const sellerName = (isCreator ? state.user?.name : null) || template.seller?.name || 'Unknown Creator';
+                  
+                  // Real-time followers count and follow state used from component hooks
+                  
+                  // end profile helpers
+
+                  return (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                          <img
+                            src={avatarUrl}
+                            alt="Creator Avatar"
+                            style={{ width: '54px', height: '54px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--color-cyan)', boxShadow: '0 0 15px rgba(0, 255, 255, 0.2)' }}
+                          />
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                            <span style={{ fontSize: '1.15rem', color: 'white', fontWeight: 'bold', fontFamily: 'var(--font-display)' }}>{sellerName}</span>
+                            <span style={{ fontSize: '0.75rem', color: 'var(--color-cyan)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <Users size={12} /> {followersCount} {followersCount === 1 ? 'follower' : 'followers'}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        {!isCreator && (
+                          <button 
+                            className={`btn ${isFollowing ? 'btn-secondary' : 'btn-primary'}`} 
+                            style={{ 
+                              padding: '6px 14px', 
+                              fontSize: '0.8rem', 
+                              borderRadius: '20px', 
+                              minWidth: '80px',
+                              height: '32px',
+                              lineHeight: '20px',
+                              boxShadow: isFollowing ? 'none' : '0 0 10px rgba(6, 182, 212, 0.4)'
+                            }}
+                            onClick={handleFollowClick}
+                          >
+                            {isFollowing ? 'Following' : 'Follow'}
+                          </button>
+                        )}
+                      </div>
+
+                      {(() => {
+                        const filledPlatforms = Object.keys(linksSource).filter(platformId => {
+                          const url = linksSource[platformId];
+                          return url && url.trim() !== '';
+                        });
+                        
+                        if (filledPlatforms.length === 0) return null;
+                        
+                        return (
+                          <div style={{ 
+                            display: 'flex', 
+                            gap: '10px', 
+                            flexWrap: 'wrap',
+                            background: 'rgba(255,255,255,0.02)', 
+                            border: '1px solid rgba(255,255,255,0.05)', 
+                            borderRadius: '12px', 
+                            padding: '14px', 
+                            justifyContent: 'center', 
+                            alignItems: 'center',
+                            marginTop: '16px',
+                            width: '100%'
+                          }}>
+                            {filledPlatforms.map(platformId => {
+                              const url = linksSource[platformId];
+                              const config = getPlatformConfig(platformId, url);
+                              
+                              return (
+                                <a 
+                                  key={platformId}
+                                  href={url} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer" 
+                                  style={{ 
+                                    color: config.color, 
+                                    transition: 'all 0.2s', 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center',
+                                    width: '38px',
+                                    height: '38px',
+                                    borderRadius: '50%',
+                                    background: `${config.color}14`, // 14 hex = 8% opacity
+                                    border: `1px solid ${config.color}26` // 26 hex = 15% opacity
+                                  }}
+                                  onMouseOver={e => {
+                                    e.currentTarget.style.color = config.color;
+                                    e.currentTarget.style.background = `${config.color}33`; // 33 hex = 20% opacity
+                                    e.currentTarget.style.borderColor = `${config.color}4D`; // 4D hex = 30% opacity
+                                  }}
+                                  onMouseOut={e => {
+                                    e.currentTarget.style.color = config.color;
+                                    e.currentTarget.style.background = `${config.color}14`;
+                                    e.currentTarget.style.borderColor = `${config.color}26`;
+                                  }}
+                                  title={config.name}
+                                >
+                                  {config.icon}
+                                </a>
+                              );
+                            })}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Unlocked Details Section */}
-        {state.user && (
-          <div className="p-detail__unlocked-section animate-slide-up">
-            {isPromptUnlocked ? (
-              <div className="secret-section">
-                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px', width: '100%' }}>
-                  <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px', fontFamily: 'var(--font-display)', fontSize: '1.2rem', color: 'white' }}>
-                    <Unlock size={18} className="text-cyan" /> The Prompt
-                  </h3>
-                  <button 
-                    className={`btn-copy-small ${copiedStates['active-prompt'] ? 'copied' : ''}`}
-                    onClick={() => {
-                      const activeSample = template.samples?.[activeImage];
-                      const activePromptText = (activeSample && typeof activeSample === 'object') ? (activeSample.input || template.template || '') : (template.template || '');
-                      const cleanPrompt = activePromptText.replace(/\r?\n|\r/g, ' ').replace(/\s+/g, ' ').trim();
-                      handleCopy(cleanPrompt, 'active-prompt');
-                    }}
-                    style={{ marginLeft: 'auto', whiteSpace: 'nowrap' }}
-                  >
-                    {copiedStates['active-prompt'] ? <><Check size={16} /> Copied!</> : <><Copy size={16} /> Copy Prompt</>}
-                  </button>
-                </div>
-                <div className="prompt-box-reveal">
-                  {(() => {
-                    const activeSample = template.samples?.[activeImage];
-                    const text = (activeSample && typeof activeSample === 'object') ? (activeSample.input || template.template || '') : (template.template || '');
-                    return text.replace(/\r?\n|\r/g, ' ').replace(/\s+/g, ' ').trim();
-                  })()}
-                </div>
-              </div>
-            ) : (
-              <div className="secret-section" style={{ background: 'rgba(251, 146, 60, 0.02)', border: '1px dashed rgba(251, 146, 60, 0.2)', padding: '30px', textAlign: 'center', borderRadius: '16px' }}>
-                <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '54px', height: '54px', borderRadius: '50%', background: 'rgba(251, 146, 60, 0.1)', color: 'var(--color-orange, #fb923c)', marginBottom: '16px' }}>
-                  <Lock size={26} />
-                </div>
-                <h3 style={{ margin: '0 0 10px 0', fontSize: '1.25rem', color: 'white', fontFamily: 'var(--font-display)' }}>
-                  Prompt & Download Options Locked
-                </h3>
-                <p style={{ margin: 0, fontSize: '0.9rem', color: '#94a3b8', maxWidth: '480px', marginLeft: 'auto', marginRight: 'auto', lineHeight: '1.5' }}>
-                  Please complete the {activeTasksCount} Creator Social Task{activeTasksCount > 1 ? 's' : ''} on the right side to unlock the professional prompt copy options and high-quality download access.
-                </p>
-              </div>
-            )}
-          </div>
-        )}
 
         <section className="p-detail__bottom-section section-spacing">
           <div className="p-detail__related-side">
@@ -1668,7 +2028,7 @@ export default function PromptDetailPage() {
             </h2>
             <MasonryGrid
               columns={4}
-              items={relatedFeedItems}
+              items={isPaidPrompt ? relatedStoreFeedItems : relatedFeedItems}
               renderItem={(item, i) => (
                 <PinterestCard key={item.keyId} item={item} index={i} />
               )}
@@ -1681,12 +2041,59 @@ export default function PromptDetailPage() {
       {/* Lightbox Modal */}
       {lightboxMedia && (
         <div className="lightbox-overlay" onClick={() => setLightboxMedia(null)}>
-          <div className="lightbox-content" onClick={e => e.stopPropagation()}>
+          <div className="lightbox-content" onClick={e => e.stopPropagation()} style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
             <button className="lightbox-close" onClick={() => setLightboxMedia(null)}>&times;</button>
+            
+            {/* Left Arrow inside Lightbox */}
+            {template.samples && template.samples.length > 1 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  const prevIdx = activeImage === 0 ? template.samples.length - 1 : activeImage - 1;
+                  setActiveImage(prevIdx);
+                  const activeSample = template.samples[prevIdx];
+                  const url = activeSample?.output || activeSample;
+                  setLightboxMedia({
+                    url,
+                    type: template.video || template.generateType === 'video' ? 'video' : 'image'
+                  });
+                }}
+                className="carousel-arrow carousel-arrow--left"
+                style={{ position: 'absolute', left: '24px', zIndex: 100 }}
+                title="Previous Image"
+              >
+                <ChevronLeft size={30} />
+              </button>
+            )}
+
             {lightboxMedia.type === 'video' ? (
-              <video src={lightboxMedia.url} controls autoPlay className="lightbox-media" />
+              <video src={lightboxMedia.url} controls autoPlay className="lightbox-media" style={{ maxHeight: '90vh', maxWidth: '90vw' }} />
             ) : (
-              <img src={lightboxMedia.url} alt="Full view" className="lightbox-media" />
+              <img src={lightboxMedia.url} alt="Full view" className="lightbox-media" style={{ maxHeight: '90vh', maxWidth: '90vw', objectFit: 'contain' }} />
+            )}
+
+            {/* Right Arrow inside Lightbox */}
+            {template.samples && template.samples.length > 1 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  const nextIdx = activeImage === template.samples.length - 1 ? 0 : activeImage + 1;
+                  setActiveImage(nextIdx);
+                  const activeSample = template.samples[nextIdx];
+                  const url = activeSample?.output || activeSample;
+                  setLightboxMedia({
+                    url,
+                    type: template.video || template.generateType === 'video' ? 'video' : 'image'
+                  });
+                }}
+                className="carousel-arrow carousel-arrow--right"
+                style={{ position: 'absolute', right: '24px', zIndex: 100 }}
+                title="Next Image"
+              >
+                <ChevronRight size={30} />
+              </button>
             )}
           </div>
         </div>

@@ -15,7 +15,8 @@ import './DashboardPage.css';
 
 export default function DashboardPage() {
   const { state, isPremium } = useApp();
-  const navigate = useNavigate();
+  const ADMIN_EMAIL = 'nitindagar0800@gmail.com';
+  const isAdmin = state?.user?.email?.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim() || state?.user?.role === 'admin' || state?.user?.isAdmin;
   const [activeTab, setActiveTab] = useState('overview');
 
   const [copied, setCopied] = useState(null);
@@ -255,9 +256,11 @@ export default function DashboardPage() {
             </div>
           </div>
           <div className="dash-header-actions">
-            <Link to="/sell" className="btn btn-primary btn-glow">
-              <Plus size={18} /> Add New Prompt
-            </Link>
+            {isAdmin && (
+              <Link to="/sell" className="btn btn-primary btn-glow">
+                <Plus size={18} /> Add New Prompt
+              </Link>
+            )}
             <button onClick={() => navigate(-1)} className="btn btn-secondary btn-back-premium" title="Go Back">
               <ArrowLeft size={18} /> <span>Back</span>
             </button>

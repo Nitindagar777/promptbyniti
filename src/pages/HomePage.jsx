@@ -58,6 +58,61 @@ const renderStars = (rating) => {
   );
 };
 
+const getStoreCardSamples = (tmpl) => {
+  const list = [];
+  const samples = tmpl.samples || [];
+  
+  samples.forEach(s => {
+    const src = s.output || s;
+    if (src && typeof src === 'string') {
+      list.push(src);
+    }
+  });
+
+  if (list.length === 0) {
+    list.push(tmpl.thumbnail || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=300&auto=format&fit=crop&q=80');
+    
+    const name = (tmpl.name || '').toLowerCase();
+    if (name.includes('cyberpunk') || name.includes('metropolis')) {
+      list.push(
+        'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=300&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1542838132-92c53300491e?w=300&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1508739773434-c26b3d09e071?w=300&auto=format&fit=crop&q=80'
+      );
+    } else if (name.includes('character') || name.includes('portrait') || name.includes('headshot')) {
+      list.push(
+        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&auto=format&fit=crop&q=80'
+      );
+    } else if (name.includes('architecture') || name.includes('interior') || name.includes('forest') || name.includes('islands')) {
+      list.push(
+        'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=300&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=300&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1511497584788-876760111969?w=300&auto=format&fit=crop&q=80'
+      );
+    } else if (name.includes('product') || name.includes('leather') || name.includes('cosmetic') || name.includes('shoes')) {
+      list.push(
+        'https://images.unsplash.com/photo-1524805444758-089113d48a6d?w=300&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=300&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300&auto=format&fit=crop&q=80'
+      );
+    } else {
+      list.push(
+        'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=300&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=300&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=300&auto=format&fit=crop&q=80'
+      );
+    }
+  }
+  
+  while (list.length < 4) {
+    list.push(tmpl.thumbnail || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=300&auto=format&fit=crop&q=80');
+  }
+  
+  return list.slice(0, 4);
+};
+
 export default function HomePage() {
   const { state, dispatch, canGenerate, useCredit, addPrompt, cache, setCachedData, setScroll, getScroll } = useApp();
   const location = useLocation();
@@ -118,7 +173,19 @@ export default function HomePage() {
     return sortedItems.slice(0, 16);
   }, [state.marketplace]);
 
+  const storeItems = useMemo(() => {
+    return state.marketplace || [];
+  }, [state.marketplace]);
 
+  const storeFeedItems = useMemo(() => {
+    return storeItems.map((tmpl, idx) => ({
+      keyId: `home-store-${tmpl._id || tmpl.id || idx}`,
+      prompt: tmpl,
+      sampleIndex: 0,
+      mediaSrc: tmpl.thumbnail || tmpl.samples?.[0]?.output || tmpl.samples?.[0] || '',
+      isTextOnly: false
+    }));
+  }, [storeItems]);
 
   // Reference Modes Showcase Section States
   const [activeRefCategory, setActiveRefCategory] = useState('image'); // 'image' | 'video' | 'text'
@@ -327,6 +394,22 @@ export default function HomePage() {
     };
   }, []);
 
+  // Smooth scroll to store section if hash is present
+  useEffect(() => {
+    if (location.hash === '#store-section') {
+      const handleScroll = () => {
+        const el = document.getElementById('store-section');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth' });
+        }
+      };
+      // Try immediate and with a delay for safety
+      handleScroll();
+      const timer = setTimeout(handleScroll, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [location.hash, loadingPrompts]);
+
 
   // Go to next reference mode in the global loop sequence
   const goToNextMode = useCallback(() => {
@@ -414,9 +497,9 @@ export default function HomePage() {
   return (
     <div className="p-home" id="home-page">
       <SEOHead
-        title="#1 AI Prompt Generator & Feed — Image, Video & Code"
-        description="Prompt by Niti is the leading AI prompt generator and content feed with 3 consistency engines. Craft consistent character prompts (cref/sref) for Midjourney & Flux, cinematic motion anchors for Sora & Kling videos, and structured code/text blueprints (AIDA, PAS, agent personas). Generate premium prompt templates and grow your social media."
-        keywords="ai prompt generator, prompt generator, prompt feed, AI prompt feed, midjourney prompt generator, chatgpt prompt generator, consistent character prompts, midjourney cref, midjourney sref, image to video prompts, sora video prompts, flux prompt generator, text to code prompts, AIDA copywriting prompts, react code prompts, AI agent personas, prompt templates, prompt engineering, promptbase alternative, promptbyniti, free prompt generator, prompt builder, prompt ideas, best AI prompts 2026, grow social media followers"
+        title="#1 AI Prompt Generator & Premium Store — Image, Video & Code"
+        description="Prompt by Niti is the leading AI prompt generator and premium prompt marketplace with 3 consistency engines. Craft consistent character prompts (cref/sref) for Midjourney & Flux, cinematic motion anchors for Sora & Kling videos, and structured code/text blueprints."
+        keywords="ai prompt generator, prompt generator, prompt store, AI prompt store, midjourney prompt generator, chatgpt prompt generator, consistent character prompts, midjourney cref, midjourney sref, image to video prompts, sora video prompts, flux prompt generator, text to code prompts, prompt templates, prompt engineering, promptbase alternative, promptbyniti"
         breadcrumbs={[
           { name: 'Home', url: '/' }
         ]}
@@ -470,16 +553,17 @@ export default function HomePage() {
             {/* Left Hero Content */}
             <div className="p-hero__content-col reveal" style={{ animationDelay: '0.1s' }}>
 
-              <h1 className="p-hero__title">
-                <span className="text-cyan">AI Prompts</span> <span style={{ fontSize: '3.25rem' }}>Generator & </span> <span className="text-orange">Feed</span> <span className="text-purple">(Free Prompts)</span>
+              <h1 className="p-hero__title" style={{ fontSize: 'clamp(2.1rem, 3.3vw, 3.2rem)', lineHeight: '1.2' }}>
+                <span className="text-cyan" style={{ whiteSpace: 'nowrap' }}>AI Prompts</span> Generator & <br className="hide-on-mobile" />
+                <span className="text-orange" style={{ whiteSpace: 'nowrap' }}>Premium Store</span>
               </h1>
 
               <p className="p-hero__pitch">
-                <strong className="text-orange">Stop</strong> buying prompts. Generate premium <strong className="text-cyan">Image</strong>, <strong className="text-cyan">Video</strong> & <strong className="text-cyan">Text</strong> prompts for less, powered by <strong className="text-purple">smart looping</strong> and <strong className="text-pink">Reference Consistency</strong> that keeps every character and style <strong className="text-green">perfectly consistent</strong>.
+                Generate & unlock high-performing <strong className="text-cyan">Image</strong>, <strong className="text-cyan">Video</strong> & <strong className="text-cyan">Text</strong> prompts, powered by <strong className="text-purple">smart looping</strong> and <strong className="text-pink">Reference Consistency</strong> that keeps every character and style <strong className="text-green">perfectly consistent</strong>.
               </p>
 
               <p className="p-hero__subtitle p-hero__subtitle--accent">
-                <span className="text-orange">Generate.</span> <span className="text-cyan">Customize.</span> <span className="text-purple">Share.</span>
+                <span className="text-orange">Generate.</span> <span className="text-cyan">Customize.</span> <span className="text-purple">Unlock.</span>
               </p>
 
               <div className="p-hero__btns">
@@ -487,7 +571,7 @@ export default function HomePage() {
                   Start Generating <ArrowRight size={18} style={{ marginLeft: '4px' }} />
                 </Link>
                 <Link to="/templates" className="btn btn-secondary btn-xl">
-                  Explore Feed <Sparkles size={18} style={{ marginLeft: '4px' }} />
+                  Explore Store <Sparkles size={18} style={{ marginLeft: '4px' }} />
                 </Link>
               </div>
 
@@ -516,39 +600,43 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 03. EXPLORE FEED — PINTEREST STYLE */}
-      <section className="p-categories bg-secondary section-spacing">
+      {/* PREMIUM STORE SECTION */}
+      <section className="p-store-section" id="store-section">
         <div className="container">
-          <div className="p-market-header reveal">
-            <h2 className="h-display">Viral <span className="text-pink">Feed</span></h2>
+          <div className="p-store-header reveal">
+            <div className="p-store-header__info">
+              <span className="p-store-header__subtitle">Premium Store</span>
+              <h2 className="h-display" style={{ marginTop: 0 }}>Featured <span className="text-orange">Premium</span> Store</h2>
+            </div>
             <Link to="/templates" className="btn btn-secondary">
-              Explore Feed <Sparkles size={18} style={{ marginLeft: '8px' }} />
+              Browse Store Feed <Sparkles size={18} style={{ marginLeft: '8px' }} />
             </Link>
           </div>
 
           {loadingPrompts ? (
-            <div style={{ display: 'flex', gap: '16px', width: '100%', margin: '30px 0' }}>
-              {[...Array(4)].map((_, i) => (
-                <div key={i} style={{ flex: 1, height: '280px', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }} />
+            <div className="p-store-grid">
+              {[...Array(16)].map((_, i) => (
+                <div key={i} style={{ height: '280px', background: 'rgba(255,255,255,0.02)', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)' }} />
               ))}
             </div>
-          ) : feedItems.length > 0 ? (
+          ) : storeItems.length > 0 ? (
             <MasonryGrid
               columns={4}
-              items={feedItems}
+              items={storeFeedItems}
               renderItem={(item, i) => (
                 <PinterestCard key={item.keyId} item={item} index={i} />
               )}
             />
           ) : (
-            <div className="p-market-empty reveal" style={{ textAlign: 'center', padding: 'var(--space-2xl) 0' }}>
+            <div className="p-market-empty" style={{ textAlign: 'center', padding: '40px 0' }}>
               <Sparkles size={48} className="text-muted mb-4 mx-auto" />
-              <h3>No Prompts Found</h3>
-              <p>Be the first to post a prompt to the community feed!</p>
+              <h3>No Premium Prompts</h3>
             </div>
           )}
         </div>
       </section>
+
+
 
       {/* UNIFIED AI REFERENCE MODES SECTION */}
       <section className="p-ref-modes section-spacing" id="ref-modes">
@@ -1193,19 +1281,19 @@ export default function HomePage() {
                             Instagram Growth Agent
                           </span>
                           <span className="p-ref-modes__text-chip p-ref-modes__text-chip--blue">
-                            <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c4.56-.93 8-4.96 8-9.8z"/></svg>
+                            <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c4.56-.93 8-4.96 8-9.8z" /></svg>
                             Facebook Ads Agent
                           </span>
                           <span className="p-ref-modes__text-chip p-ref-modes__text-chip--blue">
-                            <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+                            <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" /></svg>
                             LinkedIn Content Agent
                           </span>
                           <span className="p-ref-modes__text-chip p-ref-modes__text-chip--white">
-                            <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                            <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
                             Twitter/X Growth Agent
                           </span>
                           <span className="p-ref-modes__text-chip p-ref-modes__text-chip--red">
-                            <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                            <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" /></svg>
                             YouTube SEO Agent
                           </span>
                           <span className="p-ref-modes__text-chip p-ref-modes__text-chip--pink"><Video size={12} /> TikTok Scriptwriter</span>
@@ -1600,7 +1688,7 @@ export default function HomePage() {
                 </ul>
               </div>
               <div className="p-seo-guide-card__media">
-                <div 
+                <div
                   className="p-seo-guide-card__image-container"
                   onClick={() => setActiveLightboxImg({ src: '/text_to_image_diagram.png', alt: 'AI Text to Image Prompt structure diagram blueprint' })}
                 >
@@ -1619,7 +1707,7 @@ export default function HomePage() {
             {/* 2. Image-to-Video */}
             <div className="p-seo-guide-card p-seo-guide-card--video p-seo-guide-card--reverse glass-effect">
               <div className="p-seo-guide-card__media">
-                <div 
+                <div
                   className="p-seo-guide-card__image-container"
                   onClick={() => setActiveLightboxImg({ src: '/image_to_video_diagram.png', alt: 'AI Image to Video Motion Anchor structure diagram blueprint' })}
                 >
@@ -1696,7 +1784,7 @@ export default function HomePage() {
                 </ul>
               </div>
               <div className="p-seo-guide-card__media">
-                <div 
+                <div
                   className="p-seo-guide-card__image-container"
                   onClick={() => setActiveLightboxImg({ src: '/text_to_code_diagram.png', alt: 'AI Text to Code prompt engineering flowchart diagram blueprint' })}
                 >
@@ -1846,8 +1934,8 @@ export default function HomePage() {
 
       {/* Lightbox Modal */}
       {activeLightboxImg && (
-        <div 
-          className="p-lightbox-overlay" 
+        <div
+          className="p-lightbox-overlay"
           onClick={() => setActiveLightboxImg(null)}
           style={{
             position: 'fixed',
@@ -1864,9 +1952,9 @@ export default function HomePage() {
             padding: '24px',
           }}
         >
-          <button 
-            type="button" 
-            className="p-lightbox-close" 
+          <button
+            type="button"
+            className="p-lightbox-close"
             onClick={() => setActiveLightboxImg(null)}
             style={{
               position: 'absolute',
@@ -1889,10 +1977,10 @@ export default function HomePage() {
           >
             &times;
           </button>
-          
-          <img 
-            src={activeLightboxImg.src} 
-            alt={activeLightboxImg.alt} 
+
+          <img
+            src={activeLightboxImg.src}
+            alt={activeLightboxImg.alt}
             onClick={(e) => e.stopPropagation()}
             style={{
               maxWidth: '90%',

@@ -278,14 +278,14 @@ export default function Navbar() {
             </li>
           )}
           <li>
-            <Link to="/templates" className={`navbar__link ${isActive('/templates') ? 'navbar__link--active' : ''}`}>Feed</Link>
+            <Link to="/templates" className={`navbar__link ${isActive('/templates') ? 'navbar__link--active' : ''}`}>Store</Link>
           </li>
           {state?.user && (
             <li>
               <Link to="/pricing" className={`navbar__link ${isActive('/pricing') ? 'navbar__link--active' : ''}`}>Pricing</Link>
             </li>
           )}
-          {state?.user && (
+          {isAdmin && (
             <li>
               <Link to="/sell" className={`navbar__link ${isActive('/sell') ? 'navbar__link--active' : ''}`}>Post</Link>
             </li>
@@ -479,14 +479,14 @@ export default function Navbar() {
             </li>
           )}
           <li>
-            <Link to="/templates" className={`mobile-drawer__link ${isActive('/templates') ? 'mobile-drawer__link--active' : ''}`} onClick={() => setMobileMenuOpen(false)}>Feed</Link>
+            <Link to="/templates" className={`mobile-drawer__link ${isActive('/templates') ? 'mobile-drawer__link--active' : ''}`} onClick={() => setMobileMenuOpen(false)}>Store</Link>
           </li>
           {state?.user && (
             <li>
               <Link to="/pricing" className={`mobile-drawer__link ${isActive('/pricing') ? 'mobile-drawer__link--active' : ''}`} onClick={() => setMobileMenuOpen(false)}>Pricing</Link>
             </li>
           )}
-          {state?.user && (
+          {isAdmin && (
             <li>
               <Link to="/sell" className={`mobile-drawer__link ${isActive('/sell') ? 'mobile-drawer__link--active' : ''}`} onClick={() => setMobileMenuOpen(false)}>Post</Link>
             </li>
