@@ -968,32 +968,51 @@ export const modelParameterSamples = [
   "--ar 3:2 --v 5.2 --stylize 1000"
 ];
 
+export const generateRandomSurprise = () => {
+  const subjects = [
+    'Anime Girl', 'Cyberpunk Street Warrior', 'Dark Fantasy Wizard', 'Futuristic Supercar',
+    'Chiaroscuro Male Portrait', 'Mecha Battle Robot', 'Fluid Ink Skull Art', 'Gothic Cathedral',
+    'Astronaut on Mars', 'Steampunk Inventor', 'Samurai Assassin', 'Ethereal Forest Goddess',
+    'Neon City Skyline', 'Sci-Fi Spaceship', 'Surrealist Sculpture', 'Luxury Diamond Watch',
+    'Vaporwave Cyberpunk Cat', 'Volcanic Magma Dragon', 'Candid Streetwear Look', 'High-Fashion Editorial'
+  ];
+
+  const styles = [
+    'Anime Style', 'Cyberpunk Aesthetic', 'Dark Fantasy Art', 'Chiaroscuro Painting',
+    'Hyperrealistic 8K', 'Minimalist Vector', 'Vaporwave Synthwave', 'Oil Painting Texture',
+    'Fluid Red Ink Splatter', 'Unreal Engine 5 Render', 'Photorealistic Masterpiece',
+    'Cinematic Stills', 'Surrealism', 'Studio Portraiture', 'Octane Render 3D'
+  ];
+
+  const lightings = [
+    'Neon Volumetric Lighting', 'Dramatic Chiaroscuro Shadows', 'Golden Hour Lighting',
+    'Cinematic Rim Light', 'Bioluminescent Glow', 'Prismatic Hologram Light',
+    'Atmospheric Fog Lighting', 'Studio Softbox Highlights'
+  ];
+
+  const qualities = [
+    '8K Resolution', 'Ultra Detailed', 'Masterpiece Quality', 'Raytracing Reflections',
+    'Dynamic Action Pose', 'High Contrast Vibrancy', 'Subtle Grain Texture', 'Sharp Focus 85mm'
+  ];
+
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  return `${pick(subjects)} + ${pick(styles)} + ${pick(lightings)} + ${pick(qualities)}`;
+};
+
 export const randomDescriptions = [
-  "A futuristic cyberpunk city with neon lights and flying cars in the rain.",
-  "An underwater kingdom with glowing jellyfish and ancient ruins.",
-  "A cozy cottage in a mystical forest with talking animals and fairy dust.",
-  "A majestic dragon guarding a treasure hoard in a volcanic cavern.",
-  "An astronaut exploring a vibrant alien planet with purple vegetation.",
-  "A Victorian steampunk laboratory filled with brass gears and steam.",
-  "A peaceful Japanese garden with cherry blossoms and a koi pond.",
-  "A gritty noir detective standing in a dark alley with a trench coat.",
-  "A colossal floating island suspended by massive glowing crystals.",
-  "A lone samurai facing down a massive mechanical beast in a snowstorm.",
-  "An ancient forgotten library where books flutter like birds.",
-  "A sprawling metropolis built entirely within the branches of a giant tree.",
-  "A ghostly pirate ship sailing through a sea of stars and nebulas.",
-  "A hyper-realistic close-up of a cybernetic eye reflecting a neon skyline.",
-  "A post-apocalyptic survivor wandering through an overgrown, ruined Times Square.",
-  "A magical tea party taking place on the rings of Saturn.",
-  "A gargantuan sea monster rising from the ocean during a violent thunderstorm.",
-  "A hidden elf village illuminated by hundreds of glowing fireflies.",
-  "A futuristic racing car drifting through a track made of pure light.",
-  "A hauntingly beautiful ice palace carved into a frozen glacier.",
-  "A whimsical hot air balloon festival over a landscape of candy-colored mountains.",
-  "A mecha pilot looking out over a destroyed city at sunset.",
-  "An enchanted clockmaker's shop where time physically slows down.",
-  "A lone wanderer discovering a glowing portal in the middle of a desert.",
-  "A beautiful goddess woven entirely from threads of galaxies and stars."
+  "Anime Art + Cyberpunk City + Neon Volumetric Lighting + 8K Resolution",
+  "Chiaroscuro Portrait + Dark Fantasy + Psychological Torment + Oil Painting + Intricate Shadows",
+  "Futuristic Supercar + Night Rain Highway + Raytracing Reflections + Photorealistic 8K",
+  "Fluid Ink Skull + Red Splatter Art + High Contrast + Vector Illustration + Masterpiece",
+  "Cyberpunk Samurai + Katana Blade + Hologram Billboard + Rain Reflections + 8K Cinematic",
+  "Astronaut + Alien Flora + Bioluminescent Glow + Cosmic Nebula Sky + Ultra Detailed",
+  "Vaporwave Synthwave + Retro Sunset + 80s Grid + Neon Hologram Glow + Masterpiece",
+  "Luxury Diamond Watch + Dark Marble Table + Studio Softbox Lighting + Photorealistic 8K",
+  "Ethereal Goddess + Galaxy Threads + Floating Crystals + Soft Golden Hour + Unreal Engine 5",
+  "Steampunk Inventor + Brass Mechanical Gears + Vintage Clockwork + Volumetric Steam + 8K Detail",
+  "Minimalist Architecture + Geometric Shadows + Warm Sunlight + Clean Aesthetics + 8K Photorealistic",
+  "Dark Fantasy Dragon + Volcanic Magma Cavern + Glowing Lava + Epic Scale + Cinematic Stills",
+  "High-Fashion Editorial + Streetwear Look + Candid Pose + Studio Lighting + 85mm Lens Focus"
 ];
 
 export const textCategories = {

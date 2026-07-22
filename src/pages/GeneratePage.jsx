@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { randomDescriptions, aiModels, textCategories } from '../data/promptData';
+import { randomDescriptions, aiModels, textCategories, generateRandomSurprise } from '../data/promptData';
 import PromptOutput from '../components/PromptOutput';
 import PromptThumbnail from '../components/PromptThumbnail';
 import SEOHead from '../components/SEOHead';
@@ -396,7 +396,7 @@ export default function GeneratePage() {
   const handleRandomize = (initialDesc = null) => {
     const selectedIdea = typeof initialDesc === 'string'
       ? initialDesc
-      : randomDescriptions[Math.floor(Math.random() * randomDescriptions.length)];
+      : generateRandomSurprise();
     setForm(prev => ({ ...prev, description: selectedIdea }));
   };
 
