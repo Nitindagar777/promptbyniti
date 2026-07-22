@@ -71,6 +71,18 @@ const SYSTEM_PROMPT_VERSION = 'v23-force-4-samples-always'; // bump this when sy
 // Fallback chain: try best model first, fall back if unavailable
 const MODEL_CHAIN = ['gemini-3.5-flash', 'gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
 
+// Backup Gemini API Keys pool (8 additional keys)
+const GEMINI_FALLBACK_KEYS = [
+  'AQ.Ab8RN6Jes4GulDFcccfsyikXjNPYMR3jCIiugECjF_3_VYRqjg',
+  'AQ.Ab8RN6LJhrVHjKlG0gM5yJjUpWA-J95Y8cE-iP3FhwtCtQUDOw',
+  'AQ.Ab8RN6J9LrQxFf5kVDfOJRkhFXy1C3Pv9swoJfDWdcydk0RSEw',
+  'AQ.Ab8RN6LosILWCe-dIldoppzBXf7LkBQH05kKRLRozT6ZvOhyow',
+  'AQ.Ab8RN6KtZWaxDwWtB0Nox7-88ChqUsil30dD8__NC-clpcDHVQ',
+  'AQ.Ab8RN6IiwV8_KagTiGrWgqxwRyQd9iXlc3zxqMTGwlhmp0wnsw',
+  'AQ.Ab8RN6LKd5E6XJjk5LDfoLBv8VUYbddP4Bm9qgUm2XuhX6pIxQ',
+  'AQ.Ab8RN6IODT6rDnhkxPsQVEqrbuin-HtfUOm-0fzrtYFaX3-XOg'
+];
+
 /**
  * Build (or re-use) a Gemini model with system instruction baked in.
  * Re-creates only when the rules or API key change.
@@ -81,7 +93,7 @@ async function getOrCreateModel() {
   const freeKey = (settings?.geminiApiKey || process.env.GEMINI_API_KEY || '').trim();
   const paidKey = (settings?.paidGeminiApiKey || process.env.GEMINI_PAID_API_KEY || '').trim();
 
-  if (!freeKey && !paidKey) {
+  if (!freeKey && !paidKey && GEMINI_FALLBACK_KEYS.length === 0) {
     throw new Error('Gemini API Key not configured by Admin.');
   }
 
@@ -101,11 +113,19 @@ async function getOrCreateModel() {
 
   const keysPool = [];
   if (freeKey) {
-    keysPool.push({ name: 'FREE Key', instance: new GoogleGenerativeAI(freeKey) });
+    keysPool.push({ name: 'FREE Key (Admin)', instance: new GoogleGenerativeAI(freeKey), rawKey: freeKey });
   }
   if (paidKey && paidKey !== freeKey) {
-    keysPool.push({ name: 'PAID Key', instance: new GoogleGenerativeAI(paidKey) });
+    keysPool.push({ name: 'PAID Key (Admin)', instance: new GoogleGenerativeAI(paidKey), rawKey: paidKey });
   }
+
+  // Add all backup Gemini keys
+  GEMINI_FALLBACK_KEYS.forEach((keyStr, idx) => {
+    const trimmed = keyStr.trim();
+    if (trimmed && !keysPool.some(k => k.rawKey === trimmed)) {
+      keysPool.push({ name: `Backup Gemini Key #${idx + 1}`, instance: new GoogleGenerativeAI(trimmed), rawKey: trimmed });
+    }
+  });
 
   cachedModel = {
     keysPool,
