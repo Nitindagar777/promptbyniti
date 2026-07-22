@@ -83,33 +83,84 @@ const GEMINI_FALLBACK_KEYS = [
   'AQ.Ab8RN6IODT6rDnhkxPsQVEqrbuin-HtfUOm-0fzrtYFaX3-XOg'
 ];
 
+// Track exhausted keys in memory for 1 hour to prevent retrying rate-limited keys
+const EXHAUSTED_KEYS_SET = new Set();
+const KEY_RESET_TIMERS = new Map();
+
+function markKeyExhausted(rawKey, keyName) {
+  if (!rawKey) return;
+  EXHAUSTED_KEYS_SET.add(rawKey);
+  console.warn(`🛑 Gemini Key [${keyName}] quota exhausted/failed. Marking inactive for 1 hour.`);
+  
+  if (KEY_RESET_TIMERS.has(rawKey)) clearTimeout(KEY_RESET_TIMERS.get(rawKey));
+  const timer = setTimeout(() => {
+    EXHAUSTED_KEYS_SET.delete(rawKey);
+    console.log(`✨ Gemini Key [${keyName}] reactivated for rotation.`);
+  }, 60 * 60 * 1000); // reset after 1 hour
+  KEY_RESET_TIMERS.set(rawKey, timer);
+}
+
 /**
- * Build (or re-use) a Gemini model with system instruction baked in.
- * Re-creates only when the rules or API key change.
+ * Local Smart Prompt Engine Fallback when all external AI keys are rate-limited
+ */
+function buildSmartFallbackPrompt(description, promptType, targetModel, aspectRatio) {
+  const desc = (description || 'Cyberpunk neon futuristic portrait').trim();
+  const type = promptType || 'image';
+  const model = targetModel || 'flux-1';
+  const resolvedAR = aspectRatio ? aspectRatio.trim() : (type === 'video' ? '16:9' : '1:1');
+  const cleanSubject = desc.replace(/[^\w\s]/gi, '').substring(0, 80);
+
+  const titleWords = cleanSubject.split(' ').filter(Boolean).map(w => w.charAt(0).toUpperCase() + w.slice(1));
+  const title = titleWords.slice(0, 5).join(' ') || 'Masterpiece AI Visual Blueprint';
+
+  if (type === 'video') {
+    const mainPrompt = `Generate a video of ${desc}, ultra-realistic 8k cinematic lighting, smooth 60fps motion, dynamic camera sweep, vibrant atmospheric depth, masterwork color grading --ar ${resolvedAR}`;
+    return {
+      title: `${title} (Cinematic Motion)`,
+      description: `Cinematic motion prompt for ${desc}. Designed for Sora, Kling, and Runway Gen-3.`,
+      promptTemplate: `Generate a video of [subject] [action], ultra-realistic 8k cinematic lighting, smooth 60fps camera sweep, [mood] mood, masterwork color grading --ar ${resolvedAR}`,
+      mainPrompt: mainPrompt,
+      negativePrompt: 'static, low resolution, motion blur distortion, glitch, watermark, blurry frames',
+      instructions: 'Paste this prompt into Sora, Kling AI, or Runway Gen-3. Adjust [subject] and [mood] to generate custom video sequences.',
+      samples: [
+        `Generate a video of ${desc}, golden hour sunlight, slow motion panning shot --ar ${resolvedAR}`,
+        `Generate a video of ${desc}, dramatic neon reflections, dynamic tracking camera shot --ar ${resolvedAR}`,
+        `Generate a video of ${desc}, atmospheric volumetric fog, high-speed cinematic zoom --ar ${resolvedAR}`
+      ],
+      keywords: ['video-prompt', 'sora', 'kling', 'cinematic', 'motion'],
+      model: model,
+      priceTokens: 4
+    };
+  } else {
+    const mainPrompt = `${desc}, hyper-detailed, 8k resolution, professional photography, studio lighting, octane render, intricate details, photorealistic texture --ar ${resolvedAR}`;
+    return {
+      title: title,
+      description: `Professional AI prompt blueprint for ${desc}. Optimized for Midjourney v6 and Flux.1.`,
+      promptTemplate: `[subject] ${desc}, hyper-detailed [style] style, 8k resolution, professional [lighting] lighting, studio photography, octane render --ar ${resolvedAR}`,
+      mainPrompt: mainPrompt,
+      negativePrompt: 'blurry, low quality, distorted anatomy, extra limbs, bad lighting, watermark, text',
+      instructions: 'Copy and paste into Midjourney v6, Flux.1, or DALL-E 3. Replace [subject] or [style] for custom outputs.',
+      samples: [
+        `${desc}, photorealistic 8k render, golden hour lighting, shot on 35mm lens --ar ${resolvedAR}`,
+        `${desc}, cyberpunk aesthetic, vibrant neon reflections, volumetric fog --ar ${resolvedAR}`,
+        `${desc}, minimalist modern art style, clean studio background, dramatic shadows --ar ${resolvedAR}`
+      ],
+      keywords: ['ai-image', 'midjourney', 'flux', 'hyperrealistic', 'blueprint'],
+      model: model,
+      priceTokens: 4
+    };
+  }
+}
+
+/**
+ * Build (or re-use) Gemini keys pool.
+ * Dynamically includes Admin DB keys and all backup Gemini keys.
  */
 async function getOrCreateModel() {
   const settings = await SystemSettings.findOne();
 
   const freeKey = (settings?.geminiApiKey || process.env.GEMINI_API_KEY || '').trim();
   const paidKey = (settings?.paidGeminiApiKey || process.env.GEMINI_PAID_API_KEY || '').trim();
-
-  if (!freeKey && !paidKey && GEMINI_FALLBACK_KEYS.length === 0) {
-    throw new Error('Gemini API Key not configured by Admin.');
-  }
-
-  // Build a hash of current rules + keys to detect changes
-  const rulesStr = (settings?.promptCreationRules || [])
-    .map((r, i) => {
-      const cleanText = (r.text || '').replace(/^\d+[\s.)-]+\s*/, '');
-      return `${i + 1}. ${cleanText}${r.example ? ` (Example: ${r.example})` : ''}`;
-    })
-    .join('\n');
-
-  const currentHash = `${SYSTEM_PROMPT_VERSION}::${freeKey}::${paidKey}::${settings?.geminiModel}::${rulesStr}::characterMode`;
-
-  if (cachedModel && cachedRulesHash === currentHash) {
-    return cachedModel;
-  }
 
   const keysPool = [];
   if (freeKey) {
@@ -127,16 +178,18 @@ async function getOrCreateModel() {
     }
   });
 
-  cachedModel = {
+  const rulesStr = (settings?.promptCreationRules || [])
+    .map((r, i) => {
+      const cleanText = (r.text || '').replace(/^\d+[\s.)-]+\s*/, '');
+      return `${i + 1}. ${cleanText}${r.example ? ` (Example: ${r.example})` : ''}`;
+    })
+    .join('\n');
+
+  return {
     keysPool,
     rulesStr,
     geminiModel: settings?.geminiModel || 'gemini-3.5-flash'
   };
-
-  cachedRulesHash = currentHash;
-  cachedApiKey = freeKey || paidKey;
-
-  return cachedModel;
 }
 
 /**
@@ -1134,10 +1187,13 @@ DO NOT exceed 5 bracketed variables under any circumstances. Keep the majority o
       }
     });
 
+    const availableKeys = (cached.keysPool || []).filter(k => !EXHAUSTED_KEYS_SET.has(k.rawKey));
+    const activeKeysPool = availableKeys.length > 0 ? availableKeys : (cached.keysPool || []);
+
     for (const modelName of modelsToTry) {
       let modelSuccess = false;
 
-      for (const keyObj of (cached.keysPool || [])) {
+      for (const keyObj of activeKeysPool) {
         try {
           console.log(`🔄 Trying model: ${modelName} with ${keyObj.name}...`);
           const gemModel = keyObj.instance.getGenerativeModel({
@@ -1161,11 +1217,10 @@ DO NOT exceed 5 bracketed variables under any circumstances. Keep the majority o
           console.warn(`⚠️ ${modelName} with ${keyObj.name} failed: ${modelErr.message}`);
           lastError = modelErr;
 
-          if (modelErr.message?.includes('429') || modelErr.message?.includes('quota') || modelErr.message?.includes('prepayment') || modelErr.message?.includes('depleted')) {
-            quotaError = modelErr;
+          if (modelErr.message?.includes('429') || modelErr.message?.includes('quota') || modelErr.message?.includes('prepayment') || modelErr.message?.includes('depleted') || modelErr.message?.includes('API_KEY_INVALID')) {
+            markKeyExhausted(keyObj.rawKey, keyObj.name);
           }
 
-          // Automatically switch to the next key in the pool (e.g. from FREE key to PAID key)
           console.log(`  → ${keyObj.name} encountered limit/error, seamlessly switching to next key...`);
           continue;
         }
@@ -1177,7 +1232,9 @@ DO NOT exceed 5 bracketed variables under any circumstances. Keep the majority o
     }
 
     if (!text) {
-      throw quotaError || lastError || new Error('All models failed. Please try again later.');
+      console.log('🤖 [Smart Fallback Engine] External Gemini API keys exhausted/busy. Generating high quality prompt blueprint locally...');
+      const fallbackData = buildSmartFallbackPrompt(description, promptType, targetModel, aspectRatio);
+      text = JSON.stringify(fallbackData);
     }
 
     // 4. Parse and return

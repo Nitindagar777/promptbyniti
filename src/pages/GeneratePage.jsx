@@ -436,7 +436,18 @@ export default function GeneratePage() {
       }, 150);
     } catch (error) {
       console.error('Generation Error:', error);
-      alert(error.message || 'Failed to generate prompt. Please try again.');
+      const isAutoPilotActive = localStorage.getItem('promptbyniti_autopilot_loop') === 'true';
+      if (isAutoPilotActive) {
+        console.warn('🤖 [Auto-Pilot] Retrying prompt generation silently in 2s...');
+        setTimeout(() => {
+          if (localStorage.getItem('promptbyniti_autopilot_loop') === 'true') {
+            handleRandomize();
+            setTimeout(() => handleGenerate(), 500);
+          }
+        }, 2000);
+      } else {
+        console.warn('Generation Notice:', error.message);
+      }
     } finally {
       setIsGenerating(false);
       setIsPackGenerating(false);
