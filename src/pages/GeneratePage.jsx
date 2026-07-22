@@ -436,7 +436,14 @@ export default function GeneratePage() {
       }, 150);
     } catch (error) {
       console.error('Generation Error:', error);
-      alert(error.message || 'Failed to generate prompt. Please try again.');
+      if (localStorage.getItem('promptbyniti_autopilot_loop') === 'true') {
+        localStorage.setItem('promptbyniti_autopilot_loop', 'false');
+        setIsAutoPilot(false);
+        if (autoLoopTimerRef.current) clearTimeout(autoLoopTimerRef.current);
+        alert(`🛑 Auto-Pilot Turned OFF: Prompt generation failed (${error.message}). AI API limits or keys may be exhausted.`);
+      } else {
+        alert(error.message || 'Failed to generate prompt. Please try again.');
+      }
     } finally {
       setIsGenerating(false);
       setIsPackGenerating(false);

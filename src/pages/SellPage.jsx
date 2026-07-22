@@ -136,10 +136,20 @@ export default function SellPage() {
         })
       });
 
-      const imgData = await imgRes.json();
+      const imgData = await imgRes.json().catch(() => ({}));
       let finalImages = ['', '', '', ''];
       if (imgData.success && Array.isArray(imgData.images)) {
         finalImages = imgData.images;
+      }
+
+      // If all 11 Cloudflare accounts failed or limit reached, auto turn OFF button
+      if (!imgRes.ok || !imgData.success || imgData.allAccountsExhausted || finalImages.every(img => !img)) {
+        console.error('🛑 All Cloudflare image accounts exhausted or limit reached!');
+        localStorage.setItem('promptbyniti_autopilot_loop', 'false');
+        alert('🛑 Auto-Pilot Turned OFF: All 11 Cloudflare accounts have reached their daily image limits!');
+        setLoading(false);
+        setGeneratingIdx(null);
+        return;
       }
 
       const updatedSamples = sampleInputs.map((inputStr, i) => ({

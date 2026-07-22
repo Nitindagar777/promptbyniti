@@ -1518,6 +1518,15 @@ router.post('/batch-ai-images', async (req, res) => {
       }
     }
 
+    const hasAnyValidImage = imageResults.some(img => img && img.trim());
+    if (!hasAnyValidImage) {
+      return res.status(503).json({
+        success: false,
+        allAccountsExhausted: true,
+        message: 'All Cloudflare accounts have reached their daily image limits or failed.'
+      });
+    }
+
     return res.json({
       success: true,
       images: imageResults,
@@ -1526,7 +1535,7 @@ router.post('/batch-ai-images', async (req, res) => {
     });
   } catch (err) {
     console.error('❌ Error in batch AI image generation:', err);
-    return res.status(500).json({ success: false, message: err.message });
+    return res.status(500).json({ success: false, allAccountsExhausted: true, message: err.message });
   }
 });
 
