@@ -77,33 +77,44 @@ const MODEL_CHAIN = ['gemini-3.5-flash', 'gemini-2.5-flash', 'gemini-2.0-flash',
  */
 async function getOrCreateModel() {
   const settings = await SystemSettings.findOne();
-  if (!settings || !settings.geminiApiKey) {
+
+  const freeKey = (settings?.geminiApiKey || process.env.GEMINI_API_KEY || '').trim();
+  const paidKey = (settings?.paidGeminiApiKey || process.env.GEMINI_PAID_API_KEY || '').trim();
+
+  if (!freeKey && !paidKey) {
     throw new Error('Gemini API Key not configured by Admin.');
   }
 
-  // Build a hash of current rules + key to detect changes
-  const rulesStr = settings.promptCreationRules
+  // Build a hash of current rules + keys to detect changes
+  const rulesStr = (settings?.promptCreationRules || [])
     .map((r, i) => {
-      const cleanText = r.text.replace(/^\d+[\s.)-]+\s*/, '');
+      const cleanText = (r.text || '').replace(/^\d+[\s.)-]+\s*/, '');
       return `${i + 1}. ${cleanText}${r.example ? ` (Example: ${r.example})` : ''}`;
     })
     .join('\n');
 
-  const currentHash = `${SYSTEM_PROMPT_VERSION}::${settings.geminiApiKey}::${settings.paidGeminiApiKey || ''}::${settings.geminiModel}::${rulesStr}::characterMode`;
+  const currentHash = `${SYSTEM_PROMPT_VERSION}::${freeKey}::${paidKey}::${settings?.geminiModel}::${rulesStr}::characterMode`;
 
-  // Return cached model if nothing changed
   if (cachedModel && cachedRulesHash === currentHash) {
     return cachedModel;
   }
 
-  const genAIFree = new GoogleGenerativeAI(settings.geminiApiKey);
-  const genAIPaid = settings.paidGeminiApiKey ? new GoogleGenerativeAI(settings.paidGeminiApiKey) : null;
+  const keysPool = [];
+  if (freeKey) {
+    keysPool.push({ name: 'FREE Key', instance: new GoogleGenerativeAI(freeKey) });
+  }
+  if (paidKey && paidKey !== freeKey) {
+    keysPool.push({ name: 'PAID Key', instance: new GoogleGenerativeAI(paidKey) });
+  }
 
-  // Store both genAI instances, rulesStr, and the configured model
-  cachedModel = { genAIFree, genAIPaid, rulesStr, geminiModel: settings.geminiModel || 'gemini-3.5-flash' };
+  cachedModel = {
+    keysPool,
+    rulesStr,
+    geminiModel: settings?.geminiModel || 'gemini-3.5-flash'
+  };
 
   cachedRulesHash = currentHash;
-  cachedApiKey = settings.geminiApiKey;
+  cachedApiKey = freeKey || paidKey;
 
   return cachedModel;
 }
@@ -1104,17 +1115,12 @@ DO NOT exceed 5 bracketed variables under any circumstances. Keep the majority o
     });
 
     for (const modelName of modelsToTry) {
-      const keysToTry = [{ name: 'FREE', instance: cached.genAIFree }];
-      if (cached.genAIPaid) {
-        keysToTry.push({ name: 'PAID', instance: cached.genAIPaid });
-      }
-
       let modelSuccess = false;
 
-      for (const { name: keyName, instance: genAIInstance } of keysToTry) {
+      for (const keyObj of (cached.keysPool || [])) {
         try {
-          console.log(`🔄 Trying model: ${modelName} with ${keyName} key...`);
-          const gemModel = genAIInstance.getGenerativeModel({
+          console.log(`🔄 Trying model: ${modelName} with ${keyObj.name}...`);
+          const gemModel = keyObj.instance.getGenerativeModel({
             model: modelName,
             systemInstruction: {
               role: 'system',
@@ -1128,49 +1134,27 @@ DO NOT exceed 5 bracketed variables under any circumstances. Keep the majority o
 
           const response = await result.response;
           text = response.text();
-          console.log(`✅ Success with model: ${modelName} using ${keyName} key`);
+          console.log(`✅ Success with model: ${modelName} using ${keyObj.name}!`);
           modelSuccess = true;
           break; // success with this key — stop trying other keys
         } catch (modelErr) {
-          console.warn(`⚠️ ${modelName} with ${keyName} key failed: ${modelErr.message}`);
+          console.warn(`⚠️ ${modelName} with ${keyObj.name} failed: ${modelErr.message}`);
           lastError = modelErr;
 
           if (modelErr.message?.includes('429') || modelErr.message?.includes('quota') || modelErr.message?.includes('prepayment') || modelErr.message?.includes('depleted')) {
             quotaError = modelErr;
           }
 
-          // If 429 (Too Many Requests/Quota) and we have a paid key, we definitely want to try the next key
-          if (modelErr.message?.includes('429') || modelErr.message?.includes('quota') || modelErr.message?.includes('exhausted')) {
-            console.log(`  → ${keyName} key quota exceeded, falling back if another key exists...`);
-            continue; // try the next key in keysToTry
-          }
-          
-          // If 503 (overloaded), wait 2s, but still try the next key if this is the free one
-          if (modelErr.message?.includes('503') || modelErr.message?.includes('Service Unavailable')) {
-            console.log('  → Model overloaded, trying next key or model...');
-            if (keyName === 'FREE' && cached.genAIPaid) {
-               continue; // try paid key immediately without wait
-            } else {
-               await new Promise(r => setTimeout(r, 2000));
-               break; // break out of keys loop, go to next model
-            }
-          }
-
-          // If 404 (not found), skip immediately to next model
-          if (modelErr.message?.includes('404') || modelErr.message?.includes('not found')) {
-            break; // break out of keys loop, go to next model
-          }
-          
-          // For other errors, if we have a paid key and free failed, try paid.
-          if (keyName === 'FREE' && cached.genAIPaid) {
-             console.log(`  → Free key had error, trying paid key...`);
-             continue;
-          }
-          
-          // Other errors and no other keys to try — throw immediately to try next model
-          break; 
+          // Automatically switch to the next key in the pool (e.g. from FREE key to PAID key)
+          console.log(`  → ${keyObj.name} encountered limit/error, seamlessly switching to next key...`);
+          continue;
         }
       }
+
+      if (modelSuccess) {
+        break; // success with this model — stop trying other models
+      }
+    }
 
       if (modelSuccess) {
         break; // success with this model — stop trying other models
