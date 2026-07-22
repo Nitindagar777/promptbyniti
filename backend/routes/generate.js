@@ -1324,6 +1324,132 @@ DO NOT exceed 5 bracketed variables under any circumstances. Keep the majority o
 });
 
 /* ================================================================
+   CLOUDFLARE MULTI-ACCOUNT ROTATION POOL
+   Automatically switches to the next account if daily limit (10k Neurons) is reached,
+   an HTTP error (429, 400, 401, 500) occurs, or an image fails to generate.
+   ================================================================ */
+const CLOUDFLARE_ACCOUNTS = [
+  {
+    name: 'Account 1',
+    accountId: process.env.CF_ACCOUNT_ID || '6f39a31a781da47af7aba76763c17c21',
+    apiToken: process.env.CF_API_TOKEN || 'cfut_pOuSsb1cwqeGmQzfH8Axv48x50FT2LuCCMB49h5jc6413efb'
+  },
+  {
+    name: 'Account 2',
+    accountId: '3628ea494105ca4178d36078c09e1549',
+    apiToken: 'cfut_oQoqe5QSdU1bgdQapWDHng6xoq8EJZn6yi7GjGWq9534ccb9'
+  },
+  {
+    name: 'Account 3',
+    accountId: '8daae03d1447c2b22365e2b24360a93e',
+    apiToken: 'cfut_Kjn97Mr81rxQxH9LK3jcbSQ7KQeau3yOIerL5Usx67bb66ef'
+  },
+  {
+    name: 'Account 4',
+    accountId: '194a690e971a672ccc7d210d5b642db6',
+    apiToken: 'cfut_BaFYmVbVAd641VwH04Q16ZWk8Gt29aocj5dh3LCc273b77e7'
+  },
+  {
+    name: 'Account 5',
+    accountId: '469aee8b815c5aca3fe574084384e9df',
+    apiToken: 'cfut_YceLnxSRdnZoSKptktmAEqtSRCJ7Y6b76lPSxcRt41416698'
+  },
+  {
+    name: 'Account 6',
+    accountId: '38dfcc030e49b56928032ec2985283ed',
+    apiToken: 'cfut_1GrUdoOzmIXm7mqqH9dBkWh4eGqem4uK3JAcUGM9173fae2a'
+  },
+  {
+    name: 'Account 7',
+    accountId: '9fe308a406b6bb1b1968694878b9f83e',
+    apiToken: 'cfut_bRVycwGC0jWxjv3bxp7KRK4qpheyC7sHK4nuAJZxc4060b75'
+  },
+  {
+    name: 'Account 8',
+    accountId: 'f5f0b8b8b95bfd364eae655ce9804b37',
+    apiToken: 'cfut_KMxZHqvhM1ra6vancsXB7GNjQXYh68HJK6T9Hvk30169d8e2'
+  },
+  {
+    name: 'Account 9',
+    accountId: '70098cec98682f90c324d3b4b6a73bb8',
+    apiToken: 'cfut_EB5CQztFhx8DWvUbqXOzATTMYOeQXY5WFjo4GZx129f3515b'
+  },
+  {
+    name: 'Account 10',
+    accountId: 'b779c598b78eaeaba03fcf60df85b438',
+    apiToken: 'cfut_uu1MVlOecEaaR5sAnJC6vAt5B4GCWNz7zSUTrnSy5a4bbe14'
+  },
+  {
+    name: 'Account 11',
+    accountId: '478757f2c18a73afdc29dae6c980ffee',
+    apiToken: 'cfut_z0hRcOJPymJ1jfdFH94P4QhIVqz2sopkeuRmtTmN8e5000d2'
+  }
+];
+
+let currentCFAccountIndex = 0;
+
+/**
+ * Execute Cloudflare AI API call with automatic account failover
+ */
+async function callCloudflareAIWithFailover(promptText, selectedModel) {
+  const totalAccounts = CLOUDFLARE_ACCOUNTS.length;
+  let attempts = 0;
+
+  while (attempts < totalAccounts) {
+    const activeAccount = CLOUDFLARE_ACCOUNTS[currentCFAccountIndex];
+    console.log(`🎨 [CF AI - ${activeAccount.name}] Attempting generation (Account ${currentCFAccountIndex + 1}/${totalAccounts})...`);
+
+    try {
+      const cfResponse = await fetch(`https://api.cloudflare.com/client/v4/accounts/${activeAccount.accountId}/ai/run/${selectedModel}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${activeAccount.apiToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ prompt: promptText.trim() })
+      });
+
+      if (cfResponse.ok) {
+        const contentType = cfResponse.headers.get('content-type') || '';
+        let imageUrl = '';
+
+        if (contentType.includes('application/json')) {
+          const data = await cfResponse.json();
+          if (data.result && data.result.image) {
+            imageUrl = `data:image/png;base64,${data.result.image}`;
+          } else if (data.result && typeof data.result === 'string') {
+            imageUrl = `data:image/png;base64,${data.result}`;
+          }
+        } else {
+          const arrayBuffer = await cfResponse.arrayBuffer();
+          const base64 = Buffer.from(arrayBuffer).toString('base64');
+          const mime = contentType.includes('jpeg') ? 'image/jpeg' : 'image/png';
+          imageUrl = `data:${mime};base64,${base64}`;
+        }
+
+        if (imageUrl) {
+          console.log(`✅ [CF AI - ${activeAccount.name}] Image generated successfully!`);
+          return imageUrl;
+        }
+      }
+
+      // If response not ok or image empty, log error & failover to next account
+      const errText = await cfResponse.text().catch(() => 'No response body');
+      console.warn(`⚠️ [CF AI - ${activeAccount.name}] Failed (${cfResponse.status}): ${errText.substring(0, 150)}. Switching to next account...`);
+
+    } catch (err) {
+      console.warn(`⚠️ [CF AI - ${activeAccount.name}] Request error: ${err.message}. Switching to next account...`);
+    }
+
+    // Advance to next account index in round-robin sequence
+    currentCFAccountIndex = (currentCFAccountIndex + 1) % totalAccounts;
+    attempts++;
+  }
+
+  throw new Error('All Cloudflare Accounts failed or rate-limited.');
+}
+
+/* ================================================================
    POST /api/generate/ai-image
    Generates a single AI image using Cloudflare Workers AI REST API
    Model: FLUX.1 Schnell (@cf/black-forest-labs/flux-1-schnell)
@@ -1335,50 +1461,12 @@ router.post('/ai-image', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Prompt is required' });
     }
 
-    const cfAccountId = process.env.CF_ACCOUNT_ID || '6f39a31a781da47af7aba76763c17c21';
-    const cfApiToken = process.env.CF_API_TOKEN || 'cfut_pOuSsb1cwqeGmQzfH8Axv48x50FT2LuCCMB49h5jc6413efb';
-    
-    // Default model: FLUX.1 Schnell
     const selectedModel = model || '@cf/black-forest-labs/flux-1-schnell';
     const modelDisplayName = selectedModel.includes('flux') ? 'FLUX.1 Schnell (Cloudflare Workers AI)' : 'SDXL Lightning (Cloudflare Workers AI)';
 
-    console.log(`🎨 [Cloudflare Workers AI] Generating image using model: ${selectedModel} for prompt: "${prompt.substring(0, 60)}..."`);
+    console.log(`🎨 [Cloudflare Workers AI Single] Generating image for prompt: "${prompt.substring(0, 60)}..."`);
 
-    const cfResponse = await fetch(`https://api.cloudflare.com/client/v4/accounts/${cfAccountId}/ai/run/${selectedModel}`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${cfApiToken}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ prompt: prompt.trim() })
-    });
-
-    if (!cfResponse.ok) {
-      const errText = await cfResponse.text();
-      console.error(`❌ Cloudflare Workers AI Error (${cfResponse.status}):`, errText);
-      return res.status(500).json({ success: false, message: `Cloudflare AI failed: ${cfResponse.statusText}`, error: errText });
-    }
-
-    const contentType = cfResponse.headers.get('content-type') || '';
-
-    let imageUrl = '';
-    if (contentType.includes('application/json')) {
-      const data = await cfResponse.json();
-      if (data.result && data.result.image) {
-        imageUrl = `data:image/png;base64,${data.result.image}`;
-      } else if (data.result && typeof data.result === 'string') {
-        imageUrl = `data:image/png;base64,${data.result}`;
-      }
-    } else {
-      const arrayBuffer = await cfResponse.arrayBuffer();
-      const base64 = Buffer.from(arrayBuffer).toString('base64');
-      const mime = contentType.includes('jpeg') ? 'image/jpeg' : 'image/png';
-      imageUrl = `data:${mime};base64,${base64}`;
-    }
-
-    if (!imageUrl) {
-      return res.status(500).json({ success: false, message: 'Failed to extract image output from Cloudflare AI' });
-    }
+    const imageUrl = await callCloudflareAIWithFailover(prompt, selectedModel);
 
     return res.json({
       success: true,
@@ -1394,7 +1482,7 @@ router.post('/ai-image', async (req, res) => {
 
 /* ================================================================
    POST /api/generate/batch-ai-images
-   Generates AI images for an array of sample prompts in parallel
+   Generates AI images for an array of sample prompts with retry/failover
    ================================================================ */
 router.post('/batch-ai-images', async (req, res) => {
   try {
@@ -1403,46 +1491,36 @@ router.post('/batch-ai-images', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Prompts array is required' });
     }
 
-    const cfAccountId = process.env.CF_ACCOUNT_ID || '6f39a31a781da47af7aba76763c17c21';
-    const cfApiToken = process.env.CF_API_TOKEN || 'cfut_pOuSsb1cwqeGmQzfH8Axv48x50FT2LuCCMB49h5jc6413efb';
     const selectedModel = model || '@cf/black-forest-labs/flux-1-schnell';
     const modelDisplayName = selectedModel.includes('flux') ? 'FLUX.1 Schnell (Cloudflare Workers AI)' : 'SDXL Lightning (Cloudflare Workers AI)';
 
-    console.log(`🚀 [Cloudflare Workers AI] Batch generating ${prompts.length} images using model: ${selectedModel}...`);
+    console.log(`🚀 [Cloudflare Workers AI Batch] Generating ${prompts.length} images...`);
 
-    const imageResults = await Promise.all(prompts.map(async (promptText, idx) => {
-      try {
-        if (!promptText || !promptText.trim()) return { idx, imageUrl: null };
-        const cfResponse = await fetch(`https://api.cloudflare.com/client/v4/accounts/${cfAccountId}/ai/run/${selectedModel}`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${cfApiToken}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ prompt: promptText.trim() })
-        });
-        if (!cfResponse.ok) return { idx, imageUrl: null };
-        const contentType = cfResponse.headers.get('content-type') || '';
-        if (contentType.includes('application/json')) {
-          const data = await cfResponse.json();
-          if (data.result && data.result.image) {
-            return { idx, imageUrl: `data:image/png;base64,${data.result.image}` };
-          }
-        } else {
-          const arrayBuffer = await cfResponse.arrayBuffer();
-          const base64 = Buffer.from(arrayBuffer).toString('base64');
-          return { idx, imageUrl: `data:image/png;base64,${base64}` };
-        }
-      } catch (err) {
-        console.error(`Error in batch image ${idx}:`, err);
-        return { idx, imageUrl: null };
+    const imageResults = [];
+    for (let i = 0; i < prompts.length; i++) {
+      const promptText = prompts[i];
+      if (!promptText || !promptText.trim()) {
+        imageResults.push('');
+        continue;
       }
-      return { idx, imageUrl: null };
-    }));
+
+      try {
+        const imageUrl = await callCloudflareAIWithFailover(promptText, selectedModel);
+        imageResults.push(imageUrl || '');
+      } catch (err) {
+        console.error(`❌ Failed to generate batch image #${i + 1}:`, err.message);
+        imageResults.push('');
+      }
+
+      // Small pause between sequential image requests to prevent rate spikes
+      if (i < prompts.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
+    }
 
     return res.json({
       success: true,
-      images: imageResults.map(r => r.imageUrl),
+      images: imageResults,
       modelId: selectedModel,
       modelName: modelDisplayName
     });
