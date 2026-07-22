@@ -52,6 +52,14 @@ const uploadToCloudinary = async (base64String) => {
 router.post('/', auth, async (req, res) => {
   try {
     const payload = { ...req.body };
+
+    // Normalize template property if passed as 'prompt' or 'promptTemplate'
+    if (!payload.template && (payload.prompt || payload.promptTemplate)) {
+      payload.template = payload.prompt || payload.promptTemplate;
+    }
+    if (!payload.template) {
+      payload.template = payload.name || 'AI Prompt Template';
+    }
     
     // Upload thumbnail if it's base64
     if (payload.thumbnail) {

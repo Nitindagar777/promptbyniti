@@ -144,18 +144,20 @@ export default function SellPage() {
       setSamples(updatedSamples);
 
       // 2. Auto-Publish to MongoDB Store
+      const templateContent = promptData.template || promptData.promptTemplate || promptData.prompt || prompt || name;
       const payload = {
         name: promptData.name || promptData.title || name,
         description: promptData.description || description,
-        prompt: promptData.template || promptData.promptTemplate || prompt,
+        template: templateContent,
+        prompt: templateContent,
         negativePrompt: promptData.negativePrompt || negativePrompt || '',
         instructions: promptData.instructions || instructions || '',
         generateType: promptData.generateType || promptData.promptType || mediaType || 'image',
-        model: promptData.model || 'flux-1',
+        model: promptData.model || selectedModel || 'flux-1',
         priceTokens: 4,
         tags: promptData.keywords || tags || [],
         samples: updatedSamples,
-        thumbnail: finalImages[0] || ''
+        thumbnail: finalImages[0] || (updatedSamples.find(s => s.output)?.output || '')
       };
 
       console.log('🚀 [Admin Auto-Pipeline] Auto-publishing prompt to store...', payload.name);
