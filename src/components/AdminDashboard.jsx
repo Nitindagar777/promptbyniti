@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { DollarSign, Zap, Shield } from 'lucide-react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { DollarSign, Zap, Shield, Edit3 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import PromptThumbnail from './PromptThumbnail';
 import './AdminDashboard.css';
 const AdminDashboard = () => {
+  const navigate = useNavigate();
   const { state, dispatch } = useApp();
   const [stats, setStats] = useState(state.adminStats || null);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -446,6 +447,7 @@ const AdminDashboard = () => {
                   </td>
                   <td className="actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                     <button className="view-btn" onClick={() => setSelectedPrompt(prompt)}>View Details</button>
+                    <button className="approve-btn" style={{ background: 'var(--color-cyan, #06b6d4)', color: '#000', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }} onClick={() => navigate(`/sell?edit=${prompt._id}`)}>Edit</button>
                     {prompt.status !== 'rejected' && (
                       <button className="reject-btn" onClick={() => handleStatusUpdate(prompt._id, 'rejected')}>Reject</button>
                     )}
@@ -976,12 +978,15 @@ const AdminDashboard = () => {
                 </div>
               </div>
             </div>
-            {selectedPrompt.status === 'pending' && (
-              <div className="modal-footer">
-                <button className="approve-btn" onClick={() => { handleStatusUpdate(selectedPrompt._id, 'approved'); setSelectedPrompt(null); }}>Approve Prompt</button>
-                <button className="reject-btn" onClick={() => { handleStatusUpdate(selectedPrompt._id, 'rejected'); setSelectedPrompt(null); }}>Reject Prompt</button>
-              </div>
-            )}
+            <div className="modal-footer" style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+              <button className="approve-btn" style={{ background: 'var(--color-cyan, #06b6d4)', color: '#000', border: 'none', padding: '10px 18px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }} onClick={() => { setSelectedPrompt(null); navigate(`/sell?edit=${selectedPrompt._id}`); }}>Edit Prompt</button>
+              {selectedPrompt.status === 'pending' && (
+                <>
+                  <button className="approve-btn" onClick={() => { handleStatusUpdate(selectedPrompt._id, 'approved'); setSelectedPrompt(null); }}>Approve Prompt</button>
+                  <button className="reject-btn" onClick={() => { handleStatusUpdate(selectedPrompt._id, 'rejected'); setSelectedPrompt(null); }}>Reject Prompt</button>
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}

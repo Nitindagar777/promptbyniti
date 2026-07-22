@@ -453,7 +453,7 @@ export default function DashboardPage() {
                               <div className="table-actions" style={{ display: 'flex', gap: '12px', alignItems: 'center', justifyContent: 'center' }}>
                                 <Link to={`/prompt/${p._id}`} title="View Prompt" style={{ color: 'var(--color-cyan)', display: 'flex', alignItems: 'center' }}><Eye size={18} /></Link>
                                 
-                                {p.sales > 0 ? (
+                                {(p.sales > 0 && !isAdmin) ? (
                                   <>
                                     <div title="Locked: Sold prompts cannot be edited" style={{ opacity: 0.3, cursor: 'not-allowed', display: 'flex', alignItems: 'center' }}>
                                       <Edit3 size={18} color="white" />

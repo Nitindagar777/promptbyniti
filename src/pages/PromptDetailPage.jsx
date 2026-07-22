@@ -7,7 +7,7 @@ import {
   Sparkles, Image, MessageSquare, Play,
   Download, Share2, Heart, ShieldCheck,
   ChevronLeft, ChevronRight, Eye, ArrowRight, Star,
-  Unlock, Lock, Maximize2, Globe, Users, Loader2, CheckCircle
+  Unlock, Lock, Maximize2, Globe, Users, Loader2, CheckCircle, Edit3
 } from 'lucide-react';
 import PromptThumbnail from '../components/PromptThumbnail';
 import MasonryGrid from '../components/MasonryGrid';
@@ -184,6 +184,8 @@ export default function PromptDetailPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { state, useCredit, dispatch } = useApp();
+  const ADMIN_EMAIL = 'nitindagar0800@gmail.com';
+  const isAdmin = state?.user?.email?.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim() || state?.user?.role === 'admin' || state?.user?.isAdmin;
   // Find cached prompt from global marketplace state if available
   const cachedPrompt = useMemo(() => {
     return (state.marketplace || []).find(t => (t.id || t._id) === id) || null;
@@ -1079,13 +1081,24 @@ export default function PromptDetailPage() {
       />
       <div className="container">
         {/* Navigation */}
-        <div className="p-detail__nav">
-          <button onClick={() => navigate(-1)} className="p-detail__back">
-            <ArrowLeft size={20} /> Back
-          </button>
-          <div className="p-detail__breadcrumbs">
-            <Link to="/">Home</Link> / <Link to="/templates">Store</Link> / <span>{template.title || template.name}</span>
+        <div className="p-detail__nav" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <button onClick={() => navigate(-1)} className="p-detail__back">
+              <ArrowLeft size={20} /> Back
+            </button>
+            <div className="p-detail__breadcrumbs">
+              <Link to="/">Home</Link> / <Link to="/templates">Store</Link> / <span>{template.title || template.name}</span>
+            </div>
           </div>
+          {isAdmin && (
+            <button
+              onClick={() => navigate(`/sell?edit=${template._id || template.id}`)}
+              className="btn btn-secondary btn-sm"
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(6, 182, 212, 0.15)', color: 'var(--color-cyan)', border: '1px solid rgba(6, 182, 212, 0.3)', borderRadius: '8px', padding: '6px 14px', fontWeight: 'bold', cursor: 'pointer' }}
+            >
+              <Edit3 size={16} /> Edit Prompt (Admin)
+            </button>
+          )}
         </div>
 
         <div className="p-detail__grid">
