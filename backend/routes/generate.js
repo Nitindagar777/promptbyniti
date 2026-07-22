@@ -1156,11 +1156,6 @@ DO NOT exceed 5 bracketed variables under any circumstances. Keep the majority o
       }
     }
 
-      if (modelSuccess) {
-        break; // success with this model — stop trying other models
-      }
-    }
-
     if (!text) {
       throw quotaError || lastError || new Error('All models failed. Please try again later.');
     }
