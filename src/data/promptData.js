@@ -968,52 +968,85 @@ export const modelParameterSamples = [
   "--ar 3:2 --v 5.2 --stylize 1000"
 ];
 
-export const generateRandomSurprise = () => {
-  const subjects = [
-    'Anime Girl', 'Cyberpunk Street Warrior', 'Dark Fantasy Wizard', 'Futuristic Supercar',
-    'Chiaroscuro Male Portrait', 'Mecha Battle Robot', 'Fluid Ink Skull Art', 'Gothic Cathedral',
-    'Astronaut on Mars', 'Steampunk Inventor', 'Samurai Assassin', 'Ethereal Forest Goddess',
-    'Neon City Skyline', 'Sci-Fi Spaceship', 'Surrealist Sculpture', 'Luxury Diamond Watch',
-    'Vaporwave Cyberpunk Cat', 'Volcanic Magma Dragon', 'Candid Streetwear Look', 'High-Fashion Editorial'
-  ];
-
-  const styles = [
-    'Anime Style', 'Cyberpunk Aesthetic', 'Dark Fantasy Art', 'Chiaroscuro Painting',
-    'Hyperrealistic 8K', 'Minimalist Vector', 'Vaporwave Synthwave', 'Oil Painting Texture',
-    'Fluid Red Ink Splatter', 'Unreal Engine 5 Render', 'Photorealistic Masterpiece',
-    'Cinematic Stills', 'Surrealism', 'Studio Portraiture', 'Octane Render 3D'
-  ];
-
-  const lightings = [
-    'Neon Volumetric Lighting', 'Dramatic Chiaroscuro Shadows', 'Golden Hour Lighting',
-    'Cinematic Rim Light', 'Bioluminescent Glow', 'Prismatic Hologram Light',
-    'Atmospheric Fog Lighting', 'Studio Softbox Highlights'
-  ];
-
-  const qualities = [
-    '8K Resolution', 'Ultra Detailed', 'Masterpiece Quality', 'Raytracing Reflections',
-    'Dynamic Action Pose', 'High Contrast Vibrancy', 'Subtle Grain Texture', 'Sharp Focus 85mm'
-  ];
-
-  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
-  return `${pick(subjects)} + ${pick(styles)} + ${pick(lightings)} + ${pick(qualities)}`;
-};
-
 export const randomDescriptions = [
-  "Anime Art + Cyberpunk City + Neon Volumetric Lighting + 8K Resolution",
-  "Chiaroscuro Portrait + Dark Fantasy + Psychological Torment + Oil Painting + Intricate Shadows",
-  "Futuristic Supercar + Night Rain Highway + Raytracing Reflections + Photorealistic 8K",
-  "Fluid Ink Skull + Red Splatter Art + High Contrast + Vector Illustration + Masterpiece",
-  "Cyberpunk Samurai + Katana Blade + Hologram Billboard + Rain Reflections + 8K Cinematic",
-  "Astronaut + Alien Flora + Bioluminescent Glow + Cosmic Nebula Sky + Ultra Detailed",
-  "Vaporwave Synthwave + Retro Sunset + 80s Grid + Neon Hologram Glow + Masterpiece",
-  "Luxury Diamond Watch + Dark Marble Table + Studio Softbox Lighting + Photorealistic 8K",
-  "Ethereal Goddess + Galaxy Threads + Floating Crystals + Soft Golden Hour + Unreal Engine 5",
-  "Steampunk Inventor + Brass Mechanical Gears + Vintage Clockwork + Volumetric Steam + 8K Detail",
-  "Minimalist Architecture + Geometric Shadows + Warm Sunlight + Clean Aesthetics + 8K Photorealistic",
-  "Dark Fantasy Dragon + Volcanic Magma Cavern + Glowing Lava + Epic Scale + Cinematic Stills",
-  "High-Fashion Editorial + Streetwear Look + Candid Pose + Studio Lighting + 85mm Lens Focus"
+  "Ethereal Portrait + Transparent Skin + Internal Galaxy + Cinematic Lighting + Hyperrealism + Museum Art + 8K",
+  "Surreal Beauty + Glass Anatomy + Liquid Gold Veins + Luxury Editorial + Ultra Detail + Masterpiece",
+  "Fine Art Portrait + Marble Cracks + Living Statue + Soft God Rays + Renaissance + Photorealistic",
+  "Elegant Woman + Butterfly Veins + Bioluminescence + Dark Background + Fine Art + Ultra HD",
+  "Royal Queen + Black Crown + Golden Tears + Baroque Style + Dramatic Shadows + 8K",
+  "Surreal Horror + Floating Eyes + Endless Fog + Symbolic Art + High Contrast + Hyperrealism",
+  "Dark Fantasy + Broken Halo + Black Wings + Volumetric Lighting + Cinematic + 8K",
+  "Psychological Horror + Mirror Dimension + Impossible Geometry + Moody Lighting + Masterpiece",
+  "Gothic Cathedral + Human Roots + Fog Atmosphere + Unreal Engine + Hyper Detailed",
+  "Dreamcore Horror + Empty Throne + Cosmic Eclipse + Fine Art Photography + Ultra Realistic",
+  "Haute Couture + Liquid Gold Dress + Fashion Editorial + Studio Lighting + Vogue Style + 8K",
+  "Luxury Portrait + Diamond Skeleton + Crystal Skin + Black Background + Hyperrealistic",
+  "Avant-Garde Fashion + Floating Silk + High Jewelry + Editorial Photography + Cinematic Lighting",
+  "Runway Fashion + Metallic Fabric + Luxury Makeup + High Contrast + Award Winning Photography",
+  "Luxury Beauty + Pearl Skin + Golden Reflection + Soft Studio Lighting + Masterpiece",
+  "Impossible Architecture + Floating Castle + Waterfalls + Volumetric Clouds + Cinematic + 8K",
+  "Ancient Temple + Cosmic Sky + Giant Moon + Atmospheric Perspective + Hyperrealism",
+  "Walking Cathedral + Ocean Landscape + Fantasy Realism + Epic Scale + Ultra Detail",
+  "Brutalist Architecture + Endless Staircase + Fog + Minimalism + Photorealism",
+  "Crystal Palace + Aurora Sky + Reflection Lake + Unreal Engine + Cinematic",
+  "Bioluminescent Forest + Giant Mushrooms + Fog Rays + Fantasy Realism + Ultra Detailed",
+  "Frozen Waterfall + Aurora Borealis + Mountain Landscape + Epic Scale + 8K",
+  "Cherry Blossom Storm + Japanese Temple + Sunrise Mist + Fine Art + Hyperrealism",
+  "Alien Jungle + Neon Plants + Floating Rocks + Atmospheric Lighting + Cinematic",
+  "Ancient Tree + Crystal Roots + Magical Glow + Fantasy Landscape + Masterpiece",
+  "Hypercar Concept + Liquid Chrome + Rain Reflection + Neon City + Ray Tracing + 8K",
+  "Retro Supercar + Tokyo Streets + Night Rain + Cinematic Photography + Unreal Engine",
+  "Luxury Yacht + Golden Sunset + Ocean Reflection + Editorial Photography + Hyperrealism",
+  "Cyber Motorcycle + Neon Fog + Wet Asphalt + Volumetric Lighting + Masterpiece",
+  "Stealth Hypercar + Desert Highway + Golden Hour + Ultra Photorealistic",
+  "Cosmic Goddess + Nebula Hair + Star Crown + Celestial Glow + Hyperrealism + 8K",
+  "Astronaut + Black Hole + Gravitational Lens + Space Art + Cinematic + Masterpiece",
+  "Planetary Rings + Crystal Mountains + Alien Ocean + Epic Landscape + Ultra Detail",
+  "Celestial Throne + Solar Eclipse + Divine Light + Fine Art + Photorealistic",
+  "Galaxy Cathedral + Infinite Universe + Floating Islands + Unreal Engine + Hyperrealism",
+  "Conceptual Art + Human Geometry + Impossible Anatomy + Minimalism + Fine Art + 8K",
+  "Fluid Sculpture + Liquid Metal + High Contrast + Luxury Design + Hyperrealistic",
+  "Paper Cut Art + Layered Depth + Soft Shadows + Premium Illustration + Ultra Detail",
+  "Glass Sculpture + Light Refraction + Clean Background + Museum Quality + Masterpiece",
+  "Ink Explosion + Abstract Portrait + Dynamic Motion + High Detail + Fine Art",
+  "Glass Human + Internal Ocean + Fine Art Photography + Soft God Rays + Hyperrealism + Museum Quality + 8K",
+  "Living Statue + Marble Cracks + Luxury Editorial + Dramatic Lighting + Ultra Detailed + Masterpiece",
+  "Floating Cathedral + Cosmic Sky + Atmospheric Perspective + Cinematic + Unreal Engine + 8K",
+  "Surreal Human Anatomy + Impossible Biology + Emotional Symbolism + Museum Installation + Hyper Realism",
+  "Dreamcore + Infinite Staircase + Soft Fog + Cinematic Perspective + Fine Art Photography",
+  "Celestial Goddess + Cosmic Hair + Galaxy Dust + Divine Lighting + Ultra Detailed",
+  "Ancient Temple + Giant Sleeping Titan + Atmospheric Mist + Epic Scale + Matte Painting",
+  "Floating Islands + Waterfall Sky + Golden Sunrise + Fantasy Landscape + Unreal Engine",
+  "Dark Angel + Broken Halo + Black Feathers + Volumetric God Rays + Renaissance Realism",
+  "Glass Human + Internal Ocean + Transparent Skin + Blue Bioluminescence + Photorealistic",
+  "Living Marble Statue + Cracked Stone + Human Flesh + Luxury Editorial + Masterpiece",
+  "Human Forest + Moss Skin + Giant Trees + Nature Fusion + Fantasy Realism",
+  "Mechanical Heart + Exposed Anatomy + Brass Gears + Steampunk Luxury + Ultra Detail",
+  "Moon Priestess + Silver Veil + Lunar Glow + Mystic Atmosphere + Fine Art Portrait",
+  "Crystal Cave + Giant Dragon Skeleton + Blue Luminescence + Epic Fantasy + Cinematic Lighting",
+  "Abandoned Cathedral + Floating Candles + Dust Particles + Gothic Architecture + Dark Fantasy",
+  "Ocean Giant + Tiny Sailboat + Impossible Scale + Dramatic Clouds + Hyper Realism",
+  "Cyber Samurai + Holographic Armor + Rainy Tokyo + Neon Reflection + Cinematic Photography",
+  "Floating Whale + Sky Ocean + Cloud Waves + Magical Realism + Dream Illustration",
+  "Human Face + Blooming Flowers + Botanical Anatomy + Luxury Beauty Shot + Soft Lighting",
+  "Golden Deer + Crystal Antlers + Enchanted Forest + Morning Fog + Fantasy Photography",
+  "Ice Queen + Frozen Crown + Snow Particles + Pale Blue Lighting + Hyper Detailed",
+  "Shadow Creature + White Eyes + Minimal Darkness + Psychological Horror + Cinematic Contrast",
+  "Phoenix Empress + Molten Feathers + Volcanic Sky + Fire Particles + Epic Fantasy",
+  "Floating Library + Infinite Books + Magic Dust + Warm Light Rays + Concept Art",
+  "Black Hole Portal + Ancient Castle + Cosmic Storm + Cinematic Scale + Unreal Engine",
+  "Butterfly Dress + Floral Explosion + Fashion Editorial + Luxury Photography + Soft Bloom",
+  "Glass Butterfly + Prism Refractions + Rainbow Light + Macro Photography + Hyper Realism",
+  "Desert Kingdom + Giant Sand Whale + Golden Storm + Cinematic Landscape + Matte Painting",
+  "Alien Garden + Bioluminescent Plants + Neon Flora + Exotic Atmosphere + Ultra Detailed",
+  "Clockwork City + Giant Gears + Victorian Architecture + Steam Fog + Steampunk Masterpiece",
+  "Ghost Bride + White Roses + Foggy Forest + Gothic Romance + Cinematic Portrait",
+  "Floating Castle + Aurora Sky + Moonlight Clouds + Fantasy Kingdom + Epic Environment"
 ];
+
+export const generateRandomSurprise = () => {
+  return randomDescriptions[Math.floor(Math.random() * randomDescriptions.length)];
+};
 
 export const textCategories = {
   "AI AGENTS": {
