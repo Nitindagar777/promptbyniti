@@ -72,9 +72,9 @@ export default function SellPage() {
       if (data.negativePrompt) setNegativePrompt(data.negativePrompt);
       if (data.instructions) setInstructions(data.instructions);
       if (data.keywords && Array.isArray(data.keywords)) setTags(data.keywords);
-      setPriceTokens(data.priceTokens || data.tokens || 4);
+      setPriceTokens(data.priceTokens && Number(data.priceTokens) > 1 ? Number(data.priceTokens) : 4);
       if (data.generateType || data.promptType) setMediaType(data.generateType || data.promptType);
-      setSelectedModel(data.model || 'flux-1');
+      setSelectedModel(data.model && data.model !== 'gemini-image' ? data.model : 'flux-1');
 
       if (data.samples && Array.isArray(data.samples)) {
         const loaded = data.samples.slice(0, 4).map((s, idx) => ({

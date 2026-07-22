@@ -1300,6 +1300,10 @@ DO NOT exceed 5 bracketed variables under any circumstances. Keep the majority o
         'Optimization': 'AI-Optimized for best results'
       };
 
+      // Default model and token price
+      promptData.model = 'flux-1';
+      promptData.priceTokens = 4;
+
       res.json(promptData);
     } catch (parseError) {
       console.error('JSON Parse Error:', text);
