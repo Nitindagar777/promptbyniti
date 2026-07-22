@@ -150,11 +150,11 @@ export default function HomePage() {
   }, [state.marketplace]);
 
   const storeItems = useMemo(() => {
-    return state.marketplace || [];
+    return (state.marketplace || []).slice(0, 16);
   }, [state.marketplace]);
 
   const storeFeedItems = useMemo(() => {
-    return storeItems.map((tmpl, idx) => ({
+    return storeItems.slice(0, 16).map((tmpl, idx) => ({
       keyId: `home-store-${tmpl._id || tmpl.id || idx}`,
       prompt: tmpl,
       sampleIndex: 0,
