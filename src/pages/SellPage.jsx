@@ -96,9 +96,14 @@ export default function SellPage() {
     }
   }, [location.state]);
 
+  const autoPublishTriggeredRef = useRef(false);
+
   // Auto-Pipeline for Admin: Auto-Generate 4 FLUX Images & Auto-Post Prompt
   useEffect(() => {
     if (location.state?.autoPublishPack && location.state?.promptData) {
+      if (autoPublishTriggeredRef.current) return;
+      autoPublishTriggeredRef.current = true;
+
       const data = location.state.promptData;
       if (data.samples && Array.isArray(data.samples) && data.samples.length > 0) {
         const sampleInputs = data.samples.slice(0, 4).map(s =>
