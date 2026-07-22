@@ -178,6 +178,8 @@ export default function GeneratePage() {
   const [showPaywall, setShowPaywall] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
   const [aiPower, setAiPower] = useState('normal'); // 'normal', 'super', 'power'
+  const [isAutoPilot, setIsAutoPilot] = useState(() => localStorage.getItem('promptbyniti_autopilot_loop') === 'true');
+  const autoLoopTimerRef = useRef(null);
 
   // Recover state if background generation finished while we were mounted or just navigated back
   useEffect(() => {
@@ -259,10 +261,17 @@ export default function GeneratePage() {
     } catch { }
   }, [form, result, generatorMode, exampleTemplate, characterMode, activeCategory, selectedSubcategory]);
 
-  /* Handle incoming state from Home Page */
+  /* Handle incoming state from Home Page or Auto-Pilot return loop */
   useEffect(() => {
     if (location.state) {
-      if (location.state.isRandom) {
+      if (location.state.clearAndLoop) {
+        if (localStorage.getItem('promptbyniti_autopilot_loop') === 'true') {
+          if (autoLoopTimerRef.current) clearTimeout(autoLoopTimerRef.current);
+          autoLoopTimerRef.current = setTimeout(() => {
+            triggerAutoPilotStep();
+          }, 600);
+        }
+      } else if (location.state.isRandom) {
         handleRandomize(location.state.initialInput);
       } else if (location.state.initialInput) {
         setForm(prev => ({ ...prev, description: location.state.initialInput }));
@@ -270,16 +279,57 @@ export default function GeneratePage() {
     }
   }, [location.state]);
 
+  const toggleAutoPilot = () => {
+    const nextVal = !isAutoPilot;
+    setIsAutoPilot(nextVal);
+    localStorage.setItem('promptbyniti_autopilot_loop', nextVal ? 'true' : 'false');
+    if (autoLoopTimerRef.current) {
+      clearTimeout(autoLoopTimerRef.current);
+    }
+    if (nextVal) {
+      triggerAutoPilotStep();
+    }
+  };
+
+  const triggerAutoPilotStep = () => {
+    if (localStorage.getItem('promptbyniti_autopilot_loop') !== 'true') return;
+
+    // 1. Clean Page / Reset state
+    setForm({ description: '', characterImage: null, promptType: 'image', model: 'gemini-image', aspectRatio: '1:1' });
+    setResult(null);
+    setExampleTemplate('');
+    setCustomModel('');
+    setShowCustomInput(false);
+    setSaveMessage('');
+    setCharacterMode('sameScene');
+    setActiveCategory(null);
+    setSelectedSubcategory(null);
+    sessionStorage.removeItem(SESSION_KEY);
+
+    // 2. Click "Surprise Me" (random prompt)
+    const randomPrompt = generateRandomSurprise();
+    setForm(prev => ({ ...prev, description: randomPrompt }));
+
+    // 3. Click Generate Button automatically
+    if (autoLoopTimerRef.current) clearTimeout(autoLoopTimerRef.current);
+    autoLoopTimerRef.current = setTimeout(() => {
+      if (localStorage.getItem('promptbyniti_autopilot_loop') === 'true') {
+        handleGenerate(true, randomPrompt);
+      }
+    }, 500);
+  };
+
   const updateForm = (key, value) => {
     setForm(prev => ({ ...prev, [key]: value }));
   };
 
-  const handleGenerate = async (forcePack = false) => {
+  const handleGenerate = async (forcePack = false, overrideDesc = null) => {
     // For Admin user ONLY: directly generate the complete pack! For regular users: forcePack or direct prompt
     const isPack = isAdmin ? true : (forcePack === true);
+    const descToUse = overrideDesc !== null ? overrideDesc : form.description;
 
     if (generatorMode === 'prompt') {
-      const hasDescription = form.description && form.description.trim();
+      const hasDescription = descToUse && descToUse.trim();
       const hasSelection = !!selectedSubcategory;
       if (!hasDescription && !hasSelection) {
         descriptionRef.current?.focus();
@@ -324,6 +374,7 @@ export default function GeneratePage() {
 
       const payload = {
         ...form,
+        description: descToUse,
         aiPower,
         modelLabel,
         characterMode,
@@ -398,6 +449,7 @@ export default function GeneratePage() {
       ? initialDesc
       : generateRandomSurprise();
     setForm(prev => ({ ...prev, description: selectedIdea }));
+    return selectedIdea;
   };
 
   const handleRegenerate = () => {
@@ -1035,7 +1087,21 @@ export default function GeneratePage() {
           )}
 
           {/* Generate / Action Buttons Row */}
-          <div className="console-action-row">
+          <div className="console-action-row" style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+            {isAdmin && (
+              <button
+                type="button"
+                className={`autopilot-toggle-btn ${isAutoPilot ? 'autopilot-active' : ''}`}
+                onClick={toggleAutoPilot}
+                title={isAutoPilot ? "Click to Turn OFF Continuous Auto Loop" : "Click to Turn ON Continuous Auto Loop"}
+                id="gen-autopilot-btn"
+              >
+                <span className={`autopilot-dot ${isAutoPilot ? 'dot-active' : ''}`}></span>
+                <span className="autopilot-text">
+                  Auto Loop: <strong style={{ color: isAutoPilot ? '#22c55e' : '#ef4444', textTransform: 'uppercase', marginLeft: '4px' }}>{isAutoPilot ? 'ON' : 'OFF'}</strong>
+                </span>
+              </button>
+            )}
             {result ? (
               <div className="console-post-actions">
                 {generatorMode !== 'example' && !isGuest && (

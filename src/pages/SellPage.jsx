@@ -180,15 +180,38 @@ export default function SellPage() {
       const pubData = await publishRes.json();
       if (publishRes.ok) {
         console.log('✅ [Admin Auto-Pipeline] Prompt pack published successfully!');
-        setSubmitted(true);
+        const isAutoPilotActive = localStorage.getItem('promptbyniti_autopilot_loop') === 'true';
         setTimeout(() => {
-          navigate('/templates');
+          if (localStorage.getItem('promptbyniti_autopilot_loop') === 'true') {
+            console.log('🤖 [Auto-Pilot] Published successfully! Auto-returning to /generate to continue infinite loop...');
+            navigate('/generate', { state: { clearAndLoop: true, loopTime: Date.now() } });
+          } else {
+            navigate('/templates');
+          }
         }, 1200);
       } else {
-        alert(pubData.message || 'Auto-publish failed. Please review fields and click Post Prompt.');
+        console.error('❌ Auto-publish failed:', pubData.message);
+        const isAutoPilotActive = localStorage.getItem('promptbyniti_autopilot_loop') === 'true';
+        if (isAutoPilotActive) {
+          setTimeout(() => {
+            if (localStorage.getItem('promptbyniti_autopilot_loop') === 'true') {
+              navigate('/generate', { state: { clearAndLoop: true, loopTime: Date.now() } });
+            }
+          }, 3000);
+        } else {
+          alert(pubData.message || 'Auto-publish failed. Please review fields and click Post Prompt.');
+        }
       }
     } catch (err) {
       console.error('❌ Error in auto-generate & publish pipeline:', err);
+      const isAutoPilotActive = localStorage.getItem('promptbyniti_autopilot_loop') === 'true';
+      if (isAutoPilotActive) {
+        setTimeout(() => {
+          if (localStorage.getItem('promptbyniti_autopilot_loop') === 'true') {
+            navigate('/generate', { state: { clearAndLoop: true, loopTime: Date.now() } });
+          }
+        }, 3000);
+      }
     } finally {
       setLoading(false);
       setGeneratingIdx(null);

@@ -4,6 +4,49 @@
   min-height: 100vh;
 }
 
+/* Admin Auto-Pilot Robot Mode Button */
+.autopilot-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 20px;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.autopilot-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.autopilot-toggle-btn.active {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  border: 1px solid rgba(16, 185, 129, 0.6);
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  animation: pulse-autopilot 2s infinite;
+}
+
+@keyframes pulse-autopilot {
+  0% {
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 24px rgba(16, 185, 129, 0.8);
+  }
+  100% {
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+  }
+}
+
 .generate-page__header {
   text-align: center;
   margin-bottom: var(--space-sm);
@@ -2659,4 +2702,53 @@
   border-color: var(--color-cyan) !important;
   transform: translateY(-2px) !important;
   background: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Admin Auto Loop Button */
+.autopilot-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: var(--radius-lg, 12px);
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  backdrop-filter: blur(8px);
+}
+
+.autopilot-toggle-btn:hover {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: rgba(255, 255, 255, 0.35);
+  transform: translateY(-1px);
+}
+
+.autopilot-toggle-btn.autopilot-active {
+  background: rgba(34, 197, 94, 0.12);
+  border-color: rgba(34, 197, 94, 0.5);
+  box-shadow: 0 0 15px rgba(34, 197, 94, 0.25);
+}
+
+.autopilot-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ef4444;
+  transition: all 0.3s ease;
+}
+
+.autopilot-dot.dot-active {
+  background: #22c55e;
+  box-shadow: 0 0 10px #22c55e;
+  animation: pulse-dot 1.5s infinite;
+}
+
+@keyframes pulse-dot {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+  70% { transform: scale(1.1); box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
 }
