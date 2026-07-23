@@ -125,7 +125,8 @@ function buildSmartFallbackPrompt(description, promptType, targetModel, aspectRa
       samples: [
         `Generate a video of ${desc}, golden hour sunlight, slow motion panning shot --ar ${resolvedAR}`,
         `Generate a video of ${desc}, dramatic neon reflections, dynamic tracking camera shot --ar ${resolvedAR}`,
-        `Generate a video of ${desc}, atmospheric volumetric fog, high-speed cinematic zoom --ar ${resolvedAR}`
+        `Generate a video of ${desc}, atmospheric volumetric fog, high-speed cinematic zoom --ar ${resolvedAR}`,
+        `Generate a video of ${desc}, studio 8k lighting, 360 orbital camera rotation --ar ${resolvedAR}`
       ],
       keywords: ['video-prompt', 'sora', 'kling', 'cinematic', 'motion'],
       model: model,
@@ -143,7 +144,8 @@ function buildSmartFallbackPrompt(description, promptType, targetModel, aspectRa
       samples: [
         `${desc}, photorealistic 8k render, golden hour lighting, shot on 35mm lens --ar ${resolvedAR}`,
         `${desc}, cyberpunk aesthetic, vibrant neon reflections, volumetric fog --ar ${resolvedAR}`,
-        `${desc}, minimalist modern art style, clean studio background, dramatic shadows --ar ${resolvedAR}`
+        `${desc}, minimalist modern art style, clean studio background, dramatic shadows --ar ${resolvedAR}`,
+        `${desc}, surreal fantasy oil painting style, dramatic rim lighting, intricate volumetric glow --ar ${resolvedAR}`
       ],
       keywords: ['ai-image', 'midjourney', 'flux', 'hyperrealistic', 'blueprint'],
       model: model,
@@ -1261,9 +1263,9 @@ DO NOT exceed 5 bracketed variables under any circumstances. Keep the majority o
         promptData.samples = [];
       }
 
-      // Ensure samples (min 3, max 5)
+      // Ensure samples (min 4, max 5)
       if (!Array.isArray(promptData.samples)) promptData.samples = [];
-      const requiredCount = isDirectPromptOnly ? 0 : (mode === 'example' ? 5 : 3);
+      const requiredCount = isDirectPromptOnly ? 0 : (mode === 'example' ? 5 : 4);
       
       while (promptData.samples.length < requiredCount) {
         promptData.samples.push(promptData.mainPrompt || 'Generate a variation here.');

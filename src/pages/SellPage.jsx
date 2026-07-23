@@ -109,6 +109,11 @@ export default function SellPage() {
         const sampleInputs = data.samples.slice(0, 4).map(s =>
           typeof s === 'object' ? (s.input || s.prompt || '') : (typeof s === 'string' ? s : '')
         );
+        const mainText = data.mainPrompt || data.template || data.prompt || data.name || '';
+        while (sampleInputs.length < 4) {
+          const sampleNum = sampleInputs.length + 1;
+          sampleInputs.push(`${mainText}, variation ${sampleNum}, ultra-detailed render --ar 1:1`);
+        }
 
         if (sampleInputs.some(p => p && p.trim())) {
           console.log('🚀 [Admin Auto-Pipeline] Starting auto Cloudflare 4-image generation & auto-post...');
