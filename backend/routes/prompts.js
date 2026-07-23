@@ -93,32 +93,91 @@ router.post('/', auth, async (req, res) => {
       );
     }
 
+    feedCache = null; // Clear cache on new prompt creation
     res.status(201).json({ success: true, prompt });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 });
 
+let feedCache = null;
+let feedCacheTime = 0;
+const CACHE_TTL = 5 * 60 * 1000; // 5 min in-memory RAM cache for instant 0ms responses
+
 // GET All Approved Prompts (Public)
 router.get('/', async (req, res) => {
-  console.log('📬 GET /api/prompts - Fetching prompts...');
   try {
-    const prompts = await Prompt.find({ status: 'approved' })
-      .populate('seller', 'name avatar socialLinks followers')
-      .select('-instructions -template') // Now includes thumbnail and samples as they are lightweight URLs
-      .sort({ createdAt: -1 })
-      .lean();
-      
-    // Normalize samples to be an array of output URLs for the marketplace
+    const now = Date.now();
+    if (feedCache && (now - feedCacheTime < CACHE_TTL)) {
+      return res.json({ success: true, prompts: feedCache });
+    }
+
+    const limitParam = parseInt(req.query.limit);
+    const limit = (!isNaN(limitParam) && limitParam > 0) ? limitParam : 150;
+    console.log('📡 Public feed request received, fetching approved prompts...');
+    
+    const prompts = await Prompt.aggregate([
+      { $match: { status: 'approved' } },
+      { $sort: { createdAt: -1 } },
+      { $limit: limit },
+      {
+        $project: {
+          _id: 1,
+          title: 1,
+          name: 1,
+          description: 1,
+          keywords: 1,
+          category: 1,
+          generateType: 1,
+          model: 1,
+          price: 1,
+          thumbnail: 1,
+          views: 1,
+          sales: 1,
+          averageRating: 1,
+          seller: 1,
+          createdAt: 1,
+          samples: {
+            $filter: {
+              input: {
+                $map: {
+                  input: { $ifNull: ['$samples', []] },
+                  as: 's',
+                  in: '$$s.output'
+                }
+              },
+              as: 'outUrl',
+              cond: {
+                $and: [
+                  { $ne: ['$$outUrl', null] },
+                  { $ne: ['$$outUrl', ''] },
+                  { $not: [{ $regexMatch: { input: '$$outUrl', regex: '^data:' } }] }
+                ]
+              }
+            }
+          }
+        }
+      }
+    ]);
+    console.log(`✅ Fetched ${prompts.length} approved prompts from DB via fast aggregation`);
+
     const normalizedPrompts = prompts.map(p => ({
       ...p,
-      samples: (p.samples || []).map(s => s.output || s)
+      samples: (p.samples && p.samples.length > 0) ? p.samples : (p.thumbnail ? [p.thumbnail] : [])
     }));
+
+    if (normalizedPrompts.length > 0) {
+      feedCache = normalizedPrompts;
+      feedCacheTime = Date.now();
+    }
 
     res.json({ success: true, prompts: normalizedPrompts });
   } catch (err) {
     console.error('❌ Error fetching prompts:', err.message);
-    res.status(500).json({ success: false, message: err.message });
+    if (feedCache) {
+      return res.json({ success: true, prompts: feedCache });
+    }
+    res.status(500).json({ success: false, message: err.message, prompts: [] });
   }
 });
 
@@ -226,6 +285,7 @@ router.put('/:id', auth, async (req, res) => {
       );
     }
     
+    feedCache = null; // Clear cache on update
     res.json({ success: true, prompt: updatedPrompt, message: 'Prompt updated successfully' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -252,6 +312,7 @@ router.delete('/:id', auth, async (req, res) => {
     }
 
     await Prompt.findByIdAndDelete(req.params.id);
+    feedCache = null; // Clear cache on deletion
     res.json({ success: true, message: 'Prompt deleted successfully' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

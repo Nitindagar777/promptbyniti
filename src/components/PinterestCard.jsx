@@ -28,6 +28,19 @@ const PinterestCardComponent = ({ item, index }) => {
     return ratios[charCodeSum % ratios.length];
   };
 
+  const getModelBadge = () => {
+    const rawModel = (tmpl?.model || tmpl?.aiModel || tmpl?.generateType || 'flux-1').toLowerCase().trim();
+    if (rawModel.includes('gemini') || rawModel.includes('imagen')) return 'Gemini';
+    if (rawModel.includes('midjourney')) return 'Midjourney';
+    if (rawModel.includes('sora')) return 'Sora';
+    if (rawModel.includes('kling')) return 'Kling AI';
+    if (rawModel.includes('runway')) return 'Runway';
+    if (rawModel.includes('dall')) return 'DALL-E 3';
+    if (rawModel.includes('gpt') || rawModel.includes('chatgpt')) return 'ChatGPT';
+    if (rawModel.includes('claude')) return 'Claude';
+    return 'Flux';
+  };
+
   const ar = getAspectRatio();
   const tokenPrice = Math.floor(tmpl?.priceTokens || tmpl?.tokens || 5);
 
@@ -68,56 +81,25 @@ const PinterestCardComponent = ({ item, index }) => {
     samples.forEach(s => {
       const src = (typeof s === 'object') ? (s.output || s.url || s.image) : s;
       if (src && typeof src === 'string' && src.trim() !== '' && !src.includes('gradient')) {
-        list.push(src);
+        if (!list.includes(src)) list.push(src);
       }
     });
 
     if (list.length === 0 && tmpl?.sampleOutputs && Array.isArray(tmpl.sampleOutputs)) {
       tmpl.sampleOutputs.forEach(src => {
         if (src && typeof src === 'string' && src.trim() !== '' && !src.includes('gradient')) {
-          list.push(src);
+          if (!list.includes(src)) list.push(src);
         }
       });
     }
 
-    if (list.length === 0) {
-      list.push(displaySrc);
-      const name = (tmpl?.title || tmpl?.name || '').toLowerCase();
-      if (name.includes('cyberpunk') || name.includes('metropolis')) {
-        list.push(
-          'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=300&auto=format&fit=crop&q=80',
-          'https://images.unsplash.com/photo-1542838132-92c53300491e?w=300&auto=format&fit=crop&q=80',
-          'https://images.unsplash.com/photo-1508739773434-c26b3d09e071?w=300&auto=format&fit=crop&q=80'
-        );
-      } else if (name.includes('character') || name.includes('portrait') || name.includes('headshot') || name.includes('anime')) {
-        list.push(
-          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80',
-          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80',
-          'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&auto=format&fit=crop&q=80'
-        );
-      } else if (name.includes('architecture') || name.includes('interior') || name.includes('forest') || name.includes('folk')) {
-        list.push(
-          'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=300&auto=format&fit=crop&q=80',
-          'https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=300&auto=format&fit=crop&q=80',
-          'https://images.unsplash.com/photo-1511497584788-876760111969?w=300&auto=format&fit=crop&q=80'
-        );
-      } else if (name.includes('product') || name.includes('mockup') || name.includes('tshirt') || name.includes('fashion') || name.includes('bookstore') || name.includes('script')) {
-        list.push(
-          'https://images.unsplash.com/photo-1524805444758-089113d48a6d?w=300&auto=format&fit=crop&q=80',
-          'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=300&auto=format&fit=crop&q=80',
-          'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300&auto=format&fit=crop&q=80'
-        );
-      } else {
-        list.push(
-          'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=300&auto=format&fit=crop&q=80',
-          'https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=300&auto=format&fit=crop&q=80',
-          'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=300&auto=format&fit=crop&q=80'
-        );
-      }
+    const mainSrc = displaySrc || tmpl?.thumbnail || tmpl?.outputImage;
+    if (mainSrc && typeof mainSrc === 'string' && !mainSrc.includes('gradient')) {
+      if (!list.includes(mainSrc)) list.unshift(mainSrc);
     }
 
     while (list.length < 4) {
-      list.push(list[0] || displaySrc);
+      list.push(list[0] || mainSrc);
     }
 
     return list.slice(0, 4);
@@ -302,6 +284,35 @@ const PinterestCardComponent = ({ item, index }) => {
           className={`pinterest-card__visual ${!item.isTextOnly ? 'pinterest-card__visual--has-ar' : ''}`} 
           style={!item.isTextOnly ? { aspectRatio: ar, overflow: 'hidden', position: 'relative' } : {}}
         >
+          {/* Top-Left AI Model Badge with small black background */}
+          <span
+            className="pinterest-card__model-badge"
+            style={{
+              position: 'absolute',
+              top: '8px',
+              left: '8px',
+              zIndex: 10,
+              padding: '3px 8px',
+              borderRadius: '5px',
+              background: 'rgba(0, 0, 0, 0.85)',
+              backdropFilter: 'blur(4px)',
+              border: '1px solid rgba(255, 255, 255, 0.25)',
+              color: '#ffffff',
+              fontSize: '10px',
+              fontWeight: '700',
+              letterSpacing: '0.4px',
+              lineHeight: '1',
+              display: 'inline-flex',
+              alignItems: 'center',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.6)',
+              pointerEvents: 'none',
+              width: 'max-content',
+              height: 'auto !important'
+            }}
+          >
+            Flux/Gemini
+          </span>
+
           {/* Small Red Eye Icon Button for Quick Preview & Share */}
           <button
             type="button"

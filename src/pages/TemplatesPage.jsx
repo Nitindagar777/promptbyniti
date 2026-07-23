@@ -46,25 +46,48 @@ export default function TemplatesPage() {
 
   const [refreshing, setRefreshing] = useState(false);
 
+  // 1. Sync prompts whenever state.marketplace is loaded or updated
+  useEffect(() => {
+    if (state.marketplace && state.marketplace.length > 0) {
+      setPrompts(state.marketplace);
+      setLoading(false);
+    }
+  }, [state.marketplace]);
+
+  // 2. Fetch fresh full dataset from /api/prompts on mount
   useEffect(() => {
     fetchPrompts();
+  }, []);
 
+  useEffect(() => {
     return () => {
       setScroll(location.pathname, window.scrollY);
     };
   }, []);
 
+  const [error, setError] = useState(false);
+
   const fetchPrompts = async () => {
-    setLoading(true);
+    if (!state.marketplace || state.marketplace.length === 0) {
+      setLoading(true);
+    }
+    setError(false);
     try {
-      const res = await fetch(`${API_URL}/prompts`);
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000); // 15s timeout
+      const res = await fetch(`${API_URL}/prompts`, { signal: controller.signal });
+      clearTimeout(timeout);
       const data = await res.json();
-      if (data.success) {
+      if (data.success && Array.isArray(data.prompts)) {
         setPrompts(data.prompts);
         dispatch({ type: 'PRELOAD_DATA', payload: { marketplace: data.prompts } });
       }
     } catch (err) {
       console.error('Failed to fetch prompts:', err);
+      // If we have cached data, use it; otherwise show error
+      if (!prompts || prompts.length === 0) {
+        setError(true);
+      }
     } finally {
       setLoading(false);
     }
@@ -90,36 +113,74 @@ export default function TemplatesPage() {
     const items = [];
     const templates = prompts.filter(t => {
       const searchLower = searchTerm.toLowerCase().trim();
-      const catLower = selectedCat.toLowerCase();
+      const catLower = (selectedCat || 'all').toLowerCase().trim();
+      const isAllCategory = catLower === 'all' || catLower === 'default' || catLower === 'none' || catLower === '';
 
-      // Check category match (Primary category OR in keywords)
-      const matchesCat = selectedCat === 'all' ||
+      const catObj = categories.find(c => c.id.toLowerCase() === catLower);
+      const catLabelLower = catObj ? catObj.label.toLowerCase() : '';
+      const cleanCatTerm = catLower.replace(/-/g, ' ');
+
+      // Category match (All / Default / None matches EVERYTHING)
+      const matchesCat = isAllCategory ||
         (t.category || '').toLowerCase() === catLower ||
-        (Array.isArray(t.keywords) && t.keywords.some(k => k && k.toLowerCase().replace(/ /g, '-') === catLower)) ||
-        (typeof t.keywords === 'string' && t.keywords.toLowerCase().replace(/ /g, '-').includes(catLower));
+        (catLabelLower && (t.category || '').toLowerCase() === catLabelLower) ||
+        (t.generateType || '').toLowerCase() === catLower ||
+        (Array.isArray(t.keywords) && t.keywords.some(k => k && (k.toLowerCase().includes(catLower) || k.toLowerCase().replace(/ /g, '-').includes(catLower) || (catLabelLower && k.toLowerCase().includes(catLabelLower))))) ||
+        (typeof t.keywords === 'string' && (t.keywords.toLowerCase().includes(catLower) || (catLabelLower && t.keywords.toLowerCase().includes(catLabelLower)))) ||
+        (t.title || t.name || '').toLowerCase().includes(cleanCatTerm) ||
+        (catLabelLower && (t.title || t.name || '').toLowerCase().includes(cleanCatTerm)) ||
+        (t.description || '').toLowerCase().includes(cleanCatTerm) ||
+        (catLabelLower && (t.description || '').toLowerCase().includes(cleanCatTerm));
 
       if (!searchLower) return matchesCat;
 
-      // Robust keyword check (handles both arrays and strings)
+      // Robust Search match (Title, Description, Instructions, Template, Category, Keywords, Samples, AI Model)
       let keywordMatch = false;
       if (Array.isArray(t.keywords)) {
-        keywordMatch = t.keywords.some(k => k && k.toLowerCase().includes(searchLower));
+        keywordMatch = t.keywords.some(k => k && String(k).toLowerCase().includes(searchLower));
       } else if (typeof t.keywords === 'string') {
         keywordMatch = t.keywords.toLowerCase().includes(searchLower);
+      }
+
+      let sampleMatch = false;
+      if (Array.isArray(t.samples)) {
+        sampleMatch = t.samples.some(s => {
+          if (!s) return false;
+          if (typeof s === 'object') {
+            return (s.input || s.prompt || s.output || '').toLowerCase().includes(searchLower);
+          }
+          return String(s).toLowerCase().includes(searchLower);
+        });
+      }
+
+      // Smart synonyms matching (e.g. girl -> woman, female, lady, portrait, model)
+      let synonymMatch = false;
+      if (searchLower === 'girl' || searchLower === 'girls') {
+        const girlTerms = ['girl', 'woman', 'female', 'lady', 'portrait', 'she', 'her', 'model'];
+        const fullText = `${t.title || ''} ${t.name || ''} ${t.description || ''} ${t.instructions || ''} ${t.template || ''} ${t.category || ''}`.toLowerCase();
+        synonymMatch = girlTerms.some(term => fullText.includes(term));
       }
 
       const matchesSearch =
         (t.name || '').toLowerCase().includes(searchLower) ||
         (t.title || '').toLowerCase().includes(searchLower) ||
         (t.description || '').toLowerCase().includes(searchLower) ||
-        keywordMatch;
+        (t.instructions || '').toLowerCase().includes(searchLower) ||
+        (t.template || '').toLowerCase().includes(searchLower) ||
+        (t.category || '').toLowerCase().includes(searchLower) ||
+        (t.model || t.aiModel || '').toLowerCase().includes(searchLower) ||
+        keywordMatch ||
+        sampleMatch ||
+        synonymMatch;
 
       return matchesCat && matchesSearch;
     });
 
     templates.forEach((tmpl, tmplIdx) => {
       const isText = tmpl.generateType === 'text';
-      const mainCover = tmpl.thumbnail || tmpl.video || (tmpl.samples?.[0]?.output || tmpl.samples?.[0]) || tmpl.image;
+      const firstSample = tmpl.samples?.[0];
+      const sampleSrc = typeof firstSample === 'object' ? (firstSample?.output || firstSample?.url || firstSample?.image) : firstSample;
+      const mainCover = tmpl.thumbnail || tmpl.video || sampleSrc || tmpl.image;
 
       items.push({
         prompt: tmpl,
@@ -133,20 +194,19 @@ export default function TemplatesPage() {
     return items;
   }, [prompts, searchTerm, selectedCat]);
 
-  const [visibleCount, setVisibleCount] = useState(12);
+  const [visibleCount, setVisibleCount] = useState(500);
 
   // Reset visibleCount when filters change
   useEffect(() => {
-    setVisibleCount(12);
+    setVisibleCount(500);
   }, [searchTerm, selectedCat]);
 
-  // Infinite scroll event listener
+  // Infinite scroll event listener to load remaining items if dataset grows
   useEffect(() => {
     const handleScroll = () => {
       if (visibleCount >= feedItems.length) return;
-      // Trigger load more when user scrolls to within 300px of the page bottom
       if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 300) {
-        setVisibleCount(prev => Math.min(prev + 12, feedItems.length));
+        setVisibleCount(prev => Math.min(prev + 50, feedItems.length));
       }
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -243,11 +303,20 @@ export default function TemplatesPage() {
             <Loader2 className="animate-spin text-cyan" size={48} />
             <p className="text-muted">Loading premium prompts...</p>
           </div>
+        ) : error ? (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '400px', gap: '1rem', textAlign: 'center' }}>
+            <Sparkles size={48} className="text-muted" />
+            <h3 style={{ color: 'var(--text-primary)' }}>Unable to load prompts</h3>
+            <p className="text-muted">Please check your connection and try again.</p>
+            <button onClick={fetchPrompts} className="btn btn-secondary" style={{ marginTop: '8px' }}>
+              <RotateCw size={16} style={{ marginRight: '8px' }} /> Retry
+            </button>
+          </div>
         ) : (
           <>
           <MasonryGrid
             columns={4}
-            items={feedItems.slice(0, visibleCount)}
+            items={feedItems}
             renderItem={(item, i) => (
               <PinterestCard key={item.keyId} item={item} index={i} />
             )}

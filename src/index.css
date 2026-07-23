@@ -961,6 +961,13 @@ p {
   min-height: 0 !important;
 }
 
+.pinterest-card__model-badge {
+  height: auto !important;
+  max-height: 22px !important;
+  width: max-content !important;
+  display: inline-flex !important;
+}
+
 /* Let image/video dictate the card height — NO fixed height */
 .pinterest-card__media {
   width: 100%;

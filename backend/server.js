@@ -44,7 +44,11 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // MongoDB Connection
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI);
+    await mongoose.connect(process.env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 10000, // Fail fast if DB is unreachable (10s)
+      connectTimeoutMS: 10000,
+      socketTimeoutMS: 30000,
+    });
     console.log('🍃 MongoDB connected successfully');
   } catch (err) {
     console.error('❌ MongoDB connection error:', err.message);
@@ -105,9 +109,9 @@ app.get('/', async (req, res) => {
 // Start Server
 const start = async () => {
   await connectDB();
-  app.listen(PORT, () => {
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Backend server is running on port ${PORT}`);
-    console.log(`✅ Payment Method route is active at: http://localhost:${PORT}/api/seller/payment-method`);
+    console.log(`✅ Payment Method route is active at: http://127.0.0.1:${PORT}/api/seller/payment-method`);
   });
 };
 

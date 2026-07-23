@@ -1,12 +1,9 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 
 /**
  * MasonryGrid — Pinterest-style layout with independent columns.
  *
- * Unlike CSS column-count (which reflows ALL items when content changes),
- * this distributes items into separate vertical columns. When new items
- * load via infinite scroll, they are appended to the shortest column —
- * existing items never move.
+ * Renders items instantly without flickering, re-animating, or black box re-fading on scroll.
  *
  * Props:
  *   items      — array of data items to render
@@ -29,9 +26,9 @@ export default function MasonryGrid({ items, renderItem, gap = 16, columns: cust
 
     const updateCols = () => {
       const w = el.offsetWidth;
-      if (w <= 480)      setColCount(2); // 2 columns on mobile portrait (standard Pinterest mobile view)
-      else if (w <= 768) setColCount(3); // 3 columns on tablet
-      else               setColCount(4); // 4 columns on desktop
+      if (w <= 480)      setColCount(2);
+      else if (w <= 768) setColCount(3);
+      else               setColCount(4);
     };
 
     updateCols();
@@ -44,9 +41,11 @@ export default function MasonryGrid({ items, renderItem, gap = 16, columns: cust
   // ── Distribute items into columns (round-robin, deterministic) ─
   const columns = useMemo(() => {
     const cols = Array.from({ length: colCount }, () => []);
-    items.forEach((item, i) => {
-      cols[i % colCount].push({ item, index: i });
-    });
+    if (Array.isArray(items)) {
+      items.forEach((item, i) => {
+        cols[i % colCount].push({ item, index: i });
+      });
+    }
     return cols;
   }, [items, colCount]);
 
@@ -71,11 +70,15 @@ export default function MasonryGrid({ items, renderItem, gap = 16, columns: cust
             display: 'flex',
             flexDirection: 'column',
             gap: `${gap}px`,
-            minWidth: 0,  /* prevents flex overflow */
+            minWidth: 0,
           }}
         >
           {col.map(({ item, index }) => (
-            <div key={item.keyId || index} className="masonry-grid__item">
+            <div
+              key={item.keyId || index}
+              className="masonry-grid__item"
+              style={{ width: '100%' }}
+            >
               {renderItem(item, index)}
             </div>
           ))}

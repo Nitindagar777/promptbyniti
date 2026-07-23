@@ -10,6 +10,7 @@ const promptSchema = new mongoose.Schema({
   template: { type: String, required: true },
   instructions: { type: String },
   keywords: [{ type: String }],
+  category: { type: String, default: '' }, // Store category for filtering (e.g., Portrait, Lifestyle, etc.)
   thumbnail: { type: String }, // first sample image (base64 or URL)
   samples: [
     {
@@ -43,5 +44,7 @@ const promptSchema = new mongoose.Schema({
   unlockRules: { type: mongoose.Schema.Types.Mixed, default: {} },
   createdAt: { type: Date, default: Date.now }
 });
+
+promptSchema.index({ status: 1, createdAt: -1 });
 
 module.exports = mongoose.model('Prompt', promptSchema);

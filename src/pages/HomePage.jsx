@@ -4,7 +4,7 @@ import { useApp } from '../context/AppContext';
 import { generatePrompt } from '../data/promptEngine';
 import { randomDescriptions } from '../data/promptData';
 import PromptOutput from '../components/PromptOutput';
-import { ArrowRight, Sparkles, Zap, Image, Layers, Heart, Wand2, Rocket, Star, Palette, MessageSquare, ShieldCheck, Zap as ZapIcon, ShoppingBag, Coins, DollarSign, Eye, Camera, Lock, Check, Repeat, Video, Info, Copy, ChevronDown, Code, FileText, Bot, Clock, RotateCw, ZoomIn, Activity, Film, Package, Send, Mail, Globe } from 'lucide-react';
+import { ArrowRight, Sparkles, Zap, Image, Layers, Heart, Wand2, Rocket, Star, Palette, MessageSquare, ShieldCheck, Zap as ZapIcon, ShoppingBag, Coins, DollarSign, Eye, Camera, Lock, Check, Repeat, Video, Info, Copy, ChevronDown, Code, FileText, Bot, Clock, RotateCw, ZoomIn, Activity, Film, Package, Send, Mail, Globe, Loader2 } from 'lucide-react';
 import PreviewModal from '../components/PreviewModal';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -116,8 +116,19 @@ const getStoreCardSamples = (tmpl) => {
 export default function HomePage() {
   const { state, dispatch, canGenerate, useCredit, addPrompt, cache, setCachedData, setScroll, getScroll } = useApp();
   const location = useLocation();
-  const [prompts, setPrompts] = useState(state.marketplace ? state.marketplace.slice(0, 8) : []);
-  const [loadingPrompts, setLoadingPrompts] = useState(!state.marketplace || state.marketplace.length === 0);
+  const [prompts, setPrompts] = useState(state.marketplace || []);
+
+  // Sync prompts whenever state.marketplace is updated or preloaded
+  useEffect(() => {
+    if (state.marketplace && state.marketplace.length > 0) {
+      setPrompts(state.marketplace);
+    }
+  }, [state.marketplace]);
+
+  // Always fetch fresh data on mount, but never block rendering
+  useEffect(() => {
+    fetchPrompts();
+  }, []);
   const navigate = useNavigate();
   const [previewPrompt, setPreviewPrompt] = useState(null);
   const [activeLightboxImg, setActiveLightboxImg] = useState(null);
@@ -128,7 +139,9 @@ export default function HomePage() {
     const sourcePrompts = state.marketplace || [];
     sourcePrompts.forEach((tmpl, tmplIdx) => {
       const isText = tmpl.generateType === 'text';
-      const mainCover = tmpl.thumbnail || tmpl.video || (tmpl.samples?.[0]?.output || tmpl.samples?.[0]) || tmpl.image;
+      const firstSample = tmpl.samples?.[0];
+      const sampleSrc = typeof firstSample === 'object' ? (firstSample?.output || firstSample?.url || firstSample?.image) : firstSample;
+      const mainCover = tmpl.thumbnail || tmpl.video || sampleSrc || tmpl.image;
 
       items.push({
         prompt: tmpl,
@@ -154,14 +167,19 @@ export default function HomePage() {
   }, [state.marketplace]);
 
   const storeFeedItems = useMemo(() => {
-    return storeItems.slice(0, 16).map((tmpl, idx) => ({
-      keyId: `home-store-${tmpl._id || tmpl.id || idx}`,
-      prompt: tmpl,
-      sampleIndex: 0,
-      mediaSrc: tmpl.thumbnail || tmpl.samples?.[0]?.output || tmpl.samples?.[0] || '',
-      isTextOnly: false
-    }));
-  }, [storeItems]);
+    const list = (state.marketplace && state.marketplace.length > 0) ? state.marketplace : prompts;
+    return (list || []).slice(0, 16).map((tmpl, idx) => {
+      const firstSample = tmpl.samples?.[0];
+      const sampleSrc = typeof firstSample === 'object' ? (firstSample?.output || firstSample?.url || firstSample?.image) : firstSample;
+      return {
+        keyId: `home-store-${tmpl._id || tmpl.id || idx}`,
+        prompt: tmpl,
+        sampleIndex: 0,
+        mediaSrc: tmpl.thumbnail || sampleSrc || '',
+        isTextOnly: false
+      };
+    });
+  }, [state.marketplace, prompts]);
 
   // Reference Modes Showcase Section States
   const [activeRefCategory, setActiveRefCategory] = useState('image'); // 'image' | 'video' | 'text'
@@ -384,7 +402,7 @@ export default function HomePage() {
       const timer = setTimeout(handleScroll, 500);
       return () => clearTimeout(timer);
     }
-  }, [location.hash, loadingPrompts]);
+  }, [location.hash]);
 
 
   // Go to next reference mode in the global loop sequence
@@ -431,15 +449,13 @@ export default function HomePage() {
     return () => clearTimeout(timer);
   }, [activeRefCategory, activeImageMode, activeVideoMode, activeTextMode, goToNextMode]);
 
-  // Effect to control playing/pausing of reference videos based on active video mode
+  // Effect to control playing/pausing of reference videos based on active video mode and category tab
   useEffect(() => {
     Object.entries(videoRefs).forEach(([key, ref]) => {
       const videoEl = ref.current;
       if (videoEl) {
-        if (key === activeVideoMode) {
-          videoEl.currentTime = 0;
+        if (activeRefCategory === 'video' && key === activeVideoMode) {
           videoEl.play().catch(err => {
-            // Silence AbortError due to quick tab switching
             if (err.name !== 'AbortError') {
               console.log(`Video play interrupted for ${key}:`, err);
             }
@@ -449,24 +465,25 @@ export default function HomePage() {
         }
       }
     });
-  }, [activeVideoMode]);
+  }, [activeVideoMode, activeRefCategory]);
 
 
   const fetchPrompts = async () => {
-    setLoadingPrompts(true);
     try {
-      const res = await fetch(`${API_URL}/prompts`);
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000); // 15s timeout
+      const res = await fetch(`${API_URL}/prompts`, { signal: controller.signal });
+      clearTimeout(timeout);
       const data = await res.json();
-      if (data.success) {
+      if (data.success && Array.isArray(data.prompts)) {
         const sliced = data.prompts.slice(0, 8);
         setPrompts(sliced);
-        // Dispatch to global state to update/refresh it
         dispatch({ type: 'PRELOAD_DATA', payload: { marketplace: data.prompts } });
       }
     } catch (err) {
-      console.error('Failed to fetch home prompts:', err);
-    } finally {
-      setLoadingPrompts(false);
+      if (err.name !== 'AbortError') {
+        console.error('Failed to fetch home prompts:', err);
+      }
     }
   };
 
@@ -589,13 +606,7 @@ export default function HomePage() {
             </Link>
           </div>
 
-          {loadingPrompts ? (
-            <div className="p-store-grid">
-              {[...Array(16)].map((_, i) => (
-                <div key={i} style={{ height: '280px', background: 'rgba(255,255,255,0.02)', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)' }} />
-              ))}
-            </div>
-          ) : storeItems.length > 0 ? (
+          {storeFeedItems.length > 0 ? (
             <MasonryGrid
               columns={4}
               items={storeFeedItems}
@@ -604,9 +615,9 @@ export default function HomePage() {
               )}
             />
           ) : (
-            <div className="p-market-empty" style={{ textAlign: 'center', padding: '40px 0' }}>
-              <Sparkles size={48} className="text-muted mb-4 mx-auto" />
-              <h3>No Premium Prompts</h3>
+            <div className="p-market-empty" style={{ textAlign: 'center', padding: '60px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
+              <Loader2 size={40} className="animate-spin text-cyan" style={{ animation: 'spin 1s linear infinite' }} />
+              <p style={{ color: 'var(--text-muted)', fontSize: '1rem', fontWeight: 500 }}>Loading premium store feed...</p>
             </div>
           )}
         </div>
@@ -1043,6 +1054,8 @@ export default function HomePage() {
                       ref={videoRefs.sameSceneLoop}
                       src="/Same_Scene_Video_ref.mp4"
                       className={`p-ref-modes__showcase-media ${activeVideoMode === 'sameSceneLoop' ? 'active' : ''}`}
+                      autoPlay
+                      loop
                       muted
                       playsInline
                       preload="auto"
@@ -1052,6 +1065,8 @@ export default function HomePage() {
                       ref={videoRefs.differentScenes}
                       src="/Different_Character_Video_ref.mp4"
                       className={`p-ref-modes__showcase-media ${activeVideoMode === 'differentScenes' ? 'active' : ''}`}
+                      autoPlay
+                      loop
                       muted
                       playsInline
                       preload="auto"
@@ -1061,6 +1076,8 @@ export default function HomePage() {
                       ref={videoRefs.fixedCharacterMotion}
                       src="/Fixed_Character_Motion_Video_ref.mp4"
                       className={`p-ref-modes__showcase-media ${activeVideoMode === 'fixedCharacterMotion' ? 'active' : ''}`}
+                      autoPlay
+                      loop
                       muted
                       playsInline
                       preload="auto"

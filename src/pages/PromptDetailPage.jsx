@@ -797,78 +797,73 @@ export default function PromptDetailPage() {
   const relatedStorePrompts = useMemo(() => {
     if (!template) return [];
     
-    const allPaid = [
-      ...(state.marketplace || []).filter(t => t.priceTokens > 0 || t.tokens > 0),
-      ...FALLBACK_STORE_ITEMS
-    ];
-    
-    const uniquePaid = [];
-    const seen = new Set();
-    allPaid.forEach(t => {
-      const key = t._id || t.id;
-      if (!seen.has(key)) {
-        seen.add(key);
-        uniquePaid.push(t);
-      }
-    });
+    const marketplaceItems = (state.marketplace && state.marketplace.length > 0) ? state.marketplace : FALLBACK_STORE_ITEMS;
+    const allPaid = marketplaceItems.filter(t => (t.priceTokens > 0 || t.tokens > 0 || t.price > 0));
+    const sourceList = allPaid.length > 0 ? allPaid : marketplaceItems;
 
-    const list = uniquePaid.filter(t => {
+    const list = sourceList.filter(t => {
       const isSelf = (t.id || t._id) === (template.id || template._id);
       if (isSelf) return false;
-      return t.category === template.category;
+      return (t.category && template.category && t.category.toLowerCase() === template.category.toLowerCase()) ||
+             (t.generateType && template.generateType && t.generateType === template.generateType);
     });
 
     if (list.length === 0) {
-      return uniquePaid.filter(t => (t.id || t._id) !== (template.id || template._id));
+      return sourceList.filter(t => (t.id || t._id) !== (template.id || template._id));
     }
 
     return list;
   }, [template, state.marketplace]);
 
   const relatedStoreFeedItems = useMemo(() => {
-    return (relatedStorePrompts || []).slice(0, 12).map((tmpl, idx) => ({
-      keyId: `related-store-${tmpl._id || tmpl.id || idx}`,
-      prompt: tmpl,
-      sampleIndex: 0,
-      mediaSrc: tmpl.thumbnail || tmpl.samples?.[0]?.output || tmpl.samples?.[0] || '',
-      isTextOnly: false
-    }));
+    return (relatedStorePrompts || []).slice(0, 16).map((tmpl, idx) => {
+      const firstSample = tmpl.samples?.[0];
+      const sampleSrc = typeof firstSample === 'object' ? (firstSample?.output || firstSample?.url || firstSample?.image) : firstSample;
+      return {
+        keyId: `related-store-${tmpl._id || tmpl.id || idx}`,
+        prompt: tmpl,
+        sampleIndex: 0,
+        mediaSrc: tmpl.thumbnail || sampleSrc || '',
+        isTextOnly: tmpl.generateType === 'text'
+      };
+    });
   }, [relatedStorePrompts]);
 
   const relatedFeedItems = useMemo(() => {
     if (!template) return [];
-    let related = (state.marketplace || []).filter(t => {
+    const sourceList = (state.marketplace && state.marketplace.length > 0) ? state.marketplace : FALLBACK_STORE_ITEMS;
+    
+    let related = sourceList.filter(t => {
       const isSelf = (t.id || t._id) === (template.id || template._id);
       if (isSelf) return false;
 
-      const catMatch = t.category === template.category;
+      const catMatch = t.category && template.category && t.category.toLowerCase() === template.category.toLowerCase();
+      const typeMatch = t.generateType && template.generateType && t.generateType === template.generateType;
       const keywordMatch = t.keywords?.some(k => template.keywords?.includes(k));
-      return catMatch || keywordMatch;
+      return catMatch || typeMatch || keywordMatch;
     });
 
     if (related.length === 0) {
-      related = (state.marketplace || []).filter(t => (t.id || t._id) !== (template.id || template._id));
+      related = sourceList.filter(t => (t.id || t._id) !== (template.id || template._id));
     }
 
     const feedItems = [];
     related.forEach((tmpl, tmplIdx) => {
       const isText = tmpl.generateType === 'text';
-      const mainCover = tmpl.thumbnail || tmpl.video || (tmpl.samples?.[0]?.output || tmpl.samples?.[0]) || tmpl.image;
+      const firstSample = tmpl.samples?.[0];
+      const sampleSrc = typeof firstSample === 'object' ? (firstSample?.output || firstSample?.url || firstSample?.image) : firstSample;
+      const mainCover = tmpl.thumbnail || tmpl.video || sampleSrc || tmpl.image;
 
       feedItems.push({
         prompt: tmpl,
         mediaSrc: isText ? null : mainCover,
         isTextOnly: isText || !mainCover,
         sampleIndex: 0,
-        keyId: tmpl.id || tmpl._id || `tmpl-${tmplIdx}`
+        keyId: `related-feed-${tmpl.id || tmpl._id || tmplIdx}`
       });
     });
 
-    // Shuffle the final list of feed items to mix samples and templates randomly
-    const shuffledFeedItems = [...feedItems].sort(() => Math.random() - 0.5);
-
-    // Slice to the active relatedLimit
-    return shuffledFeedItems.slice(0, relatedLimit);
+    return feedItems.slice(0, relatedLimit || 16);
   }, [id, template, state.marketplace, relatedLimit]);
 
   const handlePrevImage = (e) => {
@@ -914,6 +909,21 @@ export default function PromptDetailPage() {
 
   useEffect(() => {
     const fetchTemplate = async () => {
+      // If state.marketplace is empty, load public feed so related items load for unauthenticated users
+      if (!state.marketplace || state.marketplace.length === 0) {
+        try {
+          const mRes = await fetch('/api/prompts');
+          if (mRes.ok) {
+            const mData = await mRes.json();
+            if (mData.success && Array.isArray(mData.prompts)) {
+              dispatch({ type: 'PRELOAD_DATA', payload: { marketplace: mData.prompts } });
+            }
+          }
+        } catch (e) {
+          console.warn('Marketplace preload in detail page failed:', e);
+        }
+      }
+
       // Find cached prompt from global marketplace state if available when id changes
       const cached = (state.marketplace || []).find(t => (t.id || t._id) === id) || 
                      FALLBACK_STORE_ITEMS.find(t => t._id === id) || null;
@@ -2017,7 +2027,7 @@ export default function PromptDetailPage() {
             </h2>
             <MasonryGrid
               columns={4}
-              items={isPaidPrompt ? relatedStoreFeedItems : relatedFeedItems}
+              items={(relatedFeedItems && relatedFeedItems.length > 0) ? relatedFeedItems : ((relatedStoreFeedItems && relatedStoreFeedItems.length > 0) ? relatedStoreFeedItems : [])}
               renderItem={(item, i) => (
                 <PinterestCard key={item.keyId} item={item} index={i} />
               )}

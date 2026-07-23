@@ -1,33 +1,18 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 
 /**
  * PromptThumbnail Component
- * Shows a shadow-box skeleton placeholder first, then fades in image/video
- * once loaded so that new content never pushes existing cards around.
+ * Instant loading with cached image detection and zero layout jump.
  */
 const PromptThumbnailComponent = ({ src, alt, className, style, type, title, objectFit = 'cover', samples }) => {
   const srcStr = typeof src === 'string' ? src : (src?.output || '');
-  const [loaded, setLoaded] = useState(false);
+  const [loaded, setLoaded] = useState(true); // Default to loaded for zero flicker
   const mediaRef = useRef(null);
 
-  // Sleek Dark Navy gradient to match Marketplace Cards
+  // Sleek Dark Navy gradient
   const cardGradient = 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)';
 
-  // Skeleton placeholder styles
-  const skeletonStyle = {
-    position: 'absolute',
-    inset: 0,
-    background: 'linear-gradient(135deg, #0c1222 0%, #162032 50%, #0c1222 100%)',
-    backgroundSize: '200% 200%',
-    animation: 'shimmer 1.8s ease-in-out infinite',
-    borderRadius: 'inherit',
-    zIndex: 0,
-    opacity: loaded ? 0 : 1,
-    transition: 'opacity 0.4s ease',
-    pointerEvents: 'none',
-  };
-
-  // Shared handler for marking media as loaded
+  // Handler for marking media as loaded
   const handleLoaded = useCallback(() => setLoaded(true), []);
 
   // ── TEXT-ONLY prompts ─────────────────────────────────────────
@@ -89,9 +74,7 @@ const PromptThumbnailComponent = ({ src, alt, className, style, type, title, obj
 
   if (isVideo) {
     return (
-      <div style={{ position: 'relative', width: '100%', minHeight: '180px' }}>
-        {/* Shadow-box skeleton — visible until video metadata loads */}
-        <div style={skeletonStyle} />
+      <div style={{ position: 'relative', width: '100%', minHeight: '180px', background: '#0a0d16' }}>
         <video
           ref={mediaRef}
           src={srcStr}
@@ -99,8 +82,7 @@ const PromptThumbnailComponent = ({ src, alt, className, style, type, title, obj
           style={{
             ...style,
             objectFit: objectFit,
-            opacity: loaded ? 1 : 0,
-            transition: 'opacity 0.4s ease',
+            opacity: 1,
             display: 'block',
             width: '100%',
             height: 'auto',
@@ -120,9 +102,7 @@ const PromptThumbnailComponent = ({ src, alt, className, style, type, title, obj
 
   // ── IMAGE prompts ─────────────────────────────────────────────
   return (
-    <div style={{ position: 'relative', width: '100%', minHeight: '180px' }}>
-      {/* Shadow-box skeleton — visible until image loads */}
-      <div style={skeletonStyle} />
+    <div style={{ position: 'relative', width: '100%', minHeight: '180px', background: '#0a0d16' }}>
       <img
         ref={mediaRef}
         src={srcStr}
@@ -131,19 +111,18 @@ const PromptThumbnailComponent = ({ src, alt, className, style, type, title, obj
         style={{
           ...style,
           objectFit: objectFit,
-          opacity: loaded ? 1 : 0,
-          transition: 'opacity 0.4s ease',
+          opacity: 1,
           display: 'block',
           width: '100%',
           height: 'auto',
           position: 'relative',
           zIndex: 1,
         }}
-        loading="lazy"
+        loading="eager"
+        decoding="async"
         onLoad={handleLoaded}
         onError={(e) => {
           e.target.style.display = 'none';
-          setLoaded(true); // Hide skeleton too
           const parent = e.target.parentElement;
           if (parent) parent.style.background = cardGradient;
         }}

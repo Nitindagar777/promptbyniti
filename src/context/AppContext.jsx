@@ -287,6 +287,7 @@ function appReducer(state, action) {
       return {
         ...defaultState,
         prompts: state.prompts,
+        marketplace: state.marketplace, // Preserve store data so prompts stay visible for all users
       };
 
     case actions.SET_SCROLL:
@@ -316,10 +317,32 @@ export function AppProvider({ children }) {
   const [authLoading, setAuthLoading] = useState(!!localStorage.getItem(TOKEN_KEY));
   const [cache, setCache] = useState({}); // Transient API cache
 
-  /* Persist specific parts of state to localStorage (Exclude heavy marketplace/library/prompts) */
+  /* Persist specific parts of state to localStorage (Lightweight 213+ marketplace items for instant 0ms cards load) */
   useEffect(() => {
-    const { marketplace, library, buyerStats, sellerStats, adminPrompts, adminUsers, ...rest } = state;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(rest));
+    const { library, buyerStats, sellerStats, adminPrompts, adminUsers, ...rest } = state;
+    const cacheState = {
+      ...rest,
+      marketplace: (state.marketplace || []).map(p => ({
+        _id: p._id || p.id,
+        id: p.id || p._id,
+        title: p.title || p.name,
+        name: p.name || p.title,
+        description: p.description || '',
+        keywords: p.keywords || [],
+        category: p.category || '',
+        generateType: p.generateType || 'image',
+        price: p.price || 0,
+        thumbnail: p.thumbnail || '',
+        samples: (p.samples || []).map(s => (typeof s === 'object' ? (s.output || s.url || s.image || '') : s)).filter(Boolean).slice(0, 4),
+        views: p.views || 0,
+        sales: p.sales || 0,
+        averageRating: p.averageRating || 5,
+        seller: p.seller ? { name: p.seller.name, avatar: p.seller.avatar } : null
+      })).slice(0, 300)
+    };
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(cacheState));
+    } catch (e) { /* ignore storage quota edge cases */ }
   }, [state]);
 
   /* Validate User Session on Mount */
@@ -371,27 +394,40 @@ export function AppProvider({ children }) {
 
 
 
-  /* Background Data Preloading (Marketplace & Stats) */
+  /* Background Marketplace Preloading (Public — runs once on mount for ALL users, no auth needed) */
   useEffect(() => {
-    const preload = async () => {
+    const loadMarketplace = async () => {
+      const API_BASE = '/api';
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000); // 15s timeout
+        const mRes = await fetch(`${API_BASE}/prompts`, { signal: controller.signal });
+        clearTimeout(timeout);
+        if (mRes.ok) {
+          const mData = await mRes.json();
+          if (mData.success && Array.isArray(mData.prompts) && mData.prompts.length > 0) {
+            dispatch({ 
+              type: actions.PRELOAD_DATA, 
+              payload: { marketplace: mData.prompts } 
+            });
+          }
+        }
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          console.warn('Marketplace preload failed:', err);
+        }
+      }
+    };
+
+    loadMarketplace();
+  }, []); // Empty deps — always runs on mount, no auth required
+
+  /* Background Stats Preloading (Authenticated users only) */
+  useEffect(() => {
+    const preloadStats = async () => {
       const API_BASE = '/api';
       const token = localStorage.getItem(TOKEN_KEY);
 
-      // 1. Preload Marketplace (Public)
-      try {
-        const mRes = await fetch(`${API_BASE}/prompts`);
-        if (mRes.ok) {
-          const mData = await mRes.json();
-          dispatch({ 
-            type: actions.PRELOAD_DATA, 
-            payload: { marketplace: mData.prompts || [] } 
-          });
-        }
-      } catch (err) {
-        console.warn('Marketplace preload failed:', err);
-      }
-
-      // 2. Preload Buyer & Seller Stats (Authenticated)
       if (token) {
         try {
           const [bRes, sRes] = await Promise.all([
@@ -421,7 +457,7 @@ export function AppProvider({ children }) {
       }
     };
 
-    preload();
+    preloadStats();
   }, [state.user?.id, state.user?.email]);
 
   /* 3. Preload Admin Data (Specific Admin only) - Dedicated Effect */
