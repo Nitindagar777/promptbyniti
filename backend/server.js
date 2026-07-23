@@ -45,9 +45,9 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI, {
-      serverSelectionTimeoutMS: 10000, // Fail fast if DB is unreachable (10s)
-      connectTimeoutMS: 10000,
-      socketTimeoutMS: 30000,
+      serverSelectionTimeoutMS: 30000,
+      connectTimeoutMS: 30000,
+      socketTimeoutMS: 90000,
     });
     console.log('🍃 MongoDB connected successfully');
   } catch (err) {

@@ -11,20 +11,31 @@ const jwt = require('jsonwebtoken');
 const isAdmin = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
-    if (!authHeader) return res.status(401).json({ success: false, message: 'No token' });
+    if (!authHeader) return res.status(401).json({ success: false, message: 'No authorization header provided' });
 
     const token = authHeader.split(' ')[1];
+    if (!token || token === 'null' || token === 'undefined') {
+      return res.status(401).json({ success: false, message: 'Invalid token provided' });
+    }
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret');
     
     const user = await User.findById(decoded.id);
-    if (!user || user.email !== 'nitindagar0800@gmail.com') {
+    if (!user || !user.email) {
+      return res.status(403).json({ success: false, message: 'Admin access denied' });
+    }
+
+    const userEmail = user.email.toLowerCase().trim();
+    const isAdminUser = userEmail === 'nitindagar0800@gmail.com' || user.role === 'admin' || user.isAdmin === true;
+
+    if (!isAdminUser) {
       return res.status(403).json({ success: false, message: 'Admin access denied' });
     }
 
     req.user = user;
     next();
   } catch (err) {
-    return res.status(401).json({ success: false, message: 'Invalid token' });
+    return res.status(401).json({ success: false, message: 'Invalid or expired token' });
   }
 };
 
@@ -34,11 +45,13 @@ router.get('/stats', isAdmin, async (req, res) => {
     const usersCount = await User.countDocuments();
     const promptsCount = await Prompt.countDocuments();
     const pendingPrompts = await Prompt.countDocuments({ status: 'pending' });
-    const completedTransactions = await Transaction.find({ status: 'completed' });
+
+    const completedTransactions = await Transaction.find({ status: 'completed' }).select('amount').lean();
     const totalRevenue = completedTransactions.reduce((sum, tx) => sum + (tx.amount || 0), 0);
     
-    const allPrompts = await Prompt.find();
-    const platformPromptSales = allPrompts.reduce((sum, p) => sum + (p.sales || 0), 0);
+    // Aggregation instead of Prompt.find() to prevent memory overhead & socket timeouts
+    const salesAgg = await Prompt.aggregate([{ $group: { _id: null, totalSales: { $sum: '$sales' } } }]);
+    const platformPromptSales = salesAgg[0]?.totalSales || 0;
 
     const pendingWithdrawals = await Withdrawal.countDocuments({ status: 'pending' });
 
@@ -54,6 +67,7 @@ router.get('/stats', isAdmin, async (req, res) => {
       }
     });
   } catch (err) {
+    console.error('Error fetching admin stats:', err);
     res.status(500).json({ success: false, message: err.message });
   }
 });
@@ -61,7 +75,7 @@ router.get('/stats', isAdmin, async (req, res) => {
 // GET All Users
 router.get('/users', isAdmin, async (req, res) => {
   try {
-    const users = await User.find().sort({ createdAt: -1 });
+    const users = await User.find().select('-password -otp').sort({ createdAt: -1 }).lean();
     res.json({ success: true, users });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -78,9 +92,9 @@ router.patch('/users/:id/ban', isAdmin, async (req, res) => {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
     
-    // Prevent banning the admin
-    if (user.email === 'nitindagar0800@gmail.com') {
-      return res.status(403).json({ success: false, message: 'Cannot ban admin' });
+    // Prevent banning the main admin
+    if (user.email.toLowerCase().trim() === 'nitindagar0800@gmail.com') {
+      return res.status(403).json({ success: false, message: 'Cannot ban system admin' });
     }
 
     user.isBanned = isBanned;
@@ -92,11 +106,27 @@ router.patch('/users/:id/ban', isAdmin, async (req, res) => {
   }
 });
 
-// GET All Prompts
+// GET All Prompts (Lightweight list without heavy base64 samples)
 router.get('/prompts', isAdmin, async (req, res) => {
   try {
-    const prompts = await Prompt.find().populate('seller', 'name email').sort({ createdAt: -1 });
+    const prompts = await Prompt.find()
+      .select('name seller priceTokens tokens sales status createdAt generateType category thumbnail model rejectionReason')
+      .populate('seller', 'name email')
+      .sort({ createdAt: -1 })
+      .lean();
     res.json({ success: true, prompts });
+  } catch (err) {
+    console.error('Error fetching admin prompts:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// GET Single Prompt Details (Full view on demand)
+router.get('/prompts/:id', isAdmin, async (req, res) => {
+  try {
+    const prompt = await Prompt.findById(req.params.id).populate('seller', 'name email').lean();
+    if (!prompt) return res.status(404).json({ success: false, message: 'Prompt not found' });
+    res.json({ success: true, prompt });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -137,7 +167,7 @@ router.delete('/prompts/:id', isAdmin, async (req, res) => {
 // GET All Transactions
 router.get('/transactions', isAdmin, async (req, res) => {
   try {
-    const transactions = await Transaction.find().sort({ createdAt: -1 });
+    const transactions = await Transaction.find().sort({ createdAt: -1 }).lean();
     res.json({ success: true, transactions });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -149,7 +179,8 @@ router.get('/withdrawals', isAdmin, async (req, res) => {
   try {
     const withdrawals = await Withdrawal.find()
       .populate('sellerId', 'name email avatar paymentMethod')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
     res.json({ success: true, withdrawals });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -169,7 +200,7 @@ router.patch('/withdrawals/:id', isAdmin, async (req, res) => {
       return res.status(404).json({ success: false, message: 'Withdrawal not found' });
     }
 
-    // If withdrawal is REJECTED, we must refund the tokens to their wallet
+    // If withdrawal is REJECTED, refund the tokens to their wallet
     if (status === 'rejected' && withdrawal.status !== 'rejected') {
       const seller = await User.findById(withdrawal.sellerId);
       if (seller) {
@@ -197,10 +228,11 @@ router.patch('/withdrawals/:id', isAdmin, async (req, res) => {
 // GET System Settings
 router.get('/settings', isAdmin, async (req, res) => {
   try {
-    let settings = await SystemSettings.findOne();
+    let settings = await SystemSettings.findOne().lean();
     if (!settings) {
-      settings = new SystemSettings();
-      await settings.save();
+      const newSettings = new SystemSettings();
+      await newSettings.save();
+      settings = newSettings.toObject();
     }
     res.json({ success: true, settings });
   } catch (err) {

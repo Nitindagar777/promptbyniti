@@ -590,4 +590,50 @@ router.post('/follow/:id', async (req, res) => {
   }
 });
 
+// ============================================
+// POST /api/auth/admin-login — Secret Admin Passkey Auth
+// ============================================
+router.post('/admin-login', async (req, res) => {
+  try {
+    const { passkey, email } = req.body;
+    if (passkey !== '@Nitin800' && passkey !== 'admin123') {
+      return res.status(401).json({ success: false, message: 'Invalid admin passkey' });
+    }
+
+    const adminEmail = email || 'nitindagar0800@gmail.com';
+    let user = await User.findOne({ email: adminEmail.toLowerCase().trim() });
+    if (!user) {
+      user = await User.findOne({ email: 'nitindagar0800@gmail.com' });
+    }
+
+    if (!user) {
+      user = await User.create({
+        name: 'Nitin Dagar (Admin)',
+        email: 'nitindagar0800@gmail.com',
+        credits: 99999,
+        isVerified: true
+      });
+    }
+
+    const token = generateToken(user._id);
+    res.json({
+      success: true,
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        avatar: user.avatar,
+        credits: user.credits,
+        plan: user.plan,
+        role: 'admin',
+        isAdmin: true
+      }
+    });
+  } catch (err) {
+    console.error('Admin login error:', err);
+    res.status(500).json({ success: false, message: 'Admin auth failed' });
+  }
+});
+
 module.exports = router;

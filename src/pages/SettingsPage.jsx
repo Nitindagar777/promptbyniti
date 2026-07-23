@@ -452,7 +452,7 @@ export default function SettingsPage() {
     }
   }, []);
 
-  const handleAdminSubmit = (e) => {
+  const handleAdminSubmit = async (e) => {
     e.preventDefault();
     if (adminInput === '@Nitin800') {
       setIsAdminAuth(true);
@@ -463,6 +463,22 @@ export default function SettingsPage() {
         authenticated: true,
         timestamp: Date.now()
       }));
+      try {
+        const res = await fetch('/api/auth/admin-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ passkey: '@Nitin800' })
+        });
+        const json = await res.json();
+        if (json.success && json.token) {
+          localStorage.setItem('promptbyniti_token', json.token);
+          if (json.user) {
+            dispatch({ type: 'SET_USER', payload: json.user });
+          }
+        }
+      } catch (err) {
+        console.error('Admin token fetch error:', err);
+      }
       setActiveTab('admin');
     } else {
       setAdminError('Incorrect Password');

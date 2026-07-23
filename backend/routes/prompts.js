@@ -14,11 +14,11 @@ const auth = async (req, res, next) => {
     if (!authHeader) return res.status(401).json({ success: false, message: 'No token' });
     const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret');
-    
+
     const user = await User.findById(decoded.id);
     if (!user) return res.status(401).json({ success: false, message: 'User not found' });
     if (user.isBanned) return res.status(403).json({ success: false, message: 'Your account has been banned.' });
-    
+
     // Auto-verify if they have a valid token but flag is missing
     if (!user.isVerified) {
       user.isVerified = true;
@@ -60,12 +60,12 @@ router.post('/', auth, async (req, res) => {
     if (!payload.template) {
       payload.template = payload.name || 'AI Prompt Template';
     }
-    
+
     // Upload thumbnail if it's base64
     if (payload.thumbnail) {
       payload.thumbnail = await uploadToCloudinary(payload.thumbnail);
     }
-    
+
     // Upload samples if they are base64
     if (payload.samples && payload.samples.length > 0) {
       for (let i = 0; i < payload.samples.length; i++) {
@@ -210,17 +210,17 @@ const optionalAuth = async (req, res, next) => {
 router.get('/:id', optionalAuth, async (req, res) => {
   try {
     const prompt = await Prompt.findByIdAndUpdate(
-      req.params.id, 
-      { $inc: { views: 1 } }, 
+      req.params.id,
+      { $inc: { views: 1 } },
       { returnDocument: 'after' }
     ).populate('seller', 'name avatar socialLinks followers');
-    
+
     if (!prompt) {
       return res.status(404).json({ success: false, message: 'Prompt not found' });
     }
 
     const promptObj = prompt.toObject();
-    
+
     // Authorization check: Is the user the seller or a buyer?
     let isAuthorized = false;
     if (req.userId) {
@@ -240,10 +240,10 @@ router.get('/:id', optionalAuth, async (req, res) => {
       console.log('🔍 PURCHASE CHECK: No req.userId - user not authenticated');
     }
 
-    res.json({ 
-      success: true, 
-      prompt: promptObj, 
-      isPurchased: isAuthorized 
+    res.json({
+      success: true,
+      prompt: promptObj,
+      isPurchased: isAuthorized
     });
   } catch (err) {
     console.error("Error fetching/updating prompt:", err);
@@ -256,7 +256,7 @@ router.put('/:id', auth, async (req, res) => {
   try {
     const prompt = await Prompt.findById(req.params.id);
     if (!prompt) return res.status(404).json({ success: false, message: 'Prompt not found' });
-    
+
     // Check ownership
     if (prompt.seller.toString() !== req.userId && prompt.seller.toString() !== req.userId.toString()) {
       return res.status(403).json({ success: false, message: 'Unauthorized: You do not own this prompt' });
@@ -264,9 +264,9 @@ router.put('/:id', auth, async (req, res) => {
 
     // BLOCK EDIT IF SOLD
     if (prompt.sales > 0) {
-      return res.status(403).json({ 
-        success: false, 
-        message: 'Forbidden: This prompt has already been purchased by users and cannot be edited to maintain content consistency.' 
+      return res.status(403).json({
+        success: false,
+        message: 'Forbidden: This prompt has already been purchased by users and cannot be edited to maintain content consistency.'
       });
     }
 
@@ -284,7 +284,7 @@ router.put('/:id', auth, async (req, res) => {
         { $set: { socialLinks: req.body.socialLinks } }
       );
     }
-    
+
     feedCache = null; // Clear cache on update
     res.json({ success: true, prompt: updatedPrompt, message: 'Prompt updated successfully' });
   } catch (err) {
@@ -297,7 +297,7 @@ router.delete('/:id', auth, async (req, res) => {
   try {
     const prompt = await Prompt.findById(req.params.id);
     if (!prompt) return res.status(404).json({ success: false, message: 'Prompt not found' });
-    
+
     // Check ownership
     if (prompt.seller.toString() !== req.userId && prompt.seller.toString() !== req.userId.toString()) {
       return res.status(403).json({ success: false, message: 'Unauthorized: You do not own this prompt' });
@@ -305,9 +305,9 @@ router.delete('/:id', auth, async (req, res) => {
 
     // BLOCK DELETE IF SOLD
     if (prompt.sales > 0) {
-      return res.status(403).json({ 
-        success: false, 
-        message: 'Forbidden: This prompt has already been purchased by users and cannot be deleted to preserve their lifetime access.' 
+      return res.status(403).json({
+        success: false,
+        message: 'Forbidden: This prompt has already been purchased by users and cannot be deleted to preserve their lifetime access.'
       });
     }
 
@@ -353,7 +353,7 @@ router.post('/:id/reviews', auth, async (req, res) => {
     };
 
     prompt.reviews.push(newReview);
-    
+
     // 5. Update stats
     prompt.totalReviews = prompt.reviews.length;
     prompt.averageRating = prompt.reviews.reduce((acc, item) => item.rating + acc, 0) / prompt.reviews.length;

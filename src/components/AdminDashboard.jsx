@@ -76,15 +76,43 @@ const AdminDashboard = () => {
     setFullScreenMedia(selectedPrompt.samples[nextIndex].output);
   };
 
+  const ensureAdminToken = async () => {
+    let token = localStorage.getItem('promptbyniti_token');
+    if (token) return token;
+    const adminSession = localStorage.getItem('admin_session');
+    if (adminSession) {
+      try {
+        const res = await fetch('/api/auth/admin-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ passkey: '@Nitin800' })
+        });
+        const json = await res.json();
+        if (json.success && json.token) {
+          localStorage.setItem('promptbyniti_token', json.token);
+          return json.token;
+        }
+      } catch (err) {
+        console.error('Error auto-authenticating admin:', err);
+      }
+    }
+    return null;
+  };
+
   const fetchStats = async () => {
     try {
+      const token = await ensureAdminToken();
+      if (!token) return;
       const response = await fetch(`/api/admin/stats`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('promptbyniti_token')}` }
+        headers: { 'Authorization': `Bearer ${token}` }
       });
-      const json = await response.json();
-      if (json.success) {
-        setStats(json.stats);
-        dispatch({ type: 'PRELOAD_DATA', payload: { adminStats: json.stats } });
+      const contentType = response.headers.get('content-type');
+      if (response.ok && contentType && contentType.includes('application/json')) {
+        const json = await response.json();
+        if (json.success) {
+          setStats(json.stats);
+          dispatch({ type: 'PRELOAD_DATA', payload: { adminStats: json.stats } });
+        }
       }
     } catch (err) {
       console.error('Error fetching stats:', err);
@@ -96,12 +124,30 @@ const AdminDashboard = () => {
     setError(null);
     try {
       const endpoint = tab === 'verification' ? 'prompts' : tab;
+      const token = await ensureAdminToken();
+      if (!token) {
+        setError('No authentication token found. Please log in as admin.');
+        if (showLoading) setLoading(false);
+        return;
+      }
+
       const response = await fetch(`/api/admin/${endpoint}`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('promptbyniti_token')}` }
+        headers: { 'Authorization': `Bearer ${token}` }
       });
-      const json = await response.json();
-      if (json.success) {
-        const resultData = json[endpoint] || json.data || [];
+
+      const contentType = response.headers.get('content-type');
+      let json;
+      if (contentType && contentType.includes('application/json')) {
+        json = await response.json();
+      } else {
+        const text = await response.text();
+        console.error('Non-JSON server response:', response.status, text);
+        setError(`Server returned status ${response.status}. Please check backend server.`);
+        return;
+      }
+
+      if (response.ok && json.success) {
+        const resultData = json[endpoint] || json.data || json.prompts || json.users || json.transactions || json.withdrawals || [];
         setData(resultData);
         // Sync to global state
         if (tab === 'verification' || tab === 'prompts') {
@@ -114,11 +160,11 @@ const AdminDashboard = () => {
           dispatch({ type: 'PRELOAD_DATA', payload: { adminWithdrawals: resultData } });
         }
       } else {
-        setError(json.message);
+        setError(json.message || `Failed to fetch data (Status ${response.status})`);
       }
     } catch (err) {
       console.error('Fetch error:', err);
-      setError('Failed to fetch data. Please check your connection.');
+      setError(`Connection error: ${err.message || 'Server unreachable'}. Please check your connection.`);
     } finally {
       if (showLoading) setLoading(false);
     }
@@ -139,22 +185,40 @@ const AdminDashboard = () => {
         setLoading(true);
       }
       fetchData(activeTab, needsLoading);
+    } else {
+      setLoading(false);
     }
   }, [activeTab]);
 
   const fetchSettings = async () => {
     setSettingsLoading(true);
+    setError(null);
     try {
+      const token = await ensureAdminToken();
+      if (!token) {
+        setError('No authentication token found. Please log in as admin.');
+        return;
+      }
       const response = await fetch(`/api/admin/settings`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('promptbyniti_token')}` }
+        headers: { 'Authorization': `Bearer ${token}` }
       });
-      const json = await response.json();
-      if (json.success) {
+      const contentType = response.headers.get('content-type');
+      let json;
+      if (contentType && contentType.includes('application/json')) {
+        json = await response.json();
+      } else {
+        setError(`Server returned status ${response.status}`);
+        return;
+      }
+      if (response.ok && json.success) {
         setSystemSettings(json.settings);
         dispatch({ type: 'PRELOAD_DATA', payload: { adminSettings: json.settings } });
+      } else {
+        setError(json.message || 'Failed to fetch settings');
       }
     } catch (err) {
       console.error('Error fetching settings:', err);
+      setError(`Connection error: ${err.message}`);
     } finally {
       setSettingsLoading(false);
       setLoading(false);
@@ -165,11 +229,12 @@ const AdminDashboard = () => {
     setSettingsLoading(true);
     setSettingsMessage(null);
     try {
+      const token = await ensureAdminToken();
       const response = await fetch(`/api/admin/settings`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('promptbyniti_token')}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(updatedData)
       });
@@ -195,11 +260,12 @@ const AdminDashboard = () => {
     }
 
     try {
+      const token = await ensureAdminToken();
       const response = await fetch(`/api/admin/prompts/${id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('promptbyniti_token')}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ status, rejectionReason: reason })
       });
@@ -221,10 +287,11 @@ const AdminDashboard = () => {
   const executeDeletePrompt = async () => {
     if (!deleteConfirmModal.id) return;
     try {
+      const token = await ensureAdminToken();
       const response = await fetch(`/api/admin/prompts/${deleteConfirmModal.id}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('promptbyniti_token')}`
+          'Authorization': `Bearer ${token}`
         }
       });
       const json = await response.json();
@@ -242,12 +309,13 @@ const AdminDashboard = () => {
 
   const handleUserBan = async (id, currentStatus) => {
     try {
+      const token = await ensureAdminToken();
       const isBanned = !currentStatus;
       const response = await fetch(`/api/admin/users/${id}/ban`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('promptbyniti_token')}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ isBanned })
       });
@@ -261,7 +329,25 @@ const AdminDashboard = () => {
       console.error('Ban error:', err);
     }
   };
-  
+
+  const handleViewPromptDetails = async (prompt) => {
+    setSelectedPrompt(prompt);
+    if (!prompt.template || !prompt.samples || prompt.samples.length === 0) {
+      try {
+        const token = await ensureAdminToken();
+        const response = await fetch(`/api/admin/prompts/${prompt._id}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const json = await response.json();
+        if (json.success && json.prompt) {
+          setSelectedPrompt(json.prompt);
+        }
+      } catch (err) {
+        console.error('Error fetching prompt details:', err);
+      }
+    }
+  };
+
   const handleCopy = (text) => {
     navigator.clipboard.writeText(text);
     setCopyStatus(true);
@@ -275,11 +361,12 @@ const AdminDashboard = () => {
     }
 
     try {
+      const token = await ensureAdminToken();
       const response = await fetch(`/api/admin/withdrawals/${id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('promptbyniti_token')}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ status, rejectionReason: reason })
       });
@@ -446,7 +533,7 @@ const AdminDashboard = () => {
                     </span>
                   </td>
                   <td className="actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <button className="view-btn" onClick={() => setSelectedPrompt(prompt)}>View Details</button>
+                    <button className="view-btn" onClick={() => handleViewPromptDetails(prompt)}>View Details</button>
                     <button className="approve-btn" style={{ background: 'var(--color-cyan, #06b6d4)', color: '#000', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }} onClick={() => navigate(`/sell?edit=${prompt._id}`)}>Edit</button>
                     {prompt.status !== 'rejected' && (
                       <button className="reject-btn" onClick={() => handleStatusUpdate(prompt._id, 'rejected')}>Reject</button>
@@ -1041,7 +1128,28 @@ const AdminDashboard = () => {
         {loading && activeTab !== 'overview' ? (
           <div className="admin-loader">Loading control data...</div>
         ) : error ? (
-          <div className="admin-error">{error}</div>
+          <div className="admin-error" style={{ textAlign: 'center', padding: '40px 20px', background: 'rgba(239, 68, 68, 0.05)', borderRadius: '12px', border: '1px solid rgba(239, 68, 68, 0.2)', margin: '20px auto', maxWidth: '600px' }}>
+            <p style={{ color: '#ef4444', marginBottom: '20px', fontSize: '1rem', fontWeight: '500' }}>{error}</p>
+            <button 
+              onClick={() => {
+                if (activeTab === 'api' || activeTab === 'rules') fetchSettings();
+                else if (activeTab === 'overview') fetchStats();
+                else fetchData(activeTab, true);
+              }}
+              style={{
+                padding: '10px 24px',
+                borderRadius: '8px',
+                background: 'var(--color-cyan, #06b6d4)',
+                color: '#000',
+                fontWeight: 'bold',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '0.9rem'
+              }}
+            >
+              🔄 Retry Connection
+            </button>
+          </div>
         ) : (
           <>
             {activeTab === 'overview' && renderOverview()}
