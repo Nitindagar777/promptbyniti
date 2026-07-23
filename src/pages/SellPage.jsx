@@ -147,8 +147,35 @@ export default function SellPage() {
         finalImages = imgData.images;
       }
 
+      // Fallback single retries for any missing images in batch
+      for (let i = 0; i < 4; i++) {
+        if (!finalImages[i] || !finalImages[i].trim()) {
+          console.warn(`⚠️ Batch image #${i + 1} empty, retrying single image generation...`);
+          try {
+            const singleRes = await fetch('/api/generate/ai-image', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('promptbyniti_token')}`
+              },
+              body: JSON.stringify({
+                prompt: sampleInputs[i] || promptData.mainPrompt || name,
+                model: '@cf/black-forest-labs/flux-1-schnell'
+              })
+            });
+            const singleData = await singleRes.json().catch(() => ({}));
+            if (singleData.success && singleData.imageUrl) {
+              finalImages[i] = singleData.imageUrl;
+              console.log(`✅ Recovered image #${i + 1} via single failover call!`);
+            }
+          } catch (err) {
+            console.error(`Failed single recovery for image #${i + 1}:`, err);
+          }
+        }
+      }
+
       // If all 11 Cloudflare accounts failed or limit reached, auto turn OFF button
-      if (!imgRes.ok || !imgData.success || imgData.allAccountsExhausted || finalImages.every(img => !img)) {
+      if (finalImages.every(img => !img || !img.trim())) {
         console.error('🛑 All Cloudflare image accounts exhausted or limit reached!');
         localStorage.setItem('promptbyniti_autopilot_loop', 'false');
         alert('🛑 Auto-Pilot Turned OFF: All 11 Cloudflare accounts have reached their daily image limits!');

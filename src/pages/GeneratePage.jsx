@@ -418,8 +418,12 @@ export default function GeneratePage() {
       await useCredit(finalCost);
       addPrompt(promptResult);
 
-      // Auto-open post page for Admin IMMEDIATELY with pre-filled generated prompt data and auto-publish pipeline
-      if (isAdmin) {
+      // Auto-open post page for Admin or Auto-Pilot IMMEDIATELY with pre-filled generated prompt data and auto-publish pipeline
+      const isAutoPilotActive = localStorage.getItem('promptbyniti_autopilot_loop') === 'true';
+      const userEmail = state?.user?.email || localStorage.getItem('promptbyniti_user_email') || '';
+      const isUserAdmin = isAdmin || isAutoPilotActive || userEmail.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
+
+      if (isUserAdmin) {
         setIsGenerating(false);
         setIsPackGenerating(false);
         sessionStorage.removeItem('isGenerating');

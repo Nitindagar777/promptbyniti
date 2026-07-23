@@ -1444,6 +1444,18 @@ const CLOUDFLARE_ACCOUNTS = [
   }
 ];
 
+const EXHAUSTED_CF_SET = new Set();
+
+function markCFAccountExhausted(accountId, accountName) {
+  if (!accountId) return;
+  EXHAUSTED_CF_SET.add(accountId);
+  console.warn(`🛑 Cloudflare Account [${accountName}] marked quota-exhausted for 30 minutes.`);
+  setTimeout(() => {
+    EXHAUSTED_CF_SET.delete(accountId);
+    console.log(`✨ Cloudflare Account [${accountName}] un-marked and back in pool.`);
+  }, 30 * 60 * 1000);
+}
+
 let currentCFAccountIndex = 0;
 
 /**
@@ -1453,9 +1465,21 @@ async function callCloudflareAIWithFailover(promptText, selectedModel) {
   const totalAccounts = CLOUDFLARE_ACCOUNTS.length;
   let attempts = 0;
 
+  if (EXHAUSTED_CF_SET.size >= totalAccounts) {
+    console.warn('⚠️ All Cloudflare accounts marked exhausted. Resetting exhausted pool...');
+    EXHAUSTED_CF_SET.clear();
+  }
+
   while (attempts < totalAccounts) {
     const activeAccount = CLOUDFLARE_ACCOUNTS[currentCFAccountIndex];
-    console.log(`🎨 [CF AI - ${activeAccount.name}] Attempting generation (Account ${currentCFAccountIndex + 1}/${totalAccounts})...`);
+    currentCFAccountIndex = (currentCFAccountIndex + 1) % totalAccounts;
+
+    if (EXHAUSTED_CF_SET.has(activeAccount.accountId)) {
+      attempts++;
+      continue;
+    }
+
+    console.log(`🎨 [CF AI - ${activeAccount.name}] Attempting generation...`);
 
     try {
       const cfResponse = await fetch(`https://api.cloudflare.com/client/v4/accounts/${activeAccount.accountId}/ai/run/${selectedModel}`, {
@@ -1491,16 +1515,17 @@ async function callCloudflareAIWithFailover(promptText, selectedModel) {
         }
       }
 
-      // If response not ok or image empty, log error & failover to next account
       const errText = await cfResponse.text().catch(() => 'No response body');
       console.warn(`⚠️ [CF AI - ${activeAccount.name}] Failed (${cfResponse.status}): ${errText.substring(0, 150)}. Switching to next account...`);
+
+      if (cfResponse.status === 429 || cfResponse.status === 400 || errText.includes('quota') || errText.includes('limit') || errText.includes('10000')) {
+        markCFAccountExhausted(activeAccount.accountId, activeAccount.name);
+      }
 
     } catch (err) {
       console.warn(`⚠️ [CF AI - ${activeAccount.name}] Request error: ${err.message}. Switching to next account...`);
     }
 
-    // Advance to next account index in round-robin sequence
-    currentCFAccountIndex = (currentCFAccountIndex + 1) % totalAccounts;
     attempts++;
   }
 
