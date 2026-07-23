@@ -483,6 +483,16 @@ export function AppProvider({ children }) {
     dispatch,
     /* Convenience helpers */
     useCredit: async (amount = 1, templateId = null, isFreePrompt = false) => {
+      const ADMIN_EMAIL = 'nitindagar0800@gmail.com';
+      const userEmail = state?.user?.email || localStorage.getItem('promptbyniti_user_email') || '';
+      const isAutoPilotActive = localStorage.getItem('promptbyniti_autopilot_loop') === 'true';
+      const isAdminUser = isAutoPilotActive || (userEmail && userEmail.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim()) || state?.user?.role === 'admin' || state?.user?.isAdmin;
+
+      if (isAdminUser && !templateId) {
+        // Admin / AutoPilot has unlimited prompt generation credits — skip deduction
+        return;
+      }
+
       if (isFreePrompt) {
         dispatch({ type: actions.USE_FREE_PROMPT });
       } else {

@@ -413,16 +413,18 @@ export default function GeneratePage() {
 
       setResult(promptResult);
 
-      // Credit deduction:
-      const finalCost = isPack ? Math.max(0, fullCost - 1) : 1;
-      await useCredit(finalCost);
-      addPrompt(promptResult);
-
-      // Auto-open post page for Admin or Auto-Pilot IMMEDIATELY with pre-filled generated prompt data and auto-publish pipeline
+      // Credit deduction (bypassed for Admin / AutoPilot):
       const isAutoPilotActive = localStorage.getItem('promptbyniti_autopilot_loop') === 'true';
       const userEmail = state?.user?.email || localStorage.getItem('promptbyniti_user_email') || '';
       const isUserAdmin = isAdmin || isAutoPilotActive || userEmail.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
 
+      if (!isUserAdmin) {
+        const finalCost = isPack ? Math.max(0, fullCost - 1) : 1;
+        await useCredit(finalCost);
+      }
+      addPrompt(promptResult);
+
+      // Auto-open post page for Admin or Auto-Pilot IMMEDIATELY with pre-filled generated prompt data and auto-publish pipeline
       if (isUserAdmin) {
         setIsGenerating(false);
         setIsPackGenerating(false);

@@ -435,11 +435,17 @@ router.post('/use-credits', async (req, res) => {
       }
     } else {
       // No templateId — this is a generation credit deduction (not a purchase)
-      if (user.credits < finalPrice) {
+      const ADMIN_EMAIL = 'nitindagar0800@gmail.com';
+      const isAdminUser = (user.email && user.email.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim()) || user.role === 'admin' || user.isAdmin;
+
+      if (!isAdminUser && user.credits < finalPrice) {
         return res.status(400).json({ success: false, message: 'Insufficient tokens' });
       }
-      user.credits -= finalPrice;
-      await user.save();
+
+      if (!isAdminUser) {
+        user.credits -= finalPrice;
+        await user.save();
+      }
     }
 
     res.json({ success: true, credits: user.credits });
