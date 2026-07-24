@@ -37,7 +37,13 @@ function loadState() {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
-      return { ...defaultState, ...JSON.parse(stored) };
+      const parsed = JSON.parse(stored);
+      const isAdmin = parsed.user?.email?.toLowerCase().trim() === 'nitindagar0800@gmail.com' || parsed.user?.role === 'admin' || parsed.user?.isAdmin;
+      if (isAdmin) {
+        parsed.credits = 100000;
+        if (parsed.user) parsed.user.credits = 100000;
+      }
+      return { ...defaultState, ...parsed };
     }
   } catch (e) {
     // ignore
@@ -68,6 +74,10 @@ function appReducer(state, action) {
   switch (action.type) {
     case actions.SET_USER: {
       const updatedUser = action.payload;
+      const isAdmin = updatedUser?.email?.toLowerCase().trim() === 'nitindagar0800@gmail.com' || updatedUser?.role === 'admin' || updatedUser?.isAdmin;
+      const finalUser = isAdmin ? { ...updatedUser, credits: 100000 } : updatedUser;
+      const updatedCredits = isAdmin ? 100000 : (updatedUser?.credits ?? state.credits);
+
       const updatedMarketplace = (state.marketplace || []).map(p => {
         const sellerId = p.seller?._id?.toString() || p.seller?.id?.toString() || p.seller?.toString();
         const userId = updatedUser?._id?.toString() || updatedUser?.id?.toString();
@@ -98,7 +108,7 @@ function appReducer(state, action) {
         }
         return p;
       });
-      return { ...state, user: updatedUser, marketplace: updatedMarketplace, prompts: updatedPrompts };
+      return { ...state, user: finalUser, credits: updatedCredits, marketplace: updatedMarketplace, prompts: updatedPrompts };
     }
 
     case actions.USE_CREDIT:
@@ -174,6 +184,10 @@ function appReducer(state, action) {
 
     case actions.LOGIN: {
       const loggedInUser = action.payload;
+      const isAdmin = loggedInUser?.email?.toLowerCase().trim() === 'nitindagar0800@gmail.com' || loggedInUser?.role === 'admin' || loggedInUser?.isAdmin;
+      const finalUser = isAdmin ? { ...loggedInUser, credits: 100000 } : loggedInUser;
+      const updatedCredits = isAdmin ? 100000 : (loggedInUser?.credits ?? state.credits);
+
       const updatedMarketplace = (state.marketplace || []).map(p => {
         const sellerId = p.seller?._id?.toString() || p.seller?.id?.toString() || p.seller?.toString();
         const userId = loggedInUser?._id?.toString() || loggedInUser?.id?.toString();
@@ -206,9 +220,9 @@ function appReducer(state, action) {
       });
       return {
         ...state,
-        user: loggedInUser,
-        credits: loggedInUser.credits ?? state.credits,
-        plan: loggedInUser.plan ?? state.plan,
+        user: finalUser,
+        credits: updatedCredits,
+        plan: loggedInUser?.plan ?? state.plan,
         marketplace: updatedMarketplace,
         prompts: updatedPrompts
       };

@@ -55,6 +55,14 @@ const sendOTPEmail = async (email, otp) => {
   return transporter.sendMail(mailOptions);
 };
 
+// Helper: Admin user check
+const ADMIN_EMAIL = 'nitindagar0800@gmail.com';
+const isAdminUser = (user) => {
+  if (!user) return false;
+  const userEmail = (user.email || '').toLowerCase().trim();
+  return userEmail === ADMIN_EMAIL.toLowerCase().trim() || user.role === 'admin' || user.isAdmin === true;
+};
+
 // Generate JWT token
 const generateToken = (userId) => {
   return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
@@ -77,19 +85,20 @@ router.post('/register', async (req, res) => {
     }
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+    const isAdmin = email.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
     if (user) {
       user.name = name;
       user.password = password;
       user.otp = otp;
       user.otpExpires = otpExpires;
-      user.hasUsedFreePrompt = true; // 2 credits represent their free generations
-      user.credits = 2; // Initial 2 free generations
+      user.hasUsedFreePrompt = true;
+      user.credits = isAdmin ? 100000 : 2;
       await user.save();
     } else {
       user = await User.create({
         name, email, password, provider: 'local', otp, otpExpires, isVerified: false,
-        hasUsedFreePrompt: true, // 2 credits represent their free generations
-        credits: 2 // Initial 2 free generations
+        hasUsedFreePrompt: true,
+        credits: isAdmin ? 100000 : 2
       });
     }
     await sendOTPEmail(email, otp);
@@ -141,6 +150,9 @@ router.post('/login', async (req, res) => {
       });
     }
 
+    if (isAdminUser(user) && user.credits !== 100000) {
+      user.credits = 100000;
+    }
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
     user.otp = otp;
@@ -167,6 +179,9 @@ router.post('/verify-otp', async (req, res) => {
     user.otp = null;
     user.otpExpires = null;
     user.isVerified = true;
+    if (isAdminUser(user)) {
+      user.credits = 100000;
+    }
     await user.save();
     const token = generateToken(user._id);
     res.json({
@@ -213,13 +228,17 @@ router.post('/google', async (req, res) => {
         user.provider = 'google';
         if (picture) user.avatar = picture;
         user.isVerified = true;
-        await user.save();
       }
+      if (isAdminUser(user)) {
+        user.credits = 100000;
+      }
+      await user.save();
     } else {
+      const isAdmin = email.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
       user = await User.create({
         name, email, googleId, avatar: picture || 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=100&auto=format&fit=crop&q=60', provider: 'google',
-        credits: 2, plan: 'free', isVerified: true,
-        hasUsedFreePrompt: true // 2 credits represent their free generations
+        credits: isAdmin ? 100000 : 2, plan: 'free', isVerified: true,
+        hasUsedFreePrompt: true
       });
     }
     const token = generateToken(user._id);
@@ -259,6 +278,10 @@ router.get('/me', async (req, res) => {
     const user = await User.findById(decoded.id);
     if (!user) return res.status(401).json({ success: false, message: 'User not found' });
     if (user.isBanned) return res.status(403).json({ success: false, message: 'Your account has been banned.' });
+    if (isAdminUser(user) && user.credits !== 100000) {
+      user.credits = 100000;
+      await user.save();
+    }
     res.json({
       success: true,
       user: {
@@ -610,9 +633,12 @@ router.post('/admin-login', async (req, res) => {
       user = await User.create({
         name: 'Nitin Dagar (Admin)',
         email: 'nitindagar0800@gmail.com',
-        credits: 99999,
+        credits: 100000,
         isVerified: true
       });
+    } else {
+      user.credits = 100000;
+      await user.save();
     }
 
     const token = generateToken(user._id);

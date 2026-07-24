@@ -1,5 +1,5 @@
 /**
- * One-time script: Add 1000 tokens to admin account
+ * Script: Set 100000 tokens for admin account
  * Email: nitindagar0800@gmail.com
  */
 const mongoose = require('mongoose');
@@ -23,10 +23,10 @@ async function addTokens() {
     console.log(`📋 Found user: ${user.name} (${user.email})`);
     console.log(`   Current credits: ${user.credits}`);
 
-    user.credits += 1000;
+    user.credits = 100000;
     await user.save();
 
-    console.log(`✅ Added 1000 tokens!`);
+    console.log(`✅ Set 100000 tokens for admin!`);
     console.log(`   New credits: ${user.credits}`);
   } catch (err) {
     console.error('❌ Error:', err.message);
