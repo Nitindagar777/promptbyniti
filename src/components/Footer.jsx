@@ -77,13 +77,15 @@ export default function Footer() {
         <div className="footer__links">
           <div className="footer__column">
             <h4 className="text-cyan">Platform</h4>
-            <Link to={state?.user ? "/generate" : "/login"}>Prompt Generator</Link>
-            <Link to="/templates">Explore Feed</Link>
-            {state?.user && <Link to="/pricing">Pricing</Link>}
+            <Link to="/generate">Prompt Generator</Link>
+            <Link to="/templates">Templates Store</Link>
+            <Link to="/pricing">Pricing Plans</Link>
           </div>
           <div className="footer__column">
             <h4 className="text-purple">Resources</h4>
+            <Link to="/guide">Prompt Guide</Link>
             <Link to="/help">Help Center</Link>
+            <Link to="/contact">Contact Support</Link>
           </div>
           <div className="footer__column">
             <h4 className="text-pink">Company</h4>

@@ -65,18 +65,34 @@
     <priority>0.80</priority>
   </url>
 
+  <!-- Prompt Engineering Guide -->
+  <url>
+    <loc>https://promptbyniti.in/guide</loc>
+    <lastmod>2026-07-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+  </url>
+
   <!-- Help Center -->
   <url>
     <loc>https://promptbyniti.in/help</loc>
-    <lastmod>2026-06-08</lastmod>
+    <lastmod>2026-07-24</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.65</priority>
+    <priority>0.70</priority>
+  </url>
+
+  <!-- Contact Us -->
+  <url>
+    <loc>https://promptbyniti.in/contact</loc>
+    <lastmod>2026-07-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.70</priority>
   </url>
 
   <!-- About Page -->
   <url>
     <loc>https://promptbyniti.in/about</loc>
-    <lastmod>2026-06-08</lastmod>
+    <lastmod>2026-07-24</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.65</priority>
   </url>
@@ -84,17 +100,17 @@
   <!-- Privacy Policy -->
   <url>
     <loc>https://promptbyniti.in/privacy</loc>
-    <lastmod>2026-06-08</lastmod>
+    <lastmod>2026-07-24</lastmod>
     <changefreq>yearly</changefreq>
-    <priority>0.40</priority>
+    <priority>0.50</priority>
   </url>
 
   <!-- Terms of Service -->
   <url>
     <loc>https://promptbyniti.in/terms</loc>
-    <lastmod>2026-06-08</lastmod>
+    <lastmod>2026-07-24</lastmod>
     <changefreq>yearly</changefreq>
-    <priority>0.40</priority>
+    <priority>0.50</priority>
   </url>
 
 </urlset>

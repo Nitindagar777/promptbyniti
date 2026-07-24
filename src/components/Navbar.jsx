@@ -272,19 +272,18 @@ export default function Navbar() {
           <li>
             <Link to="/" className={`navbar__link ${isActive('/') ? 'navbar__link--active' : ''}`}>Home</Link>
           </li>
-          {state?.user && (
-            <li>
-              <Link to="/generate" className={`navbar__link ${isActive('/generate') ? 'navbar__link--active' : ''}`}>Generate</Link>
-            </li>
-          )}
+          <li>
+            <Link to="/generate" className={`navbar__link ${isActive('/generate') ? 'navbar__link--active' : ''}`}>Generate</Link>
+          </li>
           <li>
             <Link to="/templates" className={`navbar__link ${isActive('/templates') ? 'navbar__link--active' : ''}`}>Store</Link>
           </li>
-          {state?.user && (
-            <li>
-              <Link to="/pricing" className={`navbar__link ${isActive('/pricing') ? 'navbar__link--active' : ''}`}>Pricing</Link>
-            </li>
-          )}
+          <li>
+            <Link to="/guide" className={`navbar__link ${isActive('/guide') ? 'navbar__link--active' : ''}`}>Guide</Link>
+          </li>
+          <li>
+            <Link to="/pricing" className={`navbar__link ${isActive('/pricing') ? 'navbar__link--active' : ''}`}>Pricing</Link>
+          </li>
           {isAdmin && (
             <li>
               <Link to="/sell" className={`navbar__link ${isActive('/sell') ? 'navbar__link--active' : ''}`}>Post</Link>

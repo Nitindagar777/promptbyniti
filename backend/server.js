@@ -84,6 +84,12 @@ app.use('/api/generate', generateRoutes);
 app.use('/api/lounge', loungeRoutes);
 app.use('/api/reviews', reviewRoutes);
 
+// Serve ads.txt directly for AdSense crawler
+app.get('/ads.txt', (req, res) => {
+  res.setHeader('Content-Type', 'text/plain');
+  res.status(200).send('google.com, pub-5823437765817669, DIRECT, f08c47fec0942fa0\n');
+});
+
 // Health check
 app.get('/', async (req, res) => {
   console.log('🔍 Health check requested');

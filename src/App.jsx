@@ -23,7 +23,8 @@ import PrivacyPage from './pages/PrivacyPage';
 import TermsPage from './pages/TermsPage';
 import HelpPage from './pages/HelpPage';
 import LoungePage from './pages/LoungePage';
-
+import GuidePage from './pages/GuidePage';
+import ContactPage from './pages/ContactPage';
 
 import './App.css';
 
@@ -91,27 +92,32 @@ function App() {
       <Navbar />
       <main className="main-content">
         <Routes>
+          {/* Public Core Pages (Un-gated for Googlebot & AdSense Compliance) */}
           <Route path="/" element={<HomePage />} />
-          <Route path="/generate" element={<ProtectedRoute><GeneratePage /></ProtectedRoute>} />
+          <Route path="/generate" element={<GeneratePage />} />
           <Route path="/templates" element={<TemplatesPage />} />
-          <Route path="/library" element={<ProtectedRoute><LibraryPage /></ProtectedRoute>} />
+          <Route path="/library" element={<LibraryPage />} />
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/prompt/:id" element={<PromptDetailPage />} />
+          <Route path="/lounge" element={<LoungePage />} />
+
+          {/* User Account & Admin Protected Routes */}
           <Route path="/sell" element={<ProtectedRoute><SellPage /></ProtectedRoute>} />
           <Route path="/dashboard" element={<Navigate to="/buyer-dashboard" replace />} />
           <Route path="/buyer-dashboard" element={<ProtectedRoute><BuyerDashboard /></ProtectedRoute>} />
           <Route path="/admin-lab" element={<AdminRoute><AdminTestLab /></AdminRoute>} />
           <Route path="/purchase-success/:id" element={<ProtectedRoute><PurchaseSuccess /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
-          <Route path="/lounge" element={<ProtectedRoute><LoungePage /></ProtectedRoute>} />
 
-
-          {/* Public Legal Pages */}
+          {/* Public Resources & Policy Pages */}
+          <Route path="/guide" element={<GuidePage />} />
           <Route path="/about" element={<AboutPage />} />
+          <Route path="/contact" element={<ContactPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/help" element={<HelpPage />} />
 
+          {/* Authentication Routes */}
           <Route path="/login" element={<GuestRoute><AuthPage initialMode="login" /></GuestRoute>} />
           <Route path="/signup" element={<GuestRoute><AuthPage initialMode="signup" /></GuestRoute>} />
           <Route path="*" element={

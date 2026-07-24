@@ -1,15 +1,25 @@
 # Robots.txt — Prompt by Niti (promptbyniti.in)
-# Maximum crawl access for all major search engine bots
+# Maximum crawl access for all major search engine bots & AdSense crawler
 
 User-agent: *
 Allow: /
+Allow: /ads.txt
+Allow: /sitemap.xml
+Allow: /generate
+Allow: /templates
+Allow: /guide
+Allow: /about
+Allow: /contact
+Allow: /help
+Allow: /privacy
+Allow: /terms
 
-# Block internal/admin pages (these use noindex meta tags for proper de-indexing)
+# Block internal admin pages
 Disallow: /admin-lab
 Disallow: /purchase-success/
 
 # Sitemaps
 Sitemap: https://promptbyniti.in/sitemap.xml
 
-# Host directive (Yandex)
+# Host directive
 Host: https://promptbyniti.in
