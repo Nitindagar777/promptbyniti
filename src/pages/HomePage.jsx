@@ -114,7 +114,7 @@ const getStoreCardSamples = (tmpl) => {
 };
 
 export default function HomePage() {
-  const { state, dispatch, canGenerate, useCredit, addPrompt, cache, setCachedData, setScroll, getScroll } = useApp();
+  const { state, dispatch, canGenerate, useCredit, addPrompt, cache, setCachedData, setScroll, getScroll, refetchMarketplace } = useApp();
   const location = useLocation();
   const [prompts, setPrompts] = useState(state.marketplace || []);
 
@@ -127,7 +127,9 @@ export default function HomePage() {
 
   // Always fetch fresh data on mount, but never block rendering
   useEffect(() => {
-    fetchPrompts();
+    if (refetchMarketplace) {
+      refetchMarketplace();
+    }
   }, []);
   const navigate = useNavigate();
   const [previewPrompt, setPreviewPrompt] = useState(null);
@@ -163,12 +165,23 @@ export default function HomePage() {
   }, [state.marketplace]);
 
   const storeItems = useMemo(() => {
-    return (state.marketplace || []).slice(0, 16);
-  }, [state.marketplace]);
+    const list = (state.marketplace && state.marketplace.length > 0) ? state.marketplace : prompts;
+    const sorted = [...list].sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return dateB - dateA;
+    });
+    return sorted.slice(0, 16);
+  }, [state.marketplace, prompts]);
 
   const storeFeedItems = useMemo(() => {
     const list = (state.marketplace && state.marketplace.length > 0) ? state.marketplace : prompts;
-    return (list || []).slice(0, 16).map((tmpl, idx) => {
+    const sorted = [...list].sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return dateB - dateA;
+    });
+    return sorted.slice(0, 16).map((tmpl, idx) => {
       const firstSample = tmpl.samples?.[0];
       const sampleSrc = typeof firstSample === 'object' ? (firstSample?.output || firstSample?.url || firstSample?.image) : firstSample;
       return {

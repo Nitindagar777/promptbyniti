@@ -132,6 +132,8 @@ router.get('/prompts/:id', isAdmin, async (req, res) => {
   }
 });
 
+const promptRoutes = require('./prompts');
+
 // UPDATE Prompt Status
 router.patch('/prompts/:id', isAdmin, async (req, res) => {
   try {
@@ -146,6 +148,7 @@ router.patch('/prompts/:id', isAdmin, async (req, res) => {
     }
 
     const prompt = await Prompt.findByIdAndUpdate(req.params.id, updateData, { new: true });
+    if (typeof promptRoutes.clearFeedCache === 'function') promptRoutes.clearFeedCache();
     res.json({ success: true, prompt });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -157,7 +160,7 @@ router.delete('/prompts/:id', isAdmin, async (req, res) => {
   try {
     const prompt = await Prompt.findByIdAndDelete(req.params.id);
     if (!prompt) return res.status(404).json({ success: false, message: 'Prompt not found' });
-    
+    if (typeof promptRoutes.clearFeedCache === 'function') promptRoutes.clearFeedCache();
     res.json({ success: true, message: 'Prompt deleted successfully' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

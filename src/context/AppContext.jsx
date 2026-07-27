@@ -67,6 +67,7 @@ const actions = {
   ADD_PURCHASE: 'ADD_PURCHASE',
   SET_SCROLL: 'SET_SCROLL',
   PRELOAD_DATA: 'PRELOAD_DATA',
+  ADD_MARKETPLACE_PROMPT: 'ADD_MARKETPLACE_PROMPT',
 };
 
 /* Reducer */
@@ -318,6 +319,18 @@ function appReducer(state, action) {
         ...state,
         ...action.payload
       };
+
+    case 'ADD_MARKETPLACE_PROMPT': {
+      const newPrompt = action.payload;
+      if (!newPrompt) return state;
+      const targetId = (newPrompt._id || newPrompt.id)?.toString();
+      const existingList = state.marketplace || [];
+      const filteredList = existingList.filter(p => (p._id || p.id)?.toString() !== targetId);
+      return {
+        ...state,
+        marketplace: [newPrompt, ...filteredList]
+      };
+    }
 
     default:
       return state;
@@ -590,6 +603,21 @@ export function AppProvider({ children }) {
       }
     },
     addPrompt: (prompt) => dispatch({ type: actions.ADD_PROMPT, payload: prompt }),
+    addMarketplacePrompt: (prompt) => dispatch({ type: 'ADD_MARKETPLACE_PROMPT', payload: prompt }),
+    refetchMarketplace: async () => {
+      try {
+        const res = await fetch('/api/prompts');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.prompts) && data.prompts.length > 0) {
+            dispatch({ type: actions.PRELOAD_DATA, payload: { marketplace: data.prompts } });
+            return data.prompts;
+          }
+        }
+      } catch (err) {
+        console.warn('Refetch marketplace failed:', err);
+      }
+    },
     deletePrompt: (id) => dispatch({ type: actions.DELETE_PROMPT, payload: id }),
     toggleFavorite: (id) => dispatch({ type: actions.TOGGLE_FAVORITE, payload: id }),
     setPlan: (plan) => dispatch({ type: actions.SET_PLAN, payload: plan }),

@@ -176,7 +176,14 @@ export default function TemplatesPage() {
       return matchesCat && matchesSearch;
     });
 
-    templates.forEach((tmpl, tmplIdx) => {
+    // Sort templates by createdAt descending (newest prompts first)
+    const sortedTemplates = [...templates].sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return dateB - dateA;
+    });
+
+    sortedTemplates.forEach((tmpl, tmplIdx) => {
       const isText = tmpl.generateType === 'text';
       const firstSample = tmpl.samples?.[0];
       const sampleSrc = typeof firstSample === 'object' ? (firstSample?.output || firstSample?.url || firstSample?.image) : firstSample;

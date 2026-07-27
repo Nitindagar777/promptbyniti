@@ -393,4 +393,8 @@ router.post('/:id/reviews/:reviewId/reply', auth, async (req, res) => {
   }
 });
 
+router.clearFeedCache = () => {
+  feedCache = null;
+};
+
 module.exports = router;

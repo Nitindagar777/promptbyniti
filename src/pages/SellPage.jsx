@@ -21,7 +21,7 @@ const AI_MODEL_OPTIONS = [
 ];
 
 export default function SellPage() {
-  const { state } = useApp();
+  const { state, addMarketplacePrompt, refetchMarketplace } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -222,6 +222,12 @@ export default function SellPage() {
       const pubData = await publishRes.json();
       if (publishRes.ok) {
         console.log('✅ [Admin Auto-Pipeline] Prompt pack published successfully!');
+        if (pubData.prompt && addMarketplacePrompt) {
+          addMarketplacePrompt(pubData.prompt);
+        }
+        if (refetchMarketplace) {
+          refetchMarketplace();
+        }
         const isAutoPilotActive = localStorage.getItem('promptbyniti_autopilot_loop') === 'true';
         setTimeout(() => {
           if (localStorage.getItem('promptbyniti_autopilot_loop') === 'true') {
@@ -466,6 +472,12 @@ export default function SellPage() {
 
       const data = await response.json();
       if (data.success) {
+        if (data.prompt && addMarketplacePrompt) {
+          addMarketplacePrompt(data.prompt);
+        }
+        if (refetchMarketplace) {
+          refetchMarketplace();
+        }
         setSubmitted(true);
         window.scrollTo(0, 0);
       } else {
