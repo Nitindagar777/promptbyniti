@@ -116,55 +116,24 @@ router.get('/', async (req, res) => {
     const limit = (!isNaN(limitParam) && limitParam > 0) ? limitParam : 150;
     console.log('📡 Public feed request received, fetching approved prompts...');
     
-    const prompts = await Prompt.aggregate([
-      { $match: { status: 'approved' } },
-      { $sort: { createdAt: -1 } },
-      { $limit: limit },
-      {
-        $project: {
-          _id: 1,
-          title: 1,
-          name: 1,
-          description: 1,
-          keywords: 1,
-          category: 1,
-          generateType: 1,
-          model: 1,
-          price: 1,
-          thumbnail: 1,
-          views: 1,
-          sales: 1,
-          averageRating: 1,
-          seller: 1,
-          createdAt: 1,
-          samples: {
-            $filter: {
-              input: {
-                $map: {
-                  input: { $ifNull: ['$samples', []] },
-                  as: 's',
-                  in: '$$s.output'
-                }
-              },
-              as: 'outUrl',
-              cond: {
-                $and: [
-                  { $ne: ['$$outUrl', null] },
-                  { $ne: ['$$outUrl', ''] },
-                  { $not: [{ $regexMatch: { input: '$$outUrl', regex: '^data:' } }] }
-                ]
-              }
-            }
-          }
-        }
-      }
-    ]);
-    console.log(`✅ Fetched ${prompts.length} approved prompts from DB via fast aggregation`);
+    const prompts = await Prompt.find({ status: 'approved' })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .select('_id title name description keywords category generateType model price priceTokens thumbnail views sales averageRating seller createdAt samples')
+      .lean();
 
-    const normalizedPrompts = prompts.map(p => ({
-      ...p,
-      samples: (p.samples && p.samples.length > 0) ? p.samples : (p.thumbnail ? [p.thumbnail] : [])
-    }));
+    console.log(`✅ Fetched ${prompts.length} approved prompts from DB`);
+
+    const normalizedPrompts = prompts.map(p => {
+      const sampleUrls = (p.samples || [])
+        .map(s => (typeof s === 'object' ? (s.output || s.url || s.image || '') : (typeof s === 'string' ? s : '')))
+        .filter(url => url && typeof url === 'string' && !url.startsWith('data:'));
+
+      return {
+        ...p,
+        samples: sampleUrls.length > 0 ? sampleUrls : (p.thumbnail ? [p.thumbnail] : [])
+      };
+    });
 
     if (normalizedPrompts.length > 0) {
       feedCache = normalizedPrompts;
