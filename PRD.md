@@ -68,6 +68,11 @@
     - 12.1 Technology Directory
     - 12.2 Project Directory Structures
 13. **Risk Assessment & Mitigation**
+14. **References & Official Documentation**
+    - 14.1 Frontend Technologies & Libraries
+    - 14.2 Backend Technologies & Frameworks
+    - 14.3 AI Models & Third-Party Cloud SDKs
+    - 14.4 Security, Utility & Infrastructure
 
 ---
 
@@ -1107,6 +1112,42 @@ prompt_gene/
 | **Transaction Records Fraud** | Medium | Medium | Validate all simulated checkout records on the server. Never rely on the client browser to report transaction success. |
 | **Canvas Performance Issues** | Low | Medium | Disable complex background particle rendering in the Quantum Reactor on devices with low refresh rates or screen sizes below 600px. |
 | **Mongoose Query Performance** | Medium | Low | Index fields that are queried frequently (e.g. `userId` in `YoutubeAgentMemory`, `status` in `Prompt`, and `email` in `User`). |
+
+---
+
+## 14. References & Official Documentation
+
+### 14.1 Frontend Technologies & Libraries
+* **React Documentation:** [React 19 Official Documentation](https://react.dev/) — Declarative component architecture, hooks, and Context API state management.
+* **React Router DOM:** [React Router v7 Documentation](https://reactrouter.com/) — Multi-page dynamic routing, parameters, and layout outlets.
+* **Vite Tooling:** [Vite Official Guide](https://vite.dev/guide/) — Next-generation frontend build tool and dev server.
+* **Lucide Icons:** [Lucide React Icon Library](https://lucide.dev/icons/) — Clean vector icons for UI buttons and status indicators.
+* **HTML5 Canvas Context 2D:** [MDN HTML5 Canvas API Reference](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API) — High-performance 2D orbital particle physics engine (Quantum Reactor).
+* **CSS3 Custom Properties & HSL:** [MDN CSS Custom Properties Guide](https://developer.mozilla.org/en-US/docs/Web/CSS/Using_CSS_custom_properties) — Modern color space tokens, variables, and dark mode styling.
+
+### 14.2 Backend Technologies & Frameworks
+* **Node.js:** [Node.js v20+ API Reference](https://nodejs.org/docs/latest/api/) — Asynchronous runtime for executing backend service modules.
+* **Express Framework:** [Express 5.x API Reference](https://expressjs.com/en/5x/api.html) — REST API routing framework, middleware pipeline, and controller handlers.
+* **MongoDB & Mongoose ODM:** [Mongoose v9 Docs](https://mongoosejs.com/docs/) & [MongoDB Manual](https://www.mongodb.com/docs/) — NoSQL data models, schema validations, and database indexing.
+* **Nodemon:** [Nodemon Utility Documentation](https://nodemon.io/) — Hot-reloading daemon for backend server development.
+
+### 14.3 AI Models & External Cloud Integrations
+* **Google Generative AI SDK (`@google/generative-ai`):** [Google AI Gemini API Docs](https://ai.google.dev/gemini-api/docs/quickstart?lang=node) — Official SDK for Gemini 2.5 Flash, 2.0 Flash, and 1.5 Flash models.
+* **Google Auth Library (`google-auth-library`):** [Google OAuth 2.0 Node Client](https://github.com/googleapis/google-api-nodejs-client) — Identity token validation and Google Sign-In verification.
+* **Bytez AI SDK (`bytez.js`):** [Bytez Open-Source Model API](https://bytez.com/docs) — Multi-model engine fallback integration.
+* **Razorpay Payment Gateway (`razorpay`):** [Razorpay Node SDK & API Docs](https://razorpay.com/docs/api/) — Order creation, webhooks, and HMAC SHA256 payment signature verification.
+* **Cloudinary SDK (`cloudinary`):** [Cloudinary Node.js SDK Reference](https://cloudinary.com/documentation/node_integration) — Asset uploads and media optimization.
+* **Nodemailer:** [Nodemailer Documentation](https://nodemailer.com/) — SMTP email delivery for verification OTPs and system alerts.
+
+### 14.4 Security, Infrastructure & Utilities
+* **JSON Web Token (`jsonwebtoken`):** [JWT.io Specification](https://jwt.io/) & [Node JSONWebToken Repository](https://github.com/auth0/node-jsonwebtoken) — Session handling, bearer tokens, and signature verification.
+* **bcryptjs:** [bcrypt.js Documentation](https://github.com/dperini/bcrypt.js) — Salt-based hashing for user passwords.
+* **Helmet.js:** [Helmet Security Documentation](https://helmetjs.github.io/) — Security header protection, CSP rules, and XSS defense.
+* **Express Rate Limit:** [Express Rate Limit Middleware Docs](https://github.com/express-rate-limit/express-rate-limit) — Rate limiting to prevent API abuse.
+* **CORS Middleware:** [Express CORS Documentation](https://github.com/expressjs/cors) — Cross-Origin Resource Sharing control.
+* **Dotenv:** [Dotenv Module Guide](https://github.com/motdotla/dotenv) — Environment variable management.
+* **ESLint:** [ESLint Docs](https://eslint.org/docs/latest/) — Code style enforcement and linting.
+* **Vercel Platform:** [Vercel Deployment Docs](https://vercel.com/docs) — Static and serverless deployment platform.
 
 ---
 *End of Product Requirements Document (PRD)*

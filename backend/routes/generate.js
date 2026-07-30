@@ -104,50 +104,51 @@ function markKeyExhausted(rawKey, keyName) {
  * Local Smart Prompt Engine Fallback when all external AI keys are rate-limited
  */
 function buildSmartFallbackPrompt(description, promptType, targetModel, aspectRatio) {
-  const desc = (description || 'Cyberpunk neon futuristic portrait').trim();
+  const descRaw = (description || 'Asian model portrait in soft bedroom lighting').trim();
+  const descClean = descRaw.replace(/\s*\+\s*/g, ', ').replace(/\s{2,}/g, ' ').trim();
   const type = promptType || 'image';
   const model = targetModel || 'flux-1';
   const resolvedAR = aspectRatio ? aspectRatio.trim() : (type === 'video' ? '16:9' : '1:1');
-  const cleanSubject = desc.replace(/[^\w\s]/gi, '').substring(0, 80);
+  const cleanSubject = descClean.replace(/[^\w\s,]/gi, '').substring(0, 80);
 
   const titleWords = cleanSubject.split(' ').filter(Boolean).map(w => w.charAt(0).toUpperCase() + w.slice(1));
-  const title = titleWords.slice(0, 5).join(' ') || 'Masterpiece AI Visual Blueprint';
+  const title = titleWords.slice(0, 5).join(' ') || 'Photorealistic AI Model Blueprint';
 
   if (type === 'video') {
-    const mainPrompt = `Generate a video of ${desc}, ultra-realistic 8k cinematic lighting, smooth 60fps motion, dynamic camera sweep, vibrant atmospheric depth, masterwork color grading --ar ${resolvedAR}`;
+    const mainPrompt = `Generate a video of ${descClean}, ultra-realistic 8k cinematic lighting, authentic real human model, 60fps motion, dynamic camera sweep, vibrant atmospheric depth, masterwork color grading --ar ${resolvedAR}`;
     return {
       title: `${title} (Cinematic Motion)`,
-      description: `Cinematic motion prompt for ${desc}. Designed for Sora, Kling, and Runway Gen-3.`,
-      promptTemplate: `Generate a video of [subject] [action], ultra-realistic 8k cinematic lighting, smooth 60fps camera sweep, [mood] mood, masterwork color grading --ar ${resolvedAR}`,
+      description: `A professional cinematic motion prompt blueprint for ${descClean}. Designed for Sora, Kling, and Runway Gen-3.`,
+      promptTemplate: `Generate a video of [subject] ${descClean}, ultra-realistic 8k cinematic lighting, smooth 60fps camera sweep, [mood] mood, masterwork color grading --ar ${resolvedAR}`,
       mainPrompt: mainPrompt,
-      negativePrompt: 'static, low resolution, motion blur distortion, glitch, watermark, blurry frames',
+      negativePrompt: 'static, low resolution, motion blur distortion, glitch, watermark, plastic skin, CGI, AI glow',
       instructions: 'Paste this prompt into Sora, Kling AI, or Runway Gen-3. Adjust [subject] and [mood] to generate custom video sequences.',
       samples: [
-        `Generate a video of ${desc}, golden hour sunlight, slow motion panning shot --ar ${resolvedAR}`,
-        `Generate a video of ${desc}, dramatic neon reflections, dynamic tracking camera shot --ar ${resolvedAR}`,
-        `Generate a video of ${desc}, atmospheric volumetric fog, high-speed cinematic zoom --ar ${resolvedAR}`,
-        `Generate a video of ${desc}, studio 8k lighting, 360 orbital camera rotation --ar ${resolvedAR}`
+        `Generate a video of ${descClean}, golden hour sunlight, authentic real human model, slow motion panning shot --ar ${resolvedAR}`,
+        `Generate a video of ${descClean}, dramatic soft bedroom lighting, 85mm lens portrait, dynamic tracking camera shot --ar ${resolvedAR}`,
+        `Generate a video of ${descClean}, atmospheric volumetric lighting, natural unedited skin texture, high-speed cinematic zoom --ar ${resolvedAR}`,
+        `Generate a video of ${descClean}, professional studio 8k lighting, subtle skin pores, 360 orbital camera rotation --ar ${resolvedAR}`
       ],
-      keywords: ['video-prompt', 'sora', 'kling', 'cinematic', 'motion'],
+      keywords: ['video-prompt', 'sora', 'kling', 'cinematic', 'photorealistic-model'],
       model: model,
       priceTokens: 4
     };
   } else {
-    const mainPrompt = `${desc}, hyper-detailed, 8k resolution, professional photography, studio lighting, octane render, intricate details, photorealistic texture --ar ${resolvedAR}`;
+    const mainPrompt = `A highly detailed photorealistic portrait of ${descClean}, authentic 100% real human girl, natural unedited skin texture, subtle visible skin pores, shot on 85mm f/1.4 lens, shallow depth of field, professional studio lighting setup, raw photograph, natural skin tone, high aesthetic detail --ar ${resolvedAR}`;
     return {
       title: title,
-      description: `Professional AI prompt blueprint for ${desc}. Optimized for Midjourney v6 and Flux.1.`,
-      promptTemplate: `[subject] ${desc}, hyper-detailed [style] style, 8k resolution, professional [lighting] lighting, studio photography, octane render --ar ${resolvedAR}`,
+      description: `A professional photorealistic AI prompt template for generating authentic ${descClean}. Optimized for Midjourney v6 and Flux.1.`,
+      promptTemplate: `[subject] ${descClean}, authentic 100% real human girl, natural unedited skin texture, subtle visible skin pores, shot on 85mm f/1.4 lens, shallow depth of field, professional [lighting] lighting, raw photograph, high aesthetic detail --ar ${resolvedAR}`,
       mainPrompt: mainPrompt,
-      negativePrompt: 'blurry, low quality, distorted anatomy, extra limbs, bad lighting, watermark, text',
-      instructions: 'Copy and paste into Midjourney v6, Flux.1, or DALL-E 3. Replace [subject] or [style] for custom outputs.',
+      negativePrompt: 'plastic skin, AI glow, airbrushed, CGI, 3D render, smooth doll skin, overprocessed skin, fake skin texture, digital artifact, oversaturated skin glow, blurry, distorted anatomy, extra limbs, watermark',
+      instructions: 'Copy and paste into Midjourney v6, Flux.1, or DALL-E 3. Replace [subject] or [lighting] for custom outputs.',
       samples: [
-        `${desc}, photorealistic 8k render, golden hour lighting, shot on 35mm lens --ar ${resolvedAR}`,
-        `${desc}, cyberpunk aesthetic, vibrant neon reflections, volumetric fog --ar ${resolvedAR}`,
-        `${desc}, minimalist modern art style, clean studio background, dramatic shadows --ar ${resolvedAR}`,
-        `${desc}, surreal fantasy oil painting style, dramatic rim lighting, intricate volumetric glow --ar ${resolvedAR}`
+        `A highly detailed photorealistic portrait of ${descClean}, authentic 100% real human girl, natural unedited skin texture, golden hour warm sunlight, shot on 85mm f/1.4 lens, raw photograph --ar ${resolvedAR}`,
+        `A highly detailed photorealistic portrait of ${descClean}, authentic 100% real human girl, subtle visible skin pores, soft ambient bedroom lighting, shot on 35mm lens, raw DSLR portrait --ar ${resolvedAR}`,
+        `A highly detailed photorealistic portrait of ${descClean}, authentic 100% real human girl, natural unedited skin texture, dramatic rim lighting, studio dark background, raw portrait --ar ${resolvedAR}`,
+        `A highly detailed photorealistic portrait of ${descClean}, authentic 100% real human girl, subtle visible skin pores, gentle natural daylight, window reflections, raw photograph --ar ${resolvedAR}`
       ],
-      keywords: ['ai-image', 'midjourney', 'flux', 'hyperrealistic', 'blueprint'],
+      keywords: ['photorealistic', 'real-human-girl', 'midjourney-v6', 'flux-1', 'raw-photography'],
       model: model,
       priceTokens: 4
     };
@@ -784,6 +785,29 @@ You must return a VALID JSON object with these fields:
 Return ONLY the JSON object. No markdown fences, no explanation.`;
   }
 
+  const isModelCategory = (category || '').toLowerCase().trim() === 'model' || (subcategory || '').toLowerCase().trim().includes('model');
+
+  const modelBoldInstructions = isModelCategory ? `
+CRITICAL MODEL PROMPT, REAL HUMAN GIRL REALISM & DESCRIPTION RULES:
+1. PRESERVE USER WORDS: You MUST preserve and incorporate the user's EXACT input keywords and description into the generated prompt. DO NOT discard or replace the user's specific input words.
+2. NO PLUS (+) SIGNS ANYWHERE: You are STRICTLY FORBIDDEN from using '+' symbols or plus signs in ANY field (including title, description, mainPrompt, promptTemplate, or samples). DO NOT write 'model + thin clothes + sunset'. Always use clean, natural English prose and descriptive phrases separated by commas.
+3. CLEAN HUMAN-READABLE DESCRIPTION: The "description" field MUST be a clean, elegant, human-readable 1-2 sentence sales summary (e.g. "A professional photorealistic AI prompt template for generating alluring model portraits with soft bedroom lighting, messy hair, and authentic skin textures."). NEVER output raw prompt strings, '+' signs, or internal variable tags inside "description".
+4. LONG, COMPREHENSIVE, HIGHLY DETAILED PROMPT TEMPLATES:
+   - Both "promptTemplate" and "mainPrompt" MUST be long, rich, masterclass photographic prompts (minimum 400 to 600 characters long).
+   - NEVER generate short 2-3 line keyword lists. Include full photographic parameters: camera setup (e.g. shot on 85mm f/1.4 lens, shallow depth of field), atmospheric lighting (e.g. soft ambient bedroom glow, volumetric rim light), composition, and specific attire details.
+5. 100% REAL HUMAN GIRL PHOTOGRAPHY (STRICT ANTI-AI PLASTIC GLOW):
+   - Every model prompt MUST specify 100% authentic, photorealistic real human girl photography.
+   - MANDATORY PHOTOREALISTIC ANCHORS: Include 'authentic 100% real human girl, natural unedited skin texture, subtle visible skin pores, fine facial details, shot on 85mm f/1.4 lens, raw photograph'.
+   - STRICTLY FORBIDDEN: Do NOT generate artificial plastic AI skin, airbrushed CGI look, excessive digital skin glow, porcelain doll skin, or overprocessed smooth textures.
+6. MANDATORY FULL FIELDS: Every field in the JSON object ("title", "description", "mainPrompt", "negativePrompt", "promptTemplate", "samples", "keywords", "instructions") MUST be fully populated with rich content.` : `
+STRICT INPUT, REALISM & SYNTAX RULES:
+1. PRESERVE USER WORDS: You MUST preserve and incorporate the user's EXACT input keywords and description into the generated prompt. DO NOT discard or replace the user's specific input words.
+2. NO PLUS (+) SIGNS ANYWHERE: You are STRICTLY FORBIDDEN from using '+' symbols or plus signs in ANY field. Use clean, natural English prose and descriptive phrases separated by commas.
+3. CLEAN HUMAN-READABLE DESCRIPTION: The "description" field MUST be a clean, elegant, human-readable 1-2 sentence sales summary. NEVER output raw prompt strings or '+' signs inside "description".
+4. DETAILED PROMPTS: "promptTemplate" and "mainPrompt" MUST be complete, detailed, rich photographic prompts (min 400-600 characters). Include camera lens details (e.g. 85mm f/1.4), lighting, and skin texture.
+5. 100% REAL HUMAN REALISM: Specify 'authentic 100% real human, natural unedited skin texture, subtle visible skin pores, raw photograph'. Avoid plastic AI glow or CGI smooth doll skin.
+6. MANDATORY FULL FIELDS: Every field in the JSON object MUST be fully populated.`;
+
   return `You are an expert AI Prompt Engineer for a premium prompt marketplace called "Prompt by Niti".
 
 PLATFORM RULES (ALWAYS ENFORCE):
@@ -795,6 +819,9 @@ YOUR ROLE:
 - For IMAGE prompts: focus on vivid visual details, composition, lighting, style keywords.
 - For VIDEO prompts: include camera movements, motion dynamics, temporal flow, scene transitions.
 - For TEXT prompts: focus on tone, structure, context, audience, formatting guidance.
+
+${modelBoldInstructions}
+
 ${tierGuidelines}
 
 ${referenceImageRules}
@@ -1206,9 +1233,14 @@ DO NOT exceed 5 bracketed variables under any circumstances. Keep the majority o
             }
           });
 
-          const result = await gemModel.generateContent({
-            contents: [{ role: 'user', parts: userParts }]
-          });
+          const timeoutPromise = (ms) => new Promise((_, reject) => setTimeout(() => reject(new Error('Gemini API timeout (10s limit)')), ms));
+
+          const result = await Promise.race([
+            gemModel.generateContent({
+              contents: [{ role: 'user', parts: userParts }]
+            }),
+            timeoutPromise(10000)
+          ]);
 
           const response = await result.response;
           text = response.text();
@@ -1274,11 +1306,15 @@ DO NOT exceed 5 bracketed variables under any circumstances. Keep the majority o
         promptData.samples = promptData.samples.slice(0, 5);
       }
 
-      // ── Post-processing: strip labels & enforce custom aspect ratio ──
+      // ── Post-processing: strip labels, plus signs & enforce custom aspect ratio ──
       const stripLabel = (s) => s.replace(/^(Variation\s*\d*[:.\-]\s*|Example\s*\d*[:.\-]\s*|Sample\s*[A-C\d]*[:.\-]\s*|Version\s*\d*[:.\-]\s*|\d+[:.)\-]\s*)/i, '').trim();
+      const removePlusSigns = (str) => {
+        if (!str || typeof str !== 'string') return str;
+        return str.replace(/\s*\+\s*/g, ', ').replace(/\s{2,}/g, ' ').trim();
+      };
       const resolvedAR = aspectRatio ? aspectRatio.trim() : (promptType === 'video' ? '16:9' : '1:1');
       const ensureCustomAR = (s) => {
-        const cleaned = s.replace(/\s*--ar\s+\S+/g, '').trim();
+        const cleaned = removePlusSigns(s.replace(/\s*--ar\s+\S+/g, '')).trim();
         return cleaned + ' --ar ' + resolvedAR;
       };
 
@@ -1288,6 +1324,7 @@ DO NOT exceed 5 bracketed variables under any circumstances. Keep the majority o
         
         // 1. Remove all square brackets [] to prevent metadata safety blockages, keeping text inside if there's any.
         cleaned = cleaned.replace(/[\[\]]/g, '');
+        cleaned = removePlusSigns(cleaned);
 
         // 2. Ensure it starts with "Generate a video of" or "A cinematic video of"
         const startsWithVideo = /^\s*(generate\s+a\s+video|a\s+cinematic\s+video)/i.test(cleaned);
@@ -1312,9 +1349,7 @@ DO NOT exceed 5 bracketed variables under any circumstances. Keep the majority o
         promptData.mainPrompt = ensureCustomAR(cleanVideoPrompt(promptData.mainPrompt || ''));
         promptData.samples = promptData.samples.map(s => ensureCustomAR(cleanVideoPrompt(s || '')));
         if (promptData.promptTemplate) {
-          // For template, we only normalize the scene timestamps and ensure video prefix and ar resolvedAR,
-          // but we do NOT strip variable brackets like [animation_1].
-          let temp = promptData.promptTemplate.trim();
+          let temp = removePlusSigns(promptData.promptTemplate.trim());
           const startsWithVideo = /^\s*(generate\s+a\s+video|a\s+cinematic\s+video)/i.test(temp);
           if (!startsWithVideo) {
             if (/^\s*scene\s*1/i.test(temp)) {
@@ -1328,18 +1363,28 @@ DO NOT exceed 5 bracketed variables under any circumstances. Keep the majority o
           promptData.promptTemplate = ensureCustomAR(temp);
         }
       } else if (promptType === 'text') {
-        promptData.mainPrompt = stripLabel(promptData.mainPrompt || '');
-        promptData.samples = promptData.samples.map(s => stripLabel(s || ''));
+        promptData.mainPrompt = removePlusSigns(stripLabel(promptData.mainPrompt || ''));
+        promptData.samples = promptData.samples.map(s => removePlusSigns(stripLabel(s || '')));
         if (promptData.promptTemplate) {
-          promptData.promptTemplate = stripLabel(promptData.promptTemplate);
+          promptData.promptTemplate = removePlusSigns(stripLabel(promptData.promptTemplate));
         }
       } else {
         // default to image prompt rules
-        promptData.mainPrompt = ensureCustomAR(stripLabel(promptData.mainPrompt || ''));
-        promptData.samples = promptData.samples.map(s => ensureCustomAR(stripLabel(s || '')));
+        promptData.mainPrompt = ensureCustomAR(removePlusSigns(stripLabel(promptData.mainPrompt || '')));
+        promptData.samples = promptData.samples.map(s => ensureCustomAR(removePlusSigns(stripLabel(s || ''))));
         if (promptData.promptTemplate) {
-          promptData.promptTemplate = ensureCustomAR(promptData.promptTemplate);
+          promptData.promptTemplate = ensureCustomAR(removePlusSigns(promptData.promptTemplate));
         }
+      }
+
+      // Sanitize description field to ensure clean human-readable sales pitch with no '+' signs or raw blueprint strings
+      if (promptData.description) {
+        let cleanDesc = promptData.description.replace(/\s*\+\s*/g, ', ').replace(/\s{2,}/g, ' ').trim();
+        if (cleanDesc.toLowerCase().includes('professional ai prompt blueprint for') || cleanDesc.includes('+') || cleanDesc.includes('[') || cleanDesc.length < 25) {
+          const topic = (promptData.title || description || 'model portrait').replace(/[^\w\s]/gi, '').trim();
+          cleanDesc = `A professional photorealistic AI prompt blueprint for generating high quality ${topic}. Optimized for Midjourney v6 and Flux.1.`;
+        }
+        promptData.description = cleanDesc;
       }
 
       // Ensure keywords and instructions
@@ -1622,6 +1667,7 @@ router.post('/batch-ai-images', async (req, res) => {
   }
 });
 
+router.callCloudflareAIWithFailover = callCloudflareAIWithFailover;
 router.buildSystemInstruction = buildSystemInstruction;
 module.exports = router;
 

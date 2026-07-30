@@ -13,7 +13,7 @@ const AdminDashboard = () => {
   
   // Initialize data with preloaded values if available
   const getInitialData = (tab) => {
-    if (tab === 'verification' || tab === 'prompts') return state.adminPrompts || [];
+    if (tab === 'verification' || tab === 'prompts' || tab === 'model') return state.adminPrompts || [];
     if (tab === 'users') return state.adminUsers || [];
     if (tab === 'transactions') return state.adminTransactions || [];
     if (tab === 'withdrawals') return state.adminWithdrawals || [];
@@ -123,7 +123,7 @@ const AdminDashboard = () => {
     if (showLoading) setLoading(true);
     setError(null);
     try {
-      const endpoint = tab === 'verification' ? 'prompts' : tab;
+      const endpoint = (tab === 'verification' || tab === 'model') ? 'prompts' : tab;
       const token = await ensureAdminToken();
       if (!token) {
         setError('No authentication token found. Please log in as admin.');
@@ -150,7 +150,7 @@ const AdminDashboard = () => {
         const resultData = json[endpoint] || json.data || json.prompts || json.users || json.transactions || json.withdrawals || [];
         setData(resultData);
         // Sync to global state
-        if (tab === 'verification' || tab === 'prompts') {
+        if (tab === 'verification' || tab === 'prompts' || tab === 'model') {
           dispatch({ type: 'PRELOAD_DATA', payload: { adminPrompts: resultData } });
         } else if (tab === 'users') {
           dispatch({ type: 'PRELOAD_DATA', payload: { adminUsers: resultData } });
@@ -380,6 +380,25 @@ const AdminDashboard = () => {
       console.error('Withdrawal update error:', err);
     }
   };
+
+  useEffect(() => {
+    fetchStats();
+    fetchSettings();
+    if (activeTab !== 'overview' && activeTab !== 'api' && activeTab !== 'rules') {
+      const initialData = getInitialData(activeTab);
+      let needsLoading = true;
+      if (initialData && initialData.length > 0) {
+        setData(initialData);
+        setLoading(false);
+        needsLoading = false;
+      } else {
+        setLoading(true);
+      }
+      fetchData(activeTab, needsLoading);
+    } else {
+      setLoading(false);
+    }
+  }, [activeTab]);
 
   const renderOverview = () => (
     <div className="admin-overview">
@@ -704,6 +723,51 @@ const AdminDashboard = () => {
         <p className="text-xs text-muted mt-2">Switching models can improve prompt quality or reduce costs. "Latest" always points to the newest stable version.</p>
       </div>
 
+      <div className="admin-field" style={{ marginTop: '24px', padding: '20px', background: 'rgba(236, 72, 153, 0.05)', borderRadius: '12px', border: '1px solid rgba(236, 72, 153, 0.2)' }}>
+        <h3 style={{ fontSize: '1.1rem', color: '#ec4899', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          👑 Model Section & Navbar Controls
+        </h3>
+        
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+          <div>
+            <strong style={{ display: 'block', color: 'var(--text-primary)', fontSize: '0.95rem' }}>Navbar Model Link Visibility</strong>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Show or hide the "Model" link in the navbar for all users.</span>
+          </div>
+          <button 
+            type="button"
+            className="approve-btn"
+            style={{ 
+              background: (systemSettings.modelSectionVisible ?? true) ? '#22c55e' : '#ef4444',
+              minWidth: '120px'
+            }}
+            onClick={() => handleUpdateSettings({ modelSectionVisible: !(systemSettings.modelSectionVisible ?? true) })}
+            disabled={settingsLoading}
+          >
+            {(systemSettings.modelSectionVisible ?? true) ? 'Visible (ON)' : 'Hidden (OFF)'}
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0 0' }}>
+          <div>
+            <strong style={{ display: 'block', color: 'var(--text-primary)', fontSize: '0.95rem' }}>Model Auto-Loop Default</strong>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Default system status for model-specific auto generation loop.</span>
+          </div>
+          <button 
+            type="button"
+            className="approve-btn"
+            style={{ 
+              background: systemSettings.modelAutoLoop ? '#ec4899' : 'rgba(255,255,255,0.1)',
+              color: systemSettings.modelAutoLoop ? '#fff' : 'var(--text-secondary)',
+              minWidth: '120px'
+            }}
+            onClick={() => handleUpdateSettings({ modelAutoLoop: !systemSettings.modelAutoLoop })}
+            disabled={settingsLoading}
+          >
+            {systemSettings.modelAutoLoop ? 'Enabled (ON)' : 'Disabled (OFF)'}
+          </button>
+        </div>
+      </div>
+
       {settingsMessage && (
         <div className={`settings-status ${settingsMessage.type}`}>
           {settingsMessage.text}
@@ -852,13 +916,162 @@ const AdminDashboard = () => {
               style={{ width: '100%' }}
             />
           </div>
-          <button className="approve-btn" onClick={addRule} style={{ alignSelf: 'flex-end', marginTop: '5px' }}>Add Rule</button>
         </div>
       </>
     )}
   </div>
 );
 };
+
+  const renderModelTab = () => {
+    const modelPrompts = data.filter(item => {
+      const cat = (item.category || '').toLowerCase().trim();
+      return cat === 'model' || cat === 'models';
+    });
+
+    return (
+      <div className="admin-model-tab-content">
+        {/* Model Section & Navbar Visibility Control Box */}
+        <div className="admin-field" style={{ marginBottom: '25px', padding: '24px', background: 'rgba(236, 72, 153, 0.06)', borderRadius: '16px', border: '1px solid rgba(236, 72, 153, 0.25)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+            <div>
+              <h3 style={{ fontSize: '1.2rem', color: '#ec4899', margin: 0, display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}>
+                👑 Model Prompts Section & Navbar Controls
+              </h3>
+              <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                Control whether the Model Prompts section on the homepage and the Model link in the navbar are visible to all users.
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+              <button 
+                type="button"
+                className="approve-btn"
+                style={{ 
+                  background: (systemSettings.modelSectionVisible ?? true) ? '#22c55e' : '#ef4444',
+                  padding: '12px 24px',
+                  fontSize: '0.95rem',
+                  fontWeight: 'bold',
+                  borderRadius: '10px',
+                  boxShadow: (systemSettings.modelSectionVisible ?? true) ? '0 0 15px rgba(34, 197, 94, 0.3)' : '0 0 15px rgba(239, 68, 68, 0.3)'
+                }}
+                onClick={() => handleUpdateSettings({ modelSectionVisible: !(systemSettings.modelSectionVisible ?? true) })}
+                disabled={settingsLoading}
+              >
+                {(systemSettings.modelSectionVisible ?? true) ? '👁️ VISIBLE (ON)' : '🔒 HIDDEN (OFF)'}
+              </button>
+              <button
+                type="button"
+                className="approve-btn"
+                style={{ background: 'rgba(255,255,255,0.1)', color: '#ec4899', padding: '12px 18px', borderRadius: '10px', fontWeight: 'bold' }}
+                onClick={() => navigate('/model')}
+              >
+                View Model Page ↗
+              </button>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '12px', borderTop: '1px solid rgba(255,255,255,0.08)', flexWrap: 'wrap', gap: '12px' }}>
+            <div>
+              <strong style={{ display: 'block', color: 'var(--text-primary)', fontSize: '0.95rem' }}>Model Auto-Loop Generator Status</strong>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Automated model-specific prompt generation loop for continuous prompt creation.</span>
+            </div>
+            <button 
+              type="button"
+              className="approve-btn"
+              style={{ 
+                background: systemSettings.modelAutoLoop ? '#ec4899' : 'rgba(255,255,255,0.1)',
+                color: systemSettings.modelAutoLoop ? '#fff' : 'var(--text-secondary)',
+                padding: '8px 18px',
+                borderRadius: '8px',
+                fontWeight: 'bold'
+              }}
+              onClick={() => handleUpdateSettings({ modelAutoLoop: !systemSettings.modelAutoLoop })}
+              disabled={settingsLoading}
+            >
+              {systemSettings.modelAutoLoop ? '⚡ Auto-Loop Active (ON)' : '⏸️ Auto-Loop Off (OFF)'}
+            </button>
+          </div>
+        </div>
+
+        {/* Model Prompts List */}
+        <div style={{ marginBottom: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h3 style={{ fontSize: '1.1rem', margin: 0 }}>
+            Model Prompts ({modelPrompts.length})
+          </h3>
+          <button 
+            className="approve-btn"
+            style={{ background: '#ec4899', padding: '8px 16px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 'bold' }}
+            onClick={() => navigate('/generate')}
+          >
+            + Generate Model Prompt
+          </button>
+        </div>
+
+        <div className="admin-table-container">
+          {modelPrompts.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '50px 20px', color: 'var(--text-secondary)' }}>
+              <p style={{ fontSize: '1.1rem', marginBottom: '8px', color: 'var(--text-primary)' }}>No Model Prompts Created Yet</p>
+              <p style={{ fontSize: '0.9rem', maxWidth: '500px', margin: '0 auto 16px' }}>
+                Turn ON Model Loop in the Generate page or click "Generate Model Prompt" to start creating model prompts.
+              </p>
+            </div>
+          ) : (
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Seller</th>
+                  <th>Price</th>
+                  <th>Sales</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {modelPrompts.map(prompt => (
+                  <tr key={prompt._id}>
+                    <td>
+                      <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '12px', textAlign: 'left' }}>
+                        <PromptThumbnail 
+                          src={prompt.thumbnail || (prompt.samples && prompt.samples.length > 0 ? (prompt.samples[0].output || prompt.samples[0]) : null)} 
+                          alt={prompt.name}
+                          type={prompt.generateType}
+                          style={{ width: '45px', height: '45px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }}
+                        />
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                          <span style={{ fontWeight: 'bold' }}>{prompt.name}</span>
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{new Date(prompt.createdAt).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td>{prompt.seller?.name || 'Admin'}</td>
+                    <td>{prompt.priceTokens || prompt.tokens || 4} Tokens</td>
+                    <td>{prompt.sales || 0}</td>
+                    <td>
+                      <span className={`status-badge ${(prompt.status || 'approved').toLowerCase()}`}>
+                        {prompt.status || 'approved'}
+                      </span>
+                    </td>
+                    <td className="actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <button className="view-btn" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={() => handleViewPromptDetails(prompt)}>View</button>
+                      <button className="approve-btn" style={{ background: 'var(--color-cyan, #06b6d4)', color: '#000', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.8rem' }} onClick={() => navigate(`/sell?edit=${prompt._id}`)}>Edit</button>
+                      {prompt.status !== 'rejected' && (
+                        <button className="reject-btn" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={() => handleStatusUpdate(prompt._id, 'rejected')}>Reject</button>
+                      )}
+                      {prompt.status === 'pending' && (
+                        <button className="approve-btn" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={() => handleStatusUpdate(prompt._id, 'approved')}>Approve</button>
+                      )}
+                      <button className="delete-btn" style={{ padding: '6px 12px', fontSize: '0.8rem', background: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }} onClick={() => handleDeletePrompt(prompt._id)}>Delete</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="admin-dashboard">
@@ -867,6 +1080,9 @@ const AdminDashboard = () => {
         <div className="admin-tabs">
           <button className={activeTab === 'overview' ? 'active' : ''} onClick={() => { setActiveTab('overview'); setSearchParams({ tab: 'admin', sub: 'overview' }); }}>Overview</button>
           <button className={activeTab === 'users' ? 'active' : ''} onClick={() => { setActiveTab('users'); setSearchParams({ tab: 'admin', sub: 'users' }); }}>Users</button>
+          <button className={`tab-model ${activeTab === 'model' ? 'active' : ''}`} style={{ borderColor: '#ec4899', color: activeTab === 'model' ? '#fff' : '#ec4899', background: activeTab === 'model' ? 'linear-gradient(135deg, #ec4899, #db2777)' : 'rgba(236, 72, 153, 0.12)', fontWeight: 'bold' }} onClick={() => { setActiveTab('model'); setSearchParams({ tab: 'admin', sub: 'model' }); }}>
+            👑 Model
+          </button>
           <button className={activeTab === 'verification' ? 'active' : ''} onClick={() => { setActiveTab('verification'); setSearchParams({ tab: 'admin', sub: 'verification' }); }}>
             Verification {stats?.pendingPrompts > 0 && <span className="tab-badge">{stats.pendingPrompts}</span>}
           </button>
@@ -1154,6 +1370,7 @@ const AdminDashboard = () => {
           <>
             {activeTab === 'overview' && renderOverview()}
             {activeTab === 'users' && renderUsers()}
+            {activeTab === 'model' && renderModelTab()}
             {activeTab === 'verification' && renderPrompts(true)}
             {activeTab === 'prompts' && renderPrompts(false)}
             {activeTab === 'transactions' && renderTransactions()}

@@ -246,13 +246,15 @@ router.get('/settings', isAdmin, async (req, res) => {
 // UPDATE System Settings
 router.post('/settings', isAdmin, async (req, res) => {
   try {
-    const { geminiApiKey, paidGeminiApiKey, geminiModel, promptCreationRules } = req.body;
+    const { geminiApiKey, paidGeminiApiKey, geminiModel, promptCreationRules, modelSectionVisible, modelAutoLoop } = req.body;
     let settings = await SystemSettings.findOne();
     if (!settings) settings = new SystemSettings();
     
     if (geminiApiKey !== undefined) settings.geminiApiKey = geminiApiKey;
     if (paidGeminiApiKey !== undefined) settings.paidGeminiApiKey = paidGeminiApiKey;
     if (geminiModel !== undefined) settings.geminiModel = geminiModel;
+    if (modelSectionVisible !== undefined) settings.modelSectionVisible = modelSectionVisible;
+    if (modelAutoLoop !== undefined) settings.modelAutoLoop = modelAutoLoop;
     if (promptCreationRules !== undefined) {
       // Normalize rules: convert any legacy strings to objects
       settings.promptCreationRules = promptCreationRules.map(r => {
@@ -267,6 +269,20 @@ router.post('/settings', isAdmin, async (req, res) => {
     res.json({ success: true, settings, message: 'Settings updated successfully' });
   } catch (err) {
     console.error('❌ ERROR UPDATING SETTINGS:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// GET Model Prompts List (Explicit endpoint for /api/admin/model)
+router.get('/model', isAdmin, async (req, res) => {
+  try {
+    const prompts = await Prompt.find()
+      .select('name seller priceTokens tokens sales status createdAt generateType category thumbnail model rejectionReason')
+      .populate('seller', 'name email')
+      .sort({ createdAt: -1 })
+      .lean();
+    res.json({ success: true, prompts });
+  } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 });

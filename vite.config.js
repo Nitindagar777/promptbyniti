@@ -10,7 +10,16 @@ export default defineConfig({
     proxy: {
       '/api': {
         target: 'http://127.0.0.1:8845',
-        changeOrigin: true
+        changeOrigin: true,
+        secure: false,
+        ws: true,
+        timeout: 120000,
+        proxyTimeout: 120000,
+        configure: (proxy, options) => {
+          proxy.on('error', (err, _req, _res) => {
+            console.warn('[Vite Proxy Warning]:', err.message);
+          });
+        }
       }
     }
   }

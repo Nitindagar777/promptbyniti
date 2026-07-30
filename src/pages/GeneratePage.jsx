@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { randomDescriptions, aiModels, textCategories, generateRandomSurprise } from '../data/promptData';
+import { generateModelSurprise } from '../data/modelPromptData';
 import PromptOutput from '../components/PromptOutput';
 import PromptThumbnail from '../components/PromptThumbnail';
 import SEOHead from '../components/SEOHead';
@@ -179,6 +180,7 @@ export default function GeneratePage() {
   const [saveMessage, setSaveMessage] = useState('');
   const [aiPower, setAiPower] = useState('normal'); // 'normal', 'super', 'power'
   const [isAutoPilot, setIsAutoPilot] = useState(() => localStorage.getItem('promptbyniti_autopilot_loop') === 'true');
+  const [isModelAutoPilot, setIsModelAutoPilot] = useState(() => localStorage.getItem('promptbyniti_model_autopilot_loop') === 'true');
   const autoLoopTimerRef = useRef(null);
 
   // Recover state if background generation finished while we were mounted or just navigated back
@@ -265,7 +267,12 @@ export default function GeneratePage() {
   useEffect(() => {
     if (location.state) {
       if (location.state.clearAndLoop) {
-        if (localStorage.getItem('promptbyniti_autopilot_loop') === 'true') {
+        if (localStorage.getItem('promptbyniti_model_autopilot_loop') === 'true') {
+          if (autoLoopTimerRef.current) clearTimeout(autoLoopTimerRef.current);
+          autoLoopTimerRef.current = setTimeout(() => {
+            triggerModelAutoPilotStep();
+          }, 600);
+        } else if (localStorage.getItem('promptbyniti_autopilot_loop') === 'true') {
           if (autoLoopTimerRef.current) clearTimeout(autoLoopTimerRef.current);
           autoLoopTimerRef.current = setTimeout(() => {
             triggerAutoPilotStep();
@@ -282,12 +289,32 @@ export default function GeneratePage() {
   const toggleAutoPilot = () => {
     const nextVal = !isAutoPilot;
     setIsAutoPilot(nextVal);
+    if (nextVal) {
+      setIsModelAutoPilot(false);
+      localStorage.setItem('promptbyniti_model_autopilot_loop', 'false');
+    }
     localStorage.setItem('promptbyniti_autopilot_loop', nextVal ? 'true' : 'false');
     if (autoLoopTimerRef.current) {
       clearTimeout(autoLoopTimerRef.current);
     }
     if (nextVal) {
       triggerAutoPilotStep();
+    }
+  };
+
+  const toggleModelAutoPilot = () => {
+    const nextVal = !isModelAutoPilot;
+    setIsModelAutoPilot(nextVal);
+    if (nextVal) {
+      setIsAutoPilot(false);
+      localStorage.setItem('promptbyniti_autopilot_loop', 'false');
+    }
+    localStorage.setItem('promptbyniti_model_autopilot_loop', nextVal ? 'true' : 'false');
+    if (autoLoopTimerRef.current) {
+      clearTimeout(autoLoopTimerRef.current);
+    }
+    if (nextVal) {
+      triggerModelAutoPilotStep();
     }
   };
 
@@ -315,6 +342,34 @@ export default function GeneratePage() {
     autoLoopTimerRef.current = setTimeout(() => {
       if (localStorage.getItem('promptbyniti_autopilot_loop') === 'true') {
         handleGenerate(true, randomPrompt);
+      }
+    }, 500);
+  };
+
+  const triggerModelAutoPilotStep = () => {
+    if (localStorage.getItem('promptbyniti_model_autopilot_loop') !== 'true') return;
+
+    // 1. Clean Page / Reset state
+    setForm({ description: '', characterImage: null, promptType: 'image', model: 'gemini-image', aspectRatio: '1:1' });
+    setResult(null);
+    setExampleTemplate('');
+    setCustomModel('');
+    setShowCustomInput(false);
+    setSaveMessage('');
+    setCharacterMode('sameScene');
+    setActiveCategory(null);
+    setSelectedSubcategory(null);
+    sessionStorage.removeItem(SESSION_KEY);
+
+    // 2. Use Model Surprise Prompt (from modelPromptData)
+    const randomModelPrompt = generateModelSurprise();
+    setForm(prev => ({ ...prev, description: randomModelPrompt }));
+
+    // 3. Click Generate Button automatically
+    if (autoLoopTimerRef.current) clearTimeout(autoLoopTimerRef.current);
+    autoLoopTimerRef.current = setTimeout(() => {
+      if (localStorage.getItem('promptbyniti_model_autopilot_loop') === 'true') {
+        handleGenerate(true, randomModelPrompt);
       }
     }, 500);
   };
@@ -442,13 +497,15 @@ export default function GeneratePage() {
       }, 150);
     } catch (error) {
       console.error('Generation Error:', error);
-      const isAutoPilotActive = localStorage.getItem('promptbyniti_autopilot_loop') === 'true';
-      if (isAutoPilotActive) {
+      const isModelLoop = localStorage.getItem('promptbyniti_model_autopilot_loop') === 'true';
+      const isNormalLoop = localStorage.getItem('promptbyniti_autopilot_loop') === 'true';
+      if (isModelLoop || isNormalLoop) {
         console.warn('🤖 [Auto-Pilot] Retrying prompt generation silently in 2s...');
         setTimeout(() => {
-          if (localStorage.getItem('promptbyniti_autopilot_loop') === 'true') {
-            handleRandomize();
-            setTimeout(() => handleGenerate(), 500);
+          if (localStorage.getItem('promptbyniti_model_autopilot_loop') === 'true') {
+            triggerModelAutoPilotStep();
+          } else if (localStorage.getItem('promptbyniti_autopilot_loop') === 'true') {
+            triggerAutoPilotStep();
           }
         }, 2000);
       } else {
@@ -1106,18 +1163,34 @@ export default function GeneratePage() {
           {/* Generate / Action Buttons Row */}
           <div className="console-action-row" style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
             {isAdmin && (
-              <button
-                type="button"
-                className={`autopilot-toggle-btn ${isAutoPilot ? 'autopilot-active' : ''}`}
-                onClick={toggleAutoPilot}
-                title={isAutoPilot ? "Click to Turn OFF Continuous Auto Loop" : "Click to Turn ON Continuous Auto Loop"}
-                id="gen-autopilot-btn"
-              >
-                <span className={`autopilot-dot ${isAutoPilot ? 'dot-active' : ''}`}></span>
-                <span className="autopilot-text">
-                  Auto Loop: <strong style={{ color: isAutoPilot ? '#22c55e' : '#ef4444', textTransform: 'uppercase', marginLeft: '4px' }}>{isAutoPilot ? 'ON' : 'OFF'}</strong>
-                </span>
-              </button>
+              <>
+                <button
+                  type="button"
+                  className={`autopilot-toggle-btn ${isAutoPilot ? 'autopilot-active' : ''}`}
+                  onClick={toggleAutoPilot}
+                  title={isAutoPilot ? "Click to Turn OFF Continuous Auto Loop" : "Click to Turn ON Continuous Auto Loop"}
+                  id="gen-autopilot-btn"
+                >
+                  <span className={`autopilot-dot ${isAutoPilot ? 'dot-active' : ''}`}></span>
+                  <span className="autopilot-text">
+                    Auto Loop: <strong style={{ color: isAutoPilot ? '#22c55e' : '#ef4444', textTransform: 'uppercase', marginLeft: '4px' }}>{isAutoPilot ? 'ON' : 'OFF'}</strong>
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  className={`autopilot-toggle-btn ${isModelAutoPilot ? 'autopilot-active' : ''}`}
+                  onClick={toggleModelAutoPilot}
+                  title={isModelAutoPilot ? "Click to Turn OFF Model Auto Loop" : "Click to Turn ON Model Auto Loop"}
+                  id="gen-model-autopilot-btn"
+                  style={{ borderColor: isModelAutoPilot ? '#ec4899' : 'rgba(236, 72, 153, 0.3)' }}
+                >
+                  <span className={`autopilot-dot ${isModelAutoPilot ? 'dot-active' : ''}`} style={{ background: isModelAutoPilot ? '#ec4899' : '#ef4444' }}></span>
+                  <span className="autopilot-text">
+                    Model Loop: <strong style={{ color: isModelAutoPilot ? '#ec4899' : '#ef4444', textTransform: 'uppercase', marginLeft: '4px' }}>{isModelAutoPilot ? 'ON' : 'OFF'}</strong>
+                  </span>
+                </button>
+              </>
             )}
             {result ? (
               <div className="console-post-actions">

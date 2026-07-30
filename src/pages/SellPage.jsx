@@ -174,10 +174,14 @@ export default function SellPage() {
         }
       }
 
+      const isModelAutoPilotActive = localStorage.getItem('promptbyniti_model_autopilot_loop') === 'true';
+      const isAutoPilotActive = localStorage.getItem('promptbyniti_autopilot_loop') === 'true' || isModelAutoPilotActive;
+
       // If all 11 Cloudflare accounts failed or limit reached, auto turn OFF button
       if (finalImages.every(img => !img || !img.trim())) {
         console.error('🛑 All Cloudflare image accounts exhausted or limit reached!');
         localStorage.setItem('promptbyniti_autopilot_loop', 'false');
+        localStorage.setItem('promptbyniti_model_autopilot_loop', 'false');
         alert('🛑 Auto-Pilot Turned OFF: All 11 Cloudflare accounts have reached their daily image limits!');
         setLoading(false);
         setGeneratingIdx(null);
@@ -191,18 +195,27 @@ export default function SellPage() {
       setSamples(updatedSamples);
 
       // 2. Auto-Publish to MongoDB Store
-      const templateContent = promptData.template || promptData.promptTemplate || promptData.prompt || prompt || name;
+      const rawTemplate = promptData.template || promptData.promptTemplate || promptData.prompt || prompt || name || '';
+      const templateContent = rawTemplate.replace(/\s*\+\s*/g, ', ').replace(/\s{2,}/g, ' ').trim();
+      
+      let cleanDesc = (promptData.description || description || '').replace(/\s*\+\s*/g, ', ').replace(/\s{2,}/g, ' ').trim();
+      if (cleanDesc.toLowerCase().includes('professional ai prompt blueprint for') || cleanDesc.includes('+') || cleanDesc.includes('[') || cleanDesc.length < 25) {
+        const topic = (promptData.name || promptData.title || name || 'photorealistic model').replace(/[^\w\s]/gi, '').trim();
+        cleanDesc = `A professional photorealistic AI prompt blueprint for generating high quality ${topic}. Optimized for Midjourney v6 and Flux.1.`;
+      }
+
       const payload = {
-        name: promptData.name || promptData.title || name,
-        description: promptData.description || description,
+        name: (promptData.name || promptData.title || name || '').replace(/\s*\+\s*/g, ' ').replace(/\s{2,}/g, ' ').trim(),
+        description: cleanDesc,
+        category: isModelAutoPilotActive ? 'model' : (promptData.category || category || 'image'),
         template: templateContent,
         prompt: templateContent,
-        negativePrompt: promptData.negativePrompt || negativePrompt || '',
-        instructions: promptData.instructions || instructions || '',
+        negativePrompt: promptData.negativePrompt || negativePrompt || 'plastic skin, AI glow, airbrushed, CGI, 3D render, smooth doll skin, fake skin texture',
+        instructions: promptData.instructions || instructions || 'Paste into Midjourney v6 or Flux.1. Adjust [variables] to customize.',
         generateType: promptData.generateType || promptData.promptType || mediaType || 'image',
         model: promptData.model || selectedModel || 'flux-1',
         priceTokens: 4,
-        tags: promptData.keywords || tags || [],
+        tags: isModelAutoPilotActive ? [...(promptData.keywords || tags || []), 'model', 'photorealistic'] : (promptData.keywords || tags || []),
         samples: updatedSamples,
         thumbnail: finalImages[0] || (updatedSamples.find(s => s.output)?.output || '')
       };
@@ -228,9 +241,8 @@ export default function SellPage() {
         if (refetchMarketplace) {
           refetchMarketplace();
         }
-        const isAutoPilotActive = localStorage.getItem('promptbyniti_autopilot_loop') === 'true';
         setTimeout(() => {
-          if (localStorage.getItem('promptbyniti_autopilot_loop') === 'true') {
+          if (localStorage.getItem('promptbyniti_autopilot_loop') === 'true' || localStorage.getItem('promptbyniti_model_autopilot_loop') === 'true') {
             console.log('🤖 [Auto-Pilot] Published successfully! Auto-returning to /generate to continue infinite loop...');
             navigate('/generate', { state: { clearAndLoop: true, loopTime: Date.now() } });
           } else {
@@ -239,10 +251,9 @@ export default function SellPage() {
         }, 1200);
       } else {
         console.error('❌ Auto-publish failed:', pubData.message);
-        const isAutoPilotActive = localStorage.getItem('promptbyniti_autopilot_loop') === 'true';
-        if (isAutoPilotActive) {
+        if (localStorage.getItem('promptbyniti_autopilot_loop') === 'true' || localStorage.getItem('promptbyniti_model_autopilot_loop') === 'true') {
           setTimeout(() => {
-            if (localStorage.getItem('promptbyniti_autopilot_loop') === 'true') {
+            if (localStorage.getItem('promptbyniti_autopilot_loop') === 'true' || localStorage.getItem('promptbyniti_model_autopilot_loop') === 'true') {
               navigate('/generate', { state: { clearAndLoop: true, loopTime: Date.now() } });
             }
           }, 3000);
@@ -252,10 +263,9 @@ export default function SellPage() {
       }
     } catch (err) {
       console.error('❌ Error in auto-generate & publish pipeline:', err);
-      const isAutoPilotActive = localStorage.getItem('promptbyniti_autopilot_loop') === 'true';
-      if (isAutoPilotActive) {
+      if (localStorage.getItem('promptbyniti_autopilot_loop') === 'true' || localStorage.getItem('promptbyniti_model_autopilot_loop') === 'true') {
         setTimeout(() => {
-          if (localStorage.getItem('promptbyniti_autopilot_loop') === 'true') {
+          if (localStorage.getItem('promptbyniti_autopilot_loop') === 'true' || localStorage.getItem('promptbyniti_model_autopilot_loop') === 'true') {
             navigate('/generate', { state: { clearAndLoop: true, loopTime: Date.now() } });
           }
         }, 3000);

@@ -25,6 +25,7 @@ import HelpPage from './pages/HelpPage';
 import LoungePage from './pages/LoungePage';
 import GuidePage from './pages/GuidePage';
 import ContactPage from './pages/ContactPage';
+import ModelPage from './pages/ModelPage';
 
 import './App.css';
 
@@ -100,6 +101,7 @@ function App() {
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/prompt/:id" element={<PromptDetailPage />} />
           <Route path="/lounge" element={<LoungePage />} />
+          <Route path="/model" element={<ModelPage />} />
 
           {/* User Account & Admin Protected Routes */}
           <Route path="/sell" element={<ProtectedRoute><SellPage /></ProtectedRoute>} />

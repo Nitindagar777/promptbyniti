@@ -458,28 +458,32 @@ export function AppProvider({ children }) {
       if (token) {
         try {
           const [bRes, sRes] = await Promise.all([
-            fetch(`${API_BASE}/buyer/stats`, { headers: { 'Authorization': `Bearer ${token}` } }),
-            fetch(`${API_BASE}/seller/stats`, { headers: { 'Authorization': `Bearer ${token}` } })
+            fetch(`${API_BASE}/buyer/stats`, { headers: { 'Authorization': `Bearer ${token}` } }).catch(() => null),
+            fetch(`${API_BASE}/seller/stats`, { headers: { 'Authorization': `Bearer ${token}` } }).catch(() => null)
           ]);
           
           let preloadPayload = {};
 
-          if (bRes.ok) {
-            const bData = await bRes.json();
-            preloadPayload.library = bData.stats?.library || [];
-            preloadPayload.buyerStats = bData.stats;
+          if (bRes && bRes.ok) {
+            const bData = await bRes.json().catch(() => null);
+            if (bData && bData.stats) {
+              preloadPayload.library = bData.stats?.library || [];
+              preloadPayload.buyerStats = bData.stats;
+            }
           }
 
-          if (sRes.ok) {
-            const sData = await sRes.json();
-            preloadPayload.sellerStats = sData.stats;
+          if (sRes && sRes.ok) {
+            const sData = await sRes.json().catch(() => null);
+            if (sData && sData.stats) {
+              preloadPayload.sellerStats = sData.stats;
+            }
           }
 
           if (Object.keys(preloadPayload).length > 0) {
             dispatch({ type: actions.PRELOAD_DATA, payload: preloadPayload });
           }
         } catch (err) {
-          console.warn('Authenticated data preload failed:', err);
+          // Silent catch for network hiccups
         }
       }
     };
@@ -499,40 +503,40 @@ export function AppProvider({ children }) {
         try {
           // Fetch all critical admin data in parallel for speed
           const [sRes, setRes, pRes, uRes, tRes, wRes] = await Promise.all([
-            fetch(`${API_BASE}/admin/stats`, { headers: { 'Authorization': `Bearer ${token}` } }),
-            fetch(`${API_BASE}/admin/settings`, { headers: { 'Authorization': `Bearer ${token}` } }),
-            fetch(`${API_BASE}/admin/prompts`, { headers: { 'Authorization': `Bearer ${token}` } }),
-            fetch(`${API_BASE}/admin/users`, { headers: { 'Authorization': `Bearer ${token}` } }),
-            fetch(`${API_BASE}/admin/transactions`, { headers: { 'Authorization': `Bearer ${token}` } }),
-            fetch(`${API_BASE}/admin/withdrawals`, { headers: { 'Authorization': `Bearer ${token}` } })
+            fetch(`${API_BASE}/admin/stats`, { headers: { 'Authorization': `Bearer ${token}` } }).catch(() => null),
+            fetch(`${API_BASE}/admin/settings`, { headers: { 'Authorization': `Bearer ${token}` } }).catch(() => null),
+            fetch(`${API_BASE}/admin/prompts`, { headers: { 'Authorization': `Bearer ${token}` } }).catch(() => null),
+            fetch(`${API_BASE}/admin/users`, { headers: { 'Authorization': `Bearer ${token}` } }).catch(() => null),
+            fetch(`${API_BASE}/admin/transactions`, { headers: { 'Authorization': `Bearer ${token}` } }).catch(() => null),
+            fetch(`${API_BASE}/admin/withdrawals`, { headers: { 'Authorization': `Bearer ${token}` } }).catch(() => null)
           ]);
 
-          if (sRes.ok) {
-            const sData = await sRes.json();
-            dispatch({ type: actions.PRELOAD_DATA, payload: { adminStats: sData.stats } });
+          if (sRes && sRes.ok) {
+            const sData = await sRes.json().catch(() => null);
+            if (sData) dispatch({ type: actions.PRELOAD_DATA, payload: { adminStats: sData.stats } });
           }
-          if (setRes.ok) {
-            const setData = await setRes.json();
-            dispatch({ type: actions.PRELOAD_DATA, payload: { adminSettings: setData.settings } });
+          if (setRes && setRes.ok) {
+            const setData = await setRes.json().catch(() => null);
+            if (setData) dispatch({ type: actions.PRELOAD_DATA, payload: { adminSettings: setData.settings } });
           }
-          if (pRes.ok) {
-            const pData = await pRes.json();
-            dispatch({ type: actions.PRELOAD_DATA, payload: { adminPrompts: pData.prompts || [] } });
+          if (pRes && pRes.ok) {
+            const pData = await pRes.json().catch(() => null);
+            if (pData) dispatch({ type: actions.PRELOAD_DATA, payload: { adminPrompts: pData.prompts || [] } });
           }
-          if (uRes.ok) {
-            const uData = await uRes.json();
-            dispatch({ type: actions.PRELOAD_DATA, payload: { adminUsers: uData.users || [] } });
+          if (uRes && uRes.ok) {
+            const uData = await uRes.json().catch(() => null);
+            if (uData) dispatch({ type: actions.PRELOAD_DATA, payload: { adminUsers: uData.users || [] } });
           }
-          if (tRes.ok) {
-            const tData = await tRes.json();
-            dispatch({ type: actions.PRELOAD_DATA, payload: { adminTransactions: tData.transactions || tData.data || [] } });
+          if (tRes && tRes.ok) {
+            const tData = await tRes.json().catch(() => null);
+            if (tData) dispatch({ type: actions.PRELOAD_DATA, payload: { adminTransactions: tData.transactions || tData.data || [] } });
           }
-          if (wRes.ok) {
-            const wData = await wRes.json();
-            dispatch({ type: actions.PRELOAD_DATA, payload: { adminWithdrawals: wData.withdrawals || wData.data || [] } });
+          if (wRes && wRes.ok) {
+            const wData = await wRes.json().catch(() => null);
+            if (wData) dispatch({ type: actions.PRELOAD_DATA, payload: { adminWithdrawals: wData.withdrawals || wData.data || [] } });
           }
         } catch (err) {
-          console.warn('Admin background preload failed:', err);
+          // Silent catch for network hiccups
         }
       }
     };

@@ -1,7 +1,7 @@
 /* Navbar Component — Premium Human Design */
 import { Link, useLocation } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { Zap, User, Menu, X, FlaskConical, Bell, ShoppingBag, Sparkles, AlertCircle, DollarSign, MessageSquare, Send, Users, Bot, Smile } from 'lucide-react';
+import { Zap, User, Menu, X, FlaskConical, Bell, ShoppingBag, Sparkles, AlertCircle, DollarSign, MessageSquare, Send, Users, Bot, Smile, Video, Crown } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import './Navbar.css';
 
@@ -49,6 +49,7 @@ export default function Navbar() {
   // Chat Mascot & Lounge State
   const [chatNotificationsCount, setChatNotificationsCount] = useState(0);
   const [isMascotHovered, setIsMascotHovered] = useState(false);
+  const [modelSectionVisible, setModelSectionVisible] = useState(true);
 
 
 
@@ -227,12 +228,16 @@ export default function Navbar() {
       const res = await fetch('/api/lounge/unread-count', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
+      if (!res.ok) return;
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) return;
+      
       const data = await res.json();
-      if (data.success) {
-        setChatNotificationsCount(data.count);
+      if (data && data.success) {
+        setChatNotificationsCount(data.count || 0);
       }
     } catch (err) {
-      console.error('Error fetching unread count:', err);
+      // Silent catch for network hiccups
     }
   };
 
@@ -246,6 +251,23 @@ export default function Navbar() {
     return () => clearInterval(interval);
   }, [state?.user, location.pathname]);
 
+  // Fetch model section visibility from public settings
+  useEffect(() => {
+    const fetchModelVisibility = async () => {
+      try {
+        const res = await fetch('/api/settings/public');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            setModelSectionVisible(data.modelSectionVisible ?? true);
+          }
+        }
+      } catch (err) {
+        // Silent — default to visible
+      }
+    };
+    fetchModelVisibility();
+  }, []);
 
   const isActive = (path) => location.pathname === path;
 
@@ -278,6 +300,14 @@ export default function Navbar() {
           <li>
             <Link to="/templates" className={`navbar__link ${isActive('/templates') ? 'navbar__link--active' : ''}`}>Store</Link>
           </li>
+          {(modelSectionVisible || isAdmin) && (
+            <li>
+              <Link to="/model" className={`navbar__link navbar__link--model ${isActive('/model') ? 'navbar__link--active' : ''}`}>
+                <Crown size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '3px' }} />
+                Model
+              </Link>
+            </li>
+          )}
           <li>
             <Link to="/pricing" className={`navbar__link ${isActive('/pricing') ? 'navbar__link--active' : ''}`}>Pricing</Link>
           </li>
@@ -477,6 +507,14 @@ export default function Navbar() {
           <li>
             <Link to="/templates" className={`mobile-drawer__link ${isActive('/templates') ? 'mobile-drawer__link--active' : ''}`} onClick={() => setMobileMenuOpen(false)}>Store</Link>
           </li>
+          {(modelSectionVisible || isAdmin) && (
+            <li>
+              <Link to="/model" className={`mobile-drawer__link ${isActive('/model') ? 'mobile-drawer__link--active' : ''}`} onClick={() => setMobileMenuOpen(false)}>
+                <Crown size={14} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />
+                Model
+              </Link>
+            </li>
+          )}
           {state?.user && (
             <li>
               <Link to="/pricing" className={`mobile-drawer__link ${isActive('/pricing') ? 'mobile-drawer__link--active' : ''}`} onClick={() => setMobileMenuOpen(false)}>Pricing</Link>

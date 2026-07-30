@@ -14,6 +14,8 @@ const SystemSettingsSchema = new mongoose.Schema({
       { text: "Title should be descriptive and catchy.", example: "Instead of 'Car', use 'Hyper-realistic Cyberpunk Supercar'." }
     ]
   },
+  modelSectionVisible: { type: Boolean, default: true },
+  modelAutoLoop: { type: Boolean, default: false },
   updatedAt: { type: Date, default: Date.now }
 });
 

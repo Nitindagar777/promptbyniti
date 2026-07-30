@@ -120,10 +120,18 @@ export default function TemplatesPage() {
       const catLabelLower = catObj ? catObj.label.toLowerCase() : '';
       const cleanCatTerm = catLower.replace(/-/g, ' ');
 
-      // Category match (All / Default / None matches EVERYTHING)
+      const promptCatLower = (t.category || '').toLowerCase().trim();
+      const isModelCat = promptCatLower === 'model' || promptCatLower === 'models';
+
+      // Model category prompts belong strictly on /model page and Model section — exclude from general store
+      if (catLower !== 'model' && catLower !== 'models' && isModelCat) {
+        return false;
+      }
+
+      // Category match (All / Default / None matches EVERYTHING except model prompts)
       const matchesCat = isAllCategory ||
-        (t.category || '').toLowerCase() === catLower ||
-        (catLabelLower && (t.category || '').toLowerCase() === catLabelLower) ||
+        promptCatLower === catLower ||
+        (catLabelLower && promptCatLower === catLabelLower) ||
         (t.generateType || '').toLowerCase() === catLower ||
         (Array.isArray(t.keywords) && t.keywords.some(k => k && (k.toLowerCase().includes(catLower) || k.toLowerCase().replace(/ /g, '-').includes(catLower) || (catLabelLower && k.toLowerCase().includes(catLabelLower))))) ||
         (typeof t.keywords === 'string' && (t.keywords.toLowerCase().includes(catLower) || (catLabelLower && t.keywords.toLowerCase().includes(catLabelLower)))) ||

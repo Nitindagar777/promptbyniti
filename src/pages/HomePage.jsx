@@ -4,7 +4,7 @@ import { useApp } from '../context/AppContext';
 import { generatePrompt } from '../data/promptEngine';
 import { randomDescriptions } from '../data/promptData';
 import PromptOutput from '../components/PromptOutput';
-import { ArrowRight, Sparkles, Zap, Image, Layers, Heart, Wand2, Rocket, Star, Palette, MessageSquare, ShieldCheck, Zap as ZapIcon, ShoppingBag, Coins, DollarSign, Eye, Camera, Lock, Check, Repeat, Video, Info, Copy, ChevronDown, Code, FileText, Bot, Clock, RotateCw, ZoomIn, Activity, Film, Package, Send, Mail, Globe, Loader2 } from 'lucide-react';
+import { ArrowRight, Sparkles, Zap, Image, Layers, Heart, Wand2, Rocket, Star, Palette, MessageSquare, ShieldCheck, Zap as ZapIcon, ShoppingBag, Coins, DollarSign, Eye, Camera, Lock, Check, Repeat, Video, Info, Copy, ChevronDown, Code, FileText, Bot, Clock, RotateCw, ZoomIn, Activity, Film, Package, Send, Mail, Globe, Loader2, Crown } from 'lucide-react';
 import PreviewModal from '../components/PreviewModal';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -61,7 +61,7 @@ const renderStars = (rating) => {
 const getStoreCardSamples = (tmpl) => {
   const list = [];
   const samples = tmpl.samples || [];
-  
+
   samples.forEach(s => {
     const src = s.output || s;
     if (src && typeof src === 'string') {
@@ -71,7 +71,7 @@ const getStoreCardSamples = (tmpl) => {
 
   if (list.length === 0) {
     list.push(tmpl.thumbnail || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=300&auto=format&fit=crop&q=80');
-    
+
     const name = (tmpl.name || '').toLowerCase();
     if (name.includes('cyberpunk') || name.includes('metropolis')) {
       list.push(
@@ -105,11 +105,11 @@ const getStoreCardSamples = (tmpl) => {
       );
     }
   }
-  
+
   while (list.length < 4) {
     list.push(tmpl.thumbnail || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=300&auto=format&fit=crop&q=80');
   }
-  
+
   return list.slice(0, 4);
 };
 
@@ -117,6 +117,9 @@ export default function HomePage() {
   const { state, dispatch, canGenerate, useCredit, addPrompt, cache, setCachedData, setScroll, getScroll, refetchMarketplace } = useApp();
   const location = useLocation();
   const [prompts, setPrompts] = useState(state.marketplace || []);
+  const [modelSectionVisible, setModelSectionVisible] = useState(true);
+  const ADMIN_EMAIL = 'nitindagar0800@gmail.com';
+  const isAdmin = state?.user?.email?.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim() || state?.user?.role === 'admin' || state?.user?.isAdmin;
 
   // Sync prompts whenever state.marketplace is updated or preloaded
   useEffect(() => {
@@ -124,6 +127,22 @@ export default function HomePage() {
       setPrompts(state.marketplace);
     }
   }, [state.marketplace]);
+
+  // Fetch model section visibility from public settings
+  useEffect(() => {
+    const fetchModelVisibility = async () => {
+      try {
+        const res = await fetch('/api/settings/public');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            setModelSectionVisible(data.modelSectionVisible ?? true);
+          }
+        }
+      } catch (err) { }
+    };
+    fetchModelVisibility();
+  }, []);
 
   // Always fetch fresh data on mount, but never block rendering
   useEffect(() => {
@@ -176,7 +195,11 @@ export default function HomePage() {
 
   const storeFeedItems = useMemo(() => {
     const list = (state.marketplace && state.marketplace.length > 0) ? state.marketplace : prompts;
-    const sorted = [...list].sort((a, b) => {
+    const nonModelList = list.filter(t => {
+      const cat = (t.category || '').toLowerCase().trim();
+      return cat !== 'model' && cat !== 'models';
+    });
+    const sorted = [...nonModelList].sort((a, b) => {
       const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
       const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
       return dateB - dateA;
@@ -186,6 +209,32 @@ export default function HomePage() {
       const sampleSrc = typeof firstSample === 'object' ? (firstSample?.output || firstSample?.url || firstSample?.image) : firstSample;
       return {
         keyId: `home-store-${tmpl._id || tmpl.id || idx}`,
+        prompt: tmpl,
+        sampleIndex: 0,
+        mediaSrc: tmpl.thumbnail || sampleSrc || '',
+        isTextOnly: false
+      };
+    });
+  }, [state.marketplace, prompts]);
+
+  // Build model-specific feed items for the Model Prompt section (4x4 = 16 items max)
+  const modelFeedItems = useMemo(() => {
+    const list = (state.marketplace && state.marketplace.length > 0) ? state.marketplace : prompts;
+    // Strictly filter for prompts explicitly assigned under the model category
+    const modelPrompts = list.filter(t => {
+      const cat = (t.category || '').toLowerCase().trim();
+      return cat === 'model' || cat === 'models';
+    });
+    const sorted = [...modelPrompts].sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return dateB - dateA;
+    });
+    return sorted.slice(0, 16).map((tmpl, idx) => {
+      const firstSample = tmpl.samples?.[0];
+      const sampleSrc = typeof firstSample === 'object' ? (firstSample?.output || firstSample?.url || firstSample?.image) : firstSample;
+      return {
+        keyId: `home-model-${tmpl._id || tmpl.id || idx}`,
         prompt: tmpl,
         sampleIndex: 0,
         mediaSrc: tmpl.thumbnail || sampleSrc || '',
@@ -487,15 +536,20 @@ export default function HomePage() {
       const timeout = setTimeout(() => controller.abort(), 15000); // 15s timeout
       const res = await fetch(`${API_URL}/prompts`, { signal: controller.signal });
       clearTimeout(timeout);
+
+      if (!res.ok) return;
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) return;
+
       const data = await res.json();
-      if (data.success && Array.isArray(data.prompts)) {
+      if (data && data.success && Array.isArray(data.prompts)) {
         const sliced = data.prompts.slice(0, 8);
         setPrompts(sliced);
         dispatch({ type: 'PRELOAD_DATA', payload: { marketplace: data.prompts } });
       }
     } catch (err) {
       if (err.name !== 'AbortError') {
-        console.error('Failed to fetch home prompts:', err);
+        console.warn('Network notice fetching home prompts:', err.message);
       }
     }
   };
@@ -605,6 +659,34 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* MODEL PROMPT SECTION (before Premium Store) */}
+      {(modelSectionVisible || isAdmin) && modelFeedItems.length > 0 && (
+        <section className="p-model-section" id="model-section">
+          <div className="container">
+            <div className="p-model-header reveal">
+              <div className="p-model-header__info">
+                <span className="p-model-header__subtitle">
+                  <Crown size={14} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+                  Model Prompt
+                </span>
+                <h2 className="h-display" style={{ marginTop: 0 }}>Premium <span className="text-pink">Model</span> Prompts</h2>
+              </div>
+              <Link to="/model" className="btn btn-secondary" style={{ color: '#ffffff' }}>
+                View All Models <Crown size={18} style={{ marginLeft: '8px', color: '#ffffff' }} />
+              </Link>
+            </div>
+
+            <MasonryGrid
+              columns={4}
+              items={modelFeedItems}
+              renderItem={(item, i) => (
+                <PinterestCard key={item.keyId} item={item} index={i} />
+              )}
+            />
+          </div>
+        </section>
+      )}
 
       {/* PREMIUM STORE SECTION */}
       <section className="p-store-section" id="store-section">

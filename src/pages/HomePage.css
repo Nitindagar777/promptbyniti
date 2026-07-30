@@ -3379,6 +3379,102 @@
 }
 
 /* =============================================
+   MODEL PROMPT SECTION (Pink Theme, before Store)
+   ============================================= */
+
+.p-model-section {
+  background: var(--bg-primary);
+  border-top: 1px solid rgba(236, 72, 153, 0.1);
+  border-bottom: 1px solid rgba(236, 72, 153, 0.1);
+  padding: 80px 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.p-model-section::before {
+  content: '';
+  position: absolute;
+  top: -10%;
+  left: 15%;
+  width: 400px;
+  height: 400px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(236, 72, 153, 0.08), transparent 70%);
+  pointer-events: none;
+}
+
+.p-model-section::after {
+  content: '';
+  position: absolute;
+  bottom: -10%;
+  right: 10%;
+  width: 350px;
+  height: 350px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(244, 114, 182, 0.06), transparent 70%);
+  pointer-events: none;
+}
+
+.p-model-section .container {
+  position: relative;
+  z-index: 1;
+}
+
+.p-model-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 36px;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.p-model-header__info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.p-model-header__subtitle {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #ec4899;
+  display: flex;
+  align-items: center;
+}
+
+.text-pink {
+  background: linear-gradient(135deg, #ec4899, #f472b6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+@media (max-width: 768px) {
+  .p-model-section {
+    padding: 50px 0;
+  }
+  
+  .p-model-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .p-model-header__info {
+    text-align: left;
+  }
+}
+
+@media (max-width: 480px) {
+  .p-model-section {
+    padding: 40px 0;
+  }
+}
+
+/* =============================================
    PREMIUM PORTFOLIO STORE SECTION (4x4 Grid)
    ============================================= */
 
@@ -3642,4 +3738,9 @@
   .p-store-section {
     padding: 60px 0;
   }
+}
+
+.p-model-section .btn-secondary,
+.p-model-section .btn-secondary * {
+  color: #ffffff !important;
 }
