@@ -23,8 +23,8 @@
     }
   ],
   "rewrites": [
-    { "source": "/ads.txt", "destination": "/ads.txt" },
-    { "source": "/Ads.txt", "destination": "/ads.txt" },
+    { "source": "/ads.txt", "destination": "/Ads.txt" },
+    { "source": "/Ads.txt", "destination": "/Ads.txt" },
     { "source": "/robots.txt", "destination": "/robots.txt" },
     { "source": "/sitemap.xml", "destination": "/sitemap.xml" },
     { "source": "/(.*)", "destination": "/index.html" }
