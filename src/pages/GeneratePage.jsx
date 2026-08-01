@@ -350,22 +350,22 @@ export default function GeneratePage() {
     if (localStorage.getItem('promptbyniti_model_autopilot_loop') !== 'true') return;
 
     // 1. Clean Page / Reset state
-    setForm({ description: '', characterImage: null, promptType: 'image', model: 'gemini-image', aspectRatio: '1:1' });
+    setForm({ description: '', characterImage: null, promptType: 'image', model: 'gemini-image', aspectRatio: '1:1', category: 'models' });
     setResult(null);
     setExampleTemplate('');
     setCustomModel('');
     setShowCustomInput(false);
     setSaveMessage('');
     setCharacterMode('sameScene');
-    setActiveCategory(null);
+    setActiveCategory('models');
     setSelectedSubcategory(null);
     sessionStorage.removeItem(SESSION_KEY);
 
-    // 2. Use Model Surprise Prompt (from modelPromptData)
+    // 2. Use Model Surprise Prompt (from modelPromptData) to send surprise text to Groq
     const randomModelPrompt = generateModelSurprise();
-    setForm(prev => ({ ...prev, description: randomModelPrompt }));
+    setForm(prev => ({ ...prev, description: randomModelPrompt, category: 'models' }));
 
-    // 3. Click Generate Button automatically
+    // 3. Click Generate Button automatically (forcePack = true for complete bold model pack)
     if (autoLoopTimerRef.current) clearTimeout(autoLoopTimerRef.current);
     autoLoopTimerRef.current = setTimeout(() => {
       if (localStorage.getItem('promptbyniti_model_autopilot_loop') === 'true') {
@@ -479,16 +479,7 @@ export default function GeneratePage() {
       }
       addPrompt(promptResult);
 
-      // Auto-open post page for Admin or Auto-Pilot IMMEDIATELY with pre-filled generated prompt data and auto-publish pipeline
-      if (isUserAdmin) {
-        setIsGenerating(false);
-        setIsPackGenerating(false);
-        sessionStorage.removeItem('isGenerating');
-        navigate('/sell', { state: { promptData: promptResult, autoPublishPack: true } });
-        return;
-      }
-
-      // Smoothly scroll down to the generated prompt output for non-admin users
+      // Smoothly scroll down to the generated prompt output so user can inspect and click "Post to Store"
       setTimeout(() => {
         const outputElement = document.getElementById('prompt-output');
         if (outputElement) {
@@ -497,20 +488,7 @@ export default function GeneratePage() {
       }, 150);
     } catch (error) {
       console.error('Generation Error:', error);
-      const isModelLoop = localStorage.getItem('promptbyniti_model_autopilot_loop') === 'true';
-      const isNormalLoop = localStorage.getItem('promptbyniti_autopilot_loop') === 'true';
-      if (isModelLoop || isNormalLoop) {
-        console.warn('🤖 [Auto-Pilot] Retrying prompt generation silently in 2s...');
-        setTimeout(() => {
-          if (localStorage.getItem('promptbyniti_model_autopilot_loop') === 'true') {
-            triggerModelAutoPilotStep();
-          } else if (localStorage.getItem('promptbyniti_autopilot_loop') === 'true') {
-            triggerAutoPilotStep();
-          }
-        }, 2000);
-      } else {
-        console.warn('Generation Notice:', error.message);
-      }
+      console.warn('Generation Notice:', error.message);
     } finally {
       setIsGenerating(false);
       setIsPackGenerating(false);
@@ -1193,7 +1171,17 @@ export default function GeneratePage() {
               </>
             )}
             {result ? (
-              <div className="console-post-actions">
+              <div className="console-post-actions" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                <button
+                  className="btn btn-lg console-post-btn console-post-btn--sell"
+                  style={{ background: 'linear-gradient(135deg, #ec4899, #db2777)', color: '#fff', fontWeight: 'bold', border: 'none', gap: '8px', display: 'flex', alignItems: 'center', boxShadow: '0 4px 15px rgba(236, 72, 153, 0.3)' }}
+                  onClick={() => navigate('/sell', { state: { promptData: result } })}
+                  id="gen-post-store-btn"
+                >
+                  <ShoppingBag size={18} />
+                  <span>Post to Store</span>
+                </button>
+
                 {generatorMode !== 'example' && !isGuest && (
                   <button
                     className="btn btn-lg console-post-btn console-post-btn--save"
@@ -1256,13 +1244,14 @@ export default function GeneratePage() {
                 onClick={handleGenerate}
                 disabled={isGenerating}
                 id="gen-submit-btn"
+                style={activeCategory === 'models' || form.category === 'models' ? { background: 'linear-gradient(135deg, #ec4899, #db2777)', boxShadow: '0 4px 20px rgba(236, 72, 153, 0.4)' } : {}}
               >
                 {isGenerating ? (
-                  <><RefreshCw size={18} className="gen-spin" /> Crafting...</>
+                  <><RefreshCw size={18} className="gen-spin" /> Crafting Model Prompt...</>
                 ) : (
                   <>
                     <Sparkles size={18} />
-                    <span>Generate {isAdmin ? 'Complete Pack' : (generatorMode === 'example' ? 'Examples' : 'Prompt')}</span>
+                    <span>{activeCategory === 'models' || form.category === 'models' ? '👑 Generate Model Prompt' : (isAdmin ? 'Complete Pack' : (generatorMode === 'example' ? 'Examples' : 'Prompt'))}</span>
                     {state.plan !== 'unlimited' && (
                       <span style={{ fontSize: '0.8rem', opacity: 0.7, marginLeft: '8px' }}>
                         {` (-${aiPower === 'power' ? 5 : aiPower === 'super' ? 3 : 1} credit${(aiPower === 'power' || aiPower === 'super') ? 's' : ''})`}

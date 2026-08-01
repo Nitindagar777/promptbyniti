@@ -125,32 +125,15 @@ export default function SellPage() {
 
   const autoGenerateAndPublish = async (sampleInputs, promptData) => {
     try {
-      setLoading(true);
+      // Do NOT block form render with loading = true so page is immediately visible
+      setLoading(false);
       setGeneratingIdx('all');
 
-      // 1. Call Cloudflare Workers AI for 4 images
-      const imgRes = await fetch('/api/generate/batch-ai-images', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('promptbyniti_token')}`
-        },
-        body: JSON.stringify({
-          prompts: sampleInputs,
-          model: '@cf/black-forest-labs/flux-1-schnell'
-        })
-      });
+      console.log('🚀 [Admin Auto-Pipeline] Generating 4 FLUX images in parallel...');
 
-      const imgData = await imgRes.json().catch(() => ({}));
-      let finalImages = ['', '', '', ''];
-      if (imgData.success && Array.isArray(imgData.images)) {
-        finalImages = imgData.images;
-      }
-
-      // Fallback single retries for any missing images in batch
-      for (let i = 0; i < 4; i++) {
-        if (!finalImages[i] || !finalImages[i].trim()) {
-          console.warn(`⚠️ Batch image #${i + 1} empty, retrying single image generation...`);
+      // 1. Generate 4 images simultaneously in parallel for lightning speed (1-3 seconds)
+      const finalImages = await Promise.all(
+        sampleInputs.map(async (inputStr, i) => {
           try {
             const singleRes = await fetch('/api/generate/ai-image', {
               method: 'POST',
@@ -159,34 +142,26 @@ export default function SellPage() {
                 'Authorization': `Bearer ${localStorage.getItem('promptbyniti_token')}`
               },
               body: JSON.stringify({
-                prompt: sampleInputs[i] || promptData.mainPrompt || name,
+                prompt: inputStr || promptData.mainPrompt || 'photograph of a real girl',
                 model: '@cf/black-forest-labs/flux-1-schnell'
               })
             });
             const singleData = await singleRes.json().catch(() => ({}));
             if (singleData.success && singleData.imageUrl) {
-              finalImages[i] = singleData.imageUrl;
-              console.log(`✅ Recovered image #${i + 1} via single failover call!`);
+              console.log(`✅ Parallel FLUX Image #${i + 1} generated!`);
+              return singleData.imageUrl;
             }
           } catch (err) {
-            console.error(`Failed single recovery for image #${i + 1}:`, err);
+            console.warn(`Parallel gen error for #${i + 1}:`, err.message);
           }
-        }
-      }
+          // Pollinations FLUX fallback with exact user prompt
+          const fallbackP = inputStr || promptData.mainPrompt || 'raw photo candid photograph of a real girl';
+          return `https://image.pollinations.ai/prompt/${encodeURIComponent(fallbackP)}?width=768&height=768&nologo=true&model=flux`;
+        })
+      );
 
       const isModelAutoPilotActive = localStorage.getItem('promptbyniti_model_autopilot_loop') === 'true';
       const isAutoPilotActive = localStorage.getItem('promptbyniti_autopilot_loop') === 'true' || isModelAutoPilotActive;
-
-      // If all 11 Cloudflare accounts failed or limit reached, auto turn OFF button
-      if (finalImages.every(img => !img || !img.trim())) {
-        console.error('🛑 All Cloudflare image accounts exhausted or limit reached!');
-        localStorage.setItem('promptbyniti_autopilot_loop', 'false');
-        localStorage.setItem('promptbyniti_model_autopilot_loop', 'false');
-        alert('🛑 Auto-Pilot Turned OFF: All 11 Cloudflare accounts have reached their daily image limits!');
-        setLoading(false);
-        setGeneratingIdx(null);
-        return;
-      }
 
       const updatedSamples = sampleInputs.map((inputStr, i) => ({
         input: inputStr,
@@ -197,7 +172,7 @@ export default function SellPage() {
       // 2. Auto-Publish to MongoDB Store
       const rawTemplate = promptData.template || promptData.promptTemplate || promptData.prompt || prompt || name || '';
       const templateContent = rawTemplate.replace(/\s*\+\s*/g, ', ').replace(/\s{2,}/g, ' ').trim();
-      
+
       let cleanDesc = (promptData.description || description || '').replace(/\s*\+\s*/g, ', ').replace(/\s{2,}/g, ' ').trim();
       if (cleanDesc.toLowerCase().includes('professional ai prompt blueprint for') || cleanDesc.includes('+') || cleanDesc.includes('[') || cleanDesc.length < 25) {
         const topic = (promptData.name || promptData.title || name || 'photorealistic model').replace(/[^\w\s]/gi, '').trim();
@@ -232,7 +207,7 @@ export default function SellPage() {
         body: JSON.stringify(payload)
       });
 
-      const pubData = await publishRes.json();
+      const pubData = await publishRes.json().catch(() => ({}));
       if (publishRes.ok) {
         console.log('✅ [Admin Auto-Pipeline] Prompt pack published successfully!');
         if (pubData.prompt && addMarketplacePrompt) {
@@ -248,17 +223,15 @@ export default function SellPage() {
           } else {
             navigate('/templates');
           }
-        }, 1200);
+        }, 1000);
       } else {
-        console.error('❌ Auto-publish failed:', pubData.message);
+        console.error('❌ Auto-publish notice:', pubData.message || 'Check authentication/fields.');
         if (localStorage.getItem('promptbyniti_autopilot_loop') === 'true' || localStorage.getItem('promptbyniti_model_autopilot_loop') === 'true') {
           setTimeout(() => {
             if (localStorage.getItem('promptbyniti_autopilot_loop') === 'true' || localStorage.getItem('promptbyniti_model_autopilot_loop') === 'true') {
               navigate('/generate', { state: { clearAndLoop: true, loopTime: Date.now() } });
             }
-          }, 3000);
-        } else {
-          alert(pubData.message || 'Auto-publish failed. Please review fields and click Post Prompt.');
+          }, 2000);
         }
       }
     } catch (err) {
@@ -268,7 +241,7 @@ export default function SellPage() {
           if (localStorage.getItem('promptbyniti_autopilot_loop') === 'true' || localStorage.getItem('promptbyniti_model_autopilot_loop') === 'true') {
             navigate('/generate', { state: { clearAndLoop: true, loopTime: Date.now() } });
           }
-        }, 3000);
+        }, 2000);
       }
     } finally {
       setLoading(false);

@@ -134,17 +134,28 @@ router.get('/prompts/:id', isAdmin, async (req, res) => {
 
 const promptRoutes = require('./prompts');
 
-// UPDATE Prompt Status
+// UPDATE Prompt Status, Category, or Model Flag
 router.patch('/prompts/:id', isAdmin, async (req, res) => {
   try {
-    const { status, rejectionReason } = req.body;
-    if (!['approved', 'rejected', 'pending'].includes(status)) {
-      return res.status(400).json({ success: false, message: 'Invalid status' });
+    const { status, rejectionReason, category, isModel } = req.body;
+    const updateData = {};
+
+    if (status) {
+      if (!['approved', 'rejected', 'pending'].includes(status)) {
+        return res.status(400).json({ success: false, message: 'Invalid status' });
+      }
+      updateData.status = status;
+      if (status === 'rejected' && rejectionReason) {
+        updateData.rejectionReason = rejectionReason;
+      }
     }
 
-    const updateData = { status };
-    if (status === 'rejected' && rejectionReason) {
-      updateData.rejectionReason = rejectionReason;
+    if (category !== undefined) {
+      updateData.category = category;
+    }
+
+    if (isModel !== undefined) {
+      updateData.category = isModel ? 'models' : (category || 'general');
     }
 
     const prompt = await Prompt.findByIdAndUpdate(req.params.id, updateData, { new: true });
@@ -246,13 +257,15 @@ router.get('/settings', isAdmin, async (req, res) => {
 // UPDATE System Settings
 router.post('/settings', isAdmin, async (req, res) => {
   try {
-    const { geminiApiKey, paidGeminiApiKey, geminiModel, promptCreationRules, modelSectionVisible, modelAutoLoop } = req.body;
+    const { geminiApiKey, paidGeminiApiKey, geminiModel, groqApiKeys, pollinationsApiKey, promptCreationRules, modelSectionVisible, modelAutoLoop } = req.body;
     let settings = await SystemSettings.findOne();
     if (!settings) settings = new SystemSettings();
     
     if (geminiApiKey !== undefined) settings.geminiApiKey = geminiApiKey;
     if (paidGeminiApiKey !== undefined) settings.paidGeminiApiKey = paidGeminiApiKey;
     if (geminiModel !== undefined) settings.geminiModel = geminiModel;
+    if (groqApiKeys !== undefined) settings.groqApiKeys = Array.isArray(groqApiKeys) ? groqApiKeys : [];
+    if (pollinationsApiKey !== undefined) settings.pollinationsApiKey = pollinationsApiKey;
     if (modelSectionVisible !== undefined) settings.modelSectionVisible = modelSectionVisible;
     if (modelAutoLoop !== undefined) settings.modelAutoLoop = modelAutoLoop;
     if (promptCreationRules !== undefined) {

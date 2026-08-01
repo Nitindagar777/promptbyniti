@@ -4,6 +4,8 @@ const SystemSettingsSchema = new mongoose.Schema({
   geminiApiKey: { type: String, default: '' },
   paidGeminiApiKey: { type: String, default: '' },
   geminiModel: { type: String, default: 'gemini-flash-latest' },
+  groqApiKeys: { type: Array, default: [] },
+  pollinationsApiKey: { type: String, default: 'sk_zPn6GkASBeODhJeJoE6QF1s2lCwz2al4' },
   promptCreationRules: {
     type: Array,
     default: [

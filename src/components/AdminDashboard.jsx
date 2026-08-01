@@ -280,6 +280,29 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleToggleModelPrompt = async (id, isModelChecked) => {
+    try {
+      const token = await ensureAdminToken();
+      const newCategory = isModelChecked ? 'models' : 'general';
+      const response = await fetch(`/api/admin/prompts/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ category: newCategory, isModel: isModelChecked })
+      });
+      const json = await response.json();
+      if (json.success) {
+        setData(prev => prev.map(item => item._id === id ? { ...item, category: newCategory, isModel: isModelChecked } : item));
+      } else {
+        alert(json.message || 'Failed to update prompt category');
+      }
+    } catch (err) {
+      console.error('Error toggling model prompt:', err);
+    }
+  };
+
   const handleDeletePrompt = (id) => {
     setDeleteConfirmModal({ show: true, id });
   };
@@ -551,7 +574,33 @@ const AdminDashboard = () => {
                       {prompt.status}
                     </span>
                   </td>
-                  <td className="actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <td className="actions" style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <label 
+                      style={{ 
+                        display: 'inline-flex', 
+                        alignItems: 'center', 
+                        gap: '6px', 
+                        padding: '6px 10px', 
+                        borderRadius: '6px', 
+                        background: ((prompt.category || '').toLowerCase().includes('model') || prompt.isModel) ? 'rgba(236, 72, 153, 0.2)' : 'rgba(255, 255, 255, 0.06)', 
+                        border: ((prompt.category || '').toLowerCase().includes('model') || prompt.isModel) ? '1px solid #ec4899' : '1px solid rgba(255, 255, 255, 0.15)', 
+                        color: ((prompt.category || '').toLowerCase().includes('model') || prompt.isModel) ? '#ec4899' : 'var(--text-secondary, #9ca3af)', 
+                        fontWeight: 'bold', 
+                        fontSize: '0.8rem', 
+                        cursor: 'pointer',
+                        userSelect: 'none',
+                        transition: 'all 0.2s ease'
+                      }}
+                      title="Check to toggle prompt in Model Page & Model Section"
+                    >
+                      <input 
+                        type="checkbox" 
+                        checked={(prompt.category || '').toLowerCase().includes('model') || prompt.isModel === true} 
+                        onChange={(e) => handleToggleModelPrompt(prompt._id, e.target.checked)}
+                        style={{ accentColor: '#ec4899', width: '15px', height: '15px', cursor: 'pointer' }}
+                      />
+                      <span>👑 Model</span>
+                    </label>
                     <button className="view-btn" onClick={() => handleViewPromptDetails(prompt)}>View Details</button>
                     <button className="approve-btn" style={{ background: 'var(--color-cyan, #06b6d4)', color: '#000', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }} onClick={() => navigate(`/sell?edit=${prompt._id}`)}>Edit</button>
                     {prompt.status !== 'rejected' && (
@@ -613,114 +662,77 @@ const AdminDashboard = () => {
     <div className="admin-settings-container card">
       <div className="settings-header-box">
         <Zap size={24} className="text-cyan" />
-        <h2>API Configurations</h2>
+        <h2>API Configurations (Groq 'grow' LLM & Pollinations AI)</h2>
       </div>
-      <p className="text-secondary mb-6">Manage external AI service keys and parameters.</p>
+      <p className="text-secondary mb-6">Manage Groq LLM keys rotation pool and Pollinations AI image generation key.</p>
 
-      <div className="admin-field">
-        <label>Free Gemini API Key</label>
-        <div style={{ display: 'flex', gap: '10px', position: 'relative' }}>
-          <div style={{ position: 'relative', flex: 1 }}>
-            <input 
-              type={showApiKey ? "text" : "password"} 
-              className="admin-input" 
-              placeholder="Enter your Free Gemini API key..." 
-              value={systemSettings.geminiApiKey || ''}
-              onChange={(e) => setSystemSettings({...systemSettings, geminiApiKey: e.target.value})}
-              style={{ width: '100%', paddingRight: '45px' }}
-            />
-            <button 
-              type="button"
-              onClick={() => setShowApiKey(!showApiKey)}
-              style={{
-                position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
-                background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer'
-              }}
-              title={showApiKey ? "Hide Key" : "Show Key"}
-            >
-              {showApiKey ? '👁️' : '🔒'}
-            </button>
-          </div>
-          <button 
-            className="approve-btn" 
-            onClick={() => handleUpdateSettings({ geminiApiKey: systemSettings.geminiApiKey })}
-            disabled={settingsLoading}
-          >
-            {settingsLoading ? 'Saving...' : 'Save Free Key'}
-          </button>
-        </div>
-        {systemSettings.geminiApiKey && !showApiKey && (
-          <p className="text-xs mt-2" style={{ color: 'var(--color-cyan)', opacity: 0.8 }}>
-            Current Key: {systemSettings.geminiApiKey.substring(0, 6)}...{systemSettings.geminiApiKey.slice(-4)}
-          </p>
-        )}
-        <p className="text-xs text-muted mt-2">This is the primary key used for generation. Try to use a free tier key here.</p>
-      </div>
+      {/* Groq 5-Account Key Pool */}
+      <div className="admin-field" style={{ padding: '20px', background: 'rgba(6, 182, 212, 0.05)', borderRadius: '12px', border: '1px solid rgba(6, 182, 212, 0.2)' }}>
+        <h3 style={{ fontSize: '1.1rem', color: 'var(--color-cyan)', marginBottom: '12px' }}>
+          🚀 Groq ('grow') LLM 5-Account Rotation Pool
+        </h3>
+        <p className="text-xs text-muted mb-4">
+          All model prompt generation uses Groq LLM with automatic 5-account failover when rate limits are reached.
+        </p>
 
-      <div className="admin-field" style={{ marginTop: '20px' }}>
-        <label>Paid Gemini API Key (Failover)</label>
-        <div style={{ display: 'flex', gap: '10px', position: 'relative' }}>
-          <div style={{ position: 'relative', flex: 1 }}>
-            <input 
-              type={showApiKey ? "text" : "password"} 
-              className="admin-input" 
-              placeholder="Enter your Paid Gemini API key (optional)..." 
-              value={systemSettings.paidGeminiApiKey || ''}
-              onChange={(e) => setSystemSettings({...systemSettings, paidGeminiApiKey: e.target.value})}
-              style={{ width: '100%', paddingRight: '45px', borderColor: 'rgba(239, 68, 68, 0.3)' }}
-            />
-            <button 
-              type="button"
-              onClick={() => setShowApiKey(!showApiKey)}
-              style={{
-                position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
-                background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer'
-              }}
-              title={showApiKey ? "Hide Key" : "Show Key"}
-            >
-              {showApiKey ? '👁️' : '🔒'}
-            </button>
-          </div>
-          <button 
-            className="approve-btn" 
-            style={{ background: 'linear-gradient(135deg, #f97316, #ef4444)' }}
-            onClick={() => handleUpdateSettings({ paidGeminiApiKey: systemSettings.paidGeminiApiKey })}
-            disabled={settingsLoading}
-          >
-            {settingsLoading ? 'Saving...' : 'Save Paid Key'}
-          </button>
-        </div>
-        {systemSettings.paidGeminiApiKey && !showApiKey && (
-          <p className="text-xs mt-2" style={{ color: '#ef4444', opacity: 0.8 }}>
-            Current Key: {systemSettings.paidGeminiApiKey.substring(0, 6)}...{systemSettings.paidGeminiApiKey.slice(-4)}
-          </p>
-        )}
-        <p className="text-xs text-muted mt-2">This key is ONLY used if the free key hits a rate limit or quota exhaustion. It ensures users never see a failure.</p>
+        {[0, 1, 2, 3, 4].map(idx => {
+          const currentKeys = Array.isArray(systemSettings.groqApiKeys) ? systemSettings.groqApiKeys : [];
+          const keyVal = currentKeys[idx] || '';
+          return (
+            <div key={idx} style={{ marginBottom: '12px' }}>
+              <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+                Groq Account #{idx + 1} API Key
+              </label>
+              <input 
+                type={showApiKey ? "text" : "password"} 
+                className="admin-input" 
+                placeholder={`gsk_... (Account #${idx + 1})`} 
+                value={keyVal}
+                onChange={(e) => {
+                  const updatedArr = [...currentKeys];
+                  updatedArr[idx] = e.target.value;
+                  setSystemSettings({...systemSettings, groqApiKeys: updatedArr});
+                }}
+                style={{ width: '100%' }}
+              />
+            </div>
+          );
+        })}
+
+        <button 
+          className="approve-btn" 
+          style={{ marginTop: '10px' }}
+          onClick={() => handleUpdateSettings({ groqApiKeys: systemSettings.groqApiKeys })}
+          disabled={settingsLoading}
+        >
+          {settingsLoading ? 'Saving...' : 'Save All 5 Groq API Keys'}
+        </button>
       </div>
 
-      <div className="admin-field" style={{ marginTop: '20px' }}>
-        <label>Gemini Model</label>
+      {/* Pollinations AI Key */}
+      <div className="admin-field" style={{ marginTop: '20px', padding: '20px', background: 'rgba(34, 197, 94, 0.05)', borderRadius: '12px', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
+        <h3 style={{ fontSize: '1.1rem', color: '#22c55e', marginBottom: '12px' }}>
+          🎨 Pollinations AI Image Generation Key
+        </h3>
         <div style={{ display: 'flex', gap: '10px' }}>
-          <select 
+          <input 
+            type={showApiKey ? "text" : "password"} 
             className="admin-input" 
-            value={systemSettings.geminiModel || 'gemini-3.5-flash'}
-            onChange={(e) => setSystemSettings({...systemSettings, geminiModel: e.target.value})}
+            placeholder="sk_zPn6GkASBeODhJeJoE6QF1s2lCwz2al4" 
+            value={systemSettings.pollinationsApiKey || ''}
+            onChange={(e) => setSystemSettings({...systemSettings, pollinationsApiKey: e.target.value})}
             style={{ flex: 1 }}
-          >
-            <option value="gemini-3.5-flash">Gemini 3.5 Flash (High/Flagship)</option>
-            <option value="gemini-2.5-flash">Gemini 2.5 Flash (High/Advanced)</option>
-            <option value="gemini-2.0-flash">Gemini 2.0 Flash (Standard)</option>
-            <option value="gemini-flash-latest">Gemini Flash Latest (Auto-update)</option>
-          </select>
+          />
           <button 
             className="approve-btn" 
-            onClick={() => handleUpdateSettings({ geminiModel: systemSettings.geminiModel })}
+            style={{ background: '#22c55e' }}
+            onClick={() => handleUpdateSettings({ pollinationsApiKey: systemSettings.pollinationsApiKey })}
             disabled={settingsLoading}
           >
-            Update Model
+            Save Pollinations Key
           </button>
         </div>
-        <p className="text-xs text-muted mt-2">Switching models can improve prompt quality or reduce costs. "Latest" always points to the newest stable version.</p>
+        <p className="text-xs text-muted mt-2">Used as the primary engine for high-quality FLUX model image generation.</p>
       </div>
 
       <div className="admin-field" style={{ marginTop: '24px', padding: '20px', background: 'rgba(236, 72, 153, 0.05)', borderRadius: '12px', border: '1px solid rgba(236, 72, 153, 0.2)' }}>
@@ -1003,7 +1015,7 @@ const AdminDashboard = () => {
             style={{ background: '#ec4899', padding: '8px 16px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 'bold' }}
             onClick={() => navigate('/generate')}
           >
-            + Generate Model Prompt
+            👑 Model
           </button>
         </div>
 
@@ -1052,7 +1064,33 @@ const AdminDashboard = () => {
                         {prompt.status || 'approved'}
                       </span>
                     </td>
-                    <td className="actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <td className="actions" style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                      <label 
+                        style={{ 
+                          display: 'inline-flex', 
+                          alignItems: 'center', 
+                          gap: '6px', 
+                          padding: '6px 10px', 
+                          borderRadius: '6px', 
+                          background: ((prompt.category || '').toLowerCase().includes('model') || prompt.isModel) ? 'rgba(236, 72, 153, 0.2)' : 'rgba(255, 255, 255, 0.06)', 
+                          border: ((prompt.category || '').toLowerCase().includes('model') || prompt.isModel) ? '1px solid #ec4899' : '1px solid rgba(255, 255, 255, 0.15)', 
+                          color: ((prompt.category || '').toLowerCase().includes('model') || prompt.isModel) ? '#ec4899' : 'var(--text-secondary, #9ca3af)', 
+                          fontWeight: 'bold', 
+                          fontSize: '0.8rem', 
+                          cursor: 'pointer',
+                          userSelect: 'none',
+                          transition: 'all 0.2s ease'
+                        }}
+                        title="Check to toggle prompt in Model Page & Model Section"
+                      >
+                        <input 
+                          type="checkbox" 
+                          checked={(prompt.category || '').toLowerCase().includes('model') || prompt.isModel === true} 
+                          onChange={(e) => handleToggleModelPrompt(prompt._id, e.target.checked)}
+                          style={{ accentColor: '#ec4899', width: '15px', height: '15px', cursor: 'pointer' }}
+                        />
+                        <span>👑 Model</span>
+                      </label>
                       <button className="view-btn" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={() => handleViewPromptDetails(prompt)}>View</button>
                       <button className="approve-btn" style={{ background: 'var(--color-cyan, #06b6d4)', color: '#000', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.8rem' }} onClick={() => navigate(`/sell?edit=${prompt._id}`)}>Edit</button>
                       {prompt.status !== 'rejected' && (

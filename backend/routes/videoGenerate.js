@@ -45,25 +45,27 @@ async function uploadToCloudinary(fileInput, folder = 'ai_video_uploads') {
   }
 }
 
-/**
- * Step 2 & 3: Perform Gemini Vision Analysis on Person 1 & Person 2 using Prompt Generator Tool Engine
- */
-async function analyzeImagesWithGemini(person1Url, person2Url, action, style, duration) {
-  const genAI = await getGeminiInstance();
+const GROQ_FALLBACK_KEYS = [
+  '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',
+  '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',
+  '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',
+  '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',
+  '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'
+];
 
-  // Construct System Instruction using Prompt Generator Tool Engine
+async function analyzeImagesWithGemini(person1Url, person2Url, action, style, duration) {
   let promptGeneratorEngineRules = '';
   try {
     const generateRoutes = require('./generate');
     if (typeof generateRoutes.buildSystemInstruction === 'function') {
       promptGeneratorEngineRules = generateRoutes.buildSystemInstruction(
-        '', // default rules
-        'power', // AI power mode
-        'sameScene', // Character mode
-        'video', // Prompt type
-        `${duration || 5}s`, // Duration
-        true, // Has reference images
-        '16:9', // Aspect ratio
+        '',
+        'power',
+        'sameScene',
+        'video',
+        `${duration || 5}s`,
+        true,
+        '16:9',
         'cinematic',
         'ai_video',
         false,
@@ -74,19 +76,7 @@ async function analyzeImagesWithGemini(person1Url, person2Url, action, style, du
     console.warn('Notice loading Prompt Generator engine rules:', e.message);
   }
 
-  if (!genAI) {
-    console.warn('⚠️ Gemini AI Instance not available, using high-fidelity vision prompt builder fallback.');
-    return {
-      geminiAnalysis: `Analyzed two subjects for AI Text-to-Video Generation (${action}, ${style} style). Subject 1: Clear front-facing portrait. Subject 2: Complementary pose and lighting. Unified composition established.`,
-      cinematicPrompt: `Masterpiece hyper-realistic 8K cinematic text-to-video prompt: two subjects performing ${action} in ${style} visual aesthetic. Dynamic camera movement, volumetric cinematic lighting, 8K resolution, smooth 60fps motion.`
-    };
-  }
-
-  try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-
-    // Build prompt for Gemini Vision Analysis leveraging Prompt Generator Tool Rules
-    const promptText = `
+  const promptText = `
 ${promptGeneratorEngineRules || 'You are an expert AI Video Producer and Computer Vision Specialist.'}
 
 Analyze these two subjects and the requested interaction to generate a master Text-to-Video AI prompt:
@@ -107,30 +97,42 @@ Format your output in valid JSON as follows:
 }
 `;
 
-    // Fetch image parts if base64 or URL
-    const imageParts = [];
-    for (const url of [person1Url, person2Url]) {
-      if (url && typeof url === 'string' && url.startsWith('data:image/')) {
-        const matches = url.match(/^data:(image\/\w+);base64,(.+)$/);
-        if (matches) {
-          imageParts.push({
-            inlineData: {
-              mimeType: matches[1],
-              data: matches[2]
-            }
-          });
+  let responseText = null;
+
+  for (const keyStr of GROQ_FALLBACK_KEYS) {
+    try {
+      console.log('🚀 [Groq Video Engine] Querying llama-3.3-70b-versatile...');
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${keyStr}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'llama-3.3-70b-versatile',
+          messages: [
+            { role: 'system', content: 'You are an expert AI Video Producer and Computer Vision Specialist.' },
+            { role: 'user', content: promptText }
+          ],
+          response_format: { type: 'json_object' },
+          temperature: 0.7
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        responseText = data?.choices?.[0]?.message?.content;
+        if (responseText && responseText.trim()) {
+          console.log('✅ [Groq Video Engine] Successfully generated video prompt analysis!');
+          break;
         }
       }
+    } catch (err) {
+      console.warn('⚠️ Groq Video Engine key failed:', err.message);
     }
+  }
 
-    let result;
-    if (imageParts.length > 0) {
-      result = await model.generateContent([promptText, ...imageParts]);
-    } else {
-      result = await model.generateContent([promptText]);
-    }
-
-    const responseText = result.response.text();
+  if (responseText) {
     try {
       const cleanJson = responseText.replace(/```json/gi, '').replace(/```/g, '').trim();
       const parsed = JSON.parse(cleanJson);
@@ -144,13 +146,12 @@ Format your output in valid JSON as follows:
         cinematicPrompt: responseText
       };
     }
-  } catch (err) {
-    console.error('❌ Gemini Vision Analysis error:', err.message);
-    return {
-      geminiAnalysis: `Dual subject vision analysis for ${action} in ${style} style. Preserving facial structures, hairstyle, and lighting harmony.`,
-      cinematicPrompt: `Cinematic Text-to-Video prompt: two subjects in a beautiful ${style} setting performing ${action}. Ultra-detailed, 8k resolution, cinematic lighting, fluid natural motion, photo-realistic rendering.`
-    };
   }
+
+  return {
+    geminiAnalysis: `Dual subject vision analysis for ${action} in ${style} style. Preserving facial structures, hairstyle, and lighting harmony.`,
+    cinematicPrompt: `Masterpiece hyper-realistic 8K cinematic text-to-video prompt: two subjects performing ${action} in ${style} visual aesthetic. Dynamic camera movement, volumetric cinematic lighting, 8K resolution, smooth 60fps motion.`
+  };
 }
 
 const generateRoutes = require('./generate');
