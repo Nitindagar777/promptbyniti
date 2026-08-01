@@ -1013,6 +1013,10 @@ export default function PromptDetailPage() {
   const isPremium = template.premium && !state.isPremium;
   const category = (template.category || template.keywords?.[0] || 'Art');
 
+  const catLower = (template.category || '').toLowerCase().trim();
+  const rawModelLower = (template.model || template.config?.model || '').toLowerCase().trim();
+  const isModelPrompt = catLower === 'model' || catLower === 'models' || catLower.includes('model') || template.isModel === true || rawModelLower === 'seedream';
+
   const handleCopy = (text, key) => {
     navigator.clipboard.writeText(text);
     setCopiedStates(prev => ({ ...prev, [key]: true }));
@@ -1576,6 +1580,38 @@ export default function PromptDetailPage() {
                 </div>
               )}
 
+              {/* Model & Free Creation Secret Note (Only for Model Prompts) */}
+              {isModelPrompt && (
+                <div className="p-detail__secret-note" style={{
+                  marginTop: '16px',
+                  padding: '14px 18px',
+                  background: 'linear-gradient(135deg, rgba(236, 72, 153, 0.12), rgba(168, 85, 247, 0.12))',
+                  border: '1px solid rgba(236, 72, 153, 0.35)',
+                  borderRadius: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  boxShadow: '0 4px 15px rgba(236, 72, 153, 0.15)'
+                }}>
+                  <div style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '10px',
+                    background: 'linear-gradient(135deg, #ec4899, #a855f7)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#fff',
+                    flexShrink: 0,
+                    fontSize: '18px'
+                  }}>
+                    🌊
+                  </div>
+                  <p style={{ margin: 0, fontSize: '0.9rem', color: '#f1f5f9', lineHeight: '1.5', fontWeight: '500' }}>
+                    model use <strong style={{ color: '#ec4899' }}>Seedream 3.5 Pro</strong> and i tell you secret how to create that images free after purchased the prompt
+                  </p>
+                </div>
+              )}
 
             </div>
 

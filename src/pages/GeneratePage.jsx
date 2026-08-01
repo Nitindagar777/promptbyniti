@@ -190,13 +190,13 @@ export default function GeneratePage() {
       try {
         const saved = JSON.parse(sessionStorage.getItem(SESSION_KEY) || '{}');
         if (saved.result) setResult(saved.result);
-      } catch (e) {}
+      } catch (e) { }
     } else if (!result && sessionStorage.getItem('isGenerating') !== 'true') {
       // Just a safety check in case we mounted after it finished
       try {
         const saved = JSON.parse(sessionStorage.getItem(SESSION_KEY) || '{}');
         if (saved.result) setResult(saved.result);
-      } catch (e) {}
+      } catch (e) { }
     }
   }, [state.prompts, isGenerating]);
 
@@ -251,10 +251,10 @@ export default function GeneratePage() {
   // Persist everything to sessionStorage
   useEffect(() => {
     try {
-      sessionStorage.setItem(SESSION_KEY, JSON.stringify({ 
-        form, 
-        result, 
-        generatorMode, 
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify({
+        form,
+        result,
+        generatorMode,
         exampleTemplate,
         characterMode,
         activeCategory,
@@ -277,6 +277,11 @@ export default function GeneratePage() {
           autoLoopTimerRef.current = setTimeout(() => {
             triggerAutoPilotStep();
           }, 600);
+        }
+      } else if (location.state.initialMode === 'example') {
+        setGeneratorMode('example');
+        if (location.state.promptTemplate) {
+          setExampleTemplate(location.state.promptTemplate);
         }
       } else if (location.state.isRandom) {
         handleRandomize(location.state.initialInput);
@@ -423,8 +428,8 @@ export default function GeneratePage() {
       const modelEntry = aiModels.find(m => m.id === form.model);
       const modelLabel = modelEntry ? modelEntry.label : (form.model || 'midjourney');
 
-      const duration = form.promptType === 'video' 
-        ? (aiPower === 'power' ? '20s' : aiPower === 'super' ? '10s' : '5s') 
+      const duration = form.promptType === 'video'
+        ? (aiPower === 'power' ? '20s' : aiPower === 'super' ? '10s' : '5s')
         : undefined;
 
       const payload = {
@@ -456,7 +461,7 @@ export default function GeneratePage() {
         throw new Error(errorData.details || errorData.message || 'Failed to generate prompt');
       }
       const promptResult = await response.json();
-      
+
       // Force update sessionStorage immediately to survive unmounts
       try {
         const currentSession = JSON.parse(sessionStorage.getItem(SESSION_KEY) || '{}');
@@ -464,7 +469,7 @@ export default function GeneratePage() {
           ...currentSession,
           result: promptResult
         }));
-      } catch (e) {}
+      } catch (e) { }
 
       setResult(promptResult);
 
@@ -603,49 +608,49 @@ export default function GeneratePage() {
         <div className="ref-mode-preview__image-container">
           {/* Always render videos in DOM for preloading/instant show */}
           <div className={`ref-mode-preview__media-group ${form.promptType === 'video' ? 'ref-mode-preview__media-group--visible' : 'ref-mode-preview__media-group--hidden'}`}>
-            <video 
-              src="/Same_Scene_Video_ref.mp4" 
+            <video
+              src="/Same_Scene_Video_ref.mp4"
               className={`ref-mode-preview__img ${activePreviewMode === 'sameSceneLoop' ? 'ref-mode-preview__img--active' : ''}`}
-              autoPlay 
-              muted 
-              loop 
+              autoPlay
+              muted
+              loop
               playsInline
               preload="auto"
             />
-            <video 
-              src="/Different_Character_Video_ref.mp4" 
+            <video
+              src="/Different_Character_Video_ref.mp4"
               className={`ref-mode-preview__img ${activePreviewMode === 'differentScenes' ? 'ref-mode-preview__img--active' : ''}`}
-              autoPlay 
-              muted 
-              loop 
+              autoPlay
+              muted
+              loop
               playsInline
               preload="auto"
             />
-            <video 
-              src="/Fixed_Character_Motion_Video_ref.mp4" 
+            <video
+              src="/Fixed_Character_Motion_Video_ref.mp4"
               className={`ref-mode-preview__img ${activePreviewMode === 'fixedCharacterMotion' ? 'ref-mode-preview__img--active' : ''}`}
-              autoPlay 
-              muted 
-              loop 
+              autoPlay
+              muted
+              loop
               playsInline
               preload="auto"
             />
           </div>
           {/* Always render images in DOM for preloading/instant show */}
           <div className={`ref-mode-preview__media-group ${form.promptType !== 'video' ? 'ref-mode-preview__media-group--visible' : 'ref-mode-preview__media-group--hidden'}`}>
-            <img 
-              src="/same_scene_ref.png" 
-              alt="Same Scene" 
+            <img
+              src="/same_scene_ref.png"
+              alt="Same Scene"
               className={`ref-mode-preview__img ${activePreviewMode === 'sameScene' ? 'ref-mode-preview__img--active' : ''}`}
             />
-            <img 
-              src="/diff_characters_ref.png" 
-              alt="Different Characters" 
+            <img
+              src="/diff_characters_ref.png"
+              alt="Different Characters"
               className={`ref-mode-preview__img ${activePreviewMode === 'different' ? 'ref-mode-preview__img--active' : ''}`}
             />
-            <img 
-              src="/fixed_character_ref.png" 
-              alt="Fixed Character" 
+            <img
+              src="/fixed_character_ref.png"
+              alt="Fixed Character"
               className={`ref-mode-preview__img ${activePreviewMode === 'fixed' ? 'ref-mode-preview__img--active' : ''}`}
             />
           </div>
@@ -799,9 +804,9 @@ export default function GeneratePage() {
     { value: '', label: 'Choose Subcategory' },
     ...(activeCategory && textCategories[activeCategory]
       ? textCategories[activeCategory].items.map(item => ({
-          value: item.name,
-          label: item.name
-        }))
+        value: item.name,
+        label: item.name
+      }))
       : [])
   ];
 
@@ -844,7 +849,7 @@ export default function GeneratePage() {
 
         {/* Centered Console Layout */}
         <div className="generate-page__console-container">
-          
+
           {/* Main Prompt Console Card */}
           <div className="prompt-console-card">
             {/* TOP ROW: Mode Toggle + Prompt Type Tabs */}
@@ -899,7 +904,7 @@ export default function GeneratePage() {
                   ref={descriptionRef}
                   className="console-textarea"
                   placeholder={
-                    form.promptType === 'text' 
+                    form.promptType === 'text'
                       ? "Describe the role, task, or prompt you want to build... (e.g., A customer support agent that handles refund requests, or a Python script that automates backups)"
                       : form.promptType === 'video'
                         ? "Describe your video scene here... (e.g., A drone shot soaring over a volcanic eruption, realistic motion)"

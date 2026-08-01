@@ -41,8 +41,8 @@ export default function SellPage() {
   const [negativePrompt, setNegativePrompt] = useState('');
   const [instructions, setInstructions] = useState('');
   const [mediaType, setMediaType] = useState('image'); // 'image' | 'video' | 'text'
-  const [selectedModel, setSelectedModel] = useState('flux-1');
-  const [priceTokens, setPriceTokens] = useState(4);
+  const [selectedModel, setSelectedModel] = useState('seedream');
+  const [priceTokens, setPriceTokens] = useState(6);
   const [tags, setTags] = useState([]);
   const [tagInput, setTagInput] = useState('');
 
@@ -60,21 +60,22 @@ export default function SellPage() {
   const [editId, setEditId] = useState(null);
   const [dragOverIdx, setDragOverIdx] = useState(null);
   const [generatingIdx, setGeneratingIdx] = useState(null); // idx of sample generating or 'all'
-  const [cfModelName, setCfModelName] = useState('FLUX.1 Schnell (Cloudflare Workers AI)');
+  const [cfModelName, setCfModelName] = useState('Seedream 3.5 Pro');
 
   // Pre-fill from generator state if navigated from /generate
   useEffect(() => {
     if (location.state?.promptData) {
       const data = location.state.promptData;
+      const isModelPrompt = (data.category || '').toLowerCase().includes('model') || data.isModel === true || data.model === 'seedream';
       if (data.name || data.title) setName(data.name || data.title);
       if (data.description) setDescription(data.description);
       if (data.template || data.promptTemplate) setPrompt(data.template || data.promptTemplate);
       if (data.negativePrompt) setNegativePrompt(data.negativePrompt);
       if (data.instructions) setInstructions(data.instructions);
       if (data.keywords && Array.isArray(data.keywords)) setTags(data.keywords);
-      setPriceTokens(data.priceTokens && Number(data.priceTokens) > 1 ? Number(data.priceTokens) : 4);
+      setPriceTokens(isModelPrompt ? 6 : (data.priceTokens ? Number(data.priceTokens) : 6));
       if (data.generateType || data.promptType) setMediaType(data.generateType || data.promptType);
-      setSelectedModel(data.model && data.model !== 'gemini-image' ? data.model : 'flux-1');
+      setSelectedModel(isModelPrompt ? 'seedream' : (data.model || 'seedream'));
 
       if (data.samples && Array.isArray(data.samples)) {
         const loaded = data.samples.slice(0, 4).map((s, idx) => ({

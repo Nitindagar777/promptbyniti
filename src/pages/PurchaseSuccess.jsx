@@ -73,7 +73,10 @@ const PurchaseSuccess = () => {
   const [alreadyReviewedBefore, setAlreadyReviewedBefore] = useState(false);
   const [isSeller, setIsSeller] = useState(false);
 
-  const modelLabel = prompt ? (aiModels.find(m => m.id === prompt.model)?.label || (prompt.model === 'flux-1' || prompt.model === 'flux' ? 'FLUX.1 Schnell' : prompt.model)) : '';
+  const isModelCat = prompt ? ((prompt.category || '').toLowerCase().includes('model') || prompt.isModel === true || prompt.model === 'seedream') : false;
+  const modelLabel = prompt 
+    ? (isModelCat ? 'Seedream 3.5 Pro' : (aiModels.find(m => m.id === prompt.model)?.label || (prompt.model === 'flux-1' || prompt.model === 'flux' ? 'FLUX.1 Schnell' : (prompt.model === 'seedream' ? 'Seedream 3.5 Pro' : prompt.model))))
+    : '';
 
   const API_BASE = '/api';
 
@@ -313,6 +316,79 @@ const PurchaseSuccess = () => {
                       <div className="metadata-value prompt-box-reveal" style={{ background: 'rgba(0,0,0,0.3)', marginTop: '8px' }}>{prompt.negativePrompt}</div>
                     </div>
                   )}
+                </div>
+              </div>
+            )}
+
+            {/* Step-by-Step Guide: How to Generate Free Image (ONLY FOR MODEL PROMPTS) */}
+            {isModelCat && (
+              <div className="secret-section free-image-guide-section animate-fade-in" style={{
+                background: 'linear-gradient(135deg, rgba(236, 72, 153, 0.08), rgba(168, 85, 247, 0.08))',
+                border: '1px solid rgba(236, 72, 153, 0.35)',
+                borderRadius: '16px',
+                padding: '24px',
+                marginTop: '28px',
+                textAlign: 'left'
+              }}>
+                <h3 style={{
+                  fontSize: '1.25rem',
+                  color: '#ec4899',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  margin: '0 0 16px',
+                  fontFamily: 'var(--font-display)',
+                  fontWeight: 'bold'
+                }}>
+                  <Sparkles size={22} style={{ color: '#ec4899' }} /> How to generate free image
+                </h3>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {/* Step 1 */}
+                  <div style={{ background: 'rgba(0,0,0,0.3)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <div style={{ fontSize: '0.95rem', fontWeight: 'bold', color: '#fff', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ background: '#ec4899', color: '#fff', width: '24px', height: '24px', borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem' }}>1</span>
+                      Step 1: Generate More Sample Prompts
+                    </div>
+                    <p style={{ margin: '0 0 12px', fontSize: '0.88rem', color: '#cbd5e1', lineHeight: '1.5' }}>
+                      Go to our Generator page in <strong>Example Mode</strong> to create more sample variations for this prompt by simply modifying the bracketed variables.
+                    </p>
+                    <button 
+                      type="button"
+                      className="btn btn-sm"
+                      onClick={() => navigate('/generate', { state: { initialMode: 'example', promptTemplate: prompt.template } })}
+                      style={{ background: 'linear-gradient(135deg, #ec4899, #db2777)', color: '#fff', fontWeight: 'bold', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                    >
+                      <Sparkles size={16} /> Open Example Mode Generator ↗
+                    </button>
+                  </div>
+
+                  {/* Step 2 */}
+                  <div style={{ background: 'rgba(0,0,0,0.3)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <div style={{ fontSize: '0.95rem', fontWeight: 'bold', color: '#fff', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ background: '#ec4899', color: '#fff', width: '24px', height: '24px', borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem' }}>2</span>
+                      Step 2: Create a Free Account on Raphael.app
+                    </div>
+                    <p style={{ margin: 0, fontSize: '0.88rem', color: '#cbd5e1', lineHeight: '1.5' }}>
+                      Go to <a href="https://raphael.app/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-cyan, #06b6d4)', textDecoration: 'underline', fontWeight: 'bold' }}>https://raphael.app/</a> and create a free account. You will get <strong>10 to 14 free daily tokens</strong>!
+                    </p>
+                  </div>
+
+                  {/* Step 3 */}
+                  <div style={{ background: 'rgba(0,0,0,0.3)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <div style={{ fontSize: '0.95rem', fontWeight: 'bold', color: '#fff', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ background: '#ec4899', color: '#fff', width: '24px', height: '24px', borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem' }}>3</span>
+                      Step 3: Select Seedream 3.5 Pro & 1K Image Quality
+                    </div>
+                    <p style={{ margin: 0, fontSize: '0.88rem', color: '#cbd5e1', lineHeight: '1.5' }}>
+                      Select the AI model as <strong>Seedream 3.5 Pro</strong>, paste your sample prompt / add reference image of the model, and select <strong>1K image quality</strong>. Taking <strong>2 tokens per image</strong>, you can easily create <strong>5 to 6 images daily per account</strong>! (If you have multiple accounts, you can create even more images daily).
+                    </p>
+                  </div>
+
+                  {/* Step 4 Callout */}
+                  <div style={{ background: 'rgba(236, 72, 153, 0.15)', padding: '14px 18px', borderRadius: '10px', border: '1px solid rgba(236, 72, 153, 0.4)', color: '#fff', fontSize: '0.9rem', fontWeight: 'bold', textAlign: 'center' }}>
+                    🎉 Now purchase more Model prompts and generate free images!
+                  </div>
                 </div>
               </div>
             )}

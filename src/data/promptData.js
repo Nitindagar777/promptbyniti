@@ -621,6 +621,7 @@ export const motionActions = [
 
 export const aiModels = [
   // --- IMAGE MODELS ---
+  { id: 'seedream', label: 'Seedream 3.5 Pro', icon: '🌊', type: 'image' },
   { id: 'gemini-image', label: 'Google Gemini', icon: '♊', type: 'image' },
   { id: 'midjourney', label: 'Midjourney', icon: '🎨', type: 'image' },
   { id: 'stable-diffusion', label: 'Stable Diffusion', icon: '🖥️', type: 'image' },

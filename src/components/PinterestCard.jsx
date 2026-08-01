@@ -29,8 +29,12 @@ const PinterestCardComponent = ({ item, index }) => {
   };
 
   const getModelBadge = () => {
-    const rawModel = (tmpl?.model || tmpl?.aiModel || tmpl?.generateType || 'flux-1').toLowerCase().trim();
-    if (rawModel.includes('gemini') || rawModel.includes('imagen')) return 'Gemini';
+    const cat = (tmpl?.category || '').toLowerCase().trim();
+    const rawModel = (tmpl?.model || tmpl?.aiModel || '').toLowerCase().trim();
+    const isModel = cat === 'model' || cat === 'models' || cat.includes('model') || tmpl?.isModel === true || rawModel === 'seedream';
+
+    if (isModel) return 'SeaDream';
+
     if (rawModel.includes('midjourney')) return 'Midjourney';
     if (rawModel.includes('sora')) return 'Sora';
     if (rawModel.includes('kling')) return 'Kling AI';
@@ -38,7 +42,8 @@ const PinterestCardComponent = ({ item, index }) => {
     if (rawModel.includes('dall')) return 'DALL-E 3';
     if (rawModel.includes('gpt') || rawModel.includes('chatgpt')) return 'ChatGPT';
     if (rawModel.includes('claude')) return 'Claude';
-    return 'Flux';
+
+    return 'Flux/Gemini';
   };
 
   const ar = getAspectRatio();
@@ -310,7 +315,7 @@ const PinterestCardComponent = ({ item, index }) => {
               height: 'auto !important'
             }}
           >
-            Flux/Gemini
+            {getModelBadge()}
           </span>
 
           {/* Small Red Eye Icon Button for Quick Preview & Share */}

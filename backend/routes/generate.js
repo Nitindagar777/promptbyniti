@@ -41,7 +41,7 @@ function limitVariables(promptTemplate, mainPrompt, maxVars = 5) {
 
     if (matches && matches.length === variables.length + 1) {
       let newTemplate = promptTemplate;
-      
+
       for (let i = maxVars; i < variables.length; i++) {
         const value = matches[i + 1];
         newTemplate = newTemplate.replace(variables[i].full, value);
@@ -98,7 +98,7 @@ function markKeyExhausted(rawKey, keyName) {
   if (!rawKey) return;
   EXHAUSTED_KEYS_SET.add(rawKey);
   console.warn(`🛑 Groq Key [${keyName}] quota exhausted/failed. Marking inactive for 1 hour.`);
-  
+
   if (KEY_RESET_TIMERS.has(rawKey)) clearTimeout(KEY_RESET_TIMERS.get(rawKey));
   const timer = setTimeout(() => {
     EXHAUSTED_KEYS_SET.delete(rawKey);
@@ -114,7 +114,7 @@ async function callGroqLLMWithFailover(systemInstruction, userParts, hasRefImage
   const availableKeys = (keysPool || []).filter(k => !EXHAUSTED_KEYS_SET.has(k.rawKey));
   const activeKeysPool = availableKeys.length > 0 ? availableKeys : (keysPool || []);
 
-  const modelsToTry = hasRefImage 
+  const modelsToTry = hasRefImage
     ? [...GROQ_VISION_MODELS, ...GROQ_MODELS]
     : GROQ_MODELS;
 
@@ -316,7 +316,7 @@ function buildSystemInstruction(rulesStr, aiPower, characterMode, promptType, du
   const isVideo = promptType === 'video';
   const isText = promptType === 'text';
   const resolvedAR = aspectRatio ? aspectRatio.trim() : (isVideo ? '16:9' : '1:1');
-  
+
   if (isDirectPromptOnly) {
     return `You are an expert AI Prompt Engineer for a premium prompt marketplace called "Prompt by Niti".
     
@@ -340,15 +340,15 @@ You must return a VALID JSON object with these fields:
 
 Return ONLY the JSON object. No markdown fences, no explanation.`;
   }
-  
+
   // Resolve characterMode dynamically for video/image compatibility
-  const resolvedCharMode = isVideo 
+  const resolvedCharMode = isVideo
     ? (characterMode === 'sameScene' || characterMode === 'sameSceneLoop' ? 'sameSceneLoop' :
-       characterMode === 'different' || characterMode === 'differentScenes' ? 'differentScenes' :
-       'fixedCharacterMotion')
+      characterMode === 'different' || characterMode === 'differentScenes' ? 'differentScenes' :
+        'fixedCharacterMotion')
     : (characterMode === 'sameSceneLoop' ? 'sameScene' :
-       characterMode === 'differentScenes' ? 'different' :
-       characterMode || 'different');
+      characterMode === 'differentScenes' ? 'different' :
+        characterMode || 'different');
 
   let tierGuidelines = '';
   if (isVideo) {
@@ -807,7 +807,7 @@ When a reference image is provided in DIFFERENT CHARACTERS mode, you MUST:
 
     if (catRules && catRules[subTrim]) {
       const rule = catRules[subTrim];
-      
+
       let subcategoryGuidelines = '';
       if (subTrim === 'Personal Development') {
         subcategoryGuidelines = `\nCustom Subcategory Guidelines:
@@ -974,7 +974,7 @@ router.post('/', async (req, res) => {
         const base64Data = characterImage.split(',')[1];
         const mimeMatch = characterImage.match(/^data:(image\/[a-zA-Z+]+);base64,/);
         const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
-        
+
         // Log image info for debugging
         const imageSizeKB = Math.round((base64Data.length * 3) / 4 / 1024);
         console.log(`📸 Reference image: ${mimeType}, ~${imageSizeKB}KB, base64 length: ${base64Data.length}`);
@@ -1018,16 +1018,16 @@ router.post('/', async (req, res) => {
       if (hasRefImage) {
         // Special case: example template customization WITH reference image consistency
         const isVideo = req.body.promptType === 'video';
-        const resolvedCharMode = isVideo 
+        const resolvedCharMode = isVideo
           ? (characterMode === 'sameScene' || characterMode === 'sameSceneLoop' ? 'sameSceneLoop' :
-             characterMode === 'different' || characterMode === 'differentScenes' ? 'differentScenes' :
-             'fixedCharacterMotion')
+            characterMode === 'different' || characterMode === 'differentScenes' ? 'differentScenes' :
+              'fixedCharacterMotion')
           : (characterMode === 'sameSceneLoop' ? 'sameScene' :
-             characterMode === 'differentScenes' ? 'different' :
-             characterMode || 'different');
-             
+            characterMode === 'differentScenes' ? 'different' :
+              characterMode || 'different');
+
         console.log(`📸 Customizing template in example mode with reference image. Character Mode: ${resolvedCharMode}`);
-        
+
         let modeSpecificInstructions = '';
         if (resolvedCharMode === 'sameScene' || resolvedCharMode === 'sameSceneLoop') {
           modeSpecificInstructions = isVideo ? `
@@ -1042,7 +1042,7 @@ When replacing the [BRACKETED] variables in the USER TEMPLATE:
 2. CHANGED VARIABLES (MUST BE COMPLETELY DIFFERENT AND UNIQUE PER SAMPLE):
    - [animation/motion] / [motion_dynamics]: Generate different subtle motion variations (e.g. winking, blowing a kiss, hair swaying).
 3. OVERRIDE Command: Repeat locked variables word-for-word across all 5 samples.`
-          : `
+            : `
 🔒 CHARACTER MODE: SAME SCENE (Everything identical, only pose/expression/camera angle changes)
 The user has uploaded a reference image and selected SAME SCENE mode. This means EVERYTHING from the reference image MUST stay 100% identical.
 
@@ -1078,7 +1078,7 @@ When replacing the [BRACKETED] variables in the USER TEMPLATE:
 2. CHANGED VARIABLES (MUST BE COMPLETELY DIFFERENT AND UNIQUE PER SAMPLE):
    - [camera_movement] / [motion_effect]: Generate different camera moves (e.g. pan, orbit, zoom).
 3. OVERRIDE Command: Repeat locked variables word-for-word across all 5 samples.`
-          : `
+            : `
 🔒 CHARACTER MODE: FIXED CHARACTER (Same character & outfit, different locations & backgrounds)
 The user has uploaded a reference image and selected FIXED CHARACTER mode. This means the character identity and clothing stay identical, but the scene/background changes.
 
@@ -1106,7 +1106,7 @@ When replacing the [BRACKETED] variables in the USER TEMPLATE:
 2. CHANGED VARIABLES (MUST BE COMPLETELY DIFFERENT AND UNIQUE PER SAMPLE):
    - [background_setting] / [location/action] / [camera_movement]: Vary location and camera moves completely per sample.
 3. OVERRIDE Command: Repeat locked variables word-for-word across all 5 samples.`
-          : `
+            : `
 🔄 CHARACTER MODE: DIFFERENT CHARACTERS (Same art style/technique, different characters)
 The user has uploaded a reference image and selected DIFFERENT CHARACTERS mode. This means the art style and visual aesthetic from the reference image stay identical, but the character changes.
 Therefore, when replacing the [BRACKETED] variables in the USER TEMPLATE:
@@ -1163,14 +1163,14 @@ Return the results in the standard JSON format.`
       // When reference image is provided in PROMPT GENERATOR MODE:
       // The Power of AI's role is to generate a beautiful, highly detailed prompt template from scratch based on the uploaded reference image.
       const isVideo = promptType === 'video';
-      const resolvedCharMode = isVideo 
+      const resolvedCharMode = isVideo
         ? (characterMode === 'sameScene' || characterMode === 'sameSceneLoop' ? 'sameSceneLoop' :
-           characterMode === 'different' || characterMode === 'differentScenes' ? 'differentScenes' :
-           'fixedCharacterMotion')
+          characterMode === 'different' || characterMode === 'differentScenes' ? 'differentScenes' :
+            'fixedCharacterMotion')
         : (characterMode === 'sameSceneLoop' ? 'sameScene' :
-           characterMode === 'differentScenes' ? 'different' :
-           characterMode || 'different');
-           
+          characterMode === 'differentScenes' ? 'different' :
+            characterMode || 'different');
+
       console.log(`📸 Generating prompt template from scratch based on uploaded reference image. Character Mode: ${resolvedCharMode}`);
 
       let modeSpecificPromptRules = '';
@@ -1186,7 +1186,7 @@ CRITICAL INSTRUCTIONS FOR TEMPLATE GENERATION:
    The ONLY variables in promptTemplate should be [animation/motion] or [motion_dynamics].
 3. HOW TO GENERATE SAMPLES:
    All samples must feature the EXACT SAME character in the EXACT SAME outfit and scene, and vary ONLY the motion.`
-        : `
+          : `
 🔒 REFERENCE MODE: SAME SCENE (Everything identical, only pose/expression/camera angle changes)
 The user has selected SAME SCENE mode. This means EVERYTHING from the reference image MUST stay 100% identical.
 
@@ -1224,7 +1224,7 @@ CRITICAL INSTRUCTIONS FOR TEMPLATE GENERATION:
    The only variable should be [camera_movement] or [motion_effect].
 3. HOW TO GENERATE SAMPLES:
    Keep character, clothes, and scene completely identical, and vary ONLY the camera motion.`
-        : `
+          : `
 🔒 REFERENCE MODE: FIXED CHARACTER (Same character & outfit, different locations & backgrounds)
 The user has selected FIXED CHARACTER mode. This means the character identity and clothing stay identical, but the scene/background changes.
 
@@ -1254,7 +1254,7 @@ CRITICAL INSTRUCTIONS FOR TEMPLATE GENERATION:
    The variables should be [location/action] and [camera_movement].
 3. HOW TO GENERATE SAMPLES:
    Keep character and style identical, vary location, action, and camera motion per sample.`
-        : `
+          : `
 🔄 REFERENCE MODE: DIFFERENT CHARACTERS (Same art style/technique, different characters)
 The user has selected DIFFERENT CHARACTERS mode. This means the art style and visual aesthetic from the reference image stay identical, but the character changes.
 Therefore, when replacing the [BRACKETED] variables:
@@ -1350,7 +1350,7 @@ DO NOT exceed 5 bracketed variables under any circumstances. Keep the majority o
       // Ensure samples (min 4, max 5)
       if (!Array.isArray(promptData.samples)) promptData.samples = [];
       const requiredCount = isDirectPromptOnly ? 0 : (mode === 'example' ? 5 : 4);
-      
+
       while (promptData.samples.length < requiredCount) {
         promptData.samples.push(promptData.mainPrompt || 'Generate a variation here.');
       }
@@ -1373,7 +1373,7 @@ DO NOT exceed 5 bracketed variables under any circumstances. Keep the majority o
       const cleanVideoPrompt = (s) => {
         if (!s) return '';
         let cleaned = stripLabel(s).trim();
-        
+
         // 1. Remove all square brackets [] to prevent metadata safety blockages, keeping text inside if there's any.
         cleaned = cleaned.replace(/[\[\]]/g, '');
         cleaned = removePlusSigns(cleaned);
@@ -1390,7 +1390,7 @@ DO NOT exceed 5 bracketed variables under any circumstances. Keep the majority o
 
         // 3. Normalize scene timing structures to avoid mathematical hyphens (e.g. 0s-2.5s -> 0 to 2.5 seconds)
         cleaned = cleaned.replace(/scene\s*(\d+)\s*\(\s*(\d+(\.\d+)?)\s*s?\s*-\s*(\d+(\.\d+)?)\s*s?\s*\)/gi, 'Scene $1 ($2 to $4 seconds)');
-        
+
         // Normalize any leftover uppercase SCENE to Scene
         cleaned = cleaned.replace(/\bSCENE\b/g, 'Scene');
 
@@ -1646,7 +1646,7 @@ async function callPollinationsAI(promptText, apiKey, width = 768, height = 768)
   const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&nologo=true&model=flux&key=${key}`;
 
   console.log(`🎨 [Pollinations AI Engine] Generating FLUX image with API Key: "${cleanPrompt.substring(0, 60)}..."`);
-  
+
   try {
     const polRes = await fetch(pollinationsUrl, {
       headers: {
