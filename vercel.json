@@ -2,7 +2,7 @@
   "version": 2,
   "headers": [
     {
-      "source": "/ads.txt",
+      "source": "/(ads|Ads).txt",
       "headers": [
         { "key": "Content-Type", "value": "text/plain; charset=utf-8" },
         { "key": "Access-Control-Allow-Origin", "value": "*" },
@@ -24,6 +24,7 @@
   ],
   "rewrites": [
     { "source": "/ads.txt", "destination": "/ads.txt" },
+    { "source": "/Ads.txt", "destination": "/ads.txt" },
     { "source": "/robots.txt", "destination": "/robots.txt" },
     { "source": "/sitemap.xml", "destination": "/sitemap.xml" },
     { "source": "/(.*)", "destination": "/index.html" }

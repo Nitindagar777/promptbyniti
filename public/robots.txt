@@ -4,6 +4,7 @@
 User-agent: *
 Allow: /
 Allow: /ads.txt
+Allow: /Ads.txt
 Allow: /sitemap.xml
 Allow: /generate
 Allow: /templates

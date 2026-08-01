@@ -103,8 +103,8 @@ app.get('/api/settings/public', async (req, res) => {
   }
 });
 
-// Serve ads.txt directly for AdSense crawler
-app.get('/ads.txt', (req, res) => {
+// Serve ads.txt directly for AdSense crawler (both case variations)
+app.get(['/ads.txt', '/Ads.txt'], (req, res) => {
   res.setHeader('Content-Type', 'text/plain');
   res.status(200).send('google.com, pub-5823437765817669, DIRECT, f08c47fec0942fa0\n');
 });
