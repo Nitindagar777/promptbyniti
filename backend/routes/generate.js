@@ -57,6 +57,124 @@ function limitVariables(promptTemplate, mainPrompt, maxVars = 5) {
   return { promptTemplate, mainPrompt };
 }
 
+/**
+ * Ensures that a sample string (or mainPrompt) contains 100% of the complete text structure
+ * from promptTemplate. If the LLM omitted or truncated any non-variable text from promptTemplate
+ * when creating the sample, this function extracts the variable values and reconstructs the sample
+ * from promptTemplate so NO text is ever missing or cut off.
+ */
+function enforceCompleteSampleFromTemplate(promptTemplate, sampleStr) {
+  if (!promptTemplate || typeof promptTemplate !== 'string') return sampleStr;
+  if (!sampleStr || typeof sampleStr !== 'string') return promptTemplate;
+
+  const cleanTemplate = promptTemplate.trim();
+  const cleanSample = sampleStr.trim();
+
+  // Extract all [bracketed] variables from promptTemplate
+  const varRegex = /\[([^\]]+)\]/g;
+  const vars = [];
+  let match;
+  while ((match = varRegex.exec(cleanTemplate)) !== null) {
+    vars.push({
+      placeholder: match[0],
+      name: match[1],
+      index: match.index
+    });
+  }
+
+  // If promptTemplate has no bracketed variables, check if sample is truncated
+  if (vars.length === 0) {
+    if (cleanSample.length < cleanTemplate.length * 0.85) {
+      return cleanTemplate;
+    }
+    return cleanSample;
+  }
+
+  // Split promptTemplate into fixed text chunks P_0, P_1, ..., P_n
+  const chunks = [];
+  let lastIndex = 0;
+  for (let i = 0; i < vars.length; i++) {
+    chunks.push(cleanTemplate.substring(lastIndex, vars[i].index));
+    lastIndex = vars[i].index + vars[i].placeholder.length;
+  }
+  chunks.push(cleanTemplate.substring(lastIndex));
+
+  // Extract variable values from sampleStr by matching fixed chunks sequentially
+  const extractedValues = {};
+  let currentIdx = 0;
+
+  for (let i = 0; i < vars.length; i++) {
+    const chunkBefore = chunks[i];
+    const chunkAfter = chunks[i + 1];
+    const varName = vars[i].placeholder;
+
+    let startPos = currentIdx;
+    if (chunkBefore.length > 0) {
+      const foundIdx = cleanSample.indexOf(chunkBefore, currentIdx);
+      if (foundIdx !== -1) {
+        startPos = foundIdx + chunkBefore.length;
+      }
+    }
+
+    let endPos = -1;
+    if (chunkAfter.length > 0) {
+      endPos = cleanSample.indexOf(chunkAfter, startPos);
+
+      if (endPos === -1 && chunkAfter.length > 3) {
+        const prefix = chunkAfter.substring(0, Math.min(15, chunkAfter.length)).trim();
+        if (prefix.length > 0) {
+          endPos = cleanSample.indexOf(prefix, startPos);
+        }
+      }
+    }
+
+    if (endPos !== -1 && endPos >= startPos) {
+      const val = cleanSample.substring(startPos, endPos).trim();
+      if (val) {
+        extractedValues[varName] = val;
+      }
+      currentIdx = endPos;
+    } else {
+      const remainingText = cleanSample.substring(startPos).trim();
+      if (remainingText) {
+        const commaIdx = remainingText.indexOf(',');
+        const val = commaIdx !== -1 ? remainingText.substring(0, commaIdx).trim() : remainingText.substring(0, 40).trim();
+        if (val) {
+          extractedValues[varName] = val;
+          currentIdx = startPos + val.length;
+        }
+      }
+    }
+  }
+
+  // Reconstruct sample from promptTemplate using extracted values
+  let reconstructed = cleanTemplate;
+  let hasReplacements = false;
+
+  for (let i = 0; i < vars.length; i++) {
+    const placeholder = vars[i].placeholder;
+    let val = extractedValues[placeholder];
+    if (!val) {
+      val = vars[i].name.replace(/_/g, ' ');
+    }
+    const cleanVal = val.replace(/[\[\]]/g, '').trim();
+    reconstructed = reconstructed.replace(placeholder, cleanVal);
+    hasReplacements = true;
+  }
+
+  // Check if cleanSample is missing trailing text from template
+  const templateEnding = chunks[chunks.length - 1].replace(/\s*--ar\s+\S+/g, '').trim();
+  const sampleEnding = cleanSample.replace(/\s*--ar\s+\S+/g, '').trim();
+  const isMissingText = templateEnding.length > 15 && !sampleEnding.endsWith(templateEnding.substring(Math.max(0, templateEnding.length - 25)));
+
+  if (hasReplacements && (isMissingText || reconstructed.length > cleanSample.length + 10)) {
+    console.log(`✨ Enforced complete text on sample (restored length from ${cleanSample.length} to ${reconstructed.length} chars)`);
+    return reconstructed;
+  }
+
+  return cleanSample;
+}
+
 /* ================================================================
    CACHED MODEL INSTANCE
    - systemInstruction (platform rules) is set ONCE at init time
@@ -795,7 +913,8 @@ When a reference image is provided in DIFFERENT CHARACTERS mode, you MUST:
    - 3 Credits (Super): promptTemplate MUST be at least 500 to 600 characters long (exceptional photographic details and camera settings).
    - 5 Credits (Power): promptTemplate MUST be at least 600 to 700 characters long (masterpiece-level visual details, highly detailed and fully descriptive).
    You MUST write exceptionally detailed, long, and descriptive fixed text around the bracketed variables in promptTemplate to satisfy this length requirement.
-10. Every prompt and sample MUST end with --ar ${resolvedAR}`;
+10. Every prompt and sample MUST end with --ar ${resolvedAR}
+11. CRITICAL COMPLETE TEXT MANDATE: Every sample (Sample A, Sample B, Sample C, Sample D) and mainPrompt MUST retain 100% of the complete text structure of promptTemplate from start to finish. DO NOT drop, omit, or cut off any fixed text, clauses, or camera details present in promptTemplate when generating samples or mainPrompt.`;
     }
   }
 
@@ -1356,6 +1475,16 @@ DO NOT exceed 5 bracketed variables under any circumstances. Keep the majority o
       }
       if (promptData.samples.length > 5) {
         promptData.samples = promptData.samples.slice(0, 5);
+      }
+
+      // Enforce 100% complete text from promptTemplate so no text is ever omitted or cut off in mainPrompt or samples
+      if (promptData.promptTemplate) {
+        if (promptData.mainPrompt) {
+          promptData.mainPrompt = enforceCompleteSampleFromTemplate(promptData.promptTemplate, promptData.mainPrompt);
+        }
+        if (Array.isArray(promptData.samples) && promptData.samples.length > 0) {
+          promptData.samples = promptData.samples.map(s => enforceCompleteSampleFromTemplate(promptData.promptTemplate, s));
+        }
       }
 
       // ── Post-processing: strip labels, plus signs & enforce custom aspect ratio ──

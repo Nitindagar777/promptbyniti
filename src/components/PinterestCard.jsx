@@ -84,26 +84,28 @@ const PinterestCardComponent = ({ item, index }) => {
     const samples = tmpl?.samples || [];
     
     samples.forEach(s => {
-      const src = (typeof s === 'object') ? (s.output || s.url || s.image) : s;
-      if (src && typeof src === 'string' && src.trim() !== '' && !src.includes('gradient')) {
+      const src = (typeof s === 'object' && s !== null) ? (s.output || s.url || s.image || s.src) : s;
+      if (src && typeof src === 'string' && src.trim() !== '' && !src.includes('gradient') && !src.includes('[object Object]')) {
         if (!list.includes(src)) list.push(src);
       }
     });
 
     if (list.length === 0 && tmpl?.sampleOutputs && Array.isArray(tmpl.sampleOutputs)) {
-      tmpl.sampleOutputs.forEach(src => {
-        if (src && typeof src === 'string' && src.trim() !== '' && !src.includes('gradient')) {
+      tmpl.sampleOutputs.forEach(s => {
+        const src = (typeof s === 'object' && s !== null) ? (s.output || s.url || s.image || s.src) : s;
+        if (src && typeof src === 'string' && src.trim() !== '' && !src.includes('gradient') && !src.includes('[object Object]')) {
           if (!list.includes(src)) list.push(src);
         }
       });
     }
 
-    const mainSrc = displaySrc || tmpl?.thumbnail || tmpl?.outputImage;
-    if (mainSrc && typeof mainSrc === 'string' && !mainSrc.includes('gradient')) {
+    const mainSrc = displaySrc || tmpl?.thumbnail || tmpl?.outputImage || tmpl?.image;
+    if (mainSrc && typeof mainSrc === 'string' && !mainSrc.includes('gradient') && !mainSrc.includes('[object Object]')) {
       if (!list.includes(mainSrc)) list.unshift(mainSrc);
     }
 
     while (list.length < 4) {
+      if (list.length === 0) break;
       list.push(list[0] || mainSrc);
     }
 

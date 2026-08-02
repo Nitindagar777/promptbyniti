@@ -5,7 +5,7 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
  * Instant loading with cached image detection and zero layout jump.
  */
 const PromptThumbnailComponent = ({ src, alt, className, style, type, title, objectFit = 'cover', samples }) => {
-  const srcStr = typeof src === 'string' ? src : (src?.output || '');
+  const srcStr = typeof src === 'string' ? src : (src?.output || src?.url || src?.image || src?.src || '');
   const [loaded, setLoaded] = useState(true); // Default to loaded for zero flicker
   const mediaRef = useRef(null);
 

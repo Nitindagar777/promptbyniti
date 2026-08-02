@@ -18,6 +18,20 @@ import './PromptDetailPage.css';
 
 // No fixed height needed — CSS columns masonry lets images dictate card size
 
+const getMediaUrl = (item, fallback = '') => {
+  if (!item) return typeof fallback === 'string' ? fallback : '';
+  if (typeof item === 'string' && item.trim() !== '' && !item.includes('[object Object]')) {
+    return item;
+  }
+  if (typeof item === 'object' && item !== null) {
+    const src = item.output || item.url || item.image || item.src || item.preview || '';
+    if (typeof src === 'string' && src.trim() !== '' && !src.includes('[object Object]')) {
+      return src;
+    }
+  }
+  return typeof fallback === 'string' ? fallback : '';
+};
+
 const getPlatformConfig = (platformId, url = '') => {
   const defaults = {
     instagram: {
@@ -724,8 +738,8 @@ export default function PromptDetailPage() {
 
   const handleDownloadMedia = async () => {
     try {
-      const activeSample = template.samples?.[activeImage];
-      const mediaUrl = template.video || (activeSample?.output || (typeof activeSample === 'string' ? activeSample : '')) || template.thumbnail;
+      const activeSample = template?.samples?.[activeImage];
+      const mediaUrl = template?.video || getMediaUrl(activeSample) || getMediaUrl(template?.thumbnail) || getMediaUrl(template?.image);
       if (!mediaUrl) return;
 
       const response = await fetch(mediaUrl);
@@ -734,7 +748,7 @@ export default function PromptDetailPage() {
       const link = document.createElement('a');
       link.href = blobUrl;
       const extension = mediaUrl.includes('.mp4') ? 'mp4' : 'png';
-      link.download = `${template.title || 'prompt-media'}.${extension}`;
+      link.download = `${template.title || template.name || 'prompt-media'}.${extension}`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -742,8 +756,8 @@ export default function PromptDetailPage() {
     } catch (err) {
       console.error('Failed to download media:', err);
       // Fallback
-      const activeSample = template.samples?.[activeImage];
-      const mediaUrl = template.video || (activeSample?.output || (typeof activeSample === 'string' ? activeSample : '')) || template.thumbnail;
+      const activeSample = template?.samples?.[activeImage];
+      const mediaUrl = template?.video || getMediaUrl(activeSample) || getMediaUrl(template?.thumbnail) || getMediaUrl(template?.image);
       if (mediaUrl) {
         window.open(mediaUrl, '_blank');
       }
@@ -1007,7 +1021,33 @@ export default function PromptDetailPage() {
     </div>
   );
 
-  const isVisual = template.generateType !== 'text' && (template.thumbnail || template.video || template.samples);
+  const validSamples = useMemo(() => {
+    if (!template) return [];
+    const list = [];
+    const rawSamples = Array.isArray(template.samples) ? template.samples : [];
+    
+    rawSamples.forEach(s => {
+      const url = getMediaUrl(s);
+      if (url && !list.includes(url)) list.push(url);
+    });
+
+    const fallbackCover = getMediaUrl(template.thumbnail) || getMediaUrl(template.image) || getMediaUrl(template.video);
+    if (list.length === 0 && fallbackCover) {
+      list.push(fallbackCover);
+    }
+
+    return list;
+  }, [template]);
+
+  const currentMediaUrl = useMemo(() => {
+    if (validSamples.length > 0) {
+      const safeIdx = activeImage >= 0 && activeImage < validSamples.length ? activeImage : 0;
+      return validSamples[safeIdx];
+    }
+    return getMediaUrl(template?.thumbnail) || getMediaUrl(template?.image) || '';
+  }, [validSamples, activeImage, template]);
+
+  const isVisual = template && template.generateType !== 'text' && (getMediaUrl(template.thumbnail) || template.video || validSamples.length > 0);
   const modelId = template.config?.model || template.model;
   const model = aiModels.find(m => m.id === modelId) || aiModels[0];
   const isPremium = template.premium && !state.isPremium;
@@ -1053,9 +1093,9 @@ export default function PromptDetailPage() {
       )}
       <SEOHead
         title={`${template.title || template.name} — ${model.label} Prompt`}
-        description={`${template.description || 'Premium AI prompt'} — Unlock this verified ${model.label} ${category} prompt template on Prompt by Niti. ${template.samples?.length || 3} sample outputs included. Best ${model.label} prompt templates & ideas.`}
+        description={`${template.description || 'Premium AI prompt'} — Unlock this verified ${model.label} ${category} prompt template on Prompt by Niti. ${validSamples.length || 3} sample outputs included. Best ${model.label} prompt templates & ideas.`}
         keywords={`${(template.keywords || []).join(', ')}, ${model.label} prompt, ${model.label} prompt template, AI prompt, ${category} prompt, unlock ${category} prompt, ${category} AI art, prompt template, unlock prompt online, premium AI prompt, ${model.label} examples`}
-        ogImage={template.thumbnail || template.samples?.[0]?.output || template.samples?.[0] || 'https://promptbyniti.in/image1.png'}
+        ogImage={currentMediaUrl || getMediaUrl(template.thumbnail) || 'https://promptbyniti.in/image1.png'}
         ogType="product"
         breadcrumbs={[
           { name: 'Home', url: '/' },
@@ -1067,7 +1107,7 @@ export default function PromptDetailPage() {
           "@type": "Product",
           "name": template.title || template.name,
           "description": template.description || `Premium ${model.label} AI prompt template`,
-          "image": template.thumbnail || template.samples?.[0]?.output || template.samples?.[0] || 'https://promptbyniti.in/image1.png',
+          "image": currentMediaUrl || getMediaUrl(template.thumbnail) || 'https://promptbyniti.in/image1.png',
           "brand": {
             "@type": "Brand",
             "name": "Prompt by Niti"
@@ -1122,12 +1162,12 @@ export default function PromptDetailPage() {
               <div className="visual-display card" style={{ marginBottom: '20px' }}>
                 <div className="visual-main">
                   {/* Left Carousel Arrow */}
-                  {template.samples && template.samples.length > 1 && (
+                  {validSamples.length > 1 && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         e.preventDefault();
-                        setActiveImage(prev => (prev === 0 ? template.samples.length - 1 : prev - 1));
+                        setActiveImage(prev => (prev === 0 ? validSamples.length - 1 : prev - 1));
                       }}
                       className="carousel-arrow carousel-arrow--left"
                       title="Previous Image"
@@ -1138,30 +1178,32 @@ export default function PromptDetailPage() {
 
                   {template.video || template.generateType === 'video' ? (
                     <video
-                      src={template.video || (template.samples?.[activeImage]?.output || template.samples?.[activeImage])}
+                      src={template.video || currentMediaUrl}
                       autoPlay muted loop controls
                       controlsList="nodownload noplaybackrate"
                       disablePictureInPicture
                     />
                   ) : (
                     <img
-                      src={
-                        template.samples
-                          ? (template.samples[activeImage]?.output || template.samples[activeImage])
-                          : template.thumbnail
-                      }
+                      src={currentMediaUrl || getMediaUrl(template.thumbnail)}
                       alt={template.title || template.name}
                       onLoad={handleImageLoad}
+                      onError={(e) => {
+                        const fallback = getMediaUrl(template.thumbnail) || getMediaUrl(template.image);
+                        if (fallback && e.target.src !== fallback) {
+                          e.target.src = fallback;
+                        }
+                      }}
                     />
                   )}
 
                   {/* Right Carousel Arrow */}
-                  {template.samples && template.samples.length > 1 && (
+                  {validSamples.length > 1 && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         e.preventDefault();
-                        setActiveImage(prev => (prev === template.samples.length - 1 ? 0 : prev + 1));
+                        setActiveImage(prev => (prev === validSamples.length - 1 ? 0 : prev + 1));
                       }}
                       className="carousel-arrow carousel-arrow--right"
                       title="Next Image"
@@ -1176,9 +1218,7 @@ export default function PromptDetailPage() {
                       e.stopPropagation();
                       e.preventDefault();
                       const isVideo = template.video || template.generateType === 'video';
-                      const url = template.samples
-                        ? (template.samples[activeImage]?.output || template.samples[activeImage])
-                        : template.thumbnail;
+                      const url = currentMediaUrl || getMediaUrl(template.thumbnail);
                       setLightboxMedia({
                         url,
                         type: isVideo ? 'video' : 'image'
@@ -1256,7 +1296,7 @@ export default function PromptDetailPage() {
                   )}
                  </div>
                  {/* Thumbnail Carousel Tray */}
-                 {template.samples && template.samples.length > 1 && (
+                 {validSamples.length > 1 && (
                    <div className="visual-thumbnails" style={{
                      display: 'flex',
                      gap: '8px',
@@ -1265,8 +1305,7 @@ export default function PromptDetailPage() {
                      padding: '4px 0',
                      scrollbarWidth: 'thin'
                    }}>
-                     {template.samples.map((sample, idx) => {
-                       const url = sample?.output || (typeof sample === 'string' ? sample : '') || template.thumbnail;
+                     {validSamples.map((sampleUrl, idx) => {
                        const isActive = idx === activeImage;
                        return (
                          <div
@@ -1294,7 +1333,7 @@ export default function PromptDetailPage() {
                            }}
                          >
                            <img
-                             src={url}
+                             src={sampleUrl}
                              alt={`Thumbnail ${idx + 1}`}
                              style={{
                                width: '100%',
@@ -2080,18 +2119,17 @@ export default function PromptDetailPage() {
             <button className="lightbox-close" onClick={() => setLightboxMedia(null)}>&times;</button>
             
             {/* Left Arrow inside Lightbox */}
-            {template.samples && template.samples.length > 1 && (
+            {validSamples.length > 1 && (
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
-                  const prevIdx = activeImage === 0 ? template.samples.length - 1 : activeImage - 1;
+                  const prevIdx = activeImage === 0 ? validSamples.length - 1 : activeImage - 1;
                   setActiveImage(prevIdx);
-                  const activeSample = template.samples[prevIdx];
-                  const url = activeSample?.output || activeSample;
+                  const url = validSamples[prevIdx] || getMediaUrl(template?.thumbnail);
                   setLightboxMedia({
                     url,
-                    type: template.video || template.generateType === 'video' ? 'video' : 'image'
+                    type: template?.video || template?.generateType === 'video' ? 'video' : 'image'
                   });
                 }}
                 className="carousel-arrow carousel-arrow--left"
@@ -2109,18 +2147,17 @@ export default function PromptDetailPage() {
             )}
 
             {/* Right Arrow inside Lightbox */}
-            {template.samples && template.samples.length > 1 && (
+            {validSamples.length > 1 && (
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
-                  const nextIdx = activeImage === template.samples.length - 1 ? 0 : activeImage + 1;
+                  const nextIdx = activeImage === validSamples.length - 1 ? 0 : activeImage + 1;
                   setActiveImage(nextIdx);
-                  const activeSample = template.samples[nextIdx];
-                  const url = activeSample?.output || activeSample;
+                  const url = validSamples[nextIdx] || getMediaUrl(template?.thumbnail);
                   setLightboxMedia({
                     url,
-                    type: template.video || template.generateType === 'video' ? 'video' : 'image'
+                    type: template?.video || template?.generateType === 'video' ? 'video' : 'image'
                   });
                 }}
                 className="carousel-arrow carousel-arrow--right"
