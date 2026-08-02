@@ -3646,10 +3646,6 @@
   pointer-events: auto;
 }
 
-.pinterest-card:hover .pinterest-card__media {
-  opacity: 0;
-}
-
 .pinterest-card__sample-img {
   width: 100%;
   height: 100%;

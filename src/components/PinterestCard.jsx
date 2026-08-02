@@ -33,7 +33,7 @@ const PinterestCardComponent = ({ item, index }) => {
     const rawModel = (tmpl?.model || tmpl?.aiModel || '').toLowerCase().trim();
     const isModel = cat === 'model' || cat === 'models' || cat.includes('model') || tmpl?.isModel === true || rawModel === 'seedream';
 
-    if (isModel) return 'SeaDream';
+    if (isModel) return 'Seedream';
 
     if (rawModel.includes('midjourney')) return 'Midjourney';
     if (rawModel.includes('sora')) return 'Sora';
@@ -273,8 +273,6 @@ const PinterestCardComponent = ({ item, index }) => {
     }
   };
 
-  const [isCardHovered, setIsCardHovered] = useState(false);
-
   return (
     <>
       <Link
@@ -365,21 +363,19 @@ const PinterestCardComponent = ({ item, index }) => {
                 className="pinterest-card__media"
                 type={tmpl?.generateType}
               />
-              {isCardHovered && (
-                <div className="pinterest-card__samples-grid">
-                  {sampleList.map((sampleUrl, sIdx) => (
-                    <img 
-                      key={sIdx} 
-                      src={sampleUrl} 
-                      alt={`Sample ${sIdx + 1}`} 
-                      className="pinterest-card__sample-img"
-                      loading="lazy"
-                      decoding="async"
-                      onError={(e) => { e.target.src = displaySrc; }}
-                    />
-                  ))}
-                </div>
-              )}
+              <div className="pinterest-card__samples-grid">
+                {sampleList.map((sampleUrl, sIdx) => (
+                  <img 
+                    key={sIdx} 
+                    src={sampleUrl} 
+                    alt={`Sample ${sIdx + 1}`} 
+                    className="pinterest-card__sample-img"
+                    loading="lazy"
+                    decoding="async"
+                    onError={(e) => { e.target.src = displaySrc; }}
+                  />
+                ))}
+              </div>
             </>
           )}
         </div>
