@@ -62,12 +62,12 @@ export default function Navbar() {
   const notifRef = useRef(null);
 
   useEffect(() => {
+    let active = true;
     const animateLogo = () => {
+      if (!active) return;
       if (isLogoHovered) {
-        // Wind up like a fan
         logoVelocity.current = Math.min(logoVelocity.current + 0.5, 12);
       } else {
-        // Wind down slowly like a real fan
         logoVelocity.current = Math.max(logoVelocity.current - 0.15, 0);
       }
 
@@ -76,13 +76,17 @@ export default function Navbar() {
         if (logoRef.current) {
           logoRef.current.style.transform = `rotate(${logoAngle.current}deg)`;
         }
+        logoAnimRef.current = requestAnimationFrame(animateLogo);
       }
-
-      logoAnimRef.current = requestAnimationFrame(animateLogo);
     };
 
-    logoAnimRef.current = requestAnimationFrame(animateLogo);
-    return () => cancelAnimationFrame(logoAnimRef.current);
+    if (isLogoHovered || logoVelocity.current > 0) {
+      logoAnimRef.current = requestAnimationFrame(animateLogo);
+    }
+    return () => {
+      active = false;
+      if (logoAnimRef.current) cancelAnimationFrame(logoAnimRef.current);
+    };
   }, [isLogoHovered]);
 
   // Generate real notifications from app state

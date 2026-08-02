@@ -15,12 +15,12 @@ export default function Footer() {
   const animationRef = useRef(null);
 
   useEffect(() => {
+    let active = true;
     const animate = () => {
+      if (!active) return;
       if (isHovered) {
-        // Wind up like a fan
         velocity.current = Math.min(velocity.current + 0.5, 12);
       } else {
-        // Wind down slowly like a real fan
         velocity.current = Math.max(velocity.current - 0.15, 0);
       }
 
@@ -29,13 +29,17 @@ export default function Footer() {
         if (logoRef.current) {
           logoRef.current.style.transform = `rotate(${currentAngle.current}deg)`;
         }
+        animationRef.current = requestAnimationFrame(animate);
       }
-
-      animationRef.current = requestAnimationFrame(animate);
     };
 
-    animationRef.current = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(animationRef.current);
+    if (isHovered || velocity.current > 0) {
+      animationRef.current = requestAnimationFrame(animate);
+    }
+    return () => {
+      active = false;
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
+    };
   }, [isHovered]);
 
   return (

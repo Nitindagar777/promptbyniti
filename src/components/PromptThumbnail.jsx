@@ -118,7 +118,7 @@ const PromptThumbnailComponent = ({ src, alt, className, style, type, title, obj
           position: 'relative',
           zIndex: 1,
         }}
-        loading="eager"
+        loading="lazy"
         decoding="async"
         onLoad={handleLoaded}
         onError={(e) => {

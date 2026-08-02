@@ -180,7 +180,7 @@ export default function HomePage() {
       return dateB - dateA;
     });
 
-    return sortedItems.slice(0, 16);
+    return sortedItems.slice(0, 20);
   }, [state.marketplace]);
 
   const storeItems = useMemo(() => {
@@ -190,7 +190,7 @@ export default function HomePage() {
       const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
       return dateB - dateA;
     });
-    return sorted.slice(0, 16);
+    return sorted.slice(0, 20);
   }, [state.marketplace, prompts]);
 
   const storeFeedItems = useMemo(() => {
@@ -204,7 +204,7 @@ export default function HomePage() {
       const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
       return dateB - dateA;
     });
-    return sorted.slice(0, 16).map((tmpl, idx) => {
+    return sorted.slice(0, 20).map((tmpl, idx) => {
       const firstSample = tmpl.samples?.[0];
       const sampleSrc = typeof firstSample === 'object' ? (firstSample?.output || firstSample?.url || firstSample?.image) : firstSample;
       return {
