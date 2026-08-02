@@ -77,7 +77,7 @@ export default function MasonryGrid({ items, renderItem, gap = 16, columns: cust
             <div
               key={item.keyId || index}
               className="masonry-grid__item"
-              style={{ width: '100%' }}
+              style={{ width: '100%', contain: 'content', transform: 'translateZ(0)' }}
             >
               {renderItem(item, index)}
             </div>

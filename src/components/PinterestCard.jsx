@@ -273,12 +273,16 @@ const PinterestCardComponent = ({ item, index }) => {
     }
   };
 
+  const [isCardHovered, setIsCardHovered] = useState(false);
+
   return (
     <>
       <Link
         to={`/prompt/${promptId}?sample=${item.sampleIndex}`}
         className={`pinterest-card reveal ${item.isTextOnly ? 'pinterest-card--text-only' : ''}`}
         id={`template-${promptId}`}
+        onMouseEnter={() => setIsCardHovered(true)}
+        onMouseLeave={() => setIsCardHovered(false)}
         style={{
           animationDelay: `${index * 0.03}s`,
           textDecoration: 'none',
@@ -289,7 +293,7 @@ const PinterestCardComponent = ({ item, index }) => {
           className={`pinterest-card__visual ${!item.isTextOnly ? 'pinterest-card__visual--has-ar' : ''}`} 
           style={!item.isTextOnly ? { aspectRatio: ar, overflow: 'hidden', position: 'relative' } : {}}
         >
-          {/* Top-Left AI Model Badge with small black background */}
+          {/* Top-Left AI Model Badge with solid sleek background */}
           <span
             className="pinterest-card__model-badge"
             style={{
@@ -299,8 +303,7 @@ const PinterestCardComponent = ({ item, index }) => {
               zIndex: 10,
               padding: '3px 8px',
               borderRadius: '5px',
-              background: 'rgba(0, 0, 0, 0.85)',
-              backdropFilter: 'blur(4px)',
+              background: 'rgba(0, 0, 0, 0.90)',
               border: '1px solid rgba(255, 255, 255, 0.25)',
               color: '#ffffff',
               fontSize: '10px',
@@ -362,17 +365,21 @@ const PinterestCardComponent = ({ item, index }) => {
                 className="pinterest-card__media"
                 type={tmpl?.generateType}
               />
-              <div className="pinterest-card__samples-grid">
-                {sampleList.map((sampleUrl, sIdx) => (
-                  <img 
-                    key={sIdx} 
-                    src={sampleUrl} 
-                    alt={`Sample ${sIdx + 1}`} 
-                    className="pinterest-card__sample-img"
-                    onError={(e) => { e.target.src = displaySrc; }}
-                  />
-                ))}
-              </div>
+              {isCardHovered && (
+                <div className="pinterest-card__samples-grid">
+                  {sampleList.map((sampleUrl, sIdx) => (
+                    <img 
+                      key={sIdx} 
+                      src={sampleUrl} 
+                      alt={`Sample ${sIdx + 1}`} 
+                      className="pinterest-card__sample-img"
+                      loading="lazy"
+                      decoding="async"
+                      onError={(e) => { e.target.src = displaySrc; }}
+                    />
+                  ))}
+                </div>
+              )}
             </>
           )}
         </div>
