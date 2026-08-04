@@ -172,9 +172,8 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     fetchStats();
-    if (activeTab === 'api' || activeTab === 'rules') {
-      fetchSettings();
-    } else if (activeTab !== 'overview') {
+    fetchSettings();
+    if (activeTab !== 'overview' && activeTab !== 'api' && activeTab !== 'rules') {
       const initialData = getInitialData(activeTab);
       let needsLoading = true;
       if (initialData && initialData.length > 0) {
@@ -241,6 +240,11 @@ const AdminDashboard = () => {
       const json = await response.json();
       if (json.success) {
         setSystemSettings(json.settings);
+        dispatch({ type: 'PRELOAD_DATA', payload: { adminSettings: json.settings } });
+        if (json.settings.modelSectionVisible !== undefined) {
+          localStorage.setItem('promptniti_model_visible', JSON.stringify(json.settings.modelSectionVisible));
+          window.dispatchEvent(new CustomEvent('modelVisibilityChanged', { detail: { modelSectionVisible: json.settings.modelSectionVisible } }));
+        }
         setSettingsMessage({ type: 'success', text: 'Settings updated successfully!' });
         setTimeout(() => setSettingsMessage(null), 3000);
       } else {
@@ -742,8 +746,8 @@ const AdminDashboard = () => {
         
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
           <div>
-            <strong style={{ display: 'block', color: 'var(--text-primary)', fontSize: '0.95rem' }}>Navbar Model Link Visibility</strong>
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Show or hide the "Model" link in the navbar for all users.</span>
+            <strong style={{ display: 'block', color: 'var(--text-primary)', fontSize: '0.95rem' }}>Global Model Section & Tab Visibility</strong>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Show or hide Model homepage section, navbar link, and admin tab platform-wide.</span>
           </div>
           <button 
             type="button"

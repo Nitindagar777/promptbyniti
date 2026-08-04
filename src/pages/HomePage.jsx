@@ -117,7 +117,14 @@ export default function HomePage() {
   const { state, dispatch, canGenerate, useCredit, addPrompt, cache, setCachedData, setScroll, getScroll, refetchMarketplace } = useApp();
   const location = useLocation();
   const [prompts, setPrompts] = useState(state.marketplace || []);
-  const [modelSectionVisible, setModelSectionVisible] = useState(true);
+  const [modelSectionVisible, setModelSectionVisible] = useState(() => {
+    try {
+      const saved = localStorage.getItem('promptniti_model_visible');
+      return saved !== null ? JSON.parse(saved) : true;
+    } catch (e) {
+      return true;
+    }
+  });
   const ADMIN_EMAIL = 'nitindagar0800@gmail.com';
   const isAdmin = state?.user?.email?.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim() || state?.user?.role === 'admin' || state?.user?.isAdmin;
 
@@ -136,13 +143,29 @@ export default function HomePage() {
         if (res.ok) {
           const data = await res.json();
           if (data.success) {
-            setModelSectionVisible(data.modelSectionVisible ?? true);
+            const isVis = data.modelSectionVisible ?? true;
+            setModelSectionVisible(isVis);
+            localStorage.setItem('promptniti_model_visible', JSON.stringify(isVis));
           }
         }
       } catch (err) { }
     };
     fetchModelVisibility();
-  }, []);
+
+    const handleCustomEvent = (e) => {
+      if (e.detail && typeof e.detail.modelSectionVisible === 'boolean') {
+        setModelSectionVisible(e.detail.modelSectionVisible);
+        localStorage.setItem('promptniti_model_visible', JSON.stringify(e.detail.modelSectionVisible));
+      } else {
+        fetchModelVisibility();
+      }
+    };
+
+    window.addEventListener('modelVisibilityChanged', handleCustomEvent);
+    return () => {
+      window.removeEventListener('modelVisibilityChanged', handleCustomEvent);
+    };
+  }, [location.pathname]);
 
   // Always fetch fresh data on mount, but never block rendering
   useEffect(() => {
@@ -661,7 +684,7 @@ export default function HomePage() {
       </section>
 
       {/* MODEL PROMPT SECTION (before Premium Store) */}
-      {(modelSectionVisible || isAdmin) && modelFeedItems.length > 0 && (
+      {modelSectionVisible && modelFeedItems.length > 0 && (
         <section className="p-model-section" id="model-section">
           <div className="container">
             <div className="p-model-header reveal">

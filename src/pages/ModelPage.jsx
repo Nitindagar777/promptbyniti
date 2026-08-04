@@ -1,9 +1,8 @@
 /* ModelPage — Shows ALL model prompts in a premium grid */
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { Sparkles, Loader2, RotateCw, Search, Crown } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
-import { useLocation } from 'react-router-dom';
 import MasonryGrid from '../components/MasonryGrid';
 import PinterestCard from '../components/PinterestCard';
 import PreviewModal from '../components/PreviewModal';
@@ -15,12 +14,29 @@ const API_URL = '/api';
 export default function ModelPage() {
   const { state, dispatch, setScroll, getScroll } = useApp();
   const location = useLocation();
+  const navigate = useNavigate();
   const [prompts, setPrompts] = useState(state.marketplace || []);
   const [loading, setLoading] = useState(!state.marketplace || state.marketplace.length === 0);
   const [searchTerm, setSearchTerm] = useState('');
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(false);
   const [previewPrompt, setPreviewPrompt] = useState(null);
+
+  // Check global visibility setting and redirect if hidden
+  useEffect(() => {
+    const checkVisibility = async () => {
+      try {
+        const res = await fetch('/api/settings/public');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.modelSectionVisible === false) {
+            navigate('/', { replace: true });
+          }
+        }
+      } catch (err) { }
+    };
+    checkVisibility();
+  }, [navigate]);
 
   // Sync prompts whenever state.marketplace is loaded or updated
   useEffect(() => {

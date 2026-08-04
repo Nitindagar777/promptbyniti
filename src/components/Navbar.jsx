@@ -49,7 +49,49 @@ export default function Navbar() {
   // Chat Mascot & Lounge State
   const [chatNotificationsCount, setChatNotificationsCount] = useState(0);
   const [isMascotHovered, setIsMascotHovered] = useState(false);
-  const [modelSectionVisible, setModelSectionVisible] = useState(true);
+  const [modelSectionVisible, setModelSectionVisible] = useState(() => {
+    try {
+      const saved = localStorage.getItem('promptniti_model_visible');
+      return saved !== null ? JSON.parse(saved) : true;
+    } catch (e) {
+      return true;
+    }
+  });
+
+  // Fetch model section visibility from public settings
+  useEffect(() => {
+    const fetchModelVisibility = async () => {
+      try {
+        const res = await fetch('/api/settings/public');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            const isVis = data.modelSectionVisible ?? true;
+            setModelSectionVisible(isVis);
+            localStorage.setItem('promptniti_model_visible', JSON.stringify(isVis));
+          }
+        }
+      } catch (err) {
+        // Silent — default to visible
+      }
+    };
+
+    fetchModelVisibility();
+
+    const handleCustomEvent = (e) => {
+      if (e.detail && typeof e.detail.modelSectionVisible === 'boolean') {
+        setModelSectionVisible(e.detail.modelSectionVisible);
+        localStorage.setItem('promptniti_model_visible', JSON.stringify(e.detail.modelSectionVisible));
+      } else {
+        fetchModelVisibility();
+      }
+    };
+
+    window.addEventListener('modelVisibilityChanged', handleCustomEvent);
+    return () => {
+      window.removeEventListener('modelVisibilityChanged', handleCustomEvent);
+    };
+  }, [location.pathname, state?.adminSettings?.modelSectionVisible]);
 
 
 
@@ -255,23 +297,7 @@ export default function Navbar() {
     return () => clearInterval(interval);
   }, [state?.user, location.pathname]);
 
-  // Fetch model section visibility from public settings
-  useEffect(() => {
-    const fetchModelVisibility = async () => {
-      try {
-        const res = await fetch('/api/settings/public');
-        if (res.ok) {
-          const data = await res.json();
-          if (data.success) {
-            setModelSectionVisible(data.modelSectionVisible ?? true);
-          }
-        }
-      } catch (err) {
-        // Silent — default to visible
-      }
-    };
-    fetchModelVisibility();
-  }, []);
+
 
   const isActive = (path) => location.pathname === path;
 
@@ -304,7 +330,7 @@ export default function Navbar() {
           <li>
             <Link to="/templates" className={`navbar__link ${isActive('/templates') ? 'navbar__link--active' : ''}`}>Store</Link>
           </li>
-          {(modelSectionVisible || isAdmin) && (
+          {modelSectionVisible && (
             <li>
               <Link to="/model" className={`navbar__link navbar__link--model ${isActive('/model') ? 'navbar__link--active' : ''}`}>
                 <Crown size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '3px' }} />
@@ -511,7 +537,7 @@ export default function Navbar() {
           <li>
             <Link to="/templates" className={`mobile-drawer__link ${isActive('/templates') ? 'mobile-drawer__link--active' : ''}`} onClick={() => setMobileMenuOpen(false)}>Store</Link>
           </li>
-          {(modelSectionVisible || isAdmin) && (
+          {modelSectionVisible && (
             <li>
               <Link to="/model" className={`mobile-drawer__link ${isActive('/model') ? 'mobile-drawer__link--active' : ''}`} onClick={() => setMobileMenuOpen(false)}>
                 <Crown size={14} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />
