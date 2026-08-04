@@ -200,6 +200,47 @@ export default function PromptDetailPage() {
   const { state, useCredit, dispatch } = useApp();
   const ADMIN_EMAIL = 'nitindagar0800@gmail.com';
   const isAdmin = state?.user?.email?.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim() || state?.user?.role === 'admin' || state?.user?.isAdmin;
+
+  const [modelSectionVisible, setModelSectionVisible] = useState(() => {
+    try {
+      const saved = localStorage.getItem('promptniti_model_visible');
+      return saved !== null ? JSON.parse(saved) : true;
+    } catch (e) {
+      return true;
+    }
+  });
+
+  useEffect(() => {
+    const fetchModelVisibility = async () => {
+      try {
+        const res = await fetch('/api/settings/public');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            const isVis = data.modelSectionVisible ?? true;
+            setModelSectionVisible(isVis);
+            localStorage.setItem('promptniti_model_visible', JSON.stringify(isVis));
+          }
+        }
+      } catch (err) { }
+    };
+    fetchModelVisibility();
+
+    const handleCustomEvent = (e) => {
+      if (e.detail && typeof e.detail.modelSectionVisible === 'boolean') {
+        setModelSectionVisible(e.detail.modelSectionVisible);
+        localStorage.setItem('promptniti_model_visible', JSON.stringify(e.detail.modelSectionVisible));
+      } else {
+        fetchModelVisibility();
+      }
+    };
+
+    window.addEventListener('modelVisibilityChanged', handleCustomEvent);
+    return () => {
+      window.removeEventListener('modelVisibilityChanged', handleCustomEvent);
+    };
+  }, [location.pathname]);
+
   // Find cached prompt from global marketplace state if available
   const cachedPrompt = useMemo(() => {
     return (state.marketplace || []).find(t => (t.id || t._id) === id) || null;
@@ -818,16 +859,27 @@ export default function PromptDetailPage() {
     const list = sourceList.filter(t => {
       const isSelf = (t.id || t._id) === (template.id || template._id);
       if (isSelf) return false;
+
+      const cat = (t.category || '').toLowerCase().trim();
+      const isModel = cat === 'model' || cat === 'models' || t.isModel === true;
+      if (!modelSectionVisible && isModel) return false;
+
       return (t.category && template.category && t.category.toLowerCase() === template.category.toLowerCase()) ||
              (t.generateType && template.generateType && t.generateType === template.generateType);
     });
 
     if (list.length === 0) {
-      return sourceList.filter(t => (t.id || t._id) !== (template.id || template._id));
+      return sourceList.filter(t => {
+        if ((t.id || t._id) === (template.id || template._id)) return false;
+        const cat = (t.category || '').toLowerCase().trim();
+        const isModel = cat === 'model' || cat === 'models' || t.isModel === true;
+        if (!modelSectionVisible && isModel) return false;
+        return true;
+      });
     }
 
     return list;
-  }, [template, state.marketplace]);
+  }, [template, state.marketplace, modelSectionVisible]);
 
   const relatedStoreFeedItems = useMemo(() => {
     return (relatedStorePrompts || []).slice(0, 16).map((tmpl, idx) => {
@@ -851,6 +903,10 @@ export default function PromptDetailPage() {
       const isSelf = (t.id || t._id) === (template.id || template._id);
       if (isSelf) return false;
 
+      const cat = (t.category || '').toLowerCase().trim();
+      const isModel = cat === 'model' || cat === 'models' || t.isModel === true;
+      if (!modelSectionVisible && isModel) return false;
+
       const catMatch = t.category && template.category && t.category.toLowerCase() === template.category.toLowerCase();
       const typeMatch = t.generateType && template.generateType && t.generateType === template.generateType;
       const keywordMatch = t.keywords?.some(k => template.keywords?.includes(k));
@@ -858,7 +914,13 @@ export default function PromptDetailPage() {
     });
 
     if (related.length === 0) {
-      related = sourceList.filter(t => (t.id || t._id) !== (template.id || template._id));
+      related = sourceList.filter(t => {
+        if ((t.id || t._id) === (template.id || template._id)) return false;
+        const cat = (t.category || '').toLowerCase().trim();
+        const isModel = cat === 'model' || cat === 'models' || t.isModel === true;
+        if (!modelSectionVisible && isModel) return false;
+        return true;
+      });
     }
 
     const feedItems = [];
@@ -878,7 +940,7 @@ export default function PromptDetailPage() {
     });
 
     return feedItems.slice(0, relatedLimit || 16);
-  }, [id, template, state.marketplace, relatedLimit]);
+  }, [id, template, state.marketplace, relatedLimit, modelSectionVisible]);
 
   const handlePrevImage = (e) => {
     e.preventDefault();

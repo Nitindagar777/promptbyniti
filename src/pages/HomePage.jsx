@@ -182,6 +182,10 @@ export default function HomePage() {
     const items = [];
     const sourcePrompts = state.marketplace || [];
     sourcePrompts.forEach((tmpl, tmplIdx) => {
+      const cat = (tmpl.category || '').toLowerCase().trim();
+      const isModel = cat === 'model' || cat === 'models' || tmpl.isModel === true;
+      if (!modelSectionVisible && isModel) return;
+
       const isText = tmpl.generateType === 'text';
       const firstSample = tmpl.samples?.[0];
       const sampleSrc = typeof firstSample === 'object' ? (firstSample?.output || firstSample?.url || firstSample?.image) : firstSample;
@@ -204,22 +208,30 @@ export default function HomePage() {
     });
 
     return sortedItems.slice(0, 20);
-  }, [state.marketplace]);
+  }, [state.marketplace, modelSectionVisible]);
 
   const storeItems = useMemo(() => {
     const list = (state.marketplace && state.marketplace.length > 0) ? state.marketplace : prompts;
-    const sorted = [...list].sort((a, b) => {
+    const filtered = list.filter(t => {
+      const cat = (t.category || '').toLowerCase().trim();
+      const isModel = cat === 'model' || cat === 'models' || t.isModel === true;
+      if (!modelSectionVisible && isModel) return false;
+      return true;
+    });
+    const sorted = [...filtered].sort((a, b) => {
       const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
       const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
       return dateB - dateA;
     });
     return sorted.slice(0, 20);
-  }, [state.marketplace, prompts]);
+  }, [state.marketplace, prompts, modelSectionVisible]);
 
   const storeFeedItems = useMemo(() => {
     const list = (state.marketplace && state.marketplace.length > 0) ? state.marketplace : prompts;
     const nonModelList = list.filter(t => {
       const cat = (t.category || '').toLowerCase().trim();
+      const isModel = cat === 'model' || cat === 'models' || t.isModel === true;
+      if (!modelSectionVisible && isModel) return false;
       return cat !== 'model' && cat !== 'models';
     });
     const sorted = [...nonModelList].sort((a, b) => {

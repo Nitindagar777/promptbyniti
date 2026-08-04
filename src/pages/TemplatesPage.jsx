@@ -34,6 +34,46 @@ export default function TemplatesPage() {
   const [loading, setLoading] = useState(!state.marketplace || state.marketplace.length === 0);
   const [previewPrompt, setPreviewPrompt] = useState(null);
 
+  const [modelSectionVisible, setModelSectionVisible] = useState(() => {
+    try {
+      const saved = localStorage.getItem('promptniti_model_visible');
+      return saved !== null ? JSON.parse(saved) : true;
+    } catch (e) {
+      return true;
+    }
+  });
+
+  useEffect(() => {
+    const fetchModelVisibility = async () => {
+      try {
+        const res = await fetch('/api/settings/public');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            const isVis = data.modelSectionVisible ?? true;
+            setModelSectionVisible(isVis);
+            localStorage.setItem('promptniti_model_visible', JSON.stringify(isVis));
+          }
+        }
+      } catch (err) { }
+    };
+    fetchModelVisibility();
+
+    const handleCustomEvent = (e) => {
+      if (e.detail && typeof e.detail.modelSectionVisible === 'boolean') {
+        setModelSectionVisible(e.detail.modelSectionVisible);
+        localStorage.setItem('promptniti_model_visible', JSON.stringify(e.detail.modelSectionVisible));
+      } else {
+        fetchModelVisibility();
+      }
+    };
+
+    window.addEventListener('modelVisibilityChanged', handleCustomEvent);
+    return () => {
+      window.removeEventListener('modelVisibilityChanged', handleCustomEvent);
+    };
+  }, [location.pathname]);
+
   useEffect(() => {
     if (location.state?.search) {
       setSearchTerm(location.state.search);
@@ -121,10 +161,10 @@ export default function TemplatesPage() {
       const cleanCatTerm = catLower.replace(/-/g, ' ');
 
       const promptCatLower = (t.category || '').toLowerCase().trim();
-      const isModelCat = promptCatLower === 'model' || promptCatLower === 'models';
+      const isModelCat = promptCatLower === 'model' || promptCatLower === 'models' || t.isModel === true;
 
-      // Model category prompts belong strictly on /model page and Model section — exclude from general store
-      if (catLower !== 'model' && catLower !== 'models' && isModelCat) {
+      // Model category prompts belong strictly on /model page and Model section — exclude if hidden or from general store
+      if ((catLower !== 'model' && catLower !== 'models' && isModelCat) || (!modelSectionVisible && isModelCat)) {
         return false;
       }
 
