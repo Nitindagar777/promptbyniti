@@ -65,3 +65,5 @@ export const MODEL_SURPRISE_PROMPTS = [
 export const generateModelSurprise = () => {
   return MODEL_SURPRISE_PROMPTS[Math.floor(Math.random() * MODEL_SURPRISE_PROMPTS.length)];
 };
+
+

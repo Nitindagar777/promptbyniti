@@ -95,11 +95,15 @@ app.use('/api/reviews', reviewRoutes);
 app.get('/api/settings/public', async (req, res) => {
   try {
     const SystemSettings = require('./models/SystemSettings');
-    let settings = await SystemSettings.findOne().select('modelSectionVisible').lean();
-    if (!settings) settings = { modelSectionVisible: true };
-    res.json({ success: true, modelSectionVisible: settings.modelSectionVisible ?? true });
+    let settings = await SystemSettings.findOne().select('modelSectionVisible modelAutoLoop storeSectionVisible').lean();
+    if (!settings) settings = { modelSectionVisible: true, storeSectionVisible: true };
+    res.json({ 
+      success: true, 
+      modelSectionVisible: settings.modelSectionVisible ?? true,
+      storeSectionVisible: settings.storeSectionVisible ?? true
+    });
   } catch (err) {
-    res.json({ success: true, modelSectionVisible: true });
+    res.json({ success: true, modelSectionVisible: true, storeSectionVisible: true });
   }
 });
 

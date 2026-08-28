@@ -125,6 +125,16 @@ export default function HomePage() {
       return true;
     }
   });
+
+  const [storeSectionVisible, setStoreSectionVisible] = useState(() => {
+    try {
+      const saved = localStorage.getItem('promptniti_store_visible');
+      return saved !== null ? JSON.parse(saved) : true;
+    } catch (e) {
+      return true;
+    }
+  });
+
   const ADMIN_EMAIL = 'nitindagar0800@gmail.com';
   const isAdmin = state?.user?.email?.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim() || state?.user?.role === 'admin' || state?.user?.isAdmin;
 
@@ -135,35 +145,49 @@ export default function HomePage() {
     }
   }, [state.marketplace]);
 
-  // Fetch model section visibility from public settings
+  // Fetch visibility settings from public settings
   useEffect(() => {
-    const fetchModelVisibility = async () => {
+    const fetchVisibility = async () => {
       try {
         const res = await fetch('/api/settings/public');
         if (res.ok) {
           const data = await res.json();
           if (data.success) {
-            const isVis = data.modelSectionVisible ?? true;
-            setModelSectionVisible(isVis);
-            localStorage.setItem('promptniti_model_visible', JSON.stringify(isVis));
+            const isModelVis = data.modelSectionVisible ?? true;
+            const isStoreVis = data.storeSectionVisible ?? true;
+            setModelSectionVisible(isModelVis);
+            setStoreSectionVisible(isStoreVis);
+            localStorage.setItem('promptniti_model_visible', JSON.stringify(isModelVis));
+            localStorage.setItem('promptniti_store_visible', JSON.stringify(isStoreVis));
           }
         }
       } catch (err) { }
     };
-    fetchModelVisibility();
+    fetchVisibility();
 
-    const handleCustomEvent = (e) => {
+    const handleModelEvent = (e) => {
       if (e.detail && typeof e.detail.modelSectionVisible === 'boolean') {
         setModelSectionVisible(e.detail.modelSectionVisible);
         localStorage.setItem('promptniti_model_visible', JSON.stringify(e.detail.modelSectionVisible));
       } else {
-        fetchModelVisibility();
+        fetchVisibility();
       }
     };
 
-    window.addEventListener('modelVisibilityChanged', handleCustomEvent);
+    const handleStoreEvent = (e) => {
+      if (e.detail && typeof e.detail.storeSectionVisible === 'boolean') {
+        setStoreSectionVisible(e.detail.storeSectionVisible);
+        localStorage.setItem('promptniti_store_visible', JSON.stringify(e.detail.storeSectionVisible));
+      } else {
+        fetchVisibility();
+      }
+    };
+
+    window.addEventListener('modelVisibilityChanged', handleModelEvent);
+    window.addEventListener('storeVisibilityChanged', handleStoreEvent);
     return () => {
-      window.removeEventListener('modelVisibilityChanged', handleCustomEvent);
+      window.removeEventListener('modelVisibilityChanged', handleModelEvent);
+      window.removeEventListener('storeVisibilityChanged', handleStoreEvent);
     };
   }, [location.pathname]);
 
@@ -592,9 +616,9 @@ export default function HomePage() {
   return (
     <div className="p-home" id="home-page">
       <SEOHead
-        title="#1 AI Prompt Generator & Premium Store — Image, Video & Code"
-        description="Prompt by Niti is the leading AI prompt generator and premium prompt marketplace with 3 consistency engines. Craft consistent character prompts (cref/sref) for Midjourney & Flux, cinematic motion anchors for Sora & Kling videos, and structured code/text blueprints."
-        keywords="ai prompt generator, prompt generator, prompt store, AI prompt store, midjourney prompt generator, chatgpt prompt generator, consistent character prompts, midjourney cref, midjourney sref, image to video prompts, sora video prompts, flux prompt generator, text to code prompts, prompt templates, prompt engineering, promptbase alternative, promptbyniti"
+        title="#1 AI Prompt Generator — Image, Video, Character & Code Consistency"
+        description="Prompt by Niti is the leading AI prompt generator and creative studio with 3 consistency engines. Craft consistent character prompts (cref/sref) for Midjourney & Flux, cinematic motion anchors for Sora & Kling videos, and structured code/text blueprints."
+        keywords="ai prompt generator, prompt generator, midjourney prompt generator, chatgpt prompt generator, consistent character prompts, midjourney cref, midjourney sref, image to video prompts, sora video prompts, flux prompt generator, text to code prompts, prompt templates, prompt engineering, promptbase alternative, promptbyniti"
         breadcrumbs={[
           { name: 'Home', url: '/' }
         ]}
@@ -649,25 +673,31 @@ export default function HomePage() {
             <div className="p-hero__content-col reveal" style={{ animationDelay: '0.1s' }}>
 
               <h1 className="p-hero__title" style={{ fontSize: 'clamp(2.1rem, 3.3vw, 3.2rem)', lineHeight: '1.2' }}>
-                <span className="text-cyan" style={{ whiteSpace: 'nowrap' }}>AI Prompts</span> Generator & <br className="hide-on-mobile" />
-                <span className="text-orange" style={{ whiteSpace: 'nowrap' }}>Premium Store</span>
+                <span className="text-cyan" style={{ whiteSpace: 'nowrap' }}>AI Prompt</span> Generator & <br className="hide-on-mobile" />
+                <span className="text-orange" style={{ whiteSpace: 'nowrap' }}>Creative Engine</span>
               </h1>
 
               <p className="p-hero__pitch">
-                Generate & unlock high-performing <strong className="text-cyan">Image</strong>, <strong className="text-cyan">Video</strong> & <strong className="text-cyan">Text</strong> prompts, powered by <strong className="text-purple">smart looping</strong> and <strong className="text-pink">Reference Consistency</strong> that keeps every character and style <strong className="text-green">perfectly consistent</strong>.
+                Generate & craft high-performing <strong className="text-cyan">Image</strong>, <strong className="text-cyan">Video</strong> & <strong className="text-cyan">Text</strong> prompts, powered by <strong className="text-purple">smart looping</strong> and <strong className="text-pink">Reference Consistency</strong> that keeps every character and style <strong className="text-green">perfectly consistent</strong>.
               </p>
 
               <p className="p-hero__subtitle p-hero__subtitle--accent">
-                <span className="text-orange">Generate.</span> <span className="text-cyan">Customize.</span> <span className="text-purple">Unlock.</span>
+                <span className="text-orange">Generate.</span> <span className="text-cyan">Customize.</span> <span className="text-purple">Create.</span>
               </p>
 
               <div className="p-hero__btns">
                 <Link to={state?.user ? "/generate" : "/login"} className="btn btn-primary btn-xl">
                   Start Generating <ArrowRight size={18} style={{ marginLeft: '4px' }} />
                 </Link>
-                <Link to="/templates" className="btn btn-secondary btn-xl">
-                  Explore Store <Sparkles size={18} style={{ marginLeft: '4px' }} />
-                </Link>
+                {storeSectionVisible ? (
+                  <Link to="/templates" className="btn btn-secondary btn-xl">
+                    Explore Store <Sparkles size={18} style={{ marginLeft: '4px' }} />
+                  </Link>
+                ) : (
+                  <a href="#ref-modes" className="btn btn-secondary btn-xl">
+                    Explore Modes <Sparkles size={18} style={{ marginLeft: '4px' }} />
+                  </a>
+                )}
               </div>
 
               {/* Feature Pills */}
@@ -723,35 +753,37 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* PREMIUM STORE SECTION */}
-      <section className="p-store-section" id="store-section">
-        <div className="container">
-          <div className="p-store-header reveal">
-            <div className="p-store-header__info">
-              <span className="p-store-header__subtitle">Premium Store</span>
-              <h2 className="h-display" style={{ marginTop: 0 }}>Featured <span className="text-orange">Premium</span> Store</h2>
+      {/* STORE SECTION */}
+      {storeSectionVisible && (
+        <section className="p-store-section" id="store-section">
+          <div className="container">
+            <div className="p-store-header reveal">
+              <div className="p-store-header__info">
+                <span className="p-store-header__subtitle">Prompt Store</span>
+                <h2 className="h-display" style={{ marginTop: 0 }}>Featured <span className="text-orange">Prompts</span></h2>
+              </div>
+              <Link to="/templates" className="btn btn-secondary">
+                Browse Store Feed <Sparkles size={18} style={{ marginLeft: '8px' }} />
+              </Link>
             </div>
-            <Link to="/templates" className="btn btn-secondary">
-              Browse Store Feed <Sparkles size={18} style={{ marginLeft: '8px' }} />
-            </Link>
-          </div>
 
-          {storeFeedItems.length > 0 ? (
-            <MasonryGrid
-              columns={4}
-              items={storeFeedItems}
-              renderItem={(item, i) => (
-                <PinterestCard key={item.keyId} item={item} index={i} />
-              )}
-            />
-          ) : (
-            <div className="p-market-empty" style={{ textAlign: 'center', padding: '60px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
-              <Loader2 size={40} className="animate-spin text-cyan" style={{ animation: 'spin 1s linear infinite' }} />
-              <p style={{ color: 'var(--text-muted)', fontSize: '1rem', fontWeight: 500 }}>Loading premium store feed...</p>
-            </div>
-          )}
-        </div>
-      </section>
+            {storeFeedItems.length > 0 ? (
+              <MasonryGrid
+                columns={4}
+                items={storeFeedItems}
+                renderItem={(item, i) => (
+                  <PinterestCard key={item.keyId} item={item} index={i} />
+                )}
+              />
+            ) : (
+              <div className="p-market-empty" style={{ textAlign: 'center', padding: '60px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
+                <Loader2 size={40} className="animate-spin text-cyan" style={{ animation: 'spin 1s linear infinite' }} />
+                <p style={{ color: 'var(--text-muted)', fontSize: '1rem', fontWeight: 500 }}>Loading prompts feed...</p>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
 
 

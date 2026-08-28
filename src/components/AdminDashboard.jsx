@@ -245,6 +245,10 @@ const AdminDashboard = () => {
           localStorage.setItem('promptniti_model_visible', JSON.stringify(json.settings.modelSectionVisible));
           window.dispatchEvent(new CustomEvent('modelVisibilityChanged', { detail: { modelSectionVisible: json.settings.modelSectionVisible } }));
         }
+        if (json.settings.storeSectionVisible !== undefined) {
+          localStorage.setItem('promptniti_store_visible', JSON.stringify(json.settings.storeSectionVisible));
+          window.dispatchEvent(new CustomEvent('storeVisibilityChanged', { detail: { storeSectionVisible: json.settings.storeSectionVisible } }));
+        }
         setSettingsMessage({ type: 'success', text: 'Settings updated successfully!' });
         setTimeout(() => setSettingsMessage(null), 3000);
       } else {
@@ -453,6 +457,99 @@ const AdminDashboard = () => {
         <div className="stat-card highlight">
           <h3>Pending Withdrawals</h3>
           <p className="stat-value">{stats?.pendingWithdrawals || 0}</p>
+        </div>
+      </div>
+
+      {/* Visibility Control Hub */}
+      <div style={{ marginTop: '30px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '20px' }}>
+        {/* Store Section & Navbar Controls */}
+        <div className="admin-field" style={{ padding: '22px', background: 'rgba(249, 115, 22, 0.06)', borderRadius: '16px', border: '1px solid rgba(249, 115, 22, 0.25)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
+            <h3 style={{ fontSize: '1.15rem', color: '#f97316', margin: 0, display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}>
+              🛒 Store Section & Navbar Controls
+            </h3>
+            <button
+              type="button"
+              className="approve-btn"
+              style={{ background: 'rgba(255,255,255,0.08)', color: '#f97316', padding: '6px 14px', borderRadius: '8px', fontWeight: 'bold', fontSize: '0.85rem' }}
+              onClick={() => navigate('/templates')}
+            >
+              View Store Page ↗
+            </button>
+          </div>
+          
+          <p style={{ margin: '0 0 16px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+            Control whether the Store / Marketplace section on the homepage and the Store link in navbar are visible to all users.
+          </p>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '12px', borderTop: '1px solid rgba(255,255,255,0.08)', flexWrap: 'wrap', gap: '10px' }}>
+            <div>
+              <strong style={{ display: 'block', color: 'var(--text-primary)', fontSize: '0.95rem' }}>Store Visibility</strong>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{(systemSettings.storeSectionVisible ?? true) ? 'Store is active and accessible' : 'Store is completely hidden'}</span>
+            </div>
+            <button 
+              type="button"
+              className="approve-btn"
+              style={{ 
+                background: (systemSettings.storeSectionVisible ?? true) ? '#22c55e' : '#ef4444',
+                minWidth: '130px',
+                padding: '10px 20px',
+                fontSize: '0.9rem',
+                fontWeight: 'bold',
+                borderRadius: '10px',
+                boxShadow: (systemSettings.storeSectionVisible ?? true) ? '0 0 15px rgba(34, 197, 94, 0.3)' : '0 0 15px rgba(239, 68, 68, 0.3)'
+              }}
+              onClick={() => handleUpdateSettings({ storeSectionVisible: !(systemSettings.storeSectionVisible ?? true) })}
+              disabled={settingsLoading}
+            >
+              {(systemSettings.storeSectionVisible ?? true) ? '👁️ VISIBLE (ON)' : '🔒 HIDDEN (OFF)'}
+            </button>
+          </div>
+        </div>
+
+        {/* Model Section & Navbar Controls */}
+        <div className="admin-field" style={{ padding: '22px', background: 'rgba(236, 72, 153, 0.06)', borderRadius: '16px', border: '1px solid rgba(236, 72, 153, 0.25)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
+            <h3 style={{ fontSize: '1.15rem', color: '#ec4899', margin: 0, display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}>
+              👑 Model Prompts & Navbar Controls
+            </h3>
+            <button
+              type="button"
+              className="approve-btn"
+              style={{ background: 'rgba(255,255,255,0.08)', color: '#ec4899', padding: '6px 14px', borderRadius: '8px', fontWeight: 'bold', fontSize: '0.85rem' }}
+              onClick={() => navigate('/model')}
+            >
+              View Model Page ↗
+            </button>
+          </div>
+
+          <p style={{ margin: '0 0 16px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+            Control whether the Model Prompts section on homepage and Model link in navbar are visible to users.
+          </p>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '12px', borderTop: '1px solid rgba(255,255,255,0.08)', flexWrap: 'wrap', gap: '10px' }}>
+            <div>
+              <strong style={{ display: 'block', color: 'var(--text-primary)', fontSize: '0.95rem' }}>Model Visibility</strong>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{(systemSettings.modelSectionVisible ?? true) ? 'Model section is active' : 'Model section is hidden'}</span>
+            </div>
+            <button 
+              type="button"
+              className="approve-btn"
+              style={{ 
+                background: (systemSettings.modelSectionVisible ?? true) ? '#22c55e' : '#ef4444',
+                minWidth: '130px',
+                padding: '10px 20px',
+                fontSize: '0.9rem',
+                fontWeight: 'bold',
+                borderRadius: '10px',
+                boxShadow: (systemSettings.modelSectionVisible ?? true) ? '0 0 15px rgba(34, 197, 94, 0.3)' : '0 0 15px rgba(239, 68, 68, 0.3)'
+              }}
+              onClick={() => handleUpdateSettings({ modelSectionVisible: !(systemSettings.modelSectionVisible ?? true) })}
+              disabled={settingsLoading}
+            >
+              {(systemSettings.modelSectionVisible ?? true) ? '👁️ VISIBLE (ON)' : '🔒 HIDDEN (OFF)'}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -737,6 +834,47 @@ const AdminDashboard = () => {
           </button>
         </div>
         <p className="text-xs text-muted mt-2">Used as the primary engine for high-quality FLUX model image generation.</p>
+      </div>
+
+      {/* Store Section & Navbar Controls */}
+      <div className="admin-field" style={{ marginTop: '24px', padding: '20px', background: 'rgba(249, 115, 22, 0.05)', borderRadius: '12px', border: '1px solid rgba(249, 115, 22, 0.2)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '10px' }}>
+          <h3 style={{ fontSize: '1.1rem', color: '#f97316', margin: 0, display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}>
+            🛒 Store Section & Navbar Controls
+          </h3>
+          <button
+            type="button"
+            className="approve-btn"
+            style={{ background: 'rgba(255,255,255,0.08)', color: '#f97316', padding: '6px 14px', borderRadius: '8px', fontWeight: 'bold', fontSize: '0.85rem' }}
+            onClick={() => navigate('/templates')}
+          >
+            View Store Page ↗
+          </button>
+        </div>
+        
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+          <div>
+            <strong style={{ display: 'block', color: 'var(--text-primary)', fontSize: '0.95rem' }}>Global Store Section & Navbar Link Visibility</strong>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Show or hide the Store section on homepage, Store link in navbar, and public store access platform-wide.</span>
+          </div>
+          <button 
+            type="button"
+            className="approve-btn"
+            style={{ 
+              background: (systemSettings.storeSectionVisible ?? true) ? '#22c55e' : '#ef4444',
+              minWidth: '130px',
+              padding: '10px 20px',
+              fontSize: '0.9rem',
+              fontWeight: 'bold',
+              borderRadius: '10px',
+              boxShadow: (systemSettings.storeSectionVisible ?? true) ? '0 0 15px rgba(34, 197, 94, 0.3)' : '0 0 15px rgba(239, 68, 68, 0.3)'
+            }}
+            onClick={() => handleUpdateSettings({ storeSectionVisible: !(systemSettings.storeSectionVisible ?? true) })}
+            disabled={settingsLoading}
+          >
+            {(systemSettings.storeSectionVisible ?? true) ? '👁️ VISIBLE (ON)' : '🔒 HIDDEN (OFF)'}
+          </button>
+        </div>
       </div>
 
       <div className="admin-field" style={{ marginTop: '24px', padding: '20px', background: 'rgba(236, 72, 153, 0.05)', borderRadius: '12px', border: '1px solid rgba(236, 72, 153, 0.2)' }}>

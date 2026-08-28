@@ -1747,7 +1747,7 @@ export default function PromptDetailPage() {
                   gap: '8px', 
                   fontFamily: 'var(--font-display)' 
                 }}>
-                  <Lock size={20} className="text-orange" /> Premium Store Prompt
+                  <Lock size={20} className="text-orange" /> Premium AI Prompt
                 </h3>
                 
                 <div style={{ 

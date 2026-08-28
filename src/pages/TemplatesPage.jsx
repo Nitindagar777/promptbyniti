@@ -34,6 +34,9 @@ export default function TemplatesPage() {
   const [loading, setLoading] = useState(!state.marketplace || state.marketplace.length === 0);
   const [previewPrompt, setPreviewPrompt] = useState(null);
 
+  const ADMIN_EMAIL = 'nitindagar0800@gmail.com';
+  const isAdmin = state?.user?.email?.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim() || state?.user?.role === 'admin' || state?.user?.isAdmin;
+
   const [modelSectionVisible, setModelSectionVisible] = useState(() => {
     try {
       const saved = localStorage.getItem('promptniti_model_visible');
@@ -43,36 +46,66 @@ export default function TemplatesPage() {
     }
   });
 
+  const [storeSectionVisible, setStoreSectionVisible] = useState(() => {
+    try {
+      const saved = localStorage.getItem('promptniti_store_visible');
+      return saved !== null ? JSON.parse(saved) : true;
+    } catch (e) {
+      return true;
+    }
+  });
+
   useEffect(() => {
-    const fetchModelVisibility = async () => {
+    const fetchVisibility = async () => {
       try {
         const res = await fetch('/api/settings/public');
         if (res.ok) {
           const data = await res.json();
           if (data.success) {
-            const isVis = data.modelSectionVisible ?? true;
-            setModelSectionVisible(isVis);
-            localStorage.setItem('promptniti_model_visible', JSON.stringify(isVis));
+            const isModelVis = data.modelSectionVisible ?? true;
+            const isStoreVis = data.storeSectionVisible ?? true;
+            setModelSectionVisible(isModelVis);
+            setStoreSectionVisible(isStoreVis);
+            localStorage.setItem('promptniti_model_visible', JSON.stringify(isModelVis));
+            localStorage.setItem('promptniti_store_visible', JSON.stringify(isStoreVis));
+
+            if (isStoreVis === false && !isAdmin) {
+              navigate('/', { replace: true });
+            }
           }
         }
       } catch (err) { }
     };
-    fetchModelVisibility();
+    fetchVisibility();
 
-    const handleCustomEvent = (e) => {
+    const handleModelEvent = (e) => {
       if (e.detail && typeof e.detail.modelSectionVisible === 'boolean') {
         setModelSectionVisible(e.detail.modelSectionVisible);
         localStorage.setItem('promptniti_model_visible', JSON.stringify(e.detail.modelSectionVisible));
       } else {
-        fetchModelVisibility();
+        fetchVisibility();
       }
     };
 
-    window.addEventListener('modelVisibilityChanged', handleCustomEvent);
-    return () => {
-      window.removeEventListener('modelVisibilityChanged', handleCustomEvent);
+    const handleStoreEvent = (e) => {
+      if (e.detail && typeof e.detail.storeSectionVisible === 'boolean') {
+        setStoreSectionVisible(e.detail.storeSectionVisible);
+        localStorage.setItem('promptniti_store_visible', JSON.stringify(e.detail.storeSectionVisible));
+        if (e.detail.storeSectionVisible === false && !isAdmin) {
+          navigate('/', { replace: true });
+        }
+      } else {
+        fetchVisibility();
+      }
     };
-  }, [location.pathname]);
+
+    window.addEventListener('modelVisibilityChanged', handleModelEvent);
+    window.addEventListener('storeVisibilityChanged', handleStoreEvent);
+    return () => {
+      window.removeEventListener('modelVisibilityChanged', handleModelEvent);
+      window.removeEventListener('storeVisibilityChanged', handleStoreEvent);
+    };
+  }, [location.pathname, isAdmin, navigate]);
 
   useEffect(() => {
     if (location.state?.search) {

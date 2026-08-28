@@ -257,7 +257,7 @@ router.get('/settings', isAdmin, async (req, res) => {
 // UPDATE System Settings
 router.post('/settings', isAdmin, async (req, res) => {
   try {
-    const { geminiApiKey, paidGeminiApiKey, geminiModel, groqApiKeys, pollinationsApiKey, promptCreationRules, modelSectionVisible, modelAutoLoop } = req.body;
+    const { geminiApiKey, paidGeminiApiKey, geminiModel, groqApiKeys, pollinationsApiKey, promptCreationRules, modelSectionVisible, modelAutoLoop, storeSectionVisible } = req.body;
     let settings = await SystemSettings.findOne();
     if (!settings) settings = new SystemSettings();
     
@@ -268,6 +268,7 @@ router.post('/settings', isAdmin, async (req, res) => {
     if (pollinationsApiKey !== undefined) settings.pollinationsApiKey = pollinationsApiKey;
     if (modelSectionVisible !== undefined) settings.modelSectionVisible = modelSectionVisible;
     if (modelAutoLoop !== undefined) settings.modelAutoLoop = modelAutoLoop;
+    if (storeSectionVisible !== undefined) settings.storeSectionVisible = storeSectionVisible;
     if (promptCreationRules !== undefined) {
       // Normalize rules: convert any legacy strings to objects
       settings.promptCreationRules = promptCreationRules.map(r => {

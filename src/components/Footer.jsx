@@ -42,6 +42,25 @@ export default function Footer() {
     };
   }, [isHovered]);
 
+  const [storeSectionVisible, setStoreSectionVisible] = useState(() => {
+    try {
+      const saved = localStorage.getItem('promptniti_store_visible');
+      return saved !== null ? JSON.parse(saved) : true;
+    } catch (e) {
+      return true;
+    }
+  });
+
+  useEffect(() => {
+    const handleStoreEvent = (e) => {
+      if (e.detail && typeof e.detail.storeSectionVisible === 'boolean') {
+        setStoreSectionVisible(e.detail.storeSectionVisible);
+      }
+    };
+    window.addEventListener('storeVisibilityChanged', handleStoreEvent);
+    return () => window.removeEventListener('storeVisibilityChanged', handleStoreEvent);
+  }, []);
+
   return (
     <footer className="footer bg-primary" id="main-footer">
       <div className="container footer__grid">
@@ -57,7 +76,7 @@ export default function Footer() {
             </span>
           </div>
           <p className="footer__tagline">
-            Discover, save, and generate studio-quality <span className="text-cyan">Prompts</span> from our community-driven <span className="text-pink">Pinterest-style feed</span>.
+            Discover, generate, and optimize studio-quality <span className="text-cyan">Prompts</span> with <span className="text-pink">Reference Consistency</span>.
           </p>
           <div className="footer__socials">
             <a href="https://www.youtube.com/@promptbyniti" className="footer__social-link youtube" title="YouTube" target="_blank" rel="noopener noreferrer">
@@ -82,7 +101,7 @@ export default function Footer() {
           <div className="footer__column">
             <h4 className="text-cyan">Platform</h4>
             <Link to="/generate">Prompt Generator</Link>
-            <Link to="/templates">Templates Store</Link>
+            {storeSectionVisible && <Link to="/templates">Templates Store</Link>}
             <Link to="/pricing">Pricing Plans</Link>
           </div>
           <div className="footer__column">

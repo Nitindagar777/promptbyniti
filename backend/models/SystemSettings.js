@@ -18,6 +18,7 @@ const SystemSettingsSchema = new mongoose.Schema({
   },
   modelSectionVisible: { type: Boolean, default: true },
   modelAutoLoop: { type: Boolean, default: false },
+  storeSectionVisible: { type: Boolean, default: true },
   updatedAt: { type: Date, default: Date.now }
 });
 

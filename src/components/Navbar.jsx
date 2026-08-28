@@ -58,17 +58,29 @@ export default function Navbar() {
     }
   });
 
-  // Fetch model section visibility from public settings
+  const [storeSectionVisible, setStoreSectionVisible] = useState(() => {
+    try {
+      const saved = localStorage.getItem('promptniti_store_visible');
+      return saved !== null ? JSON.parse(saved) : true;
+    } catch (e) {
+      return true;
+    }
+  });
+
+  // Fetch visibility settings from public settings
   useEffect(() => {
-    const fetchModelVisibility = async () => {
+    const fetchVisibility = async () => {
       try {
         const res = await fetch('/api/settings/public');
         if (res.ok) {
           const data = await res.json();
           if (data.success) {
-            const isVis = data.modelSectionVisible ?? true;
-            setModelSectionVisible(isVis);
-            localStorage.setItem('promptniti_model_visible', JSON.stringify(isVis));
+            const isModelVis = data.modelSectionVisible ?? true;
+            const isStoreVis = data.storeSectionVisible ?? true;
+            setModelSectionVisible(isModelVis);
+            setStoreSectionVisible(isStoreVis);
+            localStorage.setItem('promptniti_model_visible', JSON.stringify(isModelVis));
+            localStorage.setItem('promptniti_store_visible', JSON.stringify(isStoreVis));
           }
         }
       } catch (err) {
@@ -76,22 +88,33 @@ export default function Navbar() {
       }
     };
 
-    fetchModelVisibility();
+    fetchVisibility();
 
-    const handleCustomEvent = (e) => {
+    const handleModelEvent = (e) => {
       if (e.detail && typeof e.detail.modelSectionVisible === 'boolean') {
         setModelSectionVisible(e.detail.modelSectionVisible);
         localStorage.setItem('promptniti_model_visible', JSON.stringify(e.detail.modelSectionVisible));
       } else {
-        fetchModelVisibility();
+        fetchVisibility();
       }
     };
 
-    window.addEventListener('modelVisibilityChanged', handleCustomEvent);
-    return () => {
-      window.removeEventListener('modelVisibilityChanged', handleCustomEvent);
+    const handleStoreEvent = (e) => {
+      if (e.detail && typeof e.detail.storeSectionVisible === 'boolean') {
+        setStoreSectionVisible(e.detail.storeSectionVisible);
+        localStorage.setItem('promptniti_store_visible', JSON.stringify(e.detail.storeSectionVisible));
+      } else {
+        fetchVisibility();
+      }
     };
-  }, [location.pathname, state?.adminSettings?.modelSectionVisible]);
+
+    window.addEventListener('modelVisibilityChanged', handleModelEvent);
+    window.addEventListener('storeVisibilityChanged', handleStoreEvent);
+    return () => {
+      window.removeEventListener('modelVisibilityChanged', handleModelEvent);
+      window.removeEventListener('storeVisibilityChanged', handleStoreEvent);
+    };
+  }, [location.pathname, state?.adminSettings?.modelSectionVisible, state?.adminSettings?.storeSectionVisible]);
 
 
 
@@ -327,9 +350,11 @@ export default function Navbar() {
           <li>
             <Link to="/generate" className={`navbar__link ${isActive('/generate') ? 'navbar__link--active' : ''}`}>Generate</Link>
           </li>
-          <li>
-            <Link to="/templates" className={`navbar__link ${isActive('/templates') ? 'navbar__link--active' : ''}`}>Store</Link>
-          </li>
+          {storeSectionVisible && (
+            <li>
+              <Link to="/templates" className={`navbar__link ${isActive('/templates') ? 'navbar__link--active' : ''}`}>Store</Link>
+            </li>
+          )}
           {modelSectionVisible && (
             <li>
               <Link to="/model" className={`navbar__link navbar__link--model ${isActive('/model') ? 'navbar__link--active' : ''}`}>
@@ -534,9 +559,11 @@ export default function Navbar() {
               <Link to="/generate" className={`mobile-drawer__link ${isActive('/generate') ? 'mobile-drawer__link--active' : ''}`} onClick={() => setMobileMenuOpen(false)}>Generate</Link>
             </li>
           )}
-          <li>
-            <Link to="/templates" className={`mobile-drawer__link ${isActive('/templates') ? 'mobile-drawer__link--active' : ''}`} onClick={() => setMobileMenuOpen(false)}>Store</Link>
-          </li>
+          {storeSectionVisible && (
+            <li>
+              <Link to="/templates" className={`mobile-drawer__link ${isActive('/templates') ? 'mobile-drawer__link--active' : ''}`} onClick={() => setMobileMenuOpen(false)}>Store</Link>
+            </li>
+          )}
           {modelSectionVisible && (
             <li>
               <Link to="/model" className={`mobile-drawer__link ${isActive('/model') ? 'mobile-drawer__link--active' : ''}`} onClick={() => setMobileMenuOpen(false)}>
