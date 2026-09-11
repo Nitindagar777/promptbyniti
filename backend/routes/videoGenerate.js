@@ -35,7 +35,8 @@ async function uploadToCloudinary(fileInput, folder = 'ai_video_uploads') {
   try {
     const uploadRes = await cloudinary.uploader.upload(fileInput, {
       folder,
-      resource_type: 'image'
+      resource_type: 'image',
+      format: 'webp'
     });
     return uploadRes.secure_url;
   } catch (err) {

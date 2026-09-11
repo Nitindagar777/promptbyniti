@@ -35,7 +35,8 @@ const uploadToCloudinary = async (base64String) => {
   if (!base64String || !base64String.startsWith('data:')) return base64String;
   try {
     const result = await cloudinary.uploader.upload(base64String, {
-      resource_type: 'auto',
+      resource_type: 'image',
+      format: 'webp',
       folder: 'prompt_gene_lounge'
     });
     return result.secure_url;

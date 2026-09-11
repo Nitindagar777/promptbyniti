@@ -335,7 +335,12 @@ router.put('/profile', async (req, res) => {
     }
     if (avatar && avatar.startsWith('data:image')) {
       const uploadRes = await cloudinary.uploader.upload(avatar, {
-        folder: 'niti_avatars', width: 300, height: 300, crop: 'fill'
+        folder: 'niti_avatars',
+        resource_type: 'image',
+        format: 'webp',
+        width: 300,
+        height: 300,
+        crop: 'fill'
       });
       user.avatar = uploadRes.secure_url;
     }

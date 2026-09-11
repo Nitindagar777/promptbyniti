@@ -38,7 +38,8 @@ const uploadToCloudinary = async (base64String) => {
   if (!base64String || !base64String.startsWith('data:')) return base64String;
   try {
     const result = await cloudinary.uploader.upload(base64String, {
-      resource_type: 'auto',
+      resource_type: 'image',
+      format: 'webp',
       folder: 'prompt_gene'
     });
     return result.secure_url;
@@ -241,6 +242,16 @@ router.put('/:id', auth, async (req, res) => {
 
     // Update fields and auto-approve for instant feed updates
     const updatedData = { ...req.body, status: 'approved' };
+    if (updatedData.thumbnail && typeof updatedData.thumbnail === 'string' && updatedData.thumbnail.startsWith('data:')) {
+      updatedData.thumbnail = await uploadToCloudinary(updatedData.thumbnail);
+    }
+    if (updatedData.samples && updatedData.samples.length > 0) {
+      for (let i = 0; i < updatedData.samples.length; i++) {
+        if (updatedData.samples[i]?.output && typeof updatedData.samples[i].output === 'string' && updatedData.samples[i].output.startsWith('data:')) {
+          updatedData.samples[i].output = await uploadToCloudinary(updatedData.samples[i].output);
+        }
+      }
+    }
     const updatedPrompt = await Prompt.findByIdAndUpdate(req.params.id, updatedData, { new: true });
 
     // Sync creator's social links to their User document and all their prompts
