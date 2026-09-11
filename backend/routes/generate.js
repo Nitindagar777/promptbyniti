@@ -336,7 +336,7 @@ function buildSmartFallbackPrompt(description, promptType, targetModel, aspectRa
   const descClean = descRaw.replace(/\s*\+\s*/g, ', ').replace(/\s{2,}/g, ' ').trim();
   const type = promptType || 'image';
   const model = targetModel || 'flux-1';
-  const resolvedAR = aspectRatio ? aspectRatio.trim() : (type === 'video' ? '16:9' : '1:1');
+  const resolvedAR = type === 'video' ? (aspectRatio ? aspectRatio.trim() : '16:9') : '1:1';
   const cleanSubject = descClean.replace(/[^\w\s,]/gi, '').substring(0, 80);
 
   const titleWords = cleanSubject.split(' ').filter(Boolean).map(w => w.charAt(0).toUpperCase() + w.slice(1));
@@ -433,7 +433,7 @@ function buildSystemInstruction(rulesStr, aiPower, characterMode, promptType, du
   const power = aiPower || 'normal';
   const isVideo = promptType === 'video';
   const isText = promptType === 'text';
-  const resolvedAR = aspectRatio ? aspectRatio.trim() : (isVideo ? '16:9' : '1:1');
+  const resolvedAR = isVideo ? (aspectRatio ? aspectRatio.trim() : '16:9') : '1:1';
 
   if (isDirectPromptOnly) {
     return `You are an expert AI Prompt Engineer for a premium prompt marketplace called "Prompt by Niti".
@@ -1493,7 +1493,7 @@ DO NOT exceed 5 bracketed variables under any circumstances. Keep the majority o
         if (!str || typeof str !== 'string') return str;
         return str.replace(/\s*\+\s*/g, ', ').replace(/\s{2,}/g, ' ').trim();
       };
-      const resolvedAR = aspectRatio ? aspectRatio.trim() : (promptType === 'video' ? '16:9' : '1:1');
+      const resolvedAR = promptType === 'video' ? (aspectRatio ? aspectRatio.trim() : '16:9') : '1:1';
       const ensureCustomAR = (s) => {
         const cleaned = removePlusSigns(s.replace(/\s*--ar\s+\S+/g, '')).trim();
         return cleaned + ' --ar ' + resolvedAR;

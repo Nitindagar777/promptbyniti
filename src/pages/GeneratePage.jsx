@@ -214,10 +214,7 @@ export default function GeneratePage() {
           nextAR = '16:9';
         }
       } else if (type === 'image') {
-        const validImageRatios = ['16:9', '4:3', '1:1', '3:4', '9:16'];
-        if (!validImageRatios.includes(nextAR)) {
-          nextAR = '1:1';
-        }
+        nextAR = '1:1';
       } else {
         nextAR = '';
       }
@@ -770,11 +767,7 @@ export default function GeneratePage() {
     { value: '9:16', label: '9:16 (Vertical)' },
     { value: '16:9', label: '16:9 (Landscape)' }
   ] : [
-    { value: '16:9', label: '16:9 (Landscape)' },
-    { value: '4:3', label: '4:3 (Standard)' },
-    { value: '1:1', label: '1:1 (Square)' },
-    { value: '3:4', label: '3:4 (Portrait)' },
-    { value: '9:16', label: '9:16 (Story)' }
+    { value: '1:1', label: '1:1 (Square - Fixed)' }
   ];
 
   const modelOptions = [

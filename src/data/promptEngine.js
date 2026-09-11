@@ -191,7 +191,7 @@ export function generatePrompt(form) {
 
   /* Format for specific AI model */
   if (model === 'midjourney' || model.includes('mj')) {
-    mainPrompt += ` ${modelParams || '--ar 16:9 --v 6'}`;
+    mainPrompt += ` ${modelParams || '--ar 1:1 --v 6'}`;
   } else if (model.includes('stable-diffusion') || model.includes('flux')) {
     mainPrompt = `(${description || catLabel}:1.3), ${parts.slice(1).join(', ')}, ${modelParams}`;
   }
@@ -267,8 +267,8 @@ function generateVariations({ category, style, mood, lighting, camera, descripti
   let var2 = v2Parts.join(', ');
 
   if (model === 'midjourney') {
-    var1 += ' --ar 16:9 --v 6 --q 2 --s 500';
-    var2 += ' --ar 16:9 --v 6 --q 2 --s 1000';
+    var1 += ' --ar 1:1 --v 6 --q 2 --s 500';
+    var2 += ' --ar 1:1 --v 6 --q 2 --s 1000';
   }
 
   return [
