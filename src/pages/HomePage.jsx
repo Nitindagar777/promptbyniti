@@ -635,30 +635,30 @@ export default function HomePage() {
 
             <div className="p-hero__mini-banners" ref={scrollContainerRef}>
 
-              {/* 2nd banner: Image Reference */}
+              {/* 2nd banner: Image Generation Agent */}
               <a href="#ref-modes" onClick={(e) => handleSelectFeature(e, 'image', 'sameScene')} className="p-mini-banner p-mini-banner--cyan" style={{ backgroundImage: "url('/same_scene_ref.png')" }}>
                 <div className="p-mini-banner__top">
                   <Image size={16} className="text-cyan" />
                 </div>
-                <h4 className="p-mini-banner__title">Image Reference</h4>
+                <h4 className="p-mini-banner__title">Image Generation Agent</h4>
                 <p className="p-mini-banner__desc">Lock faces, outfits, and styles across scenes.</p>
               </a>
 
-              {/* 3rd banner: Video Reference */}
+              {/* 3rd banner: Video Generation Agent */}
               <a href="#ref-modes" onClick={(e) => handleSelectFeature(e, 'video', 'sameSceneLoop')} className="p-mini-banner p-mini-banner--orange" style={{ backgroundImage: "url('/fixed_character_ref.png')" }}>
                 <div className="p-mini-banner__top">
                   <Video size={16} className="text-orange" />
                 </div>
-                <h4 className="p-mini-banner__title">Video Reference</h4>
+                <h4 className="p-mini-banner__title">Video Generation Agent</h4>
                 <p className="p-mini-banner__desc">Generate cinematic motion loops and characters.</p>
               </a>
 
-              {/* 4th banner: Text & AI Agents Reference */}
+              {/* 4th banner: Super Agent */}
               <a href="#ref-modes" onClick={(e) => handleSelectFeature(e, 'text', 'agents')} className="p-mini-banner p-mini-banner--purple">
                 <div className="p-mini-banner__top">
-                  <Code size={16} className="text-purple" />
+                  <Bot size={16} className="text-purple" />
                 </div>
-                <h4 className="p-mini-banner__title">Text <span style={{ color: '#ffffff' }}>&</span> AI Agents</h4>
+                <h4 className="p-mini-banner__title">Super Agent</h4>
                 <p className="p-mini-banner__desc">Format autonomous agents, system rules & code.</p>
               </a>
             </div>
@@ -791,9 +791,9 @@ export default function HomePage() {
       <section className="p-ref-modes section-spacing" id="ref-modes">
         <div className="container">
           <div className="p-ref-modes__header reveal">
-            <h2 className="h-display text-center">AI <span className="text-cyan">Reference</span> Modes</h2>
+            <h2 className="h-display text-center">AI Agent <span className="text-cyan">Reference</span> Modes</h2>
             <p className="text-center p-ref-modes__subtitle">
-              Explore how our advanced prompt templates maintain consistency across images, videos, and text outputs.
+              Explore how our advanced prompt templates maintain consistency across images, videos, and autonomous agents.
             </p>
           </div>
 
@@ -801,15 +801,15 @@ export default function HomePage() {
           <div className="p-ref-modes__category-tabs reveal">
             <button className={`p-ref-modes__cat-tab ${activeRefCategory === 'image' ? 'active p-ref-modes__cat-tab--image' : ''}`} onClick={() => setActiveRefCategory('image')}>
               <Image size={18} />
-              <span>Image Modes</span>
+              <span>Image Generation Agent</span>
             </button>
             <button className={`p-ref-modes__cat-tab ${activeRefCategory === 'video' ? 'active p-ref-modes__cat-tab--video' : ''}`} onClick={() => setActiveRefCategory('video')}>
               <Video size={18} />
-              <span>Video Modes</span>
+              <span>Video Generation Agent</span>
             </button>
             <button className={`p-ref-modes__cat-tab ${activeRefCategory === 'text' ? 'active p-ref-modes__cat-tab--text' : ''}`} onClick={() => setActiveRefCategory('text')}>
-              <Code size={18} />
-              <span>Text Modes</span>
+              <Bot size={18} />
+              <span>Super Agent</span>
             </button>
           </div>
 
