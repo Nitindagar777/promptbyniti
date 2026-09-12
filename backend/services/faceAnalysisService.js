@@ -97,7 +97,30 @@ except Exception as e:
     print(json.dumps({"face_detected": False, "error": str(e)}))
 `;
 
-    const child = execFile('py', ['-3.12', '-c', pyCode], {
+    // Cross-platform python detection (Windows: py/python, Linux: venv/python3)
+    const fs = require('fs');
+    const venvPyLinux = path.join(SERVICE_DIR, 'venv', 'bin', 'python3');
+    const venvPyWin = path.join(SERVICE_DIR, 'venv', 'Scripts', 'python.exe');
+
+    let cmd = 'python3';
+    let args = [];
+
+    if (process.platform === 'win32') {
+      if (fs.existsSync(venvPyWin)) {
+        cmd = venvPyWin;
+      } else {
+        cmd = 'py';
+        args = ['-3.12'];
+      }
+    } else {
+      if (fs.existsSync(venvPyLinux)) {
+        cmd = venvPyLinux;
+      } else {
+        cmd = 'python3';
+      }
+    }
+
+    const child = execFile(cmd, [...args, '-c', pyCode], {
       cwd: SERVICE_DIR,
       timeout: 4000,
       maxBuffer: 10 * 1024 * 1024
