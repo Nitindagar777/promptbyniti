@@ -1106,6 +1106,7 @@ router.post('/', async (req, res) => {
     const { description, characterImage, promptType, model, mode, modelLabel, aiPower, characterMode, aspectRatio, category, subcategory, generatePack } = req.body;
     // Use human-readable model name if available, otherwise fall back to model id
     const targetModel = modelLabel || model || 'Midjourney';
+    const resolvedAR = promptType === 'video' ? (aspectRatio ? aspectRatio.trim() : '16:9') : '1:1';
 
     // Default to direct prompt only (no variables) if generatePack is not explicitly true
     const isDirectPromptOnly = !generatePack;
@@ -1581,7 +1582,6 @@ DO NOT exceed 5 bracketed variables under any circumstances. Keep the majority o
         if (!str || typeof str !== 'string') return str;
         return str.replace(/\s*\+\s*/g, ', ').replace(/\s{2,}/g, ' ').trim();
       };
-      const resolvedAR = promptType === 'video' ? (aspectRatio ? aspectRatio.trim() : '16:9') : '1:1';
       const ensureCustomAR = (s) => {
         const cleaned = removePlusSigns(s.replace(/\s*--ar\s+\S+/g, '')).trim();
         return cleaned + ' --ar ' + resolvedAR;
