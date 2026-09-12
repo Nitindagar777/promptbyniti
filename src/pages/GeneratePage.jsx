@@ -387,7 +387,7 @@ export default function GeneratePage() {
     const descToUse = overrideDesc !== null ? overrideDesc : form.description;
 
     if (generatorMode === 'prompt') {
-      const hasDescription = descToUse && descToUse.trim();
+      const hasDescription = (descToUse && descToUse.trim()) || (form.promptType !== 'text' && !!form.characterImage);
       const hasSelection = !!selectedSubcategory;
       if (!hasDescription && !hasSelection) {
         descriptionRef.current?.focus();
@@ -430,9 +430,13 @@ export default function GeneratePage() {
         ? (aiPower === 'power' ? '20s' : aiPower === 'super' ? '10s' : '5s')
         : undefined;
 
+      const effectiveDescription = (descToUse && descToUse.trim())
+        ? descToUse.trim()
+        : (form.characterImage ? 'Reverse engineer and recreate 100% accurate prompt from uploaded reference image' : '');
+
       const payload = {
         ...form,
-        description: descToUse,
+        description: effectiveDescription,
         aiPower,
         modelLabel,
         characterMode,

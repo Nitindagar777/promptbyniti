@@ -465,6 +465,52 @@ function buildSystemInstruction(rulesStr, aiPower, characterMode, promptType, du
   const resolvedAR = isVideo ? (aspectRatio ? aspectRatio.trim() : '16:9') : '1:1';
 
   if (isDirectPromptOnly) {
+    if (hasRefImage && !isVideo && !isText) {
+      return `You are an expert AI Vision Prompt Engineer for a premium prompt marketplace called "Prompt by Niti".
+
+PLATFORM RULES (ALWAYS ENFORCE):
+${rulesStr}
+
+YOUR MISSION:
+The user has uploaded a REFERENCE IMAGE. Your #1 objective is to reverse-engineer an ULTRA-ACCURATE, COMPLETE, AND 100% FAITHFUL AI image generation prompt that will recreate the EXACT uploaded reference image with 100% fidelity in Midjourney/Flux/Stable Diffusion.
+
+CRITICAL INSTRUCTIONS FOR 100% FAITHFUL IMAGE RECREATION:
+1. EXAMINE EVERY VISUAL DETAIL FROM THE UPLOADED IMAGE:
+   - Subject Identity: exact ethnicity, estimated age, gender, facial structure, eye shape, nose, lips, exact hair color, hair length, hairstyle, hairline, natural skin texture with visible skin pores and fine details, and exact facial expression.
+   - Outfit & Clothing: every single garment worn in the image — exact fabrics (e.g. checkered cotton, silk, denim, knit wool), sleeve length, collar/neckline, exact colors, patterns, fit, layering, and all accessories (jewelry, earrings, necklace, rings, watch, glasses, footwear).
+   - Pose & Framing: exact posture (standing, seated, leaning), body angle, hand placement, finger positions, head tilt, eye gaze direction, and camera framing (e.g. eye-level close-up portrait, medium shot, full-body shot).
+   - Environment & Scenery: exact setting (indoor room, blooming flower field, cafe, city street, studio backdrop), background architectural elements, foliage, furniture, props, depth of field, and bokeh.
+   - Lighting & Atmosphere: exact lighting setup (natural sunlight, golden hour glow, soft diffused daylight, studio strobe, rim light), shadow depth, contrast, color temperature, and atmospheric mood.
+   - Art Medium & Photographic Style: photographic realism (e.g. candid 35mm f/1.8 lens photograph, 85mm portrait, authentic raw snapshot, subtle film grain) or specific artistic style if the upload is digital art, illustration, watercolor, or 3D render.
+
+2. ZERO VARIABLES, ZERO BRACKETS, ZERO VARIANTS (STRICTLY ENFORCED):
+   - You are ABSOLUTELY FORBIDDEN from generating ANY bracketed variables like [brackets], [subject], [clothing], [pose], [variable], or placeholders in the prompt.
+   - The prompt MUST be a single, complete, concrete, finished prompt describing the exact image.
+   - DO NOT generate alternate variants or choices.
+
+3. ALL MODES UNIFIED FOR INITIAL PROMPT:
+   - Regardless of which reference mode is active, the initial direct prompt MUST be a 100% faithful, complete recreation of the uploaded image.
+
+4. TARGET MODEL SYNTAX & AR:
+   - Target AI Model: ${targetModel || 'Midjourney'} — format keywords, photographic parameters, and syntax tailored for this model.
+   - Aspect Ratio: ${resolvedAR} (mainPrompt MUST end with --ar ${resolvedAR}).
+   - NO '+' SIGNS: Do not use '+' symbols in any field. Use natural descriptive English sentences separated by commas.
+
+OUTPUT FORMAT:
+You must return a VALID JSON object with these fields:
+{
+  "title": "A catchy 3-5 word title describing the reference image prompt",
+  "description": "A professional, elegant 1-2 sentence sales description of what this prompt achieves",
+  "imageAnalysis": "Detailed visual breakdown of everything seen in the uploaded reference image (subject, clothing, setting, lighting, and style)",
+  "mainPrompt": "The complete, 100% accurate, ultra-detailed prompt reproducing the uploaded reference image with full photographic/artistic depth. NO BRACKETS OR VARIABLES. Ends with --ar ${resolvedAR}",
+  "negativePrompt": "A comprehensive negative prompt (e.g. CGI, cartoon, 3D render, plastic smooth skin, bad anatomy, deformed limbs, blurry, extra fingers)",
+  "keywords": ["keyword1", "keyword2", "keyword3", "keyword4"],
+  "instructions": "Copy and paste this prompt directly into ${targetModel || 'Midjourney'} to generate an exact likeness of the reference image."
+}
+
+Return ONLY the JSON object. No markdown fences, no explanation.`;
+    }
+
     return `You are an expert AI Prompt Engineer for a premium prompt marketplace called "Prompt by Niti".
     
 YOUR MISSION:
@@ -740,76 +786,58 @@ CRITICAL — TEXT PROMPT RULES:
     if (resolvedCharMode === 'fixed') {
       referenceImageRules = `
 CRITICAL — REFERENCE IMAGE HANDLING (🔒 FIXED CHARACTER MODE):
-The user has selected FIXED CHARACTER mode. This means EVERYTHING from the reference image stays the SAME — the same character, same clothing, same scene, same environment, same style, same color palette, same overall vibe. The ONLY things that change are the POSE, ACTION, GESTURE, and BODY POSITION of the character. Think of it like taking multiple photos of the same model during the same photoshoot — same outfit, same location, just different poses.
+The user has selected FIXED CHARACTER mode. This means the CHARACTER'S PHYSICAL IDENTITY (face, hair, eyes, skin tone, body type, age, gender) AND their EXACT CLOTHING/OUTFIT (every garment, colors, patterns, materials, accessories) from the reference image MUST stay 100% IDENTICAL across promptTemplate and ALL 4 samples.
+WHAT CHANGES: The character travels to DIFFERENT LOCATIONS, SCENES, and ENVIRONMENTS! The background setting, location, lighting atmosphere, and action/pose change completely in each sample.
+Think of it like following the same character on a journey through different places — wearing their signature outfit, but visiting a cozy cafe, a snowy mountain peak, a vibrant neon city street, or a sunlit beach.
 
 When a reference image is provided in FIXED CHARACTER mode, you MUST:
 
-1. DEEPLY ANALYZE EVERYTHING IN THE IMAGE — treat every detail as FIXED:
-   CHARACTER (ALL FIXED — never changes):
-   - Face: structure, features, expression style, age, gender, ethnicity, makeup
-   - Hair: exact color, length, style, texture, bangs, accessories in hair
+1. DEEPLY ANALYZE THE CHARACTER & OUTFIT FROM THE IMAGE — treat them as FIXED:
+   CHARACTER (ALL FIXED — never changes across promptTemplate or any sample):
+   - Face: facial structure, eye shape, nose, lips, expression style, age, gender, ethnicity, natural skin texture with visible pores
+   - Hair: exact color, length, hairstyle, texture, bangs, accessories in hair
    - Body type, proportions, height impression
    - Clothing: EVERY piece of clothing stays IDENTICAL — exact colors, patterns, materials, layers, fit
    - Accessories: jewelry, watches, bracelets, bags, hats, sunglasses, shoes — ALL stay the same
-   - Skin tone, distinguishing marks, tattoos
-   - For animals: exact breed/species, fur color & pattern, size, markings — ALL stay the same
-   - For objects: exact shape, colors, text, design elements — ALL stay the same
 
-   SCENE & ENVIRONMENT (ALL FIXED — never changes):
-   - Background setting: the SAME location/environment type
-   - Art style: the SAME photographic/artistic style
-   - Color palette: the SAME overall color scheme and mood
-   - Props and surrounding objects: the SAME props stay in scene
-   - Lighting mood: the SAME general lighting atmosphere
-   - Composition style: the SAME framing approach
+   SCENE & BACKGROUND (CHANGES PER SAMPLE):
+   - Background setting: varies completely per sample (e.g. cozy library, snowy mountain, sunny beach, rooftop at sunset, bustling night market)
+   - Lighting mood: adjusts to match the new setting
+   - Pose/action: fits the new environment naturally
 
-2. EVERYTHING IS FIXED TEXT EXCEPT POSE/ACTION — THESE ARE THE ONLY VARIABLES:
-   In the promptTemplate, ALMOST EVERYTHING must be written as FIXED, unchangeable text — the character description, their clothes, the scene, the style, the lighting mood, the color palette. The ONLY things in [brackets] should be the character's POSE, ACTION, GESTURE, or BODY POSITION.
+2. ONLY BACKGROUND, SETTING, LIGHTING, AND POSE ARE ALLOWED AS VARIABLES:
+   In the promptTemplate, the character description and clothing description must be written as FIXED, unchangeable text. The ONLY bracketed variables should be:
+   - [background_setting]
+   - [location/environment]
+   - [pose/action]
+   - [lighting/atmosphere] (optional)
    
-   CORRECT EXAMPLE (girl in a flower field photoshoot):
-   - promptTemplate: "Creative forced perspective lifestyle photography of a young woman with long wavy brown hair wearing a blue floral crop top, white denim shorts, and canvas sneakers, [pose/action], in a bright sunny daisy and sunflower meadow, playful hand-drawn doodle overlays, vibrant summer colors, whimsical editorial style, natural daylight, full body shot --ar 1:1"
-   - Sample A: "...standing with arms spread wide next to a giant sunflower..."
-   - Sample B: "...jumping joyfully with one arm reaching toward the sky..."  
-   - Sample C: "...crouching down smelling flowers with hands cupping a daisy..."
-   
-   WRONG EXAMPLE: "Photography of a [character] wearing [outfit] in a [location]..." ← FORBIDDEN! Character, outfit, and location must NOT be variables!
+   ABSOLUTELY FORBIDDEN as variables: [character], [person], [subject], [clothing], [outfit]. These MUST be fixed text.
 
-3. STRICT VARIABLE RULES — ONLY 1 TO 3 VARIABLES ALLOWED:
-   The promptTemplate should have VERY FEW variables (ideally 1-3, max 5) because almost everything is fixed. The allowed variable types are ONLY:
-   - [pose/action] — the character's body position or physical action (e.g., "arms outstretched making a heart shape", "twirling with one leg up", "sitting cross-legged looking at camera", "hands on hips leaning forward")
-   - [gesture/expression] — hand gesture, facial expression, or small body movement (e.g., "making a peace sign and winking", "blowing a kiss", "laughing with head tilted back")
-   - [creative element] — a small creative prop or visual trick that varies between shots (e.g., "forced perspective with a giant sunflower", "soap bubble overlay", "drawn angel wings doodle")
-   
-   ABSOLUTELY FORBIDDEN as variables: [character], [person], [subject], [clothing], [outfit], [background], [setting], [location], [scene], [style], [color palette], [environment]. These MUST be fixed text.
+3. THE mainPrompt MUST DESCRIBE THE CHARACTER IN THE REFERENCE IMAGE SCENE (without brackets).
 
-4. THE mainPrompt MUST RECREATE THE EXACT SAME SCENE from the reference image with one specific pose.
-
-5. ALL 4 SAMPLES MUST LOOK LIKE THEY ARE FROM THE SAME PHOTOSHOOT (Sample A, Sample B, Sample C, Sample D):
-   - Same character, same clothes, same location, same style — ONLY the pose/action/gesture changes.
-   - If the reference shows two girls in colorful outfits at a theme park, ALL samples show those SAME two girls in those SAME outfits at that SAME theme park — just in different poses (arms spread, making heart shapes, jumping, etc.)
-   - If the reference shows a girl in a flower field with doodle overlays, ALL samples show that SAME girl in that SAME field with those SAME doodle overlays — just doing different actions.
-   - The samples should feel like a photographer telling the model "OK now try this pose... now try this one..."
-
-6. The goal: when someone generates images from these prompts, ALL the output images look like they belong to the SAME photoshoot session — same person, same outfit, same place, just different poses and moments captured.`;
+4. ALL 4 SAMPLES MUST FEATURE THE EXACT SAME CHARACTER & OUTFIT IN DIFFERENT SCENES (Sample A, Sample B, Sample C, Sample D):
+   - Same character identity, same facial features, same hair, same clothes in every sample.
+   - Each sample transports them to a completely different environment with an appropriate pose.`;
 
       howToBuildSamples = `HOW TO BUILD SAMPLES (🔒 FIXED CHARACTER MODE - FOLLOW THIS EXACTLY):
-1. Write the mainPrompt first. It must be a perfect, highly detailed, real-world example of the prompt being used (NO brackets) describing the reference image exactly.
-   - Describe the exact subject from the reference (e.g. "a young East Asian woman with short dark hair").
-   - Describe the exact clothing from the reference (e.g. "wearing a blue and white checkered wrap and a delicate white lace-strap top").
-   - Describe the scene/background setting, art style, color palette, lighting, and a specific pose/action.
+1. Write the mainPrompt first. It must be a perfect, highly detailed, real-world example of the prompt being used (NO brackets) describing the reference character and scene exactly.
+   - Describe the exact subject from the reference (e.g. "a young East Asian woman with short dark hair, natural skin texture").
+   - Describe the exact clothing from the reference (e.g. "wearing a blue and white checkered wrap top and a delicate white lace camisole").
+   - Describe the scene/background setting, lighting, and a specific pose/action.
    - End with "--ar ${resolvedAR}".
-2. Create promptTemplate: Take the mainPrompt and replace ONLY the pose/action, background setting, and lighting/colors with bracketed variables (e.g., [pose/action], [background_setting], [lighting/colors]).
+2. Create promptTemplate: Take the mainPrompt and replace ONLY the background setting, lighting, and pose/action with bracketed variables (e.g., [background_setting], [lighting], [pose/action]).
    - CRITICAL: The subject description and clothing/outfit MUST remain as FIXED, detailed, non-variable text in the promptTemplate. DO NOT put them in brackets!
 3. For each of the 4 samples (Sample A, Sample B, Sample C, Sample D), copy the promptTemplate and replace the bracketed variables.
-   - CRITICAL: The subject description and clothing/outfit MUST be 100% IDENTICAL and repeated word-for-word across all samples! DO NOT vary them! E.g., never generate different subjects like a "Nordic fisherman" or "fantasy elf" in any sample! All samples must feature the EXACT SAME young woman in the EXACT SAME outfit.
-   - The pose/action, background setting, and lighting/colors MUST vary completely per sample to show the same character in different locations/scenes (e.g. in a cozy library, in snowy mountains, on a sunny beach).
+   - CRITICAL: The subject description and clothing/outfit MUST be 100% IDENTICAL and repeated word-for-word across all samples! DO NOT vary them! E.g., never generate different subjects or different outfits. All samples must feature the EXACT SAME character in the EXACT SAME outfit.
+   - The background setting, lighting, and pose/action MUST vary completely per sample to show the same character in different locations/scenes (e.g. Sample A in the original scene, Sample B in a cozy library, Sample C in snowy mountains, Sample D in a sunlit botanical garden).
 4. ZERO TOLERANCE FOR BRACKETS IN SAMPLES: Samples and mainPrompt MUST NOT contain any [BRACKETS]. Only promptTemplate has brackets.
 5. SAMPLE COUNT: Generate exactly 4 samples for complete prompt packs (Sample A, Sample B, Sample C, Sample D).
 6. CRITICAL CHARACTER LENGTH CONSTRAINT (MANDATORY):
    The generated promptTemplate MUST strictly comply with these length limits based on the Credit Tier:
-   - 1 Credit (Normal): promptTemplate MUST be at least 400 to 500 characters long (detailed and perfect to best describe the scene).
-   - 3 Credits (Super): promptTemplate MUST be at least 500 to 600 characters long (exceptional photographic details and camera settings).
-   - 5 Credits (Power): promptTemplate MUST be at least 600 to 700 characters long (masterpiece-level visual details, highly detailed and fully descriptive).
+   - 1 Credit (Normal): promptTemplate MUST be at least 400 to 500 characters long.
+   - 3 Credits (Super): promptTemplate MUST be at least 500 to 600 characters long.
+   - 5 Credits (Power): promptTemplate MUST be at least 600 to 700 characters long.
    You MUST write exceptionally detailed, long, and descriptive fixed text around the bracketed variables in promptTemplate to satisfy this length requirement.
 7. Every prompt and sample MUST end with --ar ${resolvedAR}`;
     } else if (resolvedCharMode === 'sameScene') {
@@ -1081,15 +1109,18 @@ router.post('/', async (req, res) => {
 
     // Default to direct prompt only (no variables) if generatePack is not explicitly true
     const isDirectPromptOnly = !generatePack;
+    const hasRefImage = characterImage && characterImage.startsWith('data:image');
 
-    if (!description || !description.trim()) {
-      return res.status(400).json({ message: 'Description or Template is required.' });
+    const effectiveDesc = (description && description.trim())
+      ? description.trim()
+      : (hasRefImage ? 'Reverse engineer and recreate 100% accurate prompt from uploaded reference image' : '');
+
+    if (!effectiveDesc) {
+      return res.status(400).json({ message: 'Description, Template, or Reference Image is required.' });
     }
 
     // 1. Get cached model (keys and database rules)
     const cached = await getOrCreateModel();
-
-    const hasRefImage = characterImage && characterImage.startsWith('data:image');
 
     // Build the system instruction dynamically based on the requested aiPower level
     const systemInstruction = buildSystemInstruction(cached.rulesStr, aiPower, characterMode, promptType, req.body.duration, hasRefImage, aspectRatio, category, subcategory, isDirectPromptOnly, targetModel);
@@ -1392,8 +1423,35 @@ Therefore, when replacing the [BRACKETED] variables:
 2. The variables describing the subject, clothing, colors, and poses (e.g., [subject], [pose], [outfit], [color]) SHOULD vary completely in each of the 4 samples (e.g. generating completely different subjects like a rugged Nordic fisherman, a fantasy elf, a street artist) while keeping the overall art style described by the fixed text identical.`;
       }
 
-      userParts.push({
-        text: `I have attached a REFERENCE IMAGE above. This is the primary visual source and the most important input.
+      if (!isVideo && promptType !== 'text' && isDirectPromptOnly) {
+        userParts.push({
+          text: `I have attached a REFERENCE IMAGE above. This is the primary visual source and the most important input.
+
+YOUR MISSION:
+Carefully inspect and deeply analyze the attached reference image in extreme visual detail.
+Generate a 100% accurate, complete, and faithful image generation prompt that will recreate this EXACT image with 100% fidelity in ${targetModel}.
+
+REVERSE-ENGINEER THE UPLOADED IMAGE WITH 100% FIDELITY:
+1. Exact Subject Details: Describe the exact person, animal, or subject seen in the image — ethnicity, estimated age, facial features, eye shape, nose, lips, exact hair color, hairstyle, hairline, natural skin texture with visible skin pores, and exact facial expression.
+2. Exact Clothing & Outfit: Describe every piece of clothing, fabric weave, pattern, neckline, collar, color, fit, layers, and all accessories (jewelry, earrings, necklace, watch, eyewear, shoes, etc.).
+3. Exact Pose & Camera Angle: Describe the exact body posture, arm and hand positions, finger placement, head angle, eye gaze direction, and camera framing (e.g. eye-level close-up portrait, medium waist-up shot, full-body shot, 35mm f/1.8 candid lens).
+4. Exact Background & Environment: Describe the exact background setting, architectural or nature elements, flora/foliage, props, furniture, and depth of field / bokeh.
+5. Exact Lighting & Atmosphere: Describe the lighting source, key light, soft directional shadows, color palette, color temperature, saturation, and overall mood.
+6. Medium & Style: Match the exact visual aesthetic (e.g. raw unedited candid 35mm film photograph, high-fashion editorial portrait, or artistic medium if illustration/render).
+
+STRICT CRITICAL RULES:
+1. ZERO VARIABLES OR BRACKETS: You are ABSOLUTELY FORBIDDEN from using any bracketed variables like [subject], [clothing], [pose], [brackets], or placeholders in the prompt. The prompt must be 100% concrete, fixed, and ready to use immediately.
+2. 100% IMAGE FIDELITY: The generated prompt MUST describe the EXACT uploaded image, NOT a generic or random variation. This applies across all reference modes.
+3. Prompt Length: Write a rich, master-level prompt (at least 400 to 650 characters) that captures all the intricate details of the uploaded image.
+4. Target AI Model: ${targetModel} — optimize the prompt syntax and keywords for this model.
+5. Aspect Ratio: ${resolvedAR} (mainPrompt MUST end with --ar ${resolvedAR}).
+${effectiveDesc && effectiveDesc.trim() && !effectiveDesc.toLowerCase().includes('reverse engineer') ? `User's additional context/instructions: "${effectiveDesc.trim()}"` : ''}
+
+Fill in "imageAnalysis" with your detailed visual breakdown of the reference image, and return "mainPrompt" as the complete 100% accurate reproduction prompt in the standard JSON format.`
+        });
+      } else {
+        userParts.push({
+          text: `I have attached a REFERENCE IMAGE above. This is the primary visual source and the most important input.
 
 YOUR MISSION:
 Deeply analyze the attached reference image (its subject, clothing, style, lighting, composition, colors, medium) and generate a perfect, highly detailed prompt template and 4 distinct samples from scratch, in accordance with the character consistency rules below.
@@ -1410,10 +1468,11 @@ To achieve this character length, you MUST write exceptionally detailed, long, a
 
 Target AI Model: ${targetModel} — optimize the prompt syntax and keywords for this specific model.
 
-User's additional instructions: "${description.trim()}"
+User's additional instructions: "${effectiveDesc.trim()}"
 
 Fill in "imageAnalysis" with your detailed description of everything you see in the reference image (subject details, clothing, scene, background, lighting, and style).`
-      });
+        });
+      }
     } else {
       // No reference image — simple text-only generation
       userParts.push({
@@ -1489,6 +1548,10 @@ DO NOT exceed 5 bracketed variables under any circumstances. Keep the majority o
         promptData.negativePrompt = promptData.negativePrompt || '';
         promptData.instructions = promptData.instructions || '';
         promptData.samples = [];
+        if (promptData.mainPrompt) {
+          // Guarantee zero variables or brackets in direct prompt
+          promptData.mainPrompt = promptData.mainPrompt.replace(/\[(?:[^\]:]+:)?([^\]]+)\]/g, '$1').replace(/[\[\]]/g, '').trim();
+        }
       }
 
       // Ensure samples (min 4, max 5)
