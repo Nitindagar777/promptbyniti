@@ -658,7 +658,7 @@ export default function HomePage() {
                 <div className="p-mini-banner__top">
                   <Code size={16} className="text-purple" />
                 </div>
-                <h4 className="p-mini-banner__title">Text & AI Agents</h4>
+                <h4 className="p-mini-banner__title">Text <span style={{ color: '#ffffff' }}>&</span> AI Agents</h4>
                 <p className="p-mini-banner__desc">Format autonomous agents, system rules & code.</p>
               </a>
             </div>
@@ -673,12 +673,12 @@ export default function HomePage() {
             <div className="p-hero__content-col reveal" style={{ animationDelay: '0.1s' }}>
 
               <h1 className="p-hero__title" style={{ fontSize: 'clamp(2.1rem, 3.3vw, 3.2rem)', lineHeight: '1.2' }}>
-                <span className="text-cyan" style={{ whiteSpace: 'nowrap' }}>AI Prompt & Agent</span> <br className="hide-on-mobile" />
+                <span className="text-cyan" style={{ whiteSpace: 'nowrap' }}>AI Prompt</span> <span style={{ color: '#ffffff', margin: '0 6px' }}>&</span> <span className="text-cyan" style={{ whiteSpace: 'nowrap' }}>Agent</span> <br className="hide-on-mobile" />
                 <span className="text-orange" style={{ whiteSpace: 'nowrap' }}>Generation</span>
               </h1>
 
               <p className="p-hero__pitch">
-                Generate & craft high-performing <strong className="text-cyan">AI Prompts</strong> & autonomous <strong className="text-purple">AI Agents</strong>, powered by <strong className="text-pink">smart multi-modal engines</strong> and reference consistency that keeps every character, style, and agent persona <strong className="text-green">perfectly consistent</strong>.
+                Generate & craft high-performing <strong className="text-cyan">AI Prompts</strong> <span style={{ color: '#ffffff' }}>&</span> autonomous <strong className="text-purple">AI Agents</strong>, powered by <strong className="text-pink">smart multi-modal engines</strong> and reference consistency that keeps every character, style, and agent persona <strong className="text-green">perfectly consistent</strong>.
               </p>
 
               <p className="p-hero__subtitle p-hero__subtitle--accent">
@@ -704,7 +704,7 @@ export default function HomePage() {
               <div className="p-hero__features">
                 <div className="p-hero__feature-item">
                   <Sparkles size={16} className="text-pink" />
-                  <span>AI Prompts & Autonomous Agents</span>
+                  <span>AI Prompts <span style={{ color: '#ffffff' }}>&</span> Autonomous Agents</span>
                 </div>
                 <div className="p-hero__feature-item">
                   <ZapIcon size={16} className="text-orange" />
@@ -712,7 +712,7 @@ export default function HomePage() {
                 </div>
                 <div className="p-hero__feature-item">
                   <Layers size={16} className="text-cyan" />
-                  <span>Midjourney, Sora, ChatGPT, Claude & Agents</span>
+                  <span>Midjourney, Sora, ChatGPT, Claude <span style={{ color: '#ffffff' }}>&</span> Agents</span>
                 </div>
               </div>
             </div>
@@ -1960,7 +1960,7 @@ export default function HomePage() {
           <div className="p-seo-content container" style={{ padding: '24px 0 48px', borderTop: '1px solid rgba(255, 255, 255, 0.03)' }}>
             <div style={{ maxWidth: '900px', margin: '0 auto' }}>
               <h2 className="h-display" style={{ textAlign: 'center', marginBottom: '24px' }}>
-                The Ultimate <span className="text-cyan">AI Prompt & Agent</span> Platform — <span className="text-orange">Prompt by Niti</span>
+                The Ultimate <span className="text-cyan">AI Prompt</span> <span style={{ color: '#ffffff', margin: '0 6px' }}>&</span> <span className="text-orange">Agent Platform</span> — <span className="text-orange">Prompt by Niti</span>
               </h2>
               <div className="seo-caveat-text" style={{ color: 'var(--text-secondary)', lineHeight: '1.8' }}>
                 <p>

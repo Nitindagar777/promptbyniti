@@ -20,7 +20,7 @@ export default function AboutPage() {
         {/* Hero Section */}
         <div className="legal-page__hero">
           <div className="hero-badge">Our Story</div>
-          <h1>AI Prompt & <span className="text-orange">Agent Generation</span></h1>
+          <h1><span className="text-cyan">AI Prompt</span> <span style={{ color: '#ffffff', margin: '0 6px' }}>&</span> <span className="text-orange">Agent Generation</span></h1>
           <p className="hero-subtitle">
             Prompt by Niti is the world's most advanced platform for AI Prompt & Agent Generation — <strong>Prompts. Agents. Built by AI.</strong> Designed to bridge the gap between human imagination, generative AI models, and autonomous agents.
           </p>

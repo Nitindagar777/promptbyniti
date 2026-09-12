@@ -824,7 +824,7 @@ export default function GeneratePage() {
         {/* Header */}
         <div className="generate-page__header">
           <h1 className="generate-page__title">
-            AI Prompt & <span className="text-orange">Agent Generation</span>
+            <span className="text-cyan">AI Prompt</span> <span style={{ color: '#ffffff', margin: '0 6px' }}>&</span> <span className="text-orange">Agent Generation</span>
           </h1>
           <p className="generate-page__subtitle">
             <span className="text-cyan font-semibold" style={{ letterSpacing: '0.04em' }}>Prompts. Agents. Built by AI.</span> — Describe your vision, prompt parameters, or AI agent workflow and let our AI craft production-ready blueprints.

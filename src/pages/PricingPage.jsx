@@ -133,7 +133,7 @@ export default function PricingPage() {
       <div className="container">
         {/* Section 1: Prompt & Agent Token Packs */}
         <div className="pricing-section-header">
-          <h2 className="pricing-section-title title-prompts">AI Prompt & Agent Token Tiers</h2>
+          <h2 className="pricing-section-title title-prompts">AI Prompt <span style={{ color: '#ffffff', margin: '0 6px' }}>&</span> Agent Token Tiers</h2>
           <p className="pricing-section-desc"><strong>Prompts. Agents. Built by AI.</strong> — One-time token packs to generate fully optimized, high-converting prompts and autonomous agent blueprints.</p>
         </div>
 
