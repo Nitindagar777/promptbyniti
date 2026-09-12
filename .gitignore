@@ -25,6 +25,8 @@ dist-ssr
 
 scratch/
 gemini_api_keys.txt
+*.doc
+*.docx
 
 # Environment variables
 .env
