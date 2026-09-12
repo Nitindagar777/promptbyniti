@@ -1199,13 +1199,13 @@ export default function GeneratePage() {
 
                 <button
                   className="btn btn-lg console-post-btn console-post-btn--download"
-                  style={{ background: 'linear-gradient(135deg, #0284c7, #06b6d4)', color: '#fff', fontWeight: 'bold', border: 'none', gap: '8px', display: 'flex', alignItems: 'center', boxShadow: '0 4px 15px rgba(6, 182, 212, 0.35)' }}
+                  style={{ background: 'linear-gradient(135deg, #0284c7, #06b6d4)', color: '#000000', fontWeight: '800', border: 'none', gap: '8px', display: 'flex', alignItems: 'center', boxShadow: '0 4px 15px rgba(6, 182, 212, 0.35)' }}
                   onClick={() => downloadPromptAsDoc(result, !!result.promptTemplate)}
                   id="gen-download-doc-btn"
                   title="Download complete prompt document as Word .doc"
                 >
-                  <Download size={18} />
-                  <span>{result.promptTemplate ? 'Download Pack (.doc)' : 'Download Doc'}</span>
+                  <Download size={18} style={{ color: '#000000' }} />
+                  <span style={{ color: '#000000' }}>{result.promptTemplate ? 'Download Pack (.doc)' : 'Download Doc'}</span>
                 </button>
 
                 {generatorMode !== 'example' ? (
