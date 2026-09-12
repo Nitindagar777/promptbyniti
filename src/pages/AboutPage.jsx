@@ -8,9 +8,9 @@ export default function AboutPage() {
   return (
     <div className="legal-page about-page">
       <SEOHead
-        title="About — AI Prompt Engineering Platform by Nitin Dagar"
-        description="Learn about Prompt by Niti, the advanced AI prompt generator and feed with 3 consistency engines. Founded by Nitin Dagar. Generate and explore professional prompts for Midjourney, Sora, Flux, ChatGPT & more."
-        keywords="about prompt by niti, promptbyniti, Nitin Dagar, AI prompt platform, prompt engineering, prompt feed creator, AI tools company, who made prompt by niti"
+        title="About — AI Prompt & Agent Generation by Nitin Dagar"
+        description="Learn about Prompt by Niti, the premier platform for AI Prompt & Agent Generation. Prompts. Agents. Built by AI. Founded by Nitin Dagar. Generate professional prompts and autonomous AI agent blueprints."
+        keywords="about prompt by niti, promptbyniti, Nitin Dagar, AI prompt & agent generation, prompts agents built by ai, autonomous ai agents, prompt engineering"
         breadcrumbs={[
           { name: 'Home', url: '/' },
           { name: 'About', url: '/about' }
@@ -20,10 +20,9 @@ export default function AboutPage() {
         {/* Hero Section */}
         <div className="legal-page__hero">
           <div className="hero-badge">Our Story</div>
-          <h1>Empowering Creativity through <span className="text-orange">AI Excellence</span></h1>
+          <h1>AI Prompt & <span className="text-orange">Agent Generation</span></h1>
           <p className="hero-subtitle">
-            Prompt by Niti is the world's most advanced prompt engineering platform,
-            designed to bridge the gap between human imagination and AI generation.
+            Prompt by Niti is the world's most advanced platform for AI Prompt & Agent Generation — <strong>Prompts. Agents. Built by AI.</strong> Designed to bridge the gap between human imagination, generative AI models, and autonomous agents.
           </p>
         </div>
 

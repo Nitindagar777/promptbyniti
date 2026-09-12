@@ -616,9 +616,9 @@ export default function HomePage() {
   return (
     <div className="p-home" id="home-page">
       <SEOHead
-        title="#1 AI Prompt Generator — Image, Video, Character & Code Consistency"
-        description="Prompt by Niti is the leading AI prompt generator and creative studio with 3 consistency engines. Craft consistent character prompts (cref/sref) for Midjourney & Flux, cinematic motion anchors for Sora & Kling videos, and structured code/text blueprints."
-        keywords="ai prompt generator, prompt generator, midjourney prompt generator, chatgpt prompt generator, consistent character prompts, midjourney cref, midjourney sref, image to video prompts, sora video prompts, flux prompt generator, text to code prompts, prompt templates, prompt engineering, promptbase alternative, promptbyniti"
+        title="AI Prompt & Agent Generation — Prompts. Agents. Built by AI."
+        description="Prompt by Niti is the premier platform for AI Prompt & Agent Generation. Prompts. Agents. Built by AI. Craft consistent character prompts for Midjourney & Flux, cinematic motion anchors for Sora & Kling, and autonomous AI agents & system blueprints."
+        keywords="ai prompt generator, ai agent generator, ai prompt & agent generation, prompts agents built by ai, autonomous ai agents, agent prompt generator, midjourney prompt generator, chatgpt prompt generator, sora video prompts, flux prompt generator, text to code prompts, prompt templates, prompt engineering, promptbyniti"
         breadcrumbs={[
           { name: 'Home', url: '/' }
         ]}
@@ -653,13 +653,13 @@ export default function HomePage() {
                 <p className="p-mini-banner__desc">Generate cinematic motion loops and characters.</p>
               </a>
 
-              {/* 4th banner: Text Reference */}
-              <a href="#ref-modes" onClick={(e) => handleSelectFeature(e, 'text', 'code')} className="p-mini-banner p-mini-banner--purple">
+              {/* 4th banner: Text & AI Agents Reference */}
+              <a href="#ref-modes" onClick={(e) => handleSelectFeature(e, 'text', 'agents')} className="p-mini-banner p-mini-banner--purple">
                 <div className="p-mini-banner__top">
                   <Code size={16} className="text-purple" />
                 </div>
-                <h4 className="p-mini-banner__title">Text Reference</h4>
-                <p className="p-mini-banner__desc">Format react/python code & copywriting copy.</p>
+                <h4 className="p-mini-banner__title">Text & AI Agents</h4>
+                <p className="p-mini-banner__desc">Format autonomous agents, system rules & code.</p>
               </a>
             </div>
 
@@ -673,16 +673,16 @@ export default function HomePage() {
             <div className="p-hero__content-col reveal" style={{ animationDelay: '0.1s' }}>
 
               <h1 className="p-hero__title" style={{ fontSize: 'clamp(2.1rem, 3.3vw, 3.2rem)', lineHeight: '1.2' }}>
-                <span className="text-cyan" style={{ whiteSpace: 'nowrap' }}>AI Prompt</span> Generator & <br className="hide-on-mobile" />
-                <span className="text-orange" style={{ whiteSpace: 'nowrap' }}>Creative Engine</span>
+                <span className="text-cyan" style={{ whiteSpace: 'nowrap' }}>AI Prompt & Agent</span> <br className="hide-on-mobile" />
+                <span className="text-orange" style={{ whiteSpace: 'nowrap' }}>Generation</span>
               </h1>
 
               <p className="p-hero__pitch">
-                Generate & craft high-performing <strong className="text-cyan">Image</strong>, <strong className="text-cyan">Video</strong> & <strong className="text-cyan">Text</strong> prompts, powered by <strong className="text-purple">smart looping</strong> and <strong className="text-pink">Reference Consistency</strong> that keeps every character and style <strong className="text-green">perfectly consistent</strong>.
+                Generate & craft high-performing <strong className="text-cyan">AI Prompts</strong> & autonomous <strong className="text-purple">AI Agents</strong>, powered by <strong className="text-pink">smart multi-modal engines</strong> and reference consistency that keeps every character, style, and agent persona <strong className="text-green">perfectly consistent</strong>.
               </p>
 
               <p className="p-hero__subtitle p-hero__subtitle--accent">
-                <span className="text-orange">Generate.</span> <span className="text-cyan">Customize.</span> <span className="text-purple">Create.</span>
+                <span className="text-orange">Prompts.</span> <span className="text-cyan">Agents.</span> <span className="text-purple">Built by AI.</span>
               </p>
 
               <div className="p-hero__btns">
@@ -704,15 +704,15 @@ export default function HomePage() {
               <div className="p-hero__features">
                 <div className="p-hero__feature-item">
                   <Sparkles size={16} className="text-pink" />
-                  <span>Image, Video & Text Consistency</span>
+                  <span>AI Prompts & Autonomous Agents</span>
                 </div>
                 <div className="p-hero__feature-item">
                   <ZapIcon size={16} className="text-orange" />
-                  <span>3 Advanced Consistency Engines</span>
+                  <span>3 Consistency & Persona Engines</span>
                 </div>
                 <div className="p-hero__feature-item">
                   <Layers size={16} className="text-cyan" />
-                  <span>Midjourney, Sora, ChatGPT, Flux & More</span>
+                  <span>Midjourney, Sora, ChatGPT, Claude & Agents</span>
                 </div>
               </div>
             </div>
@@ -1960,25 +1960,25 @@ export default function HomePage() {
           <div className="p-seo-content container" style={{ padding: '24px 0 48px', borderTop: '1px solid rgba(255, 255, 255, 0.03)' }}>
             <div style={{ maxWidth: '900px', margin: '0 auto' }}>
               <h2 className="h-display" style={{ textAlign: 'center', marginBottom: '24px' }}>
-                The Best <span className="text-cyan">AI Prompt</span> Platform — <span className="text-orange">Prompt by Niti</span>
+                The Ultimate <span className="text-cyan">AI Prompt & Agent</span> Platform — <span className="text-orange">Prompt by Niti</span>
               </h2>
               <div className="seo-caveat-text" style={{ color: 'var(--text-secondary)', lineHeight: '1.8' }}>
                 <p>
-                  <strong>Prompt by Niti</strong> is the ultimate <strong>AI prompt generator</strong> and <strong>prompt feed</strong> built for creators, designers, developers, and prompt engineers. Whether you need <strong>Midjourney prompts</strong>, <strong>ChatGPT prompts</strong>, <strong>DALL·E prompts</strong>, <strong>Stable Diffusion prompts</strong>, <strong>Flux prompts</strong>, or <strong>Sora prompts</strong> — our advanced platform organizes and optimizes your prompt parameters to deliver studio-quality results in seconds.
+                  <strong>Prompt by Niti</strong> is the world's premier platform for <strong>AI Prompt & Agent Generation</strong>. <em>Prompts. Agents. Built by AI.</em> Built for creators, designers, developers, and prompt engineers, our platform empowers you to generate studio-quality prompts and autonomous AI agent blueprints in seconds. Whether you need <strong>Midjourney prompts</strong>, <strong>ChatGPT prompts</strong>, <strong>Flux prompts</strong>, <strong>Sora prompts</strong>, or <strong>Autonomous AI Agents</strong> with strict system directives and operational personas — our multi-modal engine handles everything seamlessly.
                 </p>
                 <p style={{ marginTop: '16px' }}>
-                  What sets us apart is our triple-threat <strong>Consistency Reference Engine</strong>:
+                  What sets us apart is our multi-modal <strong>Consistency & Agent Generation Engine</strong>:
                 </p>
                 <ul style={{ marginTop: '8px', paddingLeft: '20px', listStyleType: 'disc', color: 'var(--text-secondary)' }}>
                   <li style={{ marginTop: '6px' }}><strong>Image Reference Modes:</strong> Replicate complex art styles, portraits, and 3D concept graphics while locking character details (<code>--cref</code>) and style parameters (<code>--sref</code>).</li>
                   <li style={{ marginTop: '6px' }}><strong>Video Reference Modes:</strong> Bring static images to life with cinematic motion anchors, orbital rotations, slow zooms, panning directions, and stable characters across frames.</li>
-                  <li style={{ marginTop: '6px' }}><strong>Text Reference Modes:</strong> Enforce structured blueprints for <strong>Code Generation</strong> (React components, Python scripts, APIs), <strong>Copywriting Frameworks</strong> (AIDA, PAS templates), and custom <strong>AI Agent Personas</strong>.</li>
+                  <li style={{ marginTop: '6px' }}><strong>Autonomous AI Agents & Code Modes:</strong> Enforce structured blueprints for <strong>Autonomous AI Agents</strong> (Customer support, Research, Coding, Automation personas), <strong>Code Generation</strong> (React, Python, APIs), and <strong>Copywriting Frameworks</strong>.</li>
                 </ul>
                 <p style={{ marginTop: '16px' }}>
-                  Looking for <strong>prompt ideas</strong>? Our <strong>free prompt generator</strong> transforms your simple descriptions into professional, optimized <strong>prompt templates</strong> and <strong>prompt examples</strong> for any AI model. **Prompt by Niti** is the best **PromptBase alternative** — offering a richer **prompt feed**, smarter **prompt engineering** tools, and a thriving **content community** where you can grow your **social media presence** and **followers** with stunning AI-generated content.
+                  Looking for <strong>AI prompt or agent ideas</strong>? Our <strong>AI Prompt & Agent Generator</strong> transforms your simple descriptions into production-ready blueprints. <strong>Prompt by Niti</strong> is the all-in-one studio — <strong>Prompts. Agents. Built by AI.</strong>
                 </p>
                 <p style={{ marginTop: '16px' }}>
-                  Start generating <strong>professional AI prompts</strong> today — for free. No credit card required. Join thousands of creators who trust <strong>Prompt by Niti</strong> as their go-to <strong>prompt builder</strong>, <strong>prompt creator</strong>, and <strong>prompt editor</strong> platform.
+                  Start generating <strong>AI prompts & autonomous agents</strong> today — for free. No credit card required.
                 </p>
               </div>
             </div>

@@ -34,7 +34,7 @@ export default function SEOHead({
     // --- Title ---
     document.title = title 
       ? `${title} | ${BASE_TITLE}` 
-      : `${BASE_TITLE} — #1 AI Prompt Generator & Feed`;
+      : `${BASE_TITLE} — AI Prompt & Agent Generation | Prompts. Agents. Built by AI.`;
 
     // --- Meta Description ---
     const metaDesc = document.querySelector('meta[name="description"]');
@@ -64,7 +64,7 @@ export default function SEOHead({
 
     const ogTitleTag = document.querySelector('meta[property="og:title"]');
     if (ogTitleTag) {
-      ogTitleTag.setAttribute('content', ogTitle || title || `${BASE_TITLE} — #1 AI Prompt Generator & Feed`);
+      ogTitleTag.setAttribute('content', ogTitle || title || `${BASE_TITLE} — AI Prompt & Agent Generation`);
     }
 
     const ogDescTag = document.querySelector('meta[property="og:description"]');
@@ -85,7 +85,7 @@ export default function SEOHead({
     // --- Twitter tags ---
     const twTitle = document.querySelector('meta[name="twitter:title"]');
     if (twTitle) {
-      twTitle.setAttribute('content', ogTitle || title || `${BASE_TITLE} — #1 AI Prompt Generator & Feed`);
+      twTitle.setAttribute('content', ogTitle || title || `${BASE_TITLE} — AI Prompt & Agent Generation`);
     }
 
     const twDesc = document.querySelector('meta[name="twitter:description"]');
@@ -124,7 +124,7 @@ export default function SEOHead({
       {
         "@context": "https://schema.org",
         "@type": "SoftwareApplication",
-        "name": "Prompt by Niti — AI Prompt Generator",
+        "name": "Prompt by Niti — AI Prompt & Agent Generation",
         "operatingSystem": "All",
         "applicationCategory": "DesignApplication",
         "offers": {
@@ -132,7 +132,7 @@ export default function SEOHead({
           "price": "0.00",
           "priceCurrency": "USD"
         },
-        "description": "Professional AI prompt generator with 3 consistency engines — Text-to-Image (cref/sref), Image-to-Video (motion anchors), and Text-to-Code/Text (AIDA, PAS, agent personas). Supports Midjourney, Sora, Flux, ChatGPT, Stable Diffusion and more."
+        "description": "Professional AI Prompt & Agent Generation platform. Prompts. Agents. Built by AI. Multi-modal consistency engines for Text-to-Image (cref/sref), Image-to-Video (motion anchors), and autonomous AI Agent blueprints."
       }
     ];
 

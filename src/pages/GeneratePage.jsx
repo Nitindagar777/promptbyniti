@@ -811,12 +811,12 @@ export default function GeneratePage() {
   return (
     <div className="generate-page" id="generate-page">
       <SEOHead
-        title="Free AI Prompt Generator — Image, Video & Code Prompts"
-        description="Free AI prompt generator for consistent text-to-image, image-to-video, and text-to-code prompts. Supports Midjourney cref/sref, Sora motion anchors, Flux, Kling, Luma, Runway Gen-3, AIDA copywriting, React code blueprints & AI agent personas. Generate studio-quality prompts instantly."
-        keywords="free AI prompt generator, AI prompt creator, text to image prompt generator, image to video prompt generator, text to code prompt generator, consistent character prompts, midjourney cref generator, midjourney sref generator, sora video prompt builder, flux prompt maker, kling prompt generator, luma dream machine prompts, runway gen-3 prompts, AIDA copywriting prompts, PAS framework prompts, react code prompt generator, python code prompt generator, AI agent persona generator, system prompt builder, prompt engineering tool, free prompt maker, prompt builder online"
+        title="AI Prompt & Agent Generation — Prompts. Agents. Built by AI."
+        description="AI Prompt & Agent Generation platform. Prompts. Agents. Built by AI. Generate consistent text-to-image, image-to-video, and autonomous AI agents for Midjourney, Sora, Flux, ChatGPT & Claude."
+        keywords="free AI prompt generator, AI agent generator, AI prompt & agent generation, prompts agents built by ai, text to image prompt generator, image to video prompt generator, autonomous ai agents, system prompt builder, prompt engineering tool"
         breadcrumbs={[
           { name: 'Home', url: '/' },
-          { name: 'AI Prompt Generator', url: '/generate' }
+          { name: 'AI Prompt & Agent Generation', url: '/generate' }
         ]}
         noIndex={false}
       />
@@ -824,10 +824,10 @@ export default function GeneratePage() {
         {/* Header */}
         <div className="generate-page__header">
           <h1 className="generate-page__title">
-            Prompt <span className="text-orange">Generator</span>
+            AI Prompt & <span className="text-orange">Agent Generation</span>
           </h1>
           <p className="generate-page__subtitle">
-            Describe your vision and our AI will craft the perfect prompt for you
+            <span className="text-cyan font-semibold" style={{ letterSpacing: '0.04em' }}>Prompts. Agents. Built by AI.</span> — Describe your vision, prompt parameters, or AI agent workflow and let our AI craft production-ready blueprints.
           </p>
           {!isGuest && (
             <div className="generate-page__credits-bar">
@@ -868,20 +868,20 @@ export default function GeneratePage() {
                 </button>
               </div>
 
-              {/* Prompt Type selector (Image, Video, Text) - only in Prompt mode */}
+              {/* Prompt Type selector (Image, Video, Text & Agents) - only in Prompt mode */}
               {generatorMode === 'prompt' && (
                 <div className="console-type-selector">
                   {[
                     { id: 'image', label: 'Image', icon: <ImageIcon size={14} /> },
                     { id: 'video', label: 'Video', icon: <Video size={14} /> },
-                    { id: 'text', label: 'Text', icon: <Type size={14} /> }
+                    { id: 'text', label: 'Text & Agents', icon: <Type size={14} /> }
                   ].map(t => (
                     <button
                       key={t.id}
                       type="button"
                       className={`console-type-btn ${form.promptType === t.id ? 'active' : ''}`}
                       onClick={() => handlePromptTypeChange(t.id)}
-                      title={`${t.label} Prompt`}
+                      title={`${t.label}`}
                     >
                       {t.icon}
                       <span>{t.label}</span>
@@ -899,7 +899,7 @@ export default function GeneratePage() {
                   className="console-textarea"
                   placeholder={
                     form.promptType === 'text'
-                      ? "Describe the role, task, or prompt you want to build... (e.g., A customer support agent that handles refund requests, or a Python script that automates backups)"
+                      ? "Describe the prompt, AI agent persona, role, or workflow you want to build... (e.g., A customer support agent for Shopify, a Python automation agent, or a research synthesizer)"
                       : form.promptType === 'video'
                         ? "Describe your video scene here... (e.g., A drone shot soaring over a volcanic eruption, realistic motion)"
                         : "Describe your image scene here... (e.g., A futuristic cyberpunk city with neon rainy streets, cinematic lighting)"

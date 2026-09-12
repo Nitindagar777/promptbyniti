@@ -10,12 +10,12 @@
     <priority>1.0</priority>
     <image:image>
       <image:loc>https://promptbyniti.in/image1.png</image:loc>
-      <image:title>Prompt by Niti — #1 AI Prompt Generator and Marketplace</image:title>
-      <image:caption>AI prompt generator with 3 consistency engines for text-to-image, image-to-video, and text-to-code prompts. Supports Midjourney, Sora, Flux, ChatGPT and more.</image:caption>
+      <image:title>Prompt by Niti — AI Prompt & Agent Generation</image:title>
+      <image:caption>AI Prompt & Agent Generation platform. Prompts. Agents. Built by AI. Multi-modal consistency engines for images, videos, and autonomous AI agents.</image:caption>
     </image:image>
   </url>
 
-  <!-- AI Prompt Generator -->
+  <!-- AI Prompt & Agent Generation -->
   <url>
     <loc>https://promptbyniti.in/generate</loc>
     <lastmod>2026-06-08</lastmod>
@@ -23,8 +23,8 @@
     <priority>0.95</priority>
     <image:image>
       <image:loc>https://promptbyniti.in/image1.png</image:loc>
-      <image:title>Free AI Prompt Generator — Image, Video and Code Prompts</image:title>
-      <image:caption>Generate consistent text-to-image, image-to-video, and text-to-code prompts with Midjourney cref/sref, Sora motion anchors, AIDA copywriting, and AI agent personas.</image:caption>
+      <image:title>AI Prompt & Agent Generation — Prompts. Agents. Built by AI.</image:title>
+      <image:caption>Generate consistent prompts and autonomous AI agent blueprints with Midjourney, Sora, Flux, ChatGPT & Claude support.</image:caption>
     </image:image>
   </url>
 

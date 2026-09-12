@@ -12,9 +12,9 @@ export default function HelpPage() {
   return (
     <div className="legal-page help-page">
       <SEOHead
-        title="Help Center — Support & FAQ"
-        description="Get help with Prompt by Niti. FAQ about AI prompt generation, token purchases, image-to-video prompts, text-to-code prompts & more. Contact our support team via email or Discord."
-        keywords="prompt by niti help, prompt support, AI prompt FAQ, how to use prompts, prompt generator help, AI prompt tutorial, prompt engineering guide"
+        title="Help Center — AI Prompt & Agent Generation Support"
+        description="Get help with Prompt by Niti. FAQ about AI Prompt & Agent Generation, token purchases, autonomous agents, image-to-video prompts & more. Prompts. Agents. Built by AI."
+        keywords="prompt by niti help, AI prompt & agent generation, autonomous ai agents help, prompt support, AI prompt FAQ"
         breadcrumbs={[
           { name: 'Home', url: '/' },
           { name: 'Help Center', url: '/help' }
@@ -26,7 +26,7 @@ export default function HelpPage() {
           <div className="hero-badge">Support Hub</div>
           <h1>How can we <span className="text-purple">Help You</span>?</h1>
           <p className="hero-subtitle">
-            Get in touch with the Prompt by Niti team or follow our journey across social media.
+            Need assistance with AI Prompt & Agent Generation? Get in touch with our team or join our creator community.
           </p>
         </div>
 

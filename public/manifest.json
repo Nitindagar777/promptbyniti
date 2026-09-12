@@ -1,7 +1,7 @@
 {
-  "name": "Prompt by Niti — AI Prompt Generator & Marketplace",
+  "name": "Prompt by Niti — AI Prompt & Agent Generation",
   "short_name": "Prompt by Niti",
-  "description": "Generate, buy, sell, and discover the best AI prompts for Midjourney, ChatGPT, DALL·E, Stable Diffusion, Flux, Sora, and more. Free prompt ideas, templates, and examples.",
+  "description": "AI Prompt & Agent Generation platform. Prompts. Agents. Built by AI. Generate, customize, and discover prompts and autonomous AI agent blueprints.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

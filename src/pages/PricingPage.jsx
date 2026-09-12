@@ -120,9 +120,9 @@ export default function PricingPage() {
   return (
     <div className="pricing-page" id="pricing-page">
       <SEOHead
-        title="Pricing — AI Prompt Token Packs & Plans"
-        description="Get prompt packs and token plans for Prompt by Niti. Unlock AI prompt generation for Midjourney, Sora, Flux, ChatGPT & more. Grow your social media content and followers with premium AI prompts."
-        keywords="prompt pricing, AI prompt plans, buy tokens, prompt credits, prompt packs, prompt by niti pricing, AI prompt subscription, prompt token packs, free AI prompts, grow social media followers"
+        title="Pricing — AI Prompt & Agent Generation Plans"
+        description="Get token packs and plans for Prompt by Niti. Unlock AI prompt generation and autonomous AI agent generation for Midjourney, Sora, Flux, ChatGPT & Claude. Prompts. Agents. Built by AI."
+        keywords="ai prompt pricing, ai agent generator plans, buy tokens, prompt credits, prompt packs, prompt by niti pricing, prompts agents built by ai"
         breadcrumbs={[
           { name: 'Home', url: '/' },
           { name: 'Pricing', url: '/pricing' }
@@ -131,10 +131,10 @@ export default function PricingPage() {
       />
       <br></br>
       <div className="container">
-        {/* Section 1: Prompt Token Packs */}
+        {/* Section 1: Prompt & Agent Token Packs */}
         <div className="pricing-section-header">
-          <h2 className="pricing-section-title title-prompts">Prompt Pack Token Tiers</h2>
-          <p className="pricing-section-desc">One-time token packs to generate fully optimized, high-converting prompts.</p>
+          <h2 className="pricing-section-title title-prompts">AI Prompt & Agent Token Tiers</h2>
+          <p className="pricing-section-desc"><strong>Prompts. Agents. Built by AI.</strong> — One-time token packs to generate fully optimized, high-converting prompts and autonomous agent blueprints.</p>
         </div>
 
         <div className="pricing-grid pricing-grid--prompts">

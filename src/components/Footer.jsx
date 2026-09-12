@@ -76,7 +76,10 @@ export default function Footer() {
             </span>
           </div>
           <p className="footer__tagline">
-            Discover, generate, and optimize studio-quality <span className="text-cyan">Prompts</span> with <span className="text-pink">Reference Consistency</span>.
+            Discover, generate, and optimize studio-quality <span className="text-cyan">Prompts</span> & autonomous <span className="text-purple">AI Agents</span>.
+            <span style={{ display: 'block', marginTop: '6px', fontSize: '0.85em', fontWeight: 600 }}>
+              <span className="text-orange">Prompts.</span> <span className="text-cyan">Agents.</span> <span className="text-purple">Built by AI.</span>
+            </span>
           </p>
           <div className="footer__socials">
             <a href="https://www.youtube.com/@promptbyniti" className="footer__social-link youtube" title="YouTube" target="_blank" rel="noopener noreferrer">
@@ -100,7 +103,7 @@ export default function Footer() {
         <div className="footer__links">
           <div className="footer__column">
             <h4 className="text-cyan">Platform</h4>
-            <Link to="/generate">Prompt Generator</Link>
+            <Link to="/generate">Prompt & Agent Generator</Link>
             {storeSectionVisible && <Link to="/templates">Templates Store</Link>}
             <Link to="/pricing">Pricing Plans</Link>
           </div>
