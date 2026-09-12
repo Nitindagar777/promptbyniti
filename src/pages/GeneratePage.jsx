@@ -381,8 +381,9 @@ export default function GeneratePage() {
   };
 
   const handleGenerate = async (forcePack = false, overrideDesc = null) => {
-    // For Admin user ONLY: directly generate the complete pack! For regular users: forcePack or direct prompt
-    const isPack = isAdmin ? true : (forcePack === true);
+    // Both admin and regular users get a single direct prompt by default.
+    // Complete pack is only generated when user explicitly clicks "Complete Pack" button.
+    const isPack = forcePack === true;
     const descToUse = overrideDesc !== null ? overrideDesc : form.description;
 
     if (generatorMode === 'prompt') {
@@ -1249,7 +1250,7 @@ export default function GeneratePage() {
                 ) : (
                   <>
                     <Sparkles size={18} />
-                    <span>{activeCategory === 'models' || form.category === 'models' ? '👑 Generate Model Prompt' : (isAdmin ? 'Complete Pack' : (generatorMode === 'example' ? 'Examples' : 'Prompt'))}</span>
+                    <span>{activeCategory === 'models' || form.category === 'models' ? '👑 Generate Model Prompt' : (generatorMode === 'example' ? 'Examples' : 'Prompt')}</span>
                     {state.plan !== 'unlimited' && (
                       <span style={{ fontSize: '0.8rem', opacity: 0.7, marginLeft: '8px' }}>
                         {` (-${aiPower === 'power' ? 5 : aiPower === 'super' ? 3 : 1} credit${(aiPower === 'power' || aiPower === 'super') ? 's' : ''})`}

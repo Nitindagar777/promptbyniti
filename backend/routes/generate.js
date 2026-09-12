@@ -328,59 +328,88 @@ async function callGroqLLMWithFailover(systemInstruction, userParts, hasRefImage
   throw lastError || new Error('All Groq API keys and models failed.');
 }
 
+// ── Gemini API Keys Pool (backup keys from gemini_api_keys.txt) ──
+const GEMINI_BACKUP_KEYS = [
+  'AIzaSyArurzA-OEsCtoZLr9Bgd_B5UnguO7b_zo',
+  'AQ.Ab8RN6Jes4GulDFcccfsyikXjNPYMR3jCIiugECjF_3_VYRqjg',
+  'AQ.Ab8RN6LJhrVHjKlG0gM5yJjUpWA-J95Y8cE-iP3FhwtCtQUDOw',
+  'AQ.Ab8RN6J9LrQxFf5kVDfOJRkhFXy1C3Pv9swoJfDWdcydk0RSEw',
+  'AQ.Ab8RN6LosILWCe-dIldoppzBXf7LkBQH05kKRLRozT6ZvOhyow',
+  'AQ.Ab8RN6KtZWaxDwWtB0Nox7-88ChqUsil30dD8__NC-clpcDHVQ',
+  'AQ.Ab8RN6IiwV8_KagTiGrWgqxwRyQd9iXlc3zxqMTGwlhmp0wnsw',
+  'AQ.Ab8RN6LKd5E6XJjk5LDfoLBv8VUYbddP4Bm9qgUm2XuhX6pIxQ',
+  'AQ.Ab8RN6IODT6rDnhkxPsQVEqrbuin-HtfUOm-0fzrtYFaX3-XOg'
+];
+
 /**
- * Local Smart Prompt Engine Fallback when all external AI keys are rate-limited
+ * Call Gemini API with failover across multiple API keys.
+ * Supports both text-only and vision (image + text) requests.
  */
-function buildSmartFallbackPrompt(description, promptType, targetModel, aspectRatio) {
-  const descRaw = (description || 'Asian model portrait in soft bedroom lighting').trim();
-  const descClean = descRaw.replace(/\s*\+\s*/g, ', ').replace(/\s{2,}/g, ' ').trim();
-  const type = promptType || 'image';
-  const model = targetModel || 'flux-1';
-  const resolvedAR = type === 'video' ? (aspectRatio ? aspectRatio.trim() : '16:9') : '1:1';
-  const cleanSubject = descClean.replace(/[^\w\s,]/gi, '').substring(0, 80);
-
-  const titleWords = cleanSubject.split(' ').filter(Boolean).map(w => w.charAt(0).toUpperCase() + w.slice(1));
-  const title = titleWords.slice(0, 5).join(' ') || 'Photorealistic AI Model Blueprint';
-
-  if (type === 'video') {
-    const mainPrompt = `Generate a video of ${descClean}, ultra-realistic 8k cinematic lighting, authentic real human model, 60fps motion, dynamic camera sweep, vibrant atmospheric depth, masterwork color grading --ar ${resolvedAR}`;
-    return {
-      title: `${title} (Cinematic Motion)`,
-      description: `A professional cinematic motion prompt blueprint for ${descClean}. Designed for Sora, Kling, and Runway Gen-3.`,
-      promptTemplate: `Generate a video of [subject] ${descClean}, ultra-realistic 8k cinematic lighting, smooth 60fps camera sweep, [mood] mood, masterwork color grading --ar ${resolvedAR}`,
-      mainPrompt: mainPrompt,
-      negativePrompt: 'static, low resolution, motion blur distortion, glitch, watermark, plastic skin, CGI, AI glow',
-      instructions: 'Paste this prompt into Sora, Kling AI, or Runway Gen-3. Adjust [subject] and [mood] to generate custom video sequences.',
-      samples: [
-        `Generate a video of ${descClean}, golden hour sunlight, authentic real human model, slow motion panning shot --ar ${resolvedAR}`,
-        `Generate a video of ${descClean}, dramatic soft bedroom lighting, 85mm lens portrait, dynamic tracking camera shot --ar ${resolvedAR}`,
-        `Generate a video of ${descClean}, atmospheric volumetric lighting, natural unedited skin texture, high-speed cinematic zoom --ar ${resolvedAR}`,
-        `Generate a video of ${descClean}, professional studio 8k lighting, subtle skin pores, 360 orbital camera rotation --ar ${resolvedAR}`
-      ],
-      keywords: ['video-prompt', 'sora', 'kling', 'cinematic', 'photorealistic-model'],
-      model: model,
-      priceTokens: 4
-    };
-  } else {
-    const mainPrompt = `A highly detailed photorealistic portrait of ${descClean}, authentic 100% real human girl, natural unedited skin texture, subtle visible skin pores, shot on 85mm f/1.4 lens, shallow depth of field, professional studio lighting setup, raw photograph, natural skin tone, high aesthetic detail --ar ${resolvedAR}`;
-    return {
-      title: title,
-      description: `A professional photorealistic AI prompt template for generating authentic ${descClean}. Optimized for Midjourney v6 and Flux.1.`,
-      promptTemplate: `[subject] ${descClean}, authentic 100% real human girl, natural unedited skin texture, subtle visible skin pores, shot on 85mm f/1.4 lens, shallow depth of field, professional [lighting] lighting, raw photograph, high aesthetic detail --ar ${resolvedAR}`,
-      mainPrompt: mainPrompt,
-      negativePrompt: 'plastic skin, AI glow, airbrushed, CGI, 3D render, smooth doll skin, overprocessed skin, fake skin texture, digital artifact, oversaturated skin glow, blurry, distorted anatomy, extra limbs, watermark',
-      instructions: 'Copy and paste into Midjourney v6, Flux.1, or DALL-E 3. Replace [subject] or [lighting] for custom outputs.',
-      samples: [
-        `A highly detailed photorealistic portrait of ${descClean}, authentic 100% real human girl, natural unedited skin texture, golden hour warm sunlight, shot on 85mm f/1.4 lens, raw photograph --ar ${resolvedAR}`,
-        `A highly detailed photorealistic portrait of ${descClean}, authentic 100% real human girl, subtle visible skin pores, soft ambient bedroom lighting, shot on 35mm lens, raw DSLR portrait --ar ${resolvedAR}`,
-        `A highly detailed photorealistic portrait of ${descClean}, authentic 100% real human girl, natural unedited skin texture, dramatic rim lighting, studio dark background, raw portrait --ar ${resolvedAR}`,
-        `A highly detailed photorealistic portrait of ${descClean}, authentic 100% real human girl, subtle visible skin pores, gentle natural daylight, window reflections, raw photograph --ar ${resolvedAR}`
-      ],
-      keywords: ['photorealistic', 'real-human-girl', 'midjourney-v6', 'flux-1', 'raw-photography'],
-      model: model,
-      priceTokens: 4
-    };
+async function callGeminiWithFailover(systemInstruction, userParts, hasRefImage) {
+  // Build the keys pool: DB keys first, then backup keys
+  let settings = null;
+  try {
+    settings = await SystemSettings.findOne();
+  } catch (err) {
+    console.warn('⚠️ Could not fetch SystemSettings for Gemini keys:', err.message);
   }
+
+  const keysPool = [];
+  const dbKey = (settings?.geminiApiKey || '').trim();
+  const paidKey = (settings?.paidGeminiApiKey || '').trim();
+  if (paidKey) keysPool.push({ name: 'Gemini Paid Key (DB)', rawKey: paidKey });
+  if (dbKey) keysPool.push({ name: 'Gemini Free Key (DB)', rawKey: dbKey });
+  GEMINI_BACKUP_KEYS.forEach((k, i) => {
+    const trimmed = k.trim();
+    if (trimmed && !keysPool.some(existing => existing.rawKey === trimmed)) {
+      keysPool.push({ name: `Gemini Backup #${i + 1}`, rawKey: trimmed });
+    }
+  });
+
+  if (keysPool.length === 0) {
+    throw new Error('No Gemini API keys available.');
+  }
+
+  const candidateModels = [
+    (settings?.geminiModel && !['gemini-flash-latest', 'gemini-2.0-flash', 'gemini-1.5-flash'].includes(settings.geminiModel)) ? settings.geminiModel : null,
+    'gemini-2.5-flash',
+    'gemini-3.6-flash'
+  ].filter(Boolean);
+
+  let lastError = null;
+
+  for (const keyObj of keysPool) {
+    for (const modelName of candidateModels) {
+      try {
+        console.log(`🧠 [Gemini Engine] Trying ${keyObj.name} with model ${modelName}...`);
+        const genAI = new GoogleGenerativeAI(keyObj.rawKey);
+        const model = genAI.getGenerativeModel({
+          model: modelName,
+          systemInstruction: systemInstruction
+        });
+
+        const result = await model.generateContent(userParts);
+        const response = await result.response;
+        const textOutput = response.text();
+
+        if (textOutput && textOutput.trim()) {
+          console.log(`✅ [Gemini Engine] Success with ${keyObj.name} (${modelName})!`);
+          return textOutput;
+        }
+      } catch (err) {
+        console.warn(`⚠️ [Gemini - ${keyObj.name} - ${modelName}] Failed: ${err.message}`);
+        lastError = err;
+        // If 404 model not found, try next candidate model
+        if (err.message && err.message.includes('404')) {
+          continue;
+        }
+        // If quota/rate limit error, move to next key
+        break;
+      }
+    }
+  }
+
+  throw lastError || new Error('All Gemini API keys failed.');
 }
 
 /**
@@ -926,32 +955,14 @@ When a reference image is provided in DIFFERENT CHARACTERS mode, you MUST:
 
     if (catRules && catRules[subTrim]) {
       const rule = catRules[subTrim];
-
-      let subcategoryGuidelines = '';
-      if (subTrim === 'Personal Development') {
-        subcategoryGuidelines = `\nCustom Subcategory Guidelines:
-- Student: identity formation is the work
-- Early Career: skill acquisition > salary
-- Mid-Career: leverage and delegation
-- Parent: time boundaries are essential`;
-      } else if (subTrim === 'Content Creation') {
-        subcategoryGuidelines = `\nCustom Subcategory Guidelines:
-- TikTok: authenticity over production
-- Instagram: aesthetic consistency
-- LinkedIn: professional storytelling
-- YouTube: click-worthy hook`;
-      } else if (subTrim === 'Product Research') {
-        subcategoryGuidelines = `\nCustom Subcategory Guidelines:
-- Dropshipping: shipping time is critical
-- Private Label: branding and differentiation
-- Wholesale: margin and volume`;
-      }
-
+      // Only provide the subcategory name and description as context hints.
+      // DO NOT inject the raw promptTemplate — let the AI generate from scratch based on user description.
       subcategoryInstruction = `
-SUBCATEGORY SPECIFIC TEMPLATE & DETAILS — ${rule.name}:
-- Template to follow:
-${rule.promptTemplate}
-${subcategoryGuidelines}
+SUBCATEGORY CONTEXT — ${rule.name}:
+- Category: ${catUpper}
+- Subcategory: ${subTrim}
+- Description: ${rule.description || 'Generate a high-quality prompt for this subcategory.'}
+- Generate the prompt entirely from scratch based on the user's description. Do NOT use any pre-built template.
 `;
     }
   }
@@ -1427,19 +1438,33 @@ DO NOT exceed 5 bracketed variables under any circumstances. Keep the majority o
       });
     }
 
-    console.log(`📤 Sending to Groq LLM Engine: ${userParts.length} parts, hasImage: ${hasRefImage}`);
+    console.log(`📤 Sending to AI engines: ${userParts.length} parts, hasImage: ${hasRefImage}`);
 
     let text = null;
+
+    // Engine 1: Try Gemini API first (supports vision natively)
     try {
-      text = await callGroqLLMWithFailover(systemInstruction, userParts, hasRefImage, cached.keysPool);
+      console.log('🧠 [Engine 1] Trying Gemini API...');
+      text = await callGeminiWithFailover(systemInstruction, userParts, hasRefImage);
     } catch (err) {
-      console.warn('⚠️ All Groq LLM accounts failed/exhausted:', err.message);
+      console.warn('⚠️ [Engine 1] Gemini failed:', err.message);
+    }
+
+    // Engine 2: Fall back to Groq LLM if Gemini failed
+    if (!text) {
+      try {
+        console.log('🚀 [Engine 2] Trying Groq LLM...');
+        text = await callGroqLLMWithFailover(systemInstruction, userParts, hasRefImage, cached.keysPool);
+      } catch (err) {
+        console.warn('⚠️ [Engine 2] Groq failed:', err.message);
+      }
     }
 
     if (!text) {
-      console.log('🤖 [Smart Fallback Engine] External Groq API keys exhausted/busy. Generating high quality prompt blueprint locally...');
-      const fallbackData = buildSmartFallbackPrompt(description, promptType, targetModel, aspectRatio);
-      text = JSON.stringify(fallbackData);
+      return res.status(503).json({
+        message: 'All AI engines are currently busy. Please try again in a moment.',
+        details: 'Both Gemini and Groq APIs are temporarily unavailable.'
+      });
     }
 
     // 4. Parse and return
@@ -1584,9 +1609,9 @@ DO NOT exceed 5 bracketed variables under any circumstances. Keep the majority o
         'Optimization': 'AI-Optimized for best results'
       };
 
-      // Default model and token price
-      promptData.model = 'flux-1';
-      promptData.priceTokens = 4;
+      // Preserve user's selected model; only set if not already set by AI response
+      if (!promptData.model) promptData.model = targetModel || 'flux-1';
+      if (!promptData.priceTokens) promptData.priceTokens = creditCost;
 
       res.json(promptData);
     } catch (parseError) {
