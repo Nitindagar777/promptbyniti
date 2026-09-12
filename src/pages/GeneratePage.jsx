@@ -844,6 +844,44 @@ export default function GeneratePage() {
               </span>
             </div>
           )}
+
+          {/* Clean Quick How-To Instructions Box */}
+          <div className="generate-quick-steps-box animate-fade-in-up">
+            <div className="quick-steps-header">
+              <span className="quick-steps-badge">HOW TO USE</span>
+              <span className="quick-steps-subtitle">4 Simple Steps to Your Perfect AI Prompt &amp; Pack</span>
+            </div>
+            <div className="quick-steps-grid">
+              <div className="quick-step-item">
+                <span className="quick-step-num">1</span>
+                <div className="quick-step-content">
+                  <span className="quick-step-title">Upload or Describe</span>
+                  <p className="quick-step-desc">Upload reference image or write description</p>
+                </div>
+              </div>
+              <div className="quick-step-item">
+                <span className="quick-step-num">2</span>
+                <div className="quick-step-content">
+                  <span className="quick-step-title">Select Ref Mode</span>
+                  <p className="quick-step-desc">Pick Same Scene, Diff Characters, or Fixed</p>
+                </div>
+              </div>
+              <div className="quick-step-item">
+                <span className="quick-step-num">3</span>
+                <div className="quick-step-content">
+                  <span className="quick-step-title">Hit Generate</span>
+                  <p className="quick-step-desc">Click prompt button below to generate</p>
+                </div>
+              </div>
+              <div className="quick-step-item">
+                <span className="quick-step-num">4</span>
+                <div className="quick-step-content">
+                  <span className="quick-step-title">Pack or Download</span>
+                  <p className="quick-step-desc">Hit Complete Pack or download Word .doc</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Centered Console Layout */}
