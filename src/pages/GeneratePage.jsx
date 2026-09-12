@@ -11,11 +11,12 @@ import {
   Sparkles, Info, Image as ImageIcon,
   RefreshCw, AlertTriangle,
   Crown, Dices, Zap, Video, Type, Search, Layers,
-  Save, ShoppingBag, RotateCcw, Check,
+  Save, ShoppingBag, RotateCcw, Check, Download,
   Lock, Repeat, Camera, LayoutGrid,
   Bot, Code, PenTool, Megaphone, Briefcase, Microscope,
   GraduationCap, Palette, MessageSquare, ShoppingCart, Settings
 } from 'lucide-react';
+import { downloadPromptAsDoc } from '../utils/exportDoc';
 import './GeneratePage.css';
 
 const SESSION_KEY = 'promptgen_session';
@@ -1195,6 +1196,17 @@ export default function GeneratePage() {
                     <span>{saveMessage || 'Save Prompt'}</span>
                   </button>
                 )}
+
+                <button
+                  className="btn btn-lg console-post-btn console-post-btn--download"
+                  style={{ background: 'linear-gradient(135deg, #0284c7, #06b6d4)', color: '#fff', fontWeight: 'bold', border: 'none', gap: '8px', display: 'flex', alignItems: 'center', boxShadow: '0 4px 15px rgba(6, 182, 212, 0.35)' }}
+                  onClick={() => downloadPromptAsDoc(result, !!result.promptTemplate)}
+                  id="gen-download-doc-btn"
+                  title="Download complete prompt document as Word .doc"
+                >
+                  <Download size={18} />
+                  <span>{result.promptTemplate ? 'Download Pack (.doc)' : 'Download Doc'}</span>
+                </button>
 
                 {generatorMode !== 'example' ? (
                   <>
