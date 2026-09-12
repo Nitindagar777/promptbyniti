@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
+    "face-service": "py -3.12 -m uvicorn main:app --app-dir ../prompt-by-niti-handoff/face-analysis-service --host 127.0.0.1 --port 8001",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

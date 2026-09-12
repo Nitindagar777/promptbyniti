@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "face-service": "py -3.12 -m uvicorn main:app --app-dir prompt-by-niti-handoff/face-analysis-service --host 127.0.0.1 --port 8001"
   },
   "dependencies": {
     "lucide-react": "^1.8.0",

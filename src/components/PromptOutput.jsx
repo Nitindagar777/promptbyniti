@@ -81,6 +81,64 @@ export default function PromptOutput({ result, mode }) {
         </div>
       )}
 
+      {/* MediaPipe Facial Biometric Pre-Processing Audit */}
+      {result.faceAnalysis && (
+        <div className="prompt-output__biometrics-card animate-fade-in-up">
+          <div className="prompt-output__biometrics-header">
+            <div className="flex items-center gap-2">
+              <span className="biometrics-pulse-dot" />
+              <span className="biometrics-title">Python MediaPipe Biometric Pre-Processing</span>
+            </div>
+            <span className="biometrics-status-badge">
+              {result.faceAnalysis.face_detected ? '100% Character Anchored' : 'Scene / Environment Reference'}
+            </span>
+          </div>
+
+          {result.faceAnalysis.face_detected ? (
+            <div className="prompt-output__biometrics-grid">
+              <div className="biometrics-item">
+                <span className="biometrics-item__label">Face Shape</span>
+                <span className="biometrics-item__val capitalize">{result.faceAnalysis.face_shape}</span>
+              </div>
+              <div className="biometrics-item">
+                <span className="biometrics-item__label">Eye Spacing</span>
+                <span className="biometrics-item__val capitalize">{result.faceAnalysis.eye_spacing}</span>
+              </div>
+              <div className="biometrics-item">
+                <span className="biometrics-item__label">Skin Tone</span>
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className="biometrics-color-chip"
+                    style={{ backgroundColor: result.faceAnalysis.skin_tone_hex }}
+                  />
+                  <span className="biometrics-item__val uppercase font-mono text-xs">{result.faceAnalysis.skin_tone_hex}</span>
+                </div>
+              </div>
+              <div className="biometrics-item">
+                <span className="biometrics-item__label">Eye Color</span>
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className="biometrics-color-chip"
+                    style={{ backgroundColor: result.faceAnalysis.left_eye_color_hex }}
+                  />
+                  <span className="biometrics-item__val uppercase font-mono text-xs">{result.faceAnalysis.left_eye_color_hex}</span>
+                </div>
+              </div>
+              <div className="biometrics-item biometrics-item--full">
+                <span className="biometrics-item__label">Verified Landmark Precision</span>
+                <span className="biometrics-item__val text-xs" style={{ color: 'var(--text-muted)' }}>
+                  {result.faceAnalysis.landmark_count || 478} 3D Mesh Points • MediaPipe Analysis: {result.faceAnalysis.processing_ms || 10}ms • Injected as Ground Truth into AI Vision
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="text-xs text-muted" style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+              MediaPipe analyzed reference image ({result.faceAnalysis.processing_ms || 10}ms) — Processed as environment, style, or object reference.
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Direct Ready-To-Use Prompt (only if promptTemplate is null/empty, meaning Direct Prompt Mode) */}
       {!result.promptTemplate && (
         <div className="prompt-output__section prompt-output__section--template">

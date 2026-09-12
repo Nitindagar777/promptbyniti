@@ -3,6 +3,7 @@ const router = express.Router();
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const SystemSettings = require('../models/SystemSettings');
 const { TEXT_SUBCATEGORY_RULES, CREATIVE_RULES, SOCIAL_MEDIA_RULES, ECOMMERCE_RULES, OTHER_RULES } = require('./rules');
+const { analyzeFace, buildBiometricPromptContext } = require('../services/faceAnalysisService');
 
 /**
  * Programmatically reduce the number of bracketed variables in promptTemplate to maxVars,
@@ -1120,6 +1121,20 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ message: 'Description, Template, or Reference Image is required.' });
     }
 
+    // 0. Pre-process reference image with Python MediaPipe facial analysis (if present)
+    let faceAnalysisResult = null;
+    if (hasRefImage) {
+      console.log('🔬 [MediaPipe Pre-processing] Initiating facial biometric analysis via Python microservice...');
+      try {
+        faceAnalysisResult = await analyzeFace(characterImage);
+        if (faceAnalysisResult) {
+          console.log(`🎯 [MediaPipe Pre-processing] Face scan: detected=${faceAnalysisResult.face_detected}, shape=${faceAnalysisResult.face_shape || 'N/A'}, skin=${faceAnalysisResult.skin_tone_hex || 'N/A'}`);
+        }
+      } catch (fErr) {
+        console.warn('⚠️ [MediaPipe Pre-processing] Non-fatal pre-processing error:', fErr.message);
+      }
+    }
+
     // 1. Get cached model (keys and database rules)
     const cached = await getOrCreateModel();
 
@@ -1151,6 +1166,17 @@ router.post('/', async (req, res) => {
             }
           });
           console.log('✅ Image added to request parts');
+
+          // Inject Python MediaPipe biometric ground truth right after image
+          if (faceAnalysisResult) {
+            const biometricContext = buildBiometricPromptContext(faceAnalysisResult);
+            if (biometricContext) {
+              userParts.push({
+                text: biometricContext
+              });
+              console.log('✅ MediaPipe biometric ground truth injected into AI prompt context');
+            }
+          }
         }
       } catch (imgErr) {
         console.error('❌ Failed to parse reference image:', imgErr.message);
@@ -1671,6 +1697,14 @@ DO NOT exceed 5 bracketed variables under any circumstances. Keep the majority o
         'Character Ref': characterImage ? 'Provided' : 'None',
         'Optimization': 'AI-Optimized for best results'
       };
+
+      // Attach Python MediaPipe biometric ground truth if reference image was analyzed
+      if (faceAnalysisResult) {
+        promptData.faceAnalysis = faceAnalysisResult;
+        promptData.structured['MediaPipe Biometrics'] = faceAnalysisResult.face_detected
+          ? `Shape: ${faceAnalysisResult.face_shape}, Skin: ${faceAnalysisResult.skin_tone_hex}, Eyes: ${faceAnalysisResult.left_eye_color_hex}`
+          : 'Scene / Environment Reference (No face detected)';
+      }
 
       // Preserve user's selected model; only set if not already set by AI response
       if (!promptData.model) promptData.model = targetModel || 'flux-1';
