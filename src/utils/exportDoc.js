@@ -247,10 +247,13 @@ export function generateDocHtml(result, isPack = false) {
 
   ${isCompletePack && Array.isArray(result.samples) && result.samples.length > 0 ? `
   <h2>Generated Sample Variations (${result.samples.length} Samples)</h2>
-  ${result.samples.map((sample, idx) => `
-    <div class="sample-title">Sample Example ${String.fromCharCode(65 + idx)}</div>
-    <div class="sample-box">${escapeXml(sample)}</div>
-  `).join('')}
+  ${result.samples.map((sample, idx) => {
+    const escaped = escapeXml(sample);
+    const highlighted = escaped.replace(/\[([^\]]+)\]/g, '[<strong style="color: #0284c7; font-weight: bold;">$1</strong>]');
+    return `
+    <div class="sample-title">Sample Example ${String.fromCharCode(65 + idx)}${idx === 0 ? ' (Best Result)' : ''}</div>
+    <div class="sample-box">${highlighted}</div>
+  `;}).join('')}
   ` : ''}
 
   ${result.negativePrompt ? `

@@ -4,6 +4,118 @@ import { Copy, Check, ChevronDown, ChevronUp, Sparkles, Layers, Ban, Download } 
 import { downloadPromptAsDoc } from '../utils/exportDoc';
 import './PromptOutput.css';
 
+// Formats sample string so that replaced variable values have [square brackets]
+function formatSampleWithBrackets(sample, promptTemplate) {
+  if (!sample || typeof sample !== 'string') return '';
+  if (/\[[^\]]+\]/.test(sample)) return sample;
+  if (!promptTemplate || typeof promptTemplate !== 'string') return sample;
+
+  const varRegex = /\[([^\]]+)\]/g;
+  const vars = [];
+  let match;
+  while ((match = varRegex.exec(promptTemplate)) !== null) {
+    vars.push({ placeholder: match[0], name: match[1], index: match.index });
+  }
+  if (vars.length === 0) return sample;
+
+  const chunks = [];
+  let lastIndex = 0;
+  for (let i = 0; i < vars.length; i++) {
+    chunks.push(promptTemplate.substring(lastIndex, vars[i].index));
+    lastIndex = vars[i].index + vars[i].placeholder.length;
+  }
+  chunks.push(promptTemplate.substring(lastIndex));
+
+  let currentIdx = 0;
+  let formatted = '';
+  let matchedAll = true;
+
+  for (let i = 0; i < vars.length; i++) {
+    const chunkBefore = chunks[i];
+    const chunkAfter = chunks[i + 1];
+
+    let startPos = currentIdx;
+    if (chunkBefore.length > 0) {
+      const foundIdx = sample.indexOf(chunkBefore, currentIdx);
+      if (foundIdx !== -1) {
+        formatted += sample.substring(currentIdx, foundIdx + chunkBefore.length);
+        startPos = foundIdx + chunkBefore.length;
+      } else {
+        matchedAll = false;
+        break;
+      }
+    }
+
+    let endPos = -1;
+    if (chunkAfter.length > 0) {
+      endPos = sample.indexOf(chunkAfter, startPos);
+      if (endPos === -1 && chunkAfter.length > 4) {
+        const prefix = chunkAfter.substring(0, Math.min(20, chunkAfter.length)).trim();
+        if (prefix) endPos = sample.indexOf(prefix, startPos);
+      }
+    } else {
+      endPos = sample.length;
+    }
+
+    if (endPos !== -1 && endPos >= startPos) {
+      const val = sample.substring(startPos, endPos).trim();
+      formatted += `[${val}]`;
+      currentIdx = endPos;
+    } else {
+      matchedAll = false;
+      break;
+    }
+  }
+
+  if (matchedAll) {
+    formatted += sample.substring(currentIdx);
+    return formatted;
+  }
+  return sample;
+}
+
+// Renders sample text highlighting the [square brackets] and replaced variable values in bold blue
+function renderHighlightedSample(sampleText) {
+  if (!sampleText || typeof sampleText !== 'string') return null;
+
+  const parts = [];
+  const re = /\[([^\]]+)\]/g;
+  let lastIdx = 0;
+  let m;
+
+  while ((m = re.exec(sampleText)) !== null) {
+    if (m.index > lastIdx) {
+      parts.push(sampleText.substring(lastIdx, m.index));
+    }
+    parts.push(
+      <span
+        key={m.index}
+        className="prompt-variable-tag"
+        style={{
+          color: '#38bdf8',
+          fontWeight: 800,
+          background: 'rgba(56, 189, 248, 0.12)',
+          padding: '2px 6px',
+          borderRadius: '5px',
+          border: '1.5px solid rgba(56, 189, 248, 0.4)',
+          display: 'inline-block',
+          margin: '0 2px',
+          boxShadow: '0 0 8px rgba(56, 189, 248, 0.2)'
+        }}
+      >
+        [{m[1]}]
+      </span>
+    );
+    lastIdx = re.lastIndex;
+  }
+
+  if (lastIdx < sampleText.length) {
+    parts.push(sampleText.substring(lastIdx));
+  }
+
+  return parts.length > 0 ? parts : sampleText;
+}
+
 export default function PromptOutput({ result, mode }) {
   const [copied, setCopied] = useState(null);
   const [showStructured, setShowStructured] = useState(false);
@@ -199,35 +311,40 @@ export default function PromptOutput({ result, mode }) {
         </div>
       )}
 
-      {/* 3 Sample Examples (Replaced Variables) */}
-      {result.promptTemplate && (result.samples || []).map((sample, idx) => (
-        <div className="prompt-output__section" key={idx}>
-          <div className="prompt-output__header">
-            <div className="prompt-output__label">
-              <Sparkles size={16} />
-              <span>Sample Example {String.fromCharCode(65 + idx)} (Best Result)</span>
+      {/* 4 Sample Examples (Replaced Variables) */}
+      {result.promptTemplate && (result.samples || []).map((sample, idx) => {
+        const formattedSample = formatSampleWithBrackets(sample, result.promptTemplate);
+        const sampleTitle = `Sample Example ${String.fromCharCode(65 + idx)}${idx === 0 ? ' (Best Result)' : ''}`;
+
+        return (
+          <div className="prompt-output__section" key={idx}>
+            <div className="prompt-output__header">
+              <div className="prompt-output__label">
+                <Sparkles size={16} />
+                <span>{sampleTitle}</span>
+              </div>
+              <div className="prompt-output__actions">
+                <button
+                  className="prompt-output__copy prompt-output__btn-download"
+                  onClick={() => downloadPromptAsDoc({ ...result, mainPrompt: formattedSample, title: `${result.title || 'Prompt'} - Sample ${String.fromCharCode(65 + idx)}` }, false)}
+                  title="Download this sample prompt as Word .doc file"
+                >
+                  <Download size={13} /> Doc
+                </button>
+                <button
+                  className={`prompt-output__copy ${copied === `sample-${idx}` ? 'prompt-output__copy--copied' : ''}`}
+                  onClick={() => copyToClipboard(formattedSample, `sample-${idx}`)}
+                >
+                  {copied === `sample-${idx}` ? <><Check size={14} /> Copied!</> : <><Copy size={14} /> Copy</>}
+                </button>
+              </div>
             </div>
-            <div className="prompt-output__actions">
-              <button
-                className="prompt-output__copy prompt-output__btn-download"
-                onClick={() => downloadPromptAsDoc({ ...result, mainPrompt: sample, title: `${result.title || 'Prompt'} - Sample ${String.fromCharCode(65 + idx)}` }, false)}
-                title="Download this sample prompt as Word .doc file"
-              >
-                <Download size={13} /> Doc
-              </button>
-              <button
-                className={`prompt-output__copy ${copied === `sample-${idx}` ? 'prompt-output__copy--copied' : ''}`}
-                onClick={() => copyToClipboard(sample, `sample-${idx}`)}
-              >
-                {copied === `sample-${idx}` ? <><Check size={14} /> Copied!</> : <><Copy size={14} /> Copy</>}
-              </button>
+            <div className="prompt-output__text" style={{ fontSize: '1rem', lineHeight: '1.7' }}>
+              {renderHighlightedSample(formattedSample)}
             </div>
           </div>
-          <div className="prompt-output__text">
-            {sample}
-          </div>
-        </div>
-      ))}
+        );
+      })}
 
       {/* Negative Prompt */}
       {mode !== 'example' && result.promptTemplate && (

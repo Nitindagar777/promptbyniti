@@ -424,3 +424,17 @@
   display: inline-block;
 }
 
+/* Highlighted replaced variable tags in samples */
+.prompt-variable-tag {
+  color: #38bdf8 !important;
+  font-weight: 800 !important;
+  background: rgba(56, 189, 248, 0.12);
+  padding: 2px 7px;
+  border-radius: 6px;
+  border: 1.5px solid rgba(56, 189, 248, 0.45);
+  display: inline-block;
+  margin: 0 2px;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.22);
+  letter-spacing: 0.02em;
+}
+

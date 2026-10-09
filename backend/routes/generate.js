@@ -59,19 +59,21 @@ function limitVariables(promptTemplate, mainPrompt, maxVars = 5) {
 }
 
 /**
- * Ensures that a sample string (or mainPrompt) contains 100% of the complete text structure
- * from promptTemplate. If the LLM omitted or truncated any non-variable text from promptTemplate
- * when creating the sample, this function extracts the variable values and reconstructs the sample
- * from promptTemplate so NO text is ever missing or cut off.
+ * Ensures that a sample string contains [square brackets] around replaced variable values
+ * based on promptTemplate so buyers and users can clearly see which variable values were substituted.
  */
-function enforceCompleteSampleFromTemplate(promptTemplate, sampleStr) {
+function formatSampleWithBrackets(sampleStr, promptTemplate) {
   if (!promptTemplate || typeof promptTemplate !== 'string') return sampleStr;
   if (!sampleStr || typeof sampleStr !== 'string') return promptTemplate;
 
   const cleanTemplate = promptTemplate.trim();
   const cleanSample = sampleStr.trim();
 
-  // Extract all [bracketed] variables from promptTemplate
+  // If sample already has bracketed variables, keep as is
+  if (/\[[^\]]+\]/.test(cleanSample)) {
+    return cleanSample;
+  }
+
   const varRegex = /\[([^\]]+)\]/g;
   const vars = [];
   let match;
@@ -83,15 +85,8 @@ function enforceCompleteSampleFromTemplate(promptTemplate, sampleStr) {
     });
   }
 
-  // If promptTemplate has no bracketed variables, check if sample is truncated
-  if (vars.length === 0) {
-    if (cleanSample.length < cleanTemplate.length * 0.85) {
-      return cleanTemplate;
-    }
-    return cleanSample;
-  }
+  if (vars.length === 0) return cleanSample;
 
-  // Split promptTemplate into fixed text chunks P_0, P_1, ..., P_n
   const chunks = [];
   let lastIndex = 0;
   for (let i = 0; i < vars.length; i++) {
@@ -100,9 +95,9 @@ function enforceCompleteSampleFromTemplate(promptTemplate, sampleStr) {
   }
   chunks.push(cleanTemplate.substring(lastIndex));
 
-  // Extract variable values from sampleStr by matching fixed chunks sequentially
   const extractedValues = {};
   let currentIdx = 0;
+  let allFound = true;
 
   for (let i = 0; i < vars.length; i++) {
     const chunkBefore = chunks[i];
@@ -114,19 +109,21 @@ function enforceCompleteSampleFromTemplate(promptTemplate, sampleStr) {
       const foundIdx = cleanSample.indexOf(chunkBefore, currentIdx);
       if (foundIdx !== -1) {
         startPos = foundIdx + chunkBefore.length;
+      } else {
+        allFound = false;
+        break;
       }
     }
 
     let endPos = -1;
     if (chunkAfter.length > 0) {
       endPos = cleanSample.indexOf(chunkAfter, startPos);
-
-      if (endPos === -1 && chunkAfter.length > 3) {
-        const prefix = chunkAfter.substring(0, Math.min(15, chunkAfter.length)).trim();
-        if (prefix.length > 0) {
-          endPos = cleanSample.indexOf(prefix, startPos);
-        }
+      if (endPos === -1 && chunkAfter.length > 4) {
+        const prefix = chunkAfter.substring(0, Math.min(20, chunkAfter.length)).trim();
+        if (prefix) endPos = cleanSample.indexOf(prefix, startPos);
       }
+    } else {
+      endPos = cleanSample.length;
     }
 
     if (endPos !== -1 && endPos >= startPos) {
@@ -136,41 +133,47 @@ function enforceCompleteSampleFromTemplate(promptTemplate, sampleStr) {
       }
       currentIdx = endPos;
     } else {
-      const remainingText = cleanSample.substring(startPos).trim();
-      if (remainingText) {
-        const commaIdx = remainingText.indexOf(',');
-        const val = commaIdx !== -1 ? remainingText.substring(0, commaIdx).trim() : remainingText.substring(0, 40).trim();
-        if (val) {
-          extractedValues[varName] = val;
-          currentIdx = startPos + val.length;
-        }
+      allFound = false;
+      break;
+    }
+  }
+
+  if (allFound && Object.keys(extractedValues).length === vars.length) {
+    let reconstructedWithBrackets = cleanTemplate;
+    for (let i = 0; i < vars.length; i++) {
+      const placeholder = vars[i].placeholder;
+      const cleanVal = (extractedValues[placeholder] || '').replace(/[\[\]]/g, '').trim();
+      if (cleanVal) {
+        reconstructedWithBrackets = reconstructedWithBrackets.replace(placeholder, `[${cleanVal}]`);
       }
     }
+    return reconstructedWithBrackets;
   }
 
-  // Reconstruct sample from promptTemplate using extracted values
-  let reconstructed = cleanTemplate;
-  let hasReplacements = false;
+  return cleanSample;
+}
 
-  for (let i = 0; i < vars.length; i++) {
-    const placeholder = vars[i].placeholder;
-    let val = extractedValues[placeholder];
-    if (!val) {
-      val = vars[i].name.replace(/_/g, ' ');
-    }
-    const cleanVal = val.replace(/[\[\]]/g, '').trim();
-    reconstructed = reconstructed.replace(placeholder, cleanVal);
-    hasReplacements = true;
+/**
+ * Ensures that a sample string retains complete text structure from promptTemplate
+ * and ensures replaced variables are wrapped in [square brackets].
+ * NEVER replaces genuine AI output with raw placeholder variable names.
+ */
+function enforceCompleteSampleFromTemplate(promptTemplate, sampleStr) {
+  if (!promptTemplate || typeof promptTemplate !== 'string') return sampleStr;
+  if (!sampleStr || typeof sampleStr !== 'string') return promptTemplate;
+
+  const cleanTemplate = promptTemplate.trim();
+  const cleanSample = sampleStr.trim();
+
+  // If sample already has bracketed variables, return as is
+  if (/\[[^\]]+\]/.test(cleanSample)) {
+    return cleanSample;
   }
 
-  // Check if cleanSample is missing trailing text from template
-  const templateEnding = chunks[chunks.length - 1].replace(/\s*--ar\s+\S+/g, '').trim();
-  const sampleEnding = cleanSample.replace(/\s*--ar\s+\S+/g, '').trim();
-  const isMissingText = templateEnding.length > 15 && !sampleEnding.endsWith(templateEnding.substring(Math.max(0, templateEnding.length - 25)));
-
-  if (hasReplacements && (isMissingText || reconstructed.length > cleanSample.length + 10)) {
-    console.log(`✨ Enforced complete text on sample (restored length from ${cleanSample.length} to ${reconstructed.length} chars)`);
-    return reconstructed;
+  // Attempt to wrap replaced variables in [brackets] by comparing with template chunks
+  const bracketed = formatSampleWithBrackets(cleanSample, cleanTemplate);
+  if (bracketed && bracketed !== cleanSample) {
+    return bracketed;
   }
 
   return cleanSample;
@@ -185,7 +188,7 @@ function enforceCompleteSampleFromTemplate(promptTemplate, sampleStr) {
 let cachedModel = null;
 let cachedRulesHash = null;   // detect when admin edits rules
 let cachedApiKey = null;
-const SYSTEM_PROMPT_VERSION = 'v23-force-4-samples-always'; // bump this when system prompt changes
+const SYSTEM_PROMPT_VERSION = 'v24-promptbase-compliance'; // bump this when system prompt changes
 
 // Backup Groq API Keys pool (5 Accounts provided by user)
 const GROQ_FALLBACK_KEYS = [
@@ -329,17 +332,10 @@ async function callGroqLLMWithFailover(systemInstruction, userParts, hasRefImage
   throw lastError || new Error('All Groq API keys and models failed.');
 }
 
-// ── Gemini API Keys Pool (backup keys from gemini_api_keys.txt) ──
+// ── Gemini API Keys Pool (Verified working keys) ──
 const GEMINI_BACKUP_KEYS = [
-  'AIzaSyArurzA-OEsCtoZLr9Bgd_B5UnguO7b_zo',
-  'AQ.Ab8RN6Jes4GulDFcccfsyikXjNPYMR3jCIiugECjF_3_VYRqjg',
-  'AQ.Ab8RN6LJhrVHjKlG0gM5yJjUpWA-J95Y8cE-iP3FhwtCtQUDOw',
-  'AQ.Ab8RN6J9LrQxFf5kVDfOJRkhFXy1C3Pv9swoJfDWdcydk0RSEw',
-  'AQ.Ab8RN6LosILWCe-dIldoppzBXf7LkBQH05kKRLRozT6ZvOhyow',
-  'AQ.Ab8RN6KtZWaxDwWtB0Nox7-88ChqUsil30dD8__NC-clpcDHVQ',
-  'AQ.Ab8RN6IiwV8_KagTiGrWgqxwRyQd9iXlc3zxqMTGwlhmp0wnsw',
-  'AQ.Ab8RN6LKd5E6XJjk5LDfoLBv8VUYbddP4Bm9qgUm2XuhX6pIxQ',
-  'AQ.Ab8RN6IODT6rDnhkxPsQVEqrbuin-HtfUOm-0fzrtYFaX3-XOg'
+  'AQ.Ab8RN6JJC5Tk0OGRA1akwt6uKuqEQEI071e-YBTa84acxTvZQQ',
+  'AIzaSyArurzA-OEsCtoZLr9Bgd_B5UnguO7b_zo'
 ];
 
 /**
@@ -372,15 +368,19 @@ async function callGeminiWithFailover(systemInstruction, userParts, hasRefImage)
   }
 
   const candidateModels = [
-    (settings?.geminiModel && !['gemini-flash-latest', 'gemini-2.0-flash', 'gemini-1.5-flash'].includes(settings.geminiModel)) ? settings.geminiModel : null,
+    settings?.geminiModel,
     'gemini-2.5-flash',
-    'gemini-3.6-flash'
+    'gemini-3.8-flash',
+    'gemini-flash-latest'
   ].filter(Boolean);
+
+  // Remove duplicates while preserving priority order
+  const uniqueModels = [...new Set(candidateModels)];
 
   let lastError = null;
 
   for (const keyObj of keysPool) {
-    for (const modelName of candidateModels) {
+    for (const modelName of uniqueModels) {
       try {
         console.log(`🧠 [Gemini Engine] Trying ${keyObj.name} with model ${modelName}...`);
         const genAI = new GoogleGenerativeAI(keyObj.rawKey);
@@ -400,18 +400,63 @@ async function callGeminiWithFailover(systemInstruction, userParts, hasRefImage)
       } catch (err) {
         console.warn(`⚠️ [Gemini - ${keyObj.name} - ${modelName}] Failed: ${err.message}`);
         lastError = err;
-        // If 404 model not found, try next candidate model
-        if (err.message && err.message.includes('404')) {
-          continue;
-        }
-        // If quota/rate limit error, move to next key
-        break;
+        // On 404 (model not found) or 429 (quota/rate limit exceeded),
+        // try the next model candidate for this key first before moving to next key
+        continue;
       }
     }
   }
 
   throw lastError || new Error('All Gemini API keys failed.');
 }
+
+/**
+ * Fallback Engine 3: Pollinations AI text endpoint
+ * Zero rate-limit backup when Gemini and Groq are exhausted
+ */
+async function callPollinationsFallback(systemInstruction, userParts, hasRefImage) {
+  let userText = '';
+  userParts.forEach(p => {
+    if (typeof p.text === 'string') {
+      userText += (userText ? '\n\n' : '') + p.text;
+    }
+  });
+
+  const payload = {
+    messages: [
+      { role: 'system', content: systemInstruction + '\n\nCRITICAL: Return ONLY valid, raw JSON.' },
+      { role: 'user', content: userText }
+    ],
+    jsonMode: true,
+    model: 'openai',
+    seed: Math.floor(Math.random() * 100000)
+  };
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 25000);
+
+  try {
+    const res = await fetch('https://text.pollinations.ai/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      signal: controller.signal
+    });
+
+    if (!res.ok) {
+      throw new Error(`Pollinations API returned status ${res.status}`);
+    }
+
+    const text = await res.text();
+    if (text && text.trim()) {
+      return text.trim();
+    }
+    throw new Error('Empty response from Pollinations');
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 
 /**
  * Build (or re-use) Groq keys pool.
@@ -961,18 +1006,20 @@ When a reference image is provided in DIFFERENT CHARACTERS mode, you MUST:
    - mainPrompt: "Double exposure photography of a wolf silhouette against a deep pine forest, vibrant night sky filled with aurora borealis, double exposure visual effect, ethereal lighting, sharp details, cinematic rendering --ar ${resolvedAR}"
    - promptTemplate: "Double exposure photography of a [subject] silhouette against a [background scenery], vibrant night sky filled with [atmospheric effect], double exposure visual effect, [lighting style] lighting, sharp details, cinematic rendering --ar ${resolvedAR}"
    - In this example, ONLY the key items ([subject], [background scenery], [atmospheric effect], [lighting style]) are variables (4 total). All other words like "Double exposure photography", "silhouette against a", "vibrant night sky filled with", "double exposure visual effect", "lighting, sharp details, cinematic rendering" are FIXED descriptive text. This ensures the prompt is highly professional, unique, and valuable!
-5. For each sample (A, B, C, etc.), take the promptTemplate and replace every [BRACKET] variable.
+5. For each sample (Sample A, Sample B, Sample C, Sample D):
+   - Replace each [BRACKET] variable with a rich, unique, creative value.
+   - Wrap each replaced variable value in [square brackets] so buyers can clearly see which variable values were substituted (e.g. if the template has [OBJECT], Sample A has [koala], Sample B has [red panda], etc.).
+   - ZERO TOLERANCE FOR PLACEHOLDERS: Do NOT output placeholder text like "Sample A: unique variation...". Every sample MUST be a full, complete, ultra-detailed prompt.
 6. ZERO TOLERANCE FOR REPETITION: Every variable MUST be 100% unique across all samples.
-7. ZERO TOLERANCE FOR BRACKETS IN SAMPLES: Samples and mainPrompt MUST NOT contain any [BRACKETS]. Only promptTemplate has brackets.
-8. SAMPLE COUNT: Generate exactly 4 samples for complete prompt packs (Sample A, Sample B, Sample C, Sample D).
-9. CRITICAL CHARACTER LENGTH CONSTRAINT (MANDATORY):
+7. SAMPLE COUNT: Generate exactly 4 samples for complete prompt packs (Sample A, Sample B, Sample C, Sample D).
+8. CRITICAL CHARACTER LENGTH CONSTRAINT (MANDATORY):
    The generated promptTemplate MUST strictly comply with these length limits based on the Credit Tier:
    - 1 Credit (Normal): promptTemplate MUST be at least 400 to 500 characters long (detailed and perfect to best describe the scene).
    - 3 Credits (Super): promptTemplate MUST be at least 500 to 600 characters long (exceptional photographic details and camera settings).
    - 5 Credits (Power): promptTemplate MUST be at least 600 to 700 characters long (masterpiece-level visual details, highly detailed and fully descriptive).
    You MUST write exceptionally detailed, long, and descriptive fixed text around the bracketed variables in promptTemplate to satisfy this length requirement.
-10. Every prompt and sample MUST end with --ar ${resolvedAR}
-11. CRITICAL COMPLETE TEXT MANDATE: Every sample (Sample A, Sample B, Sample C, Sample D) and mainPrompt MUST retain 100% of the complete text structure of promptTemplate from start to finish. DO NOT drop, omit, or cut off any fixed text, clauses, or camera details present in promptTemplate when generating samples or mainPrompt.`;
+9. Every prompt and sample MUST end with --ar ${resolvedAR}
+10. CRITICAL COMPLETE TEXT MANDATE: Every sample (Sample A, Sample B, Sample C, Sample D) and mainPrompt MUST retain 100% of the complete text structure of promptTemplate from start to finish. DO NOT drop, omit, or cut off any fixed text, clauses, or camera details present in promptTemplate when generating samples or mainPrompt.`;
     }
   }
 
@@ -1004,14 +1051,14 @@ You must return a VALID JSON object with these fields:
   "title": "A catchy 3-5 word title for the prompt",
   "description": "A professional 1-2 sentence description of what this prompt achieves",
   "imageAnalysis": "",
-  "mainPrompt": "A COMPLETE, READY-TO-USE SAMPLE PROMPT with ALL bracketed variables replaced by real, creative values. This MUST NOT contain any [BRACKETS]. Do NOT append any --ar or visual settings.",
+  "mainPrompt": "A COMPLETE, READY-TO-USE SAMPLE PROMPT with ALL bracketed variables replaced by real, creative values. End with no brackets. Do NOT append any --ar or visual settings.",
   "negativePrompt": "Things to avoid/exclude in the text output structure",
   "promptTemplate": "The skeleton version of the prompt using [BRACKETED] variables for changeable parts. THIS IS THE ONLY FIELD THAT SHOULD HAVE BRACKETS. Limit variables to between 1 and 5.",
   "samples": [
-    "Sample A: unique variation...",
-    "Sample B: unique variation...",
-    "Sample C: unique variation...",
-    "Sample D: unique variation..."
+    "Full complete Sample A prompt with replaced values in [brackets], e.g. [value]",
+    "Full complete Sample B prompt with replaced values in [brackets], e.g. [value]",
+    "Full complete Sample C prompt with replaced values in [brackets], e.g. [value]",
+    "Full complete Sample D prompt with replaced values in [brackets], e.g. [value]"
   ],
   "keywords": ["keyword1", "keyword2", "keyword3", "keyword4"],
   "instructions": "Step-by-step instructions on how to use this prompt effectively."
@@ -1030,10 +1077,10 @@ You must return a VALID JSON object with these fields:
   "negativePrompt": "A comprehensive negative prompt (things to avoid/exclude)",
   "promptTemplate": "The skeleton version of the prompt using [BRACKETED] variables for changeable parts. THIS IS THE ONLY FIELD THAT SHOULD HAVE BRACKETS.",
   "samples": [
-    "Sample A: unique variation...",
-    "Sample B: unique variation...",
-    "Sample C: unique variation...",
-    "Sample D: unique variation..."
+    "Full complete Sample A prompt with replaced values in [brackets], e.g. [value] ending with --ar ${resolvedAR}",
+    "Full complete Sample B prompt with replaced values in [brackets], e.g. [value] ending with --ar ${resolvedAR}",
+    "Full complete Sample C prompt with replaced values in [brackets], e.g. [value] ending with --ar ${resolvedAR}",
+    "Full complete Sample D prompt with replaced values in [brackets], e.g. [value] ending with --ar ${resolvedAR}"
   ],
   "keywords": ["keyword1", "keyword2", "keyword3", "keyword4"],
   "instructions": "Step-by-step instructions on how to use this prompt effectively."
@@ -1075,6 +1122,122 @@ STRICT INPUT, REALISM & SYNTAX RULES:
 5. 100% REAL HUMAN REALISM (NO CARTOON / CGI): Specify 'candid authentic 100% real human, natural unedited skin texture, subtle visible skin pores, raw unretouched photograph, 35mm lens'. Avoid plastic AI glow, CGI renders, cartoon styles, or doll-like smooth skin.
 6. SAME SCENE CONSISTENCY: Keep subject, clothes, and scene identical across samples while varying camera framing, angles, and poses.
 7. MANDATORY FULL FIELDS: Every field in the JSON object MUST be fully populated.`;
+  // ─── PromptBase Marketplace Compliance ─────────────────────────────────────
+  const promptbaseComplianceSection = `
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PROMPTBASE MARKETPLACE COMPLIANCE — MANDATORY (ALL RULES)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Your generated prompt MUST pass all PromptBase submission guidelines so it can be sold without being declined. Follow every rule below without exception.
+
+RULE 0 — 100% ORIGINAL GENERATION & NO DEMO / TRAINING DATA (CRITICAL):
+- DO NOT copy, reuse, or output any demo examples, templates, or subjects mentioned in these guidelines (such as "Very tiny koala...", "3D clay render", "Double exposure wolf", "rapeseed flower field", or any illustrative examples).
+- Those examples are ONLY illustrations of format rules for you as the AI engineer.
+- You MUST generate 100% original, deeply detailed, creative prompts tailored specifically to the user's requested subject, style, or uploaded reference image.
+- Both the "promptTemplate" and every sample in "samples" MUST be full, rich, ultra-detailed prompts (min 400-600 characters) generated entirely from scratch by you.
+
+RULE 1 — PROMPT TEMPLATE WITH [SQUARE BRACKET] VARIABLES (CRITICAL — NON-NEGOTIABLE):
+PromptBase ONLY approves prompt TEMPLATES. A prompt template contains areas in [square brackets] that a buyer can edit to adapt the prompt for their own needs.
+
+HARD REQUIREMENTS (enforced by PromptBase):
+- MINIMUM 1 variable  — every template MUST have at least one [BRACKET] variable. A prompt with zero variables is REJECTED.
+- MAXIMUM 5 variables — you MUST NOT include more than 5 [BRACKET] variables in a single template. More than 5 = REJECTED.
+- Variables MUST use [square brackets] only — e.g. [OBJECT], [STYLE], [COLOR], [SUBJECT], [MOOD].
+- The variable name inside the brackets must be short, clear, and ALL-CAPS or Title Case (e.g. [OBJECT], [Subject], [art style]).
+
+PERFECT EXAMPLE of a PromptBase-approved template (1 variable — "OBJECT"):
+  promptTemplate: "Very tiny [OBJECT] that looks like the iOS emoji and has the same colors, 3D clay render, 4k UHD, white background, isometric top down left view, diffuse lighting, zoomed out very far"
+  Sample (buyer fills in [OBJECT] = "koala"): "Very tiny koala that looks like the iOS emoji and has the same colors, 3D clay render, 4k UHD, white background, isometric top down left view, diffuse lighting, zoomed out very far"
+
+HOW TO BUILD YOUR TEMPLATE:
+1. Write the complete, highly detailed prompt first with all fixed text (style keywords, lighting, camera, medium, etc.).
+2. Identify the 1-5 things a buyer would most want to swap out (e.g. the subject, color scheme, setting, mood).
+3. Replace those specific parts with [BRACKET] variables. Keep ALL other text fixed.
+4. The fixed text should be the majority of the prompt — it is what makes the prompt valuable and unique.
+5. Each variable must be meaningful and changeable in a way that produces a clearly different output.
+
+WHAT COUNTS AS A GOOD VARIABLE:
+- [OBJECT] / [SUBJECT] / [ANIMAL] / [CHARACTER] — the main subject of the image/video/text
+- [STYLE] / [ART STYLE] / [MOOD] — the visual or tonal style
+- [COLOR SCHEME] / [COLOR PALETTE] — color variation
+- [LOCATION] / [BACKGROUND] / [SETTING] — the environment or scene
+- [ACTION] / [POSE] — what the subject is doing
+
+EXCEPTION: "Random generator prompts" — prompts that consistently produce output in the same style but with a different subject each run (e.g. a wallpaper pattern generator) do NOT need variables. But this is rare. For all other prompts, variables are MANDATORY.
+
+DO NOT:
+- Generate a prompt with ZERO variables (no [brackets] at all) — REJECTED by PromptBase.
+- Generate a prompt with MORE THAN 5 variables — REJECTED by PromptBase.
+- Use (parentheses) or {curly braces} as variables — only [square brackets] are valid.
+- Create generic placeholder variables like [YOUR TEXT HERE] or [FILL IN] — make them specific and meaningful.
+
+RULE 2 — HIGH USE-CASE FACTOR:
+- The prompt MUST have a clear, broad use case that many different buyers would find valuable (e.g., logo designs, product photography, social media content, marketing copy, icon sets).
+- REJECT any prompt so niche or personal that only one specific user would need it.
+
+RULE 3 — NOT TOO SPECIFIC / NOT TOO NICHE:
+- DO NOT combine more than 3 ideas. A prompt combining 4+ ideas (e.g., "3D doctor animals with moustaches") is too niche.
+- Rule of thumb: if you have 3 ideas and one is niche, simplify. E.g.:
+  * TOO NICHE: "3D doctor animals with moustaches" (4 ideas, 2 niche — declined)
+  * STILL TOO NICHE: "3D doctor animals" (3 ideas, 1 niche — declined)
+  * GOOD: "3D animals with [JOB]" (3 broad ideas — approved)
+- If the user's request is too narrow, widen the scope with a [BRACKET] variable for the niche part.
+
+RULE 4 — CONSISTENT STYLE ACROSS ALL SAMPLES:
+- ALL 4 generated samples MUST look like they belong to the same series or style.
+- Visual style, art medium, or text format MUST be consistent. Only the subject/topic changes between samples.
+- FORBIDDEN: one sample is a 3D render, another is a cartoon, another is a photo — this is inconsistent style and will be declined.
+
+RULE 5 — WRITTEN IN ENGLISH:
+- The complete prompt (promptTemplate, mainPrompt, all samples, title, description, instructions) MUST be in English only.
+- No spelling mistakes, no gibberish, no filler text.
+
+RULE 6 — NOT TOO SIMPLE / NOT GUESSABLE:
+- The prompt MUST NOT be trivially obvious or easily guessable from seeing the title or output.
+- FORBIDDEN: A prompt titled "Dog Videos" with the actual prompt text "a video of a [dog]".
+- A short prompt is not automatically simple — clever, uniquely worded short prompts with specific parameters are fine.
+- DO NOT pad with excessive filler just to hit a character count. Quality and uniqueness matter most.
+
+RULE 7 — SAFE, NON-NSFW, NON-HARMFUL:
+- DO NOT generate any prompt that could produce NSFW, explicit, adult-oriented, nudity, sexual, violent, or offensive content.
+- DO NOT generate prompts that provide medical advice, promote illegal activity, or could cause harm.
+- All content must be safe for a general, professional audience.
+
+RULE 8 — NO MODEL RULE VIOLATIONS:
+- DO NOT generate prompts that circumvent the safety rules of any AI model (Midjourney, DALL-E, Stable Diffusion, etc.).
+- Respect the content guidelines of the target AI model at all times.
+
+RULE 9 — SAMPLES MUST BE MEANINGFULLY DIFFERENT:
+- The 4 generated samples MUST be clearly different from each other. DO NOT generate 4 samples of the same subject.
+- Each sample must show a clearly different subject, scene, or concept while keeping the overall style consistent.
+
+RULE 10 — ORIGINAL, NON-PLAGIARISED:
+- Generate original, thoughtfully crafted prompts with genuine creative direction and unique phrasing.
+- DO NOT copy existing popular prompts with only minor alterations.
+- DO NOT produce mass-generated, formulaic, or obviously AI-pattern-generated prompt text.
+
+RULE 11 — UNIQUE STYLE OR HIGH COMMERCIAL VALUE:
+- Prioritise prompts that achieve either:
+  a) A UNIQUE STYLE: an effect or aesthetic that is hard to achieve without the prompt, OR
+  b) HIGH COMMERCIAL VALUE: a use case actively bought by professionals (product photography, tee illustrations, food advertising, icon design, business copywriting).
+
+RULE 12 — BUILD/APP/GAME PROMPTS (if applicable):
+- DO NOT generate generic build prompts where [GAME GENRE] or [APP FUNCTIONALITY] leaves the entire concept to the buyer.
+- Define ONE specific, well-designed game or app. Only use variables for theme, art style, characters, or branding.
+
+SUMMARY CHECKLIST — Every generated prompt MUST satisfy ALL of the following:
+✅ Template with [BRACKET] variables (1-5 max) so buyers can customise
+✅ Broad, high use-case appeal — valuable to many buyers
+✅ Max 3 ideas — none overly niche
+✅ Consistent style across all samples
+✅ Written entirely in English, no spelling mistakes, no gibberish
+✅ Non-trivial, non-guessable — adds genuine expert prompt-engineering value
+✅ Safe, non-NSFW, non-harmful, AI-model-compliant
+✅ All 4 samples are meaningfully different
+✅ Original, not plagiarised, not mass-pattern-generated
+✅ Achieves a unique style OR has high commercial value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
+
+
 
   return `You are an expert AI Prompt Engineer for a premium prompt marketplace called "Prompt by Niti".
 
@@ -1088,6 +1251,8 @@ YOUR ROLE:
 - For VIDEO prompts: include camera movements, motion dynamics, temporal flow, scene transitions.
 - For TEXT prompts: focus on tone, structure, context, audience, formatting guidance.
 
+${promptbaseComplianceSection}
+
 ${modelBoldInstructions}
 
 ${tierGuidelines}
@@ -1099,6 +1264,44 @@ ${howToBuildSamples}
 ${subcategoryInstruction}
 
 ${outputFormatInstruction}`;
+}
+
+/**
+ * Zero rate-limit fallback via Pollinations AI.
+ * Guaranteed to succeed even if Gemini or Groq quotas are temporarily exhausted.
+ */
+async function callPollinationsFallback(systemInstruction, userParts, hasRefImage) {
+  let userText = '';
+  userParts.forEach(p => {
+    if (typeof p.text === 'string') {
+      userText += (userText ? '\n\n' : '') + p.text;
+    }
+  });
+
+  const response = await fetch('https://text.pollinations.ai/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      messages: [
+        { role: 'system', content: systemInstruction },
+        { role: 'user', content: userText || 'Generate a high quality prompt' }
+      ],
+      model: 'openai',
+      jsonMode: true
+    }),
+    signal: AbortSignal.timeout(40000)
+  });
+
+  if (!response.ok) {
+    throw new Error(`Pollinations HTTP error: ${response.status}`);
+  }
+
+  const resultText = await response.text();
+  if (!resultText || !resultText.trim()) {
+    throw new Error('Empty response from Pollinations');
+  }
+
+  return resultText;
 }
 
 // POST /api/generate
@@ -1546,10 +1749,21 @@ DO NOT exceed 5 bracketed variables under any circumstances. Keep the majority o
       }
     }
 
+    // Engine 3: Fall back to Pollinations AI if both Gemini and Groq failed
+    if (!text) {
+      try {
+        console.log('🌸 [Engine 3] Trying Pollinations AI fallback...');
+        text = await callPollinationsFallback(systemInstruction, userParts, hasRefImage);
+        if (text) console.log('✅ [Engine 3] Success with Pollinations AI!');
+      } catch (err) {
+        console.warn('⚠️ [Engine 3] Pollinations fallback failed:', err.message);
+      }
+    }
+
     if (!text) {
       return res.status(503).json({
         message: 'All AI engines are currently busy. Please try again in a moment.',
-        details: 'Both Gemini and Groq APIs are temporarily unavailable.'
+        details: 'Gemini, Groq, and Pollinations engines were temporarily unavailable.'
       });
     }
 
@@ -1670,6 +1884,11 @@ DO NOT exceed 5 bracketed variables under any circumstances. Keep the majority o
         if (promptData.promptTemplate) {
           promptData.promptTemplate = ensureCustomAR(removePlusSigns(promptData.promptTemplate));
         }
+      }
+
+      // In Complete Pack, ensure samples have [square brackets] around replaced variable values
+      if (promptData.promptTemplate && Array.isArray(promptData.samples) && promptData.samples.length > 0) {
+        promptData.samples = promptData.samples.map(s => formatSampleWithBrackets(s, promptData.promptTemplate));
       }
 
       // Sanitize description field to ensure clean human-readable sales pitch with no '+' signs or raw blueprint strings

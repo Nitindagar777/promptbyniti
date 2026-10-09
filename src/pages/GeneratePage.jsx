@@ -127,6 +127,7 @@ export default function GeneratePage() {
   const location = useLocation();
   const navigate = useNavigate();
   const descriptionRef = useRef(null);
+  const [showPackChoice, setShowPackChoice] = useState(false);
 
   // Restore from sessionStorage on mount
   const getInitialState = () => {
@@ -1292,27 +1293,135 @@ export default function GeneratePage() {
                 )}
               </div>
             ) : (
-              <button
-                className={`btn btn-primary btn-lg console-submit-btn ${isGenerating ? 'loading' : ''} ${form.description.length > 5 ? 'glow' : ''}`}
-                onClick={handleGenerate}
-                disabled={isGenerating}
-                id="gen-submit-btn"
-                style={activeCategory === 'models' || form.category === 'models' ? { background: 'linear-gradient(135deg, #ec4899, #db2777)', boxShadow: '0 4px 20px rgba(236, 72, 153, 0.4)' } : {}}
-              >
-                {isGenerating ? (
-                  <><RefreshCw size={18} className="gen-spin" /> Crafting Model Prompt...</>
-                ) : (
-                  <>
-                    <Sparkles size={18} />
-                    <span>{activeCategory === 'models' || form.category === 'models' ? '👑 Generate Model Prompt' : (generatorMode === 'example' ? 'Examples' : 'Prompt')}</span>
-                    {state.plan !== 'unlimited' && (
-                      <span style={{ fontSize: '0.8rem', opacity: 0.7, marginLeft: '8px' }}>
-                        {` (-${aiPower === 'power' ? 5 : aiPower === 'super' ? 3 : 1} credit${(aiPower === 'power' || aiPower === 'super') ? 's' : ''})`}
-                      </span>
-                    )}
-                  </>
+              <>
+                <button
+                  className={`btn btn-primary btn-lg console-submit-btn ${isGenerating ? 'loading' : ''} ${form.description.length > 5 ? 'glow' : ''}`}
+                  onClick={() => {
+                    if (generatorMode === 'example') {
+                      handleGenerate();
+                    } else {
+                      const hasDesc = (form.description && form.description.trim()) || (form.promptType !== 'text' && !!form.characterImage) || !!selectedSubcategory;
+                      if (!hasDesc) {
+                        descriptionRef.current?.focus();
+                        return;
+                      }
+                      setShowPackChoice(true);
+                    }
+                  }}
+                  disabled={isGenerating}
+                  id="gen-submit-btn"
+                  style={activeCategory === 'models' || form.category === 'models' ? { background: 'linear-gradient(135deg, #ec4899, #db2777)', boxShadow: '0 4px 20px rgba(236, 72, 153, 0.4)' } : {}}
+                >
+                  {isGenerating ? (
+                    <><RefreshCw size={18} className="gen-spin" /> Crafting Prompt...</>
+                  ) : (
+                    <>
+                      <Sparkles size={18} />
+                      <span>{activeCategory === 'models' || form.category === 'models' ? '👑 Generate Model Prompt' : (generatorMode === 'example' ? 'Examples' : 'Prompt')}</span>
+                      {state.plan !== 'unlimited' && (
+                        <span style={{ fontSize: '0.8rem', opacity: 0.7, marginLeft: '8px' }}>
+                          {` (-${aiPower === 'power' ? 5 : aiPower === 'super' ? 3 : 1} credit${(aiPower === 'power' || aiPower === 'super') ? 's' : ''})`}
+                        </span>
+                      )}
+                    </>
+                  )}
+                </button>
+
+                {/* Pack Choice Modal */}
+                {showPackChoice && (
+                  <div
+                    style={{
+                      position: 'fixed', inset: 0, zIndex: 9999,
+                      background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(6px)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center'
+                    }}
+                    onClick={() => setShowPackChoice(false)}
+                  >
+                    <div
+                      onClick={e => e.stopPropagation()}
+                      style={{
+                        background: 'linear-gradient(145deg, #1a1a2e, #16213e)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        borderRadius: '20px',
+                        padding: '32px 28px',
+                        maxWidth: '480px',
+                        width: '92%',
+                        boxShadow: '0 20px 60px rgba(0,0,0,0.6)'
+                      }}
+                    >
+                      <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+                        <div style={{ fontSize: '1.5rem', marginBottom: '8px' }}>⚡ Choose Generation Mode</div>
+                        <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: '0.85rem', margin: 0 }}>
+                          What would you like to generate?
+                        </p>
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                        {/* Direct Prompt */}
+                        <button
+                          onClick={() => { setShowPackChoice(false); handleGenerate(false); }}
+                          style={{
+                            background: 'linear-gradient(135deg, rgba(249,115,22,0.15), rgba(249,115,22,0.08))',
+                            border: '1.5px solid rgba(249,115,22,0.5)',
+                            borderRadius: '14px',
+                            padding: '18px 20px',
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                            transition: 'all 0.2s'
+                          }}
+                          onMouseEnter={e => e.currentTarget.style.borderColor = '#f97316'}
+                          onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(249,115,22,0.5)'}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
+                            <Sparkles size={20} color="#f97316" />
+                            <span style={{ fontWeight: 700, fontSize: '1rem', color: '#fff' }}>Direct Prompt</span>
+                            <span style={{ marginLeft: 'auto', background: 'rgba(249,115,22,0.25)', color: '#f97316', borderRadius: '20px', padding: '2px 10px', fontSize: '0.75rem', fontWeight: 700 }}>
+                              -1 credit
+                            </span>
+                          </div>
+                          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem', margin: 0, lineHeight: '1.5' }}>
+                            A single, ready-to-use prompt for this specific image/video. No variables — just copy, paste, and go.
+                          </p>
+                        </button>
+
+                        {/* Complete Pack */}
+                        <button
+                          onClick={() => { setShowPackChoice(false); handleGenerate(true); }}
+                          style={{
+                            background: 'linear-gradient(135deg, rgba(99,102,241,0.18), rgba(168,85,247,0.12))',
+                            border: '1.5px solid rgba(139,92,246,0.55)',
+                            borderRadius: '14px',
+                            padding: '18px 20px',
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                            transition: 'all 0.2s'
+                          }}
+                          onMouseEnter={e => e.currentTarget.style.borderColor = '#a855f7'}
+                          onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(139,92,246,0.55)'}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
+                            <Layers size={20} color="#a855f7" />
+                            <span style={{ fontWeight: 700, fontSize: '1rem', color: '#fff' }}>Complete Pack</span>
+                            <span style={{ marginLeft: 'auto', background: 'rgba(139,92,246,0.25)', color: '#c084fc', borderRadius: '20px', padding: '2px 10px', fontSize: '0.75rem', fontWeight: 700 }}>
+                              -{aiPower === 'power' ? 4 : aiPower === 'super' ? 2 : 0} extra credits
+                            </span>
+                          </div>
+                          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem', margin: 0, lineHeight: '1.5' }}>
+                            Full PromptBase-ready template with [bracket] variables, 4 sample variations, negative prompt, keywords &amp; instructions. Sell-ready.
+                          </p>
+                        </button>
+                      </div>
+
+                      <button
+                        onClick={() => setShowPackChoice(false)}
+                        style={{ display: 'block', margin: '20px auto 0', background: 'none', border: 'none', color: 'rgba(255,255,255,0.35)', cursor: 'pointer', fontSize: '0.8rem' }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
                 )}
-              </button>
+              </>
             )}
           </div>
 
