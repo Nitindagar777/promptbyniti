@@ -61,6 +61,7 @@ function limitVariables(promptTemplate, mainPrompt, maxVars = 5) {
 /**
  * Ensures that a sample string contains [square brackets] around replaced variable values
  * based on promptTemplate so buyers and users can clearly see which variable values were substituted.
+ * Robust against phrasing variations, commas inside variable values, and punctuation shifts.
  */
 function formatSampleWithBrackets(sampleStr, promptTemplate) {
   if (!promptTemplate || typeof promptTemplate !== 'string') return sampleStr;
@@ -69,87 +70,95 @@ function formatSampleWithBrackets(sampleStr, promptTemplate) {
   const cleanTemplate = promptTemplate.trim();
   const cleanSample = sampleStr.trim();
 
-  // If sample already has bracketed variables, keep as is
+  // If sample already has bracketed variables, return as is
   if (/\[[^\]]+\]/.test(cleanSample)) {
     return cleanSample;
   }
 
   const varRegex = /\[([^\]]+)\]/g;
   const vars = [];
-  let match;
-  while ((match = varRegex.exec(cleanTemplate)) !== null) {
-    vars.push({
-      placeholder: match[0],
-      name: match[1],
-      index: match.index
-    });
+  let m;
+  while ((m = varRegex.exec(cleanTemplate)) !== null) {
+    vars.push({ placeholder: m[0], name: m[1], index: m.index });
   }
 
   if (vars.length === 0) return cleanSample;
 
   const chunks = [];
-  let lastIndex = 0;
-  for (let i = 0; i < vars.length; i++) {
-    chunks.push(cleanTemplate.substring(lastIndex, vars[i].index));
-    lastIndex = vars[i].index + vars[i].placeholder.length;
+  let lastIdx = 0;
+  for (let v of vars) {
+    chunks.push({ type: 'literal', text: cleanTemplate.substring(lastIdx, v.index) });
+    chunks.push({ type: 'variable', placeholder: v.placeholder, name: v.name });
+    lastIdx = v.index + v.placeholder.length;
   }
-  chunks.push(cleanTemplate.substring(lastIndex));
+  chunks.push({ type: 'literal', text: cleanTemplate.substring(lastIdx) });
 
-  const extractedValues = {};
-  let currentIdx = 0;
-  let allFound = true;
+  let sampleRemainder = cleanSample;
+  let result = '';
 
-  for (let i = 0; i < vars.length; i++) {
-    const chunkBefore = chunks[i];
-    const chunkAfter = chunks[i + 1];
-    const varName = vars[i].placeholder;
+  for (let i = 0; i < chunks.length; i++) {
+    const chunk = chunks[i];
+    if (chunk.type === 'literal') {
+      const lit = chunk.text;
+      if (!lit) continue;
 
-    let startPos = currentIdx;
-    if (chunkBefore.length > 0) {
-      const foundIdx = cleanSample.indexOf(chunkBefore, currentIdx);
-      if (foundIdx !== -1) {
-        startPos = foundIdx + chunkBefore.length;
+      let foundPos = sampleRemainder.indexOf(lit);
+      if (foundPos === -1) {
+        const litWords = lit.trim().split(/\s+/).filter(w => w.length > 2);
+        if (litWords.length > 0) {
+          const anchor = litWords.slice(0, Math.min(3, litWords.length)).join(' ');
+          foundPos = sampleRemainder.indexOf(anchor);
+        }
+      }
+
+      if (foundPos !== -1) {
+        result += sampleRemainder.substring(0, foundPos) + lit;
+        sampleRemainder = sampleRemainder.substring(foundPos + lit.length);
       } else {
-        allFound = false;
-        break;
-      }
-    }
-
-    let endPos = -1;
-    if (chunkAfter.length > 0) {
-      endPos = cleanSample.indexOf(chunkAfter, startPos);
-      if (endPos === -1 && chunkAfter.length > 4) {
-        const prefix = chunkAfter.substring(0, Math.min(20, chunkAfter.length)).trim();
-        if (prefix) endPos = cleanSample.indexOf(prefix, startPos);
+        result += lit;
       }
     } else {
-      endPos = cleanSample.length;
-    }
-
-    if (endPos !== -1 && endPos >= startPos) {
-      const val = cleanSample.substring(startPos, endPos).trim();
-      if (val) {
-        extractedValues[varName] = val;
+      const nextLiteralChunk = chunks[i + 1];
+      let endPos = -1;
+      if (nextLiteralChunk && nextLiteralChunk.text) {
+        const nextLit = nextLiteralChunk.text;
+        const nextWords = nextLit.trim().split(/\s+/).filter(w => w.length > 2);
+        if (nextWords.length > 0) {
+          const anchor = nextWords.slice(0, Math.min(3, nextWords.length)).join(' ');
+          const anchorPos = sampleRemainder.indexOf(anchor);
+          if (anchorPos !== -1) {
+            const trimmedLitStart = nextLit.indexOf(anchor);
+            if (trimmedLitStart !== -1) {
+              endPos = Math.max(0, anchorPos - trimmedLitStart);
+            } else {
+              endPos = anchorPos;
+            }
+          }
+        }
+        if (endPos === -1) {
+          endPos = sampleRemainder.indexOf(nextLit);
+        }
+      } else {
+        endPos = sampleRemainder.length;
       }
-      currentIdx = endPos;
-    } else {
-      allFound = false;
-      break;
+
+      if (endPos !== -1 && endPos > 0) {
+        const varVal = sampleRemainder.substring(0, endPos).trim();
+        const cleanVal = varVal.replace(/^[\[\s]+|[\]\s]+$/g, '').trim();
+        if (cleanVal) {
+          result += `[${cleanVal}]`;
+        }
+        sampleRemainder = sampleRemainder.substring(endPos);
+      } else {
+        result += `[${chunk.placeholder.replace(/[\[\]]/g, '')}]`;
+      }
     }
   }
 
-  if (allFound && Object.keys(extractedValues).length === vars.length) {
-    let reconstructedWithBrackets = cleanTemplate;
-    for (let i = 0; i < vars.length; i++) {
-      const placeholder = vars[i].placeholder;
-      const cleanVal = (extractedValues[placeholder] || '').replace(/[\[\]]/g, '').trim();
-      if (cleanVal) {
-        reconstructedWithBrackets = reconstructedWithBrackets.replace(placeholder, `[${cleanVal}]`);
-      }
-    }
-    return reconstructedWithBrackets;
+  const finalFormatted = (result + sampleRemainder).trim();
+  if (/\[[^\]]+\]/.test(finalFormatted)) {
+    return finalFormatted;
   }
-
   return cleanSample;
 }
 
@@ -170,7 +179,7 @@ function enforceCompleteSampleFromTemplate(promptTemplate, sampleStr) {
     return cleanSample;
   }
 
-  // Attempt to wrap replaced variables in [brackets] by comparing with template chunks
+  // Attempt to wrap replaced variables in [brackets] using resilient anchor matching
   const bracketed = formatSampleWithBrackets(cleanSample, cleanTemplate);
   if (bracketed && bracketed !== cleanSample) {
     return bracketed;
@@ -718,7 +727,7 @@ When a reference image is provided in SAME SCENE LOOP mode, you MUST strictly en
    - CRITICAL: All other parts of the prompt (subject, clothing, background, style, colors, lighting) MUST remain as FIXED, detailed, non-variable text in the promptTemplate. DO NOT put them in brackets!
 3. For each of the 4 samples (Sample A, Sample B, Sample C, Sample D), copy the promptTemplate and replace ONLY the motion variables.
    - CRITICAL: The subject, clothing, background, style, etc. MUST be 100% IDENTICAL and repeated word-for-word across all samples! Only the animations must vary.
-4. ZERO TOLERANCE FOR BRACKETS IN SAMPLES: Samples and mainPrompt MUST NOT contain any [BRACKETS]. Only promptTemplate has brackets.
+4. MANDATORY SQUARE BRACKETS IN ALL SAMPLES (PROMPTBASE COMPLIANT): In each of the 4 samples (Sample A, Sample B, Sample C, Sample D), you MUST enclose every substituted variable value in [square brackets] so buyers and users clearly see which variable values were substituted (e.g. "...with a [subtle winking and waving motion]...").
 5. Every prompt and sample MUST end with "--ar ${resolvedAR}".`;
       } else if (resolvedCharMode === 'differentScenes') {
         referenceImageRules = `
@@ -753,7 +762,7 @@ When a reference image is provided in DIFFERENT SCENES mode, you MUST:
 3. For each of the 4 samples (Sample A, Sample B, Sample C, Sample D), copy the promptTemplate and replace the bracketed variables.
    - CRITICAL: The subject description and clothing/outfit MUST be 100% IDENTICAL and repeated word-for-word across all samples!
    - The location/action and camera movement MUST vary completely per sample to show the same character in different video scenes.
-4. ZERO TOLERANCE FOR BRACKETS IN SAMPLES: Samples and mainPrompt MUST NOT contain any [BRACKETS]. Only promptTemplate has brackets.
+4. MANDATORY SQUARE BRACKETS IN ALL SAMPLES (PROMPTBASE COMPLIANT): In each of the 4 samples (Sample A, Sample B, Sample C, Sample D), you MUST enclose every substituted variable value in [square brackets] so buyers and users clearly see which variable values were substituted.
 5. Every prompt and sample MUST end with "--ar ${resolvedAR}".`;
       } else {
         referenceImageRules = `
@@ -789,7 +798,7 @@ When a reference image is provided in FIXED CHARACTER + MOTION mode, you MUST:
    - CRITICAL: The subject, clothing, background, style, colors, and lighting MUST remain as FIXED, detailed, non-variable text in the promptTemplate. DO NOT put them in brackets!
 3. For each of the 4 samples (Sample A, Sample B, Sample C, Sample D), copy the promptTemplate and replace ONLY the camera movement variables.
    - CRITICAL: The subject, clothing, background, style, etc. MUST be 100% IDENTICAL and repeated word-for-word across all samples! Only the camera movement varies.
-4. ZERO TOLERANCE FOR BRACKETS IN SAMPLES: Samples and mainPrompt MUST NOT contain any [BRACKETS]. Only promptTemplate has brackets.
+4. MANDATORY SQUARE BRACKETS IN ALL SAMPLES (PROMPTBASE COMPLIANT): In each of the 4 samples (Sample A, Sample B, Sample C, Sample D), you MUST enclose every substituted camera movement in [square brackets].
 5. Every prompt and sample MUST end with "--ar ${resolvedAR}".`;
       }
     } else {
@@ -807,7 +816,7 @@ Every prompt and sample MUST start with "Generate a video of: " or "Generate a v
    - Describe a detailed, continuous video progression with scene actions, lighting, and camera.
 2. Create promptTemplate: Take the mainPrompt and replace only the key action, environment, or camera movement in each scene with a bracketed variable (e.g., [action_1], [camera_1]).
 3. For each of the 4 samples (Sample A, Sample B, Sample C, Sample D), copy the promptTemplate and replace the bracketed variables with unique creative details.
-4. ZERO TOLERANCE FOR BRACKETS IN SAMPLES: Samples and mainPrompt MUST NOT contain any [BRACKETS]. Only promptTemplate has brackets.
+4. MANDATORY SQUARE BRACKETS IN ALL SAMPLES (PROMPTBASE COMPLIANT): In each of the 4 samples (Sample A, Sample B, Sample C, Sample D), you MUST enclose each substituted variable value in [square brackets].
 5. Every prompt and sample MUST end with "--ar ${resolvedAR}".`;
     }
   } else if (isText) {
@@ -825,7 +834,7 @@ CRITICAL — TEXT PROMPT RULES:
    - CRITICAL: Do NOT append any camera settings, lens details, or Midjourney "--ar" suffixes to text prompts.
 2. Create promptTemplate: Take the mainPrompt and replace 1 to 5 key parameters with bracketed variables (e.g. [brand_name], [programming_language], [tone], etc.).
 3. For each of the 4 samples (Sample A, Sample B, Sample C, Sample D), copy the promptTemplate and replace the bracketed variables with unique creative details.
-4. ZERO TOLERANCE FOR BRACKETS IN SAMPLES: Samples and mainPrompt MUST NOT contain any [BRACKETS]. Only promptTemplate has brackets.
+4. MANDATORY SQUARE BRACKETS IN ALL SAMPLES (PROMPTBASE COMPLIANT): In each of the 4 samples (Sample A, Sample B, Sample C, Sample D), you MUST enclose each substituted parameter value in [square brackets].
 5. SAMPLE COUNT: Generate exactly 4 samples for complete prompt packs (Sample A, Sample B, Sample C, Sample D).`;
   } else {
     // Image reference rules
@@ -877,7 +886,7 @@ When a reference image is provided in FIXED CHARACTER mode, you MUST:
 3. For each of the 4 samples (Sample A, Sample B, Sample C, Sample D), copy the promptTemplate and replace the bracketed variables.
    - CRITICAL: The subject description and clothing/outfit MUST be 100% IDENTICAL and repeated word-for-word across all samples! DO NOT vary them! E.g., never generate different subjects or different outfits. All samples must feature the EXACT SAME character in the EXACT SAME outfit.
    - The background setting, lighting, and pose/action MUST vary completely per sample to show the same character in different locations/scenes (e.g. Sample A in the original scene, Sample B in a cozy library, Sample C in snowy mountains, Sample D in a sunlit botanical garden).
-4. ZERO TOLERANCE FOR BRACKETS IN SAMPLES: Samples and mainPrompt MUST NOT contain any [BRACKETS]. Only promptTemplate has brackets.
+4. MANDATORY SQUARE BRACKETS IN ALL SAMPLES (PROMPTBASE COMPLIANT): In each of the 4 samples (Sample A, Sample B, Sample C, Sample D), you MUST enclose every substituted variable value in [square brackets] (e.g. "...in a [cozy sunlit library] with [soft window illumination]...").
 5. SAMPLE COUNT: Generate exactly 4 samples for complete prompt packs (Sample A, Sample B, Sample C, Sample D).
 6. CRITICAL CHARACTER LENGTH CONSTRAINT (MANDATORY):
    The generated promptTemplate MUST strictly comply with these length limits based on the Credit Tier:
@@ -907,8 +916,8 @@ STRICT RULES FOR GROQ PROMPT GENERATION:
 3. PROMPT FORMULA TO FOLLOW:
    "Recreate this image with the exact same [subject_description], same [outfit_details], same [art_style], same [color_palette], same [background_setting], same [lighting] — only change the [pose/action], [gesture/hand_position], [facial_expression], and [camera_angle]."
 
-4. ZERO TOLERANCE FOR BRACKETS IN SAMPLES:
-   - Samples and mainPrompt MUST NOT contain bracketed tags (no [pose], no [expression], no [brackets]). Only promptTemplate has brackets.
+4. MANDATORY SQUARE BRACKETS IN ALL SAMPLES (PROMPTBASE COMPLIANT):
+   - In all 4 samples (Sample A, Sample B, Sample C, Sample D), you MUST enclose every substituted variable value in [square brackets] so replaced variables are clearly visible.
    - Every prompt and sample MUST end with "--ar ${resolvedAR}".`;
 
       howToBuildSamples = `HOW TO BUILD SAMPLES (📸 SAME SCENE MODE - REAL MODEL PHOTOSHOOT - FOLLOW THIS EXACTLY):
@@ -923,7 +932,7 @@ STRICT RULES FOR GROQ PROMPT GENERATION:
 3. For each of the 4 samples (Sample A, Sample B, Sample C, Sample D), copy the promptTemplate and replace ONLY the pose/action, hand gesture, expression, and camera angle variables.
    - CRITICAL: The subject description, facial features, hair, clothing/outfit, background setting, art style, color palette, and lighting MUST be 100% IDENTICAL and repeated word-for-word across all samples! DO NOT vary them! E.g., never generate different subjects or different outfits in any sample! All samples must feature the EXACT SAME young woman in the EXACT SAME outfit in the EXACT SAME setting.
    - ONLY the poses, hand positions, gestures, facial expressions, and camera framing must vary completely between samples (e.g., sample A: standing touching hair with confident smile; sample B: sitting cross-legged holding a mug with relaxed smile; sample C: crouching down with chin on palm; sample D: standing hands in pockets looking over shoulder).
-4. ZERO TOLERANCE FOR BRACKETS IN SAMPLES: Samples and mainPrompt MUST NOT contain any [BRACKETS]. Only promptTemplate has brackets.
+4. MANDATORY SQUARE BRACKETS IN ALL SAMPLES (PROMPTBASE COMPLIANT): In each of the 4 samples (Sample A, Sample B, Sample C, Sample D), you MUST enclose each substituted pose, hand position, expression, and camera framing value in [square brackets] (e.g. "...standing in a [confident pose touching hair], with a [warm gentle smile], captured in an [85mm portrait shot]...").
 5. SAMPLE COUNT: Generate exactly 4 samples for complete prompt packs (Sample A, Sample B, Sample C, Sample D).
 6. CRITICAL CHARACTER LENGTH CONSTRAINT (MANDATORY):
    The generated promptTemplate MUST strictly comply with these length limits based on the Credit Tier:

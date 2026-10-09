@@ -5,8 +5,10 @@ import { downloadPromptAsDoc } from '../utils/exportDoc';
 import './PromptOutput.css';
 
 // Formats sample string so that replaced variable values have [square brackets]
+// Robust against phrasing variations, commas inside variable values, and punctuation shifts
 function formatSampleWithBrackets(sample, promptTemplate) {
   if (!sample || typeof sample !== 'string') return '';
+  // If sample already has bracketed variables, return as is
   if (/\[[^\]]+\]/.test(sample)) return sample;
   if (!promptTemplate || typeof promptTemplate !== 'string') return sample;
 
@@ -21,55 +23,77 @@ function formatSampleWithBrackets(sample, promptTemplate) {
   const chunks = [];
   let lastIndex = 0;
   for (let i = 0; i < vars.length; i++) {
-    chunks.push(promptTemplate.substring(lastIndex, vars[i].index));
+    chunks.push({ type: 'literal', text: promptTemplate.substring(lastIndex, vars[i].index) });
+    chunks.push({ type: 'variable', placeholder: vars[i].placeholder, name: vars[i].name });
     lastIndex = vars[i].index + vars[i].placeholder.length;
   }
-  chunks.push(promptTemplate.substring(lastIndex));
+  chunks.push({ type: 'literal', text: promptTemplate.substring(lastIndex) });
 
-  let currentIdx = 0;
-  let formatted = '';
-  let matchedAll = true;
+  let sampleRemainder = sample.trim();
+  let result = '';
 
-  for (let i = 0; i < vars.length; i++) {
-    const chunkBefore = chunks[i];
-    const chunkAfter = chunks[i + 1];
+  for (let i = 0; i < chunks.length; i++) {
+    const chunk = chunks[i];
+    if (chunk.type === 'literal') {
+      const lit = chunk.text;
+      if (!lit) continue;
 
-    let startPos = currentIdx;
-    if (chunkBefore.length > 0) {
-      const foundIdx = sample.indexOf(chunkBefore, currentIdx);
-      if (foundIdx !== -1) {
-        formatted += sample.substring(currentIdx, foundIdx + chunkBefore.length);
-        startPos = foundIdx + chunkBefore.length;
+      let foundPos = sampleRemainder.indexOf(lit);
+      if (foundPos === -1) {
+        const litWords = lit.trim().split(/\s+/).filter(w => w.length > 2);
+        if (litWords.length > 0) {
+          const anchor = litWords.slice(0, Math.min(3, litWords.length)).join(' ');
+          foundPos = sampleRemainder.indexOf(anchor);
+        }
+      }
+
+      if (foundPos !== -1) {
+        result += sampleRemainder.substring(0, foundPos) + lit;
+        sampleRemainder = sampleRemainder.substring(foundPos + lit.length);
       } else {
-        matchedAll = false;
-        break;
-      }
-    }
-
-    let endPos = -1;
-    if (chunkAfter.length > 0) {
-      endPos = sample.indexOf(chunkAfter, startPos);
-      if (endPos === -1 && chunkAfter.length > 4) {
-        const prefix = chunkAfter.substring(0, Math.min(20, chunkAfter.length)).trim();
-        if (prefix) endPos = sample.indexOf(prefix, startPos);
+        result += lit;
       }
     } else {
-      endPos = sample.length;
-    }
+      const nextLiteralChunk = chunks[i + 1];
+      let endPos = -1;
+      if (nextLiteralChunk && nextLiteralChunk.text) {
+        const nextLit = nextLiteralChunk.text;
+        const nextWords = nextLit.trim().split(/\s+/).filter(w => w.length > 2);
+        if (nextWords.length > 0) {
+          const anchor = nextWords.slice(0, Math.min(3, nextWords.length)).join(' ');
+          const anchorPos = sampleRemainder.indexOf(anchor);
+          if (anchorPos !== -1) {
+            const trimmedLitStart = nextLit.indexOf(anchor);
+            if (trimmedLitStart !== -1) {
+              endPos = Math.max(0, anchorPos - trimmedLitStart);
+            } else {
+              endPos = anchorPos;
+            }
+          }
+        }
+        if (endPos === -1) {
+          endPos = sampleRemainder.indexOf(nextLit);
+        }
+      } else {
+        endPos = sampleRemainder.length;
+      }
 
-    if (endPos !== -1 && endPos >= startPos) {
-      const val = sample.substring(startPos, endPos).trim();
-      formatted += `[${val}]`;
-      currentIdx = endPos;
-    } else {
-      matchedAll = false;
-      break;
+      if (endPos !== -1 && endPos > 0) {
+        const varVal = sampleRemainder.substring(0, endPos).trim();
+        const cleanVal = varVal.replace(/^[\[\s]+|[\]\s]+$/g, '').trim();
+        if (cleanVal) {
+          result += `[${cleanVal}]`;
+        }
+        sampleRemainder = sampleRemainder.substring(endPos);
+      } else {
+        result += `[${chunk.placeholder.replace(/[\[\]]/g, '')}]`;
+      }
     }
   }
 
-  if (matchedAll) {
-    formatted += sample.substring(currentIdx);
-    return formatted;
+  const finalFormatted = (result + sampleRemainder).trim();
+  if (/\[[^\]]+\]/.test(finalFormatted)) {
+    return finalFormatted;
   }
   return sample;
 }
@@ -312,9 +336,14 @@ export default function PromptOutput({ result, mode }) {
       )}
 
       {/* 4 Sample Examples (Replaced Variables) */}
-      {result.promptTemplate && (result.samples || []).map((sample, idx) => {
-        const formattedSample = formatSampleWithBrackets(sample, result.promptTemplate);
-        const sampleTitle = `Sample Example ${String.fromCharCode(65 + idx)}${idx === 0 ? ' (Best Result)' : ''}`;
+      {(() => {
+        const templateForSamples = result.promptTemplate || result.template || '';
+        const samplesList = Array.isArray(result.samples) ? result.samples : [];
+        if (samplesList.length === 0) return null;
+
+        return samplesList.map((sample, idx) => {
+          const formattedSample = formatSampleWithBrackets(sample, templateForSamples);
+          const sampleTitle = `Sample Example ${String.fromCharCode(65 + idx)}${idx === 0 ? ' (Best Result)' : ''}`;
 
         return (
           <div className="prompt-output__section" key={idx}>
@@ -344,7 +373,8 @@ export default function PromptOutput({ result, mode }) {
             </div>
           </div>
         );
-      })}
+      });
+    })()}
 
       {/* Negative Prompt */}
       {mode !== 'example' && result.promptTemplate && (
