@@ -199,14 +199,8 @@ let cachedRulesHash = null;   // detect when admin edits rules
 let cachedApiKey = null;
 const SYSTEM_PROMPT_VERSION = 'v24-promptbase-compliance'; // bump this when system prompt changes
 
-// Backup Groq API Keys pool (5 Accounts provided by user)
-const GROQ_FALLBACK_KEYS = [
-  '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',
-  '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',
-  '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',
-  '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',
-  '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'
-];
+// Backup Groq API Keys pool (user configured in Admin DB or .env)
+const GROQ_FALLBACK_KEYS = [];
 
 const GROQ_MODELS = [
   'llama-3.3-70b-versatile',
@@ -244,6 +238,10 @@ function markKeyExhausted(rawKey, keyName) {
 async function callGroqLLMWithFailover(systemInstruction, userParts, hasRefImage, keysPool) {
   const availableKeys = (keysPool || []).filter(k => !EXHAUSTED_KEYS_SET.has(k.rawKey));
   const activeKeysPool = availableKeys.length > 0 ? availableKeys : (keysPool || []);
+
+  if (activeKeysPool.length === 0) {
+    throw new Error('No Groq API keys configured.');
+  }
 
   const modelsToTry = hasRefImage
     ? [...GROQ_VISION_MODELS, ...GROQ_MODELS]
@@ -341,18 +339,59 @@ async function callGroqLLMWithFailover(systemInstruction, userParts, hasRefImage
   throw lastError || new Error('All Groq API keys and models failed.');
 }
 
-// ── Gemini API Keys Pool (Verified working keys) ──
-const GEMINI_BACKUP_KEYS = [
-  'AQ.Ab8RN6JJC5Tk0OGRA1akwt6uKuqEQEI071e-YBTa84acxTvZQQ',
-  'AIzaSyArurzA-OEsCtoZLr9Bgd_B5UnguO7b_zo'
-];
+// ── Gemini API Keys Pool (Configured in Admin DB or .env) ──
+const GEMINI_BACKUP_KEYS = [];
+
+/**
+ * Robust JSON Extractor & Repair Utility
+ * Resilient against markdown fences, conversational prefixes/suffixes, and minor truncation.
+ */
+function extractAndRepairJSON(text) {
+  if (!text || typeof text !== 'string') return null;
+
+  // 1. Strip markdown fences and any conversational prefix/suffix
+  let cleaned = text.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+
+  // 2. Find first '{' and last '}'
+  const start = cleaned.indexOf('{');
+  if (start === -1) return null;
+
+  const end = cleaned.lastIndexOf('}');
+  if (end !== -1 && end > start) {
+    const candidate = cleaned.substring(start, end + 1);
+    try {
+      return JSON.parse(candidate);
+    } catch (e) {
+      // Proceed to repair attempts
+    }
+  }
+
+  // 3. Resilient repair for truncated responses
+  let partial = cleaned.substring(start);
+  const quotesCount = (partial.match(/"/g) || []).length;
+  if (quotesCount % 2 !== 0) {
+    partial += '"';
+  }
+  if (partial.includes('"samples"') && !partial.includes(']')) {
+    partial += ']}';
+  }
+  for (let i = 0; i < 4; i++) {
+    try {
+      return JSON.parse(partial);
+    } catch (e) {
+      partial += '}';
+    }
+  }
+
+  return null;
+}
 
 /**
  * Call Gemini API with failover across multiple API keys.
  * Supports both text-only and vision (image + text) requests.
  */
 async function callGeminiWithFailover(systemInstruction, userParts, hasRefImage) {
-  // Build the keys pool: DB keys first, then backup keys
+  // Build the keys pool: Env key, DB keys, then backup keys
   let settings = null;
   try {
     settings = await SystemSettings.findOne();
@@ -361,26 +400,31 @@ async function callGeminiWithFailover(systemInstruction, userParts, hasRefImage)
   }
 
   const keysPool = [];
-  const dbKey = (settings?.geminiApiKey || '').trim();
+  const envKey = (process.env.GEMINI_API_KEY || '').trim();
   const paidKey = (settings?.paidGeminiApiKey || '').trim();
-  if (paidKey) keysPool.push({ name: 'Gemini Paid Key (DB)', rawKey: paidKey });
-  if (dbKey) keysPool.push({ name: 'Gemini Free Key (DB)', rawKey: dbKey });
+  const dbKey = (settings?.geminiApiKey || '').trim();
+
+  if (envKey) keysPool.push({ name: 'Gemini (Env)', rawKey: envKey });
+  if (paidKey && !paidKey.startsWith('AQ.')) keysPool.push({ name: 'Gemini Paid Key (DB)', rawKey: paidKey });
+  if (dbKey && !dbKey.startsWith('AQ.')) keysPool.push({ name: 'Gemini Free Key (DB)', rawKey: dbKey });
+
   GEMINI_BACKUP_KEYS.forEach((k, i) => {
     const trimmed = k.trim();
-    if (trimmed && !keysPool.some(existing => existing.rawKey === trimmed)) {
+    if (trimmed && !trimmed.startsWith('AQ.') && !keysPool.some(existing => existing.rawKey === trimmed)) {
       keysPool.push({ name: `Gemini Backup #${i + 1}`, rawKey: trimmed });
     }
   });
 
   if (keysPool.length === 0) {
-    throw new Error('No Gemini API keys available.');
+    throw new Error('No valid Gemini API keys available.');
   }
 
   const candidateModels = [
     settings?.geminiModel,
-    'gemini-2.5-flash',
-    'gemini-3.8-flash',
-    'gemini-flash-latest'
+    process.env.GEMINI_MODEL,
+    'gemini-2.0-flash',
+    'gemini-1.5-flash',
+    'gemini-1.5-pro'
   ].filter(Boolean);
 
   // Remove duplicates while preserving priority order
@@ -409,8 +453,10 @@ async function callGeminiWithFailover(systemInstruction, userParts, hasRefImage)
       } catch (err) {
         console.warn(`⚠️ [Gemini - ${keyObj.name} - ${modelName}] Failed: ${err.message}`);
         lastError = err;
-        // On 404 (model not found) or 429 (quota/rate limit exceeded),
-        // try the next model candidate for this key first before moving to next key
+        if (err.message && (err.message.includes('403') || err.message.includes('401') || err.message.includes('leaked') || err.message.includes('not valid'))) {
+          // Key is permanently revoked or invalid; do not try further models with this key
+          break;
+        }
         continue;
       }
     }
@@ -421,9 +467,10 @@ async function callGeminiWithFailover(systemInstruction, userParts, hasRefImage)
 
 /**
  * Fallback Engine 3: Pollinations AI text endpoint
- * Zero rate-limit backup when Gemini and Groq are exhausted
+ * Zero rate-limit backup when Gemini and Groq are exhausted.
+ * Optimized with streamlined instructions to avoid reasoning token exhaustion.
  */
-async function callPollinationsFallback(systemInstruction, userParts, hasRefImage) {
+async function callPollinationsFallback(systemInstruction, userParts, hasRefImage, isDirectPromptOnly, targetModel, resolvedAR, promptType, description) {
   let userText = '';
   userParts.forEach(p => {
     if (typeof p.text === 'string') {
@@ -431,38 +478,143 @@ async function callPollinationsFallback(systemInstruction, userParts, hasRefImag
     }
   });
 
-  const payload = {
-    messages: [
-      { role: 'system', content: systemInstruction + '\n\nCRITICAL: Return ONLY valid, raw JSON.' },
-      { role: 'user', content: userText }
-    ],
-    jsonMode: true,
-    model: 'openai',
-    seed: Math.floor(Math.random() * 100000)
-  };
+  const modelTarget = targetModel || 'Midjourney';
+  const ar = resolvedAR || '1:1';
+  const isVideo = promptType === 'video';
+  const isText = promptType === 'text';
+
+  let conciseSystem = '';
+  let compactSchema = '';
+
+  if (isDirectPromptOnly) {
+    conciseSystem = `You are a raw JSON API generating an expert ${modelTarget} AI prompt for "Prompt by Niti".
+CRITICAL: Do NOT output any reasoning, thinking tokens, or explanation. Output strictly valid raw JSON directly starting with { and ending with }.
+RULES:
+1. NO BRACKETS OR VARIABLES. The prompt must be complete, concrete, and ready to use immediately.
+2. ${isVideo ? 'Start prompt with "Generate a video of: " and end' : isText ? 'Do NOT append --ar suffix.' : 'End prompt'} with --ar ${ar}.
+3. Return valid raw JSON matching the schema.`;
+
+    compactSchema = `{
+  "title": "3-5 word title",
+  "description": "1-2 sentence sales description",
+  "imageAnalysis": "${hasRefImage ? 'Visual breakdown of reference image' : ''}",
+  "mainPrompt": "Complete ready-to-use prompt${isText ? '' : ' --ar ' + ar}",
+  "negativePrompt": "blurry, deformed, bad anatomy, low quality",
+  "keywords": ["keyword1", "keyword2", "keyword3"],
+  "instructions": "Copy directly into ${modelTarget}."
+}`;
+  } else {
+    conciseSystem = `You are a raw JSON API generating an expert PromptBase-compliant prompt pack for "Prompt by Niti" marketplace.
+CRITICAL: Do NOT output any reasoning, thinking tokens, or explanation. Output strictly valid raw JSON directly starting with { and ending with }.
+RULES:
+1. "promptTemplate" MUST have 1 to 5 bracketed variables (e.g. [SUBJECT], [LIGHTING], [STYLE]) and end with ${isText ? 'no ar' : '--ar ' + ar}.
+2. "mainPrompt" is a ready-to-use sample without brackets ending with ${isText ? 'no ar' : '--ar ' + ar}.
+3. "samples" MUST be an array of exactly 4 complete prompts with substituted values wrapped in [brackets] (e.g. "photo of a [golden retriever] in [golden hour lighting]${isText ? '' : ' --ar ' + ar}").
+4. Keep the JSON compact and complete.`;
+
+    compactSchema = `{
+  "title": "3-5 word title",
+  "description": "1-2 sentence description",
+  "imageAnalysis": "${hasRefImage ? 'Visual breakdown of reference image' : ''}",
+  "mainPrompt": "Complete prompt${isText ? '' : ' --ar ' + ar}",
+  "negativePrompt": "blurry, low quality",
+  "promptTemplate": "Template with 1-5 [VARIABLES]${isText ? '' : ' --ar ' + ar}",
+  "samples": [
+    "Sample 1 with [value]${isText ? '' : ' --ar ' + ar}",
+    "Sample 2 with [value]${isText ? '' : ' --ar ' + ar}",
+    "Sample 3 with [value]${isText ? '' : ' --ar ' + ar}",
+    "Sample 4 with [value]${isText ? '' : ' --ar ' + ar}"
+  ],
+  "keywords": ["k1", "k2", "k3"],
+  "instructions": "Copy into ${modelTarget}."
+}`;
+  }
+
+  // For Pollinations fallback, extract clean user core description and biometric notes
+  // to avoid sending lengthy constraint essays that cause timeouts in the reasoning model
+  let cleanUserQuery = '';
+  if (description && description.trim()) {
+    cleanUserQuery = description.trim();
+  } else {
+    // Extract first few lines from userParts text
+    for (const p of userParts) {
+      if (typeof p.text === 'string' && p.text.trim()) {
+        const lines = p.text.split('\n').filter(l => l.trim() && !l.includes('CRITICAL') && !l.includes('LENGTH') && !l.includes('CONSTRAINTS'));
+        cleanUserQuery = lines.slice(0, 3).join('. ');
+        break;
+      }
+    }
+  }
+
+  // Include biometric face analysis hints if available
+  const biometricPart = userParts.find(p => typeof p.text === 'string' && p.text.includes('BIOMETRIC GROUND TRUTH'));
+  if (biometricPart) {
+    cleanUserQuery += '\n' + biometricPart.text;
+  }
+
+  const finalUserContent = `Subject / Request: "${cleanUserQuery || 'Generate a high quality AI prompt'}"\nTarget Model: ${modelTarget}\nAspect Ratio: ${ar}\n\nRequired JSON Output Schema:\n${compactSchema}`;
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 25000);
+  const timeoutId = setTimeout(() => controller.abort(), 75000);
 
   try {
+    console.log('🌸 [Pollinations] Querying text.pollinations.ai with streamlined instructions...');
     const res = await fetch('https://text.pollinations.ai/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        messages: [
+          { role: 'system', content: conciseSystem },
+          { role: 'user', content: finalUserContent }
+        ],
+        model: 'openai',
+        jsonMode: true,
+        seed: Math.floor(Math.random() * 100000)
+      }),
       signal: controller.signal
     });
 
     if (!res.ok) {
-      throw new Error(`Pollinations API returned status ${res.status}`);
+      const errText = await res.text().catch(() => '');
+      const retryMatch = errText.match(/Retry after (\d+)s/i);
+      if (retryMatch) {
+        const waitSec = Math.min(parseInt(retryMatch[1], 10) + 1, 35);
+        console.log(`⏳ [Pollinations] Free rate limit reached. Auto-waiting ${waitSec}s to retry...`);
+        await new Promise(r => setTimeout(r, waitSec * 1000));
+        const retryRes = await fetch('https://text.pollinations.ai/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: [
+              { role: 'system', content: conciseSystem },
+              { role: 'user', content: finalUserContent }
+            ],
+            model: 'openai',
+            jsonMode: true,
+            seed: Math.floor(Math.random() * 100000)
+          }),
+          signal: controller.signal
+        });
+        if (retryRes.ok) {
+          clearTimeout(timeoutId);
+          const retryText = await retryRes.text();
+          if (retryText && retryText.trim()) return retryText.trim();
+        }
+      }
+      clearTimeout(timeoutId);
+      throw new Error(`Pollinations HTTP ${res.status}: ${errText.substring(0, 150)}`);
     }
+
+    clearTimeout(timeoutId);
 
     const text = await res.text();
     if (text && text.trim()) {
       return text.trim();
     }
     throw new Error('Empty response from Pollinations');
-  } finally {
+  } catch (err) {
     clearTimeout(timeoutId);
+    throw err;
   }
 }
 
@@ -481,8 +633,12 @@ async function getOrCreateModel() {
 
   const dbKeys = (settings?.groqApiKeys || []).map(k => (typeof k === 'string' ? k.trim() : '')).filter(Boolean);
   const pollinationsKey = (settings?.pollinationsApiKey || process.env.POLLINATIONS_API_KEY || POLLINATIONS_DEFAULT_KEY).trim();
+  const envGroq = (process.env.GROQ_API_KEY || '').trim();
 
   const keysPool = [];
+  if (envGroq) {
+    keysPool.push({ name: 'Groq (Env)', rawKey: envGroq });
+  }
   dbKeys.forEach((keyStr, idx) => {
     if (!keysPool.some(k => k.rawKey === keyStr)) {
       keysPool.push({ name: `Groq Account (Admin DB #${idx + 1})`, rawKey: keyStr });
@@ -1275,44 +1431,6 @@ ${subcategoryInstruction}
 ${outputFormatInstruction}`;
 }
 
-/**
- * Zero rate-limit fallback via Pollinations AI.
- * Guaranteed to succeed even if Gemini or Groq quotas are temporarily exhausted.
- */
-async function callPollinationsFallback(systemInstruction, userParts, hasRefImage) {
-  let userText = '';
-  userParts.forEach(p => {
-    if (typeof p.text === 'string') {
-      userText += (userText ? '\n\n' : '') + p.text;
-    }
-  });
-
-  const response = await fetch('https://text.pollinations.ai/', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      messages: [
-        { role: 'system', content: systemInstruction },
-        { role: 'user', content: userText || 'Generate a high quality prompt' }
-      ],
-      model: 'openai',
-      jsonMode: true
-    }),
-    signal: AbortSignal.timeout(40000)
-  });
-
-  if (!response.ok) {
-    throw new Error(`Pollinations HTTP error: ${response.status}`);
-  }
-
-  const resultText = await response.text();
-  if (!resultText || !resultText.trim()) {
-    throw new Error('Empty response from Pollinations');
-  }
-
-  return resultText;
-}
-
 // POST /api/generate
 router.post('/', async (req, res) => {
   try {
@@ -1762,7 +1880,7 @@ DO NOT exceed 5 bracketed variables under any circumstances. Keep the majority o
     if (!text) {
       try {
         console.log('🌸 [Engine 3] Trying Pollinations AI fallback...');
-        text = await callPollinationsFallback(systemInstruction, userParts, hasRefImage);
+        text = await callPollinationsFallback(systemInstruction, userParts, hasRefImage, isDirectPromptOnly, targetModel, resolvedAR, promptType, effectiveDesc);
         if (text) console.log('✅ [Engine 3] Success with Pollinations AI!');
       } catch (err) {
         console.warn('⚠️ [Engine 3] Pollinations fallback failed:', err.message);
@@ -1778,8 +1896,10 @@ DO NOT exceed 5 bracketed variables under any circumstances. Keep the majority o
 
     // 4. Parse and return
     try {
-      const jsonStr = text.replace(/```json|```/g, '').trim();
-      const promptData = JSON.parse(jsonStr);
+      const promptData = extractAndRepairJSON(text);
+      if (!promptData || typeof promptData !== 'object') {
+        throw new Error('Failed to extract valid JSON: ' + (text ? text.substring(0, 100) : 'empty'));
+      }
 
       // Enforce strict 5-variable limit programmatically
       if (promptData.promptTemplate && promptData.mainPrompt) {
