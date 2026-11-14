@@ -475,10 +475,10 @@ async function callOpenAIWithFailover(systemInstruction, userParts, hasRefImage)
 function extractAndRepairJSON(text) {
   if (!text || typeof text !== 'string') return null;
 
-  // 1. Strip markdown fences and any conversational prefix/suffix
+  // 1. Strip markdown fences and conversational wrappers
   let cleaned = text.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
 
-  // 2. Find first '{' and last '}'
+  // 2. Direct JSON parse if possible
   const start = cleaned.indexOf('{');
   if (start === -1) return null;
 
@@ -488,25 +488,76 @@ function extractAndRepairJSON(text) {
     try {
       return JSON.parse(candidate);
     } catch (e) {
-      // Proceed to repair attempts
+      // Try sanitizing unescaped control chars
+      try {
+        const sanitized = candidate.replace(/[\u0000-\u0009\u000B\u000C\u000E-\u001F]+/g, ' ');
+        return JSON.parse(sanitized);
+      } catch (e2) {}
     }
   }
 
-  // 3. Resilient repair for truncated responses
+  // 3. Resilient repair for truncated arrays/objects
   let partial = cleaned.substring(start);
-  const quotesCount = (partial.match(/"/g) || []).length;
-  if (quotesCount % 2 !== 0) {
-    partial += '"';
-  }
-  if (partial.includes('"samples"') && !partial.includes(']')) {
-    partial += ']}';
-  }
-  for (let i = 0; i < 4; i++) {
-    try {
-      return JSON.parse(partial);
-    } catch (e) {
-      partial += '}';
+  // Truncated inside samples array? Find last complete string and close
+  const lastQuoteIndex = partial.lastIndexOf('"');
+  if (lastQuoteIndex > 0) {
+    const truncatedCandidate = partial.substring(0, lastQuoteIndex + 1);
+    const fixes = [
+      truncatedCandidate + ']}',
+      truncatedCandidate + '"]}',
+      truncatedCandidate + '}',
+      truncatedCandidate + '"}'
+    ];
+    for (const fix of fixes) {
+      try {
+        const obj = JSON.parse(fix);
+        if (obj && (obj.promptTemplate || obj.mainPrompt || obj.title)) return obj;
+      } catch (e) {}
     }
+  }
+
+  // 4. Regex-based field extractor (extracts valid fields even from severely broken/truncated JSON)
+  try {
+    const getField = (name) => {
+      const regex = new RegExp(`"${name}"\\s*:\\s*"((?:[^"\\\\]|\\\\.)*)"`, 'i');
+      const m = cleaned.match(regex);
+      return m ? m[1].replace(/\\"/g, '"').replace(/\\n/g, '\n').replace(/\\\\/g, '\\') : null;
+    };
+
+    const title = getField('title');
+    const desc = getField('description');
+    const promptTemplate = getField('promptTemplate');
+    const mainPrompt = getField('mainPrompt');
+    const negativePrompt = getField('negativePrompt');
+    const instructions = getField('instructions');
+
+    // Extract samples from array block
+    const samples = [];
+    const samplesBlock = cleaned.match(/"samples"\s*:\s*\[([\s\S]*?)(\]|$)/i);
+    if (samplesBlock && samplesBlock[1]) {
+      const sampleRegex = /"((?:[^"\\]|\\.)*)"/g;
+      let sm;
+      while ((sm = sampleRegex.exec(samplesBlock[1])) !== null) {
+        if (sm[1] && sm[1].trim().length > 10) {
+          samples.push(sm[1].replace(/\\"/g, '"').replace(/\\n/g, '\n'));
+        }
+      }
+    }
+
+    if (mainPrompt || promptTemplate || title) {
+      return {
+        title: title || 'Artistic AI Masterpiece',
+        description: desc || 'An exquisite, masterclass AI prompt designed for gallery-grade generation.',
+        promptTemplate: promptTemplate || null,
+        mainPrompt: mainPrompt || promptTemplate || 'High quality AI generated masterpiece.',
+        negativePrompt: negativePrompt || null,
+        instructions: instructions || null,
+        samples: samples.length > 0 ? samples : [],
+        keywords: ['masterpiece', 'photorealistic', '8k-resolution']
+      };
+    }
+  } catch (regexErr) {
+    console.warn('Regex fallback extraction failed:', regexErr.message);
   }
 
   return null;
@@ -2107,9 +2158,10 @@ DO NOT exceed 5 bracketed variables under any circumstances. Keep the majority o
 
     // 4. Parse and return
     try {
-      const promptData = extractAndRepairJSON(text);
+      let promptData = extractAndRepairJSON(text);
       if (!promptData || typeof promptData !== 'object') {
-        throw new Error('Failed to extract valid JSON: ' + (text ? text.substring(0, 100) : 'empty'));
+        console.warn('⚠️ extractAndRepairJSON could not parse AI output. Recovering via procedural engine...');
+        promptData = JSON.parse(generateCompliantPackFallback(effectiveDesc, isDirectPromptOnly, targetModel, resolvedAR, promptType, category, subcategory));
       }
 
       // Enforce strict 5-variable limit programmatically
@@ -2287,7 +2339,7 @@ DO NOT exceed 5 bracketed variables under any circumstances. Keep the majority o
       // Structured breakdown
       promptData.structured = {
         'Target Format': `${(promptType || 'image').toUpperCase()} Prompt`,
-        'Scene': description.substring(0, 100),
+        'Scene': (description || effectiveDesc || 'AI Prompt').substring(0, 100),
         'Character Ref': characterImage ? 'Provided' : 'None',
         'Optimization': 'AI-Optimized for best results'
       };
@@ -2306,12 +2358,17 @@ DO NOT exceed 5 bracketed variables under any circumstances. Keep the majority o
 
       res.json(promptData);
     } catch (parseError) {
-      console.error('JSON Parse Error:', text);
-      res.status(500).json({
-        message: 'Failed to parse AI response.',
-        details: 'The AI returned an invalid format. Please try again.',
-        raw: text
-      });
+      console.error('Post-processing / Parse Warning:', parseError.message);
+      try {
+        const fallbackObj = JSON.parse(generateCompliantPackFallback(effectiveDesc, isDirectPromptOnly, targetModel, resolvedAR, promptType, category, subcategory));
+        return res.json(fallbackObj);
+      } catch (err2) {
+        res.status(500).json({
+          message: 'Failed to parse AI response.',
+          details: 'The AI returned an invalid format. Please try again.',
+          raw: text
+        });
+      }
     }
 
   } catch (error) {
