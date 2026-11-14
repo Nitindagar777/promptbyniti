@@ -613,46 +613,56 @@ async function callPollinationsFallback(systemInstruction, userParts, hasRefImag
   let compactSchema = '';
 
   if (isDirectPromptOnly) {
-    conciseSystem = `You are a raw JSON API generating an expert ${modelTarget} AI prompt for "Prompt by Niti".
-CRITICAL: Do NOT output any reasoning, thinking tokens, or explanation. Output strictly valid raw JSON directly starting with { and ending with }.
-RULES:
-1. NO BRACKETS OR VARIABLES. The prompt must be complete, concrete, and ready to use immediately.
-2. ${isVideo ? 'Start prompt with "Generate a video of: " and end' : isText ? 'Do NOT append --ar suffix.' : 'End prompt'} with --ar ${ar}.
-3. Return valid raw JSON matching the schema.`;
+    conciseSystem = `You are an expert AI Prompt Engineer generating a complete, masterclass-level ${modelTarget} prompt for "Prompt by Niti" marketplace.
+CRITICAL MANDATORY RULES:
+1. NO BRACKETS OR VARIABLES: The prompt MUST be 100% concrete, finished, and ready to use immediately. ZERO bracketed variables.
+2. LONG & ULTRA-DETAILED PROMPT (MANDATORY): "mainPrompt" MUST be long, comprehensive, and rich (at least 400 to 600 characters / 60 to 100 words). Include photographic lighting (volumetric lighting, golden hour glow, cinematic rim lighting, soft diffused shadows), camera and lens settings (shot on 85mm f/1.4 lens, shallow depth of field, sharp focus, 8k resolution, octane render), intricate texture details, artistic composition, environmental atmosphere, and mood.
+3. ${isVideo ? 'Start prompt with "Generate a video of: " and end' : isText ? 'Do NOT append --ar suffix.' : 'End prompt'} with --ar ${ar}.
+4. COMPREHENSIVE NEGATIVE PROMPT: "negativePrompt" MUST list at least 20-25 flaw exclusions (blurry, low quality, bad anatomy, deformed limbs, extra fingers, missing limbs, distorted facial features, poorly drawn hands, duplicate elements, watermark, signature, username, text, logo, low resolution, artifacts, oversaturated, amateur photography, out of frame, cropped).
+5. DETAILED USAGE INSTRUCTIONS: "instructions" MUST be a detailed 3-4 sentence guide explaining step-by-step how to paste and use this prompt in ${modelTarget}, recommended aspect ratios, and how to get the highest visual quality.
+6. Return strictly valid raw JSON directly starting with { and ending with }. No reasoning, no markdown fences.`;
 
     compactSchema = `{
-  "title": "3-5 word title",
-  "description": "1-2 sentence sales description",
-  "imageAnalysis": "${hasRefImage ? 'Visual breakdown of reference image' : ''}",
-  "mainPrompt": "Complete ready-to-use prompt${isText ? '' : ' --ar ' + ar}",
-  "negativePrompt": "blurry, deformed, bad anatomy, low quality",
-  "keywords": ["keyword1", "keyword2", "keyword3"],
-  "instructions": "Copy directly into ${modelTarget}."
+  "title": "Evocative 3-5 word title",
+  "description": "Compelling 2-3 sentence commercial marketplace description highlighting the aesthetic, quality, and versatility of this prompt.",
+  "imageAnalysis": "${hasRefImage ? 'Detailed visual breakdown of subject, attire, lighting, composition, and style from reference' : ''}",
+  "mainPrompt": "A rich, ultra-detailed, complete prompt describing the full visual scene, camera lens, lighting atmosphere, textures, and artistic direction without any brackets or variables${isText ? '' : ' --ar ' + ar}",
+  "negativePrompt": "blurry, low quality, bad anatomy, deformed limbs, extra fingers, missing limbs, distorted facial features, poorly drawn hands, duplicate elements, watermark, signature, username, text, logo, low resolution, artifacts, oversaturated, amateur photography, out of frame, cropped",
+  "keywords": ["detailed-style", "cinematic-lighting", "photorealistic", "8k-resolution", "masterpiece", "artistic"],
+  "instructions": "Copy and paste this prompt directly into ${modelTarget}. For the best results, use standard default settings or high-resolution render mode. You can fine-tune the lighting and mood by adjusting atmospheric keywords."
 }`;
   } else {
-    conciseSystem = `You are a raw JSON API generating an expert PromptBase-compliant prompt pack for "Prompt by Niti" marketplace.
-CRITICAL: Do NOT output any reasoning, thinking tokens, or explanation. Output strictly valid raw JSON directly starting with { and ending with }.
-RULES:
-1. "promptTemplate" MUST have 1 to 5 bracketed variables (e.g. [SUBJECT], [LIGHTING], [STYLE]) and end with ${isText ? 'no ar' : '--ar ' + ar}.
-2. "mainPrompt" is a ready-to-use sample without brackets ending with ${isText ? 'no ar' : '--ar ' + ar}.
-3. "samples" MUST be an array of exactly 4 complete prompts with substituted values wrapped in [brackets] (e.g. "photo of a [golden retriever] in [golden hour lighting]${isText ? '' : ' --ar ' + ar}").
-4. Keep the JSON compact and complete.`;
+    conciseSystem = `You are an expert AI Prompt Engineer generating a premium PromptBase-compliant prompt pack for "Prompt by Niti" marketplace.
+CRITICAL MANDATORY RULES (STRICTLY ENFORCED):
+1. LONG & HIGHLY DETAILED PROMPT TEMPLATE (MANDATORY): "promptTemplate" MUST be long, rich, and highly descriptive (at least 400 to 600 characters / 60 to 100 words).
+   - It MUST contain 80% FIXED DESCRIPTIVE TEXT describing intricate camera setup (e.g. 85mm f/1.4 lens, shallow depth of field), cinematic lighting (e.g. volumetric sunlight, ambient studio fill, rim lighting, dramatic shadows), rich textures (e.g. intricate patterns, ultra-detailed surfaces, subtle film grain), atmospheric depth, and artistic style.
+   - It MUST contain a MINIMUM of 1 and a MAXIMUM of 5 bracketed variables (e.g. [SUBJECT], [ART_STYLE], [COLOR_PALETTE]) for changeable elements only. Never use more than 5 variables.
+   - End with ${isText ? 'no ar suffix' : '--ar ' + ar}.
+2. READY-TO-USE "mainPrompt": A complete, finished prompt (400 to 600 characters) matching the full template structure with all bracketed variables replaced by real, evocative values. NO BRACKETS in mainPrompt. Ends with ${isText ? 'no ar' : '--ar ' + ar}.
+3. EXACTLY 4 COMPLETE, LONG SAMPLES (MANDATORY): "samples" array MUST contain exactly 4 complete prompts (Sample A, Sample B, Sample C, Sample D).
+   - CRITICAL: Each sample MUST be a FULL, COMPLETE prompt (at least 400 to 600 characters long) retaining 100% of the fixed text and camera/lighting details of promptTemplate. DO NOT abbreviate or truncate samples!
+   - Every substituted variable value MUST be enclosed in [square brackets] so buyers clearly see what changed (e.g. "photograph of a [majestic Bengal tiger] in [ancient temple courtyard] with [golden hour sunlight] and [emerald mist]...").
+   - Every sample MUST end with ${isText ? 'no ar' : '--ar ' + ar}.
+4. COMPREHENSIVE NEGATIVE PROMPT: "negativePrompt" MUST list at least 20-25 flaw exclusions (blurry, low quality, bad anatomy, deformed limbs, extra fingers, missing limbs, distorted facial features, poorly drawn hands, duplicate elements, watermark, signature, username, text, logo, low resolution, artifacts, oversaturated, amateur photography, out of frame, cropped).
+5. DETAILED USAGE INSTRUCTIONS: "instructions" MUST be a detailed 3-4 sentence guide explaining step-by-step how to paste the prompt into ${modelTarget}, how to customize the [variables], and tips for maximum visual quality.
+6. ENGAGING SALES DESCRIPTION: "description" MUST be a compelling 2-3 sentence marketplace pitch explaining what this prompt creates, its visual impact, and commercial value.
+7. Return strictly valid raw JSON directly starting with { and ending with }. No reasoning, no markdown fences.`;
 
     compactSchema = `{
-  "title": "3-5 word title",
-  "description": "1-2 sentence description",
-  "imageAnalysis": "${hasRefImage ? 'Visual breakdown of reference image' : ''}",
-  "mainPrompt": "Complete prompt${isText ? '' : ' --ar ' + ar}",
-  "negativePrompt": "blurry, low quality",
-  "promptTemplate": "Template with 1-5 [VARIABLES]${isText ? '' : ' --ar ' + ar}",
+  "title": "Evocative 3-5 word title",
+  "description": "Compelling 2-3 sentence commercial marketplace description explaining what this prompt creates, its aesthetic versatility, and why buyers love it.",
+  "imageAnalysis": "${hasRefImage ? 'Detailed visual breakdown of subject, attire, lighting, composition, and style from reference' : ''}",
+  "mainPrompt": "Full complete prompt with all variables replaced by real creative values, retaining the full 400-600 character descriptive scene, camera lens, lighting, and textures${isText ? '' : ' --ar ' + ar}",
+  "negativePrompt": "blurry, low quality, bad anatomy, deformed limbs, extra fingers, missing limbs, distorted facial features, poorly drawn hands, duplicate elements, watermark, signature, username, text, logo, low resolution, artifacts, oversaturated, amateur photography, out of frame, cropped",
+  "promptTemplate": "A long, masterclass prompt template (400-600 characters) featuring 1 to 5 [VARIABLES] embedded inside rich fixed descriptions of camera lens, cinematic lighting, material textures, atmosphere, and composition${isText ? '' : ' --ar ' + ar}",
   "samples": [
-    "Sample 1 with [value]${isText ? '' : ' --ar ' + ar}",
-    "Sample 2 with [value]${isText ? '' : ' --ar ' + ar}",
-    "Sample 3 with [value]${isText ? '' : ' --ar ' + ar}",
-    "Sample 4 with [value]${isText ? '' : ' --ar ' + ar}"
+    "Full complete prompt A (400-600 chars) retaining 100% of the template's descriptive prose with [substituted value 1] and [substituted value 2] in brackets${isText ? '' : ' --ar ' + ar}",
+    "Full complete prompt B (400-600 chars) retaining 100% of the template's descriptive prose with [substituted value 1] and [substituted value 2] in brackets${isText ? '' : ' --ar ' + ar}",
+    "Full complete prompt C (400-600 chars) retaining 100% of the template's descriptive prose with [substituted value 1] and [substituted value 2] in brackets${isText ? '' : ' --ar ' + ar}",
+    "Full complete prompt D (400-600 chars) retaining 100% of the template's descriptive prose with [substituted value 1] and [substituted value 2] in brackets${isText ? '' : ' --ar ' + ar}"
   ],
-  "keywords": ["k1", "k2", "k3"],
-  "instructions": "Copy into ${modelTarget}."
+  "keywords": ["detailed-style", "cinematic-lighting", "photorealistic", "8k-resolution", "masterpiece", "artistic"],
+  "instructions": "Copy the prompt into ${modelTarget}. Replace the [bracketed variables] with your desired subjects, styles, or color palettes to generate infinite cohesive variations. Recommended to keep the lighting and lens descriptors intact for professional-grade results."
 }`;
   }
 
@@ -2167,12 +2177,47 @@ DO NOT exceed 5 bracketed variables under any circumstances. Keep the majority o
         promptData.description = cleanDesc;
       }
 
-      // Ensure keywords and instructions
-      if (!Array.isArray(promptData.keywords) || promptData.keywords.length === 0) {
-        promptData.keywords = [promptType, 'ai-generated', 'professional'].filter(Boolean);
+      // ── Post-processing: Guarantee complete, comprehensive fields per marketplace rules ──
+      const DEFAULT_NEGATIVE_PROMPT = 'blurry, low quality, bad anatomy, deformed limbs, extra fingers, missing limbs, distorted facial features, poorly drawn hands, duplicate elements, watermark, signature, username, text, logo, low resolution, artifacts, oversaturated, amateur photography, out of frame, cropped';
+
+      if (!promptData.negativePrompt || promptData.negativePrompt.trim().length < 30 || promptData.negativePrompt.trim().toLowerCase() === 'blurry, low quality') {
+        promptData.negativePrompt = DEFAULT_NEGATIVE_PROMPT;
       }
-      if (!promptData.instructions) {
-        promptData.instructions = `Use this prompt in your preferred AI tool. Adjust [VARIABLES] to customize.`;
+
+      if (!promptData.instructions || promptData.instructions.trim().length < 40 || /^\s*copy into/i.test(promptData.instructions.trim())) {
+        const destModel = targetModel || 'Google Gemini';
+        if (isDirectPromptOnly) {
+          promptData.instructions = `Copy and paste this prompt directly into ${destModel}. For the most stunning visual results, keep all atmospheric lighting and camera keywords intact. Recommended aspect ratio is --ar ${resolvedAR}.`;
+        } else {
+          promptData.instructions = `Copy and paste this prompt directly into ${destModel}. Replace any bracketed variables like [SUBJECT] or [STYLE] with your desired choices to create unlimited cohesive variations. Keep all fixed lighting and camera keywords intact for optimal quality.`;
+        }
+      }
+
+      // If promptTemplate exists but is too short (under 220 chars), enrich with photographic/artistic depth
+      if (promptData.promptTemplate && promptData.promptTemplate.length < 220 && promptType !== 'text') {
+        const arSuffix = ' --ar ' + resolvedAR;
+        let baseTemp = promptData.promptTemplate.replace(/\s*--ar\s+\S+/g, '').trim();
+        if (!baseTemp.toLowerCase().includes('lens') && !baseTemp.toLowerCase().includes('8k')) {
+          baseTemp += ', shot on 85mm f/1.4 lens, cinematic atmospheric lighting, volumetric glow, intricate details, sharp focus, 8k resolution, award-winning composition';
+          promptData.promptTemplate = baseTemp + arSuffix;
+          if (promptData.mainPrompt) {
+            let baseMain = promptData.mainPrompt.replace(/\s*--ar\s+\S+/g, '').trim();
+            baseMain += ', shot on 85mm f/1.4 lens, cinematic atmospheric lighting, volumetric glow, intricate details, sharp focus, 8k resolution, award-winning composition';
+            promptData.mainPrompt = baseMain + arSuffix;
+          }
+          if (Array.isArray(promptData.samples)) {
+            promptData.samples = promptData.samples.map(s => {
+              let baseS = s.replace(/\s*--ar\s+\S+/g, '').trim();
+              baseS += ', shot on 85mm f/1.4 lens, cinematic atmospheric lighting, volumetric glow, intricate details, sharp focus, 8k resolution, award-winning composition';
+              return baseS + arSuffix;
+            });
+          }
+        }
+      }
+
+      // Ensure keywords
+      if (!Array.isArray(promptData.keywords) || promptData.keywords.length < 3) {
+        promptData.keywords = [promptType || 'image', 'photorealistic', 'masterpiece', '8k-resolution', 'professional'].filter(Boolean);
       }
 
       // Structured breakdown
