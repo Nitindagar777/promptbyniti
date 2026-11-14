@@ -342,6 +342,132 @@ async function callGroqLLMWithFailover(systemInstruction, userParts, hasRefImage
 // ── Gemini API Keys Pool (Configured in Admin DB or .env) ──
 const GEMINI_BACKUP_KEYS = [];
 
+// ── OpenAI API Keys Pool (loaded from environment variables) ──
+// Keys are stored in .env as OPENAI_KEY_1, OPENAI_KEY_2, ... OPENAI_KEY_6
+// Never hardcode secrets in source code!
+const OPENAI_KEYS = (() => {
+  const keys = [];
+  for (let i = 1; i <= 10; i++) {
+    const k = (process.env[`OPENAI_KEY_${i}`] || '').trim();
+    if (k) keys.push(k);
+  }
+  // Also support a single OPENAI_API_KEY env var
+  const single = (process.env.OPENAI_API_KEY || '').trim();
+  if (single && !keys.includes(single)) keys.push(single);
+  return keys;
+})();
+
+// Track exhausted OpenAI keys
+const EXHAUSTED_OPENAI_KEYS = new Set();
+const OPENAI_KEY_RESET_TIMERS = new Map();
+function markOpenAIKeyExhausted(key) {
+  EXHAUSTED_OPENAI_KEYS.add(key);
+  console.warn(`🛑 OpenAI Key [...${key.slice(-8)}] exhausted/failed. Cooling off for 1h.`);
+  if (OPENAI_KEY_RESET_TIMERS.has(key)) clearTimeout(OPENAI_KEY_RESET_TIMERS.get(key));
+  const t = setTimeout(() => {
+    EXHAUSTED_OPENAI_KEYS.delete(key);
+    console.log(`✨ OpenAI Key [...${key.slice(-8)}] reactivated.`);
+  }, 60 * 60 * 1000);
+  OPENAI_KEY_RESET_TIMERS.set(key, t);
+}
+
+/**
+ * Call OpenAI API with failover across multiple API keys.
+ * Uses gpt-4o-mini (fast, cheap) with fallback to gpt-4o.
+ */
+async function callOpenAIWithFailover(systemInstruction, userParts, hasRefImage) {
+  const http = require('https');
+
+  // Extract text and image from userParts
+  let userText = '';
+  let imgBase64 = null;
+  let imgMime = 'image/jpeg';
+
+  userParts.forEach(p => {
+    if (typeof p.text === 'string') userText += (userText ? '\n\n' : '') + p.text;
+    if (p.inlineData && p.inlineData.data) {
+      imgBase64 = p.inlineData.data;
+      imgMime = p.inlineData.mimeType || 'image/jpeg';
+    }
+  });
+
+  const userContent = [];
+  if (hasRefImage && imgBase64) {
+    userContent.push({ type: 'image_url', image_url: { url: `data:${imgMime};base64,${imgBase64}`, detail: 'low' } });
+  }
+  userContent.push({ type: 'text', text: userText || 'Generate prompt.' });
+
+  const models = ['gpt-4o-mini', 'gpt-4o'];
+  const activeKeys = OPENAI_KEYS.filter(k => !EXHAUSTED_OPENAI_KEYS.has(k));
+  const keys = activeKeys.length > 0 ? activeKeys : OPENAI_KEYS;
+
+  if (keys.length === 0) throw new Error('No OpenAI API keys configured.');
+
+  let lastError = null;
+  for (const key of keys) {
+    for (const model of models) {
+      try {
+        console.log(`🤖 [OpenAI] Trying model ${model} with key [...${key.slice(-8)}]`);
+        const body = JSON.stringify({
+          model,
+          messages: [
+            { role: 'system', content: systemInstruction },
+            { role: 'user', content: userContent }
+          ],
+          max_tokens: 4096,
+          temperature: 0.8
+        });
+
+        const result = await new Promise((resolve, reject) => {
+          const options = {
+            hostname: 'api.openai.com',
+            path: '/v1/chat/completions',
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${key}`,
+              'Content-Length': Buffer.byteLength(body)
+            }
+          };
+          const req = http.request(options, res => {
+            let data = '';
+            res.on('data', chunk => data += chunk);
+            res.on('end', () => resolve({ status: res.statusCode, body: data }));
+          });
+          req.on('error', reject);
+          req.setTimeout(60000, () => { req.destroy(new Error('OpenAI request timeout')); });
+          req.write(body);
+          req.end();
+        });
+
+        if (result.status === 401 || result.status === 403) {
+          console.warn(`🛑 [OpenAI] Key [...${key.slice(-8)}] rejected (${result.status}). Skipping.`);
+          markOpenAIKeyExhausted(key);
+          break; // Try next key
+        }
+        if (result.status === 429) {
+          console.warn(`⏳ [OpenAI] Key [...${key.slice(-8)}] rate-limited (429). Trying next key.`);
+          markOpenAIKeyExhausted(key);
+          break;
+        }
+        if (result.status !== 200) {
+          throw new Error(`OpenAI HTTP ${result.status}: ${result.body.substring(0, 200)}`);
+        }
+
+        const parsed = JSON.parse(result.body);
+        const text = parsed?.choices?.[0]?.message?.content;
+        if (!text) throw new Error('OpenAI returned empty content.');
+        console.log(`✅ [OpenAI] Success with model ${model}! Length: ${text.length} chars`);
+        return text;
+      } catch (err) {
+        lastError = err;
+        console.warn(`⚠️ [OpenAI] model ${model} key [...${key.slice(-8)}] failed: ${err.message}`);
+      }
+    }
+  }
+  throw lastError || new Error('All OpenAI keys and models failed.');
+}
+
 /**
  * Robust JSON Extractor & Repair Utility
  * Resilient against markdown fences, conversational prefixes/suffixes, and minor truncation.
@@ -1876,7 +2002,18 @@ DO NOT exceed 5 bracketed variables under any circumstances. Keep the majority o
       }
     }
 
-    // Engine 3: Fall back to Pollinations AI if both Gemini and Groq failed
+    // Engine 2b: Fall back to OpenAI if Gemini and Groq both failed
+    if (!text) {
+      try {
+        console.log('🤖 [Engine 2b] Trying OpenAI GPT...');
+        text = await callOpenAIWithFailover(systemInstruction, userParts, hasRefImage);
+        if (text) console.log('✅ [Engine 2b] Success with OpenAI!');
+      } catch (err) {
+        console.warn('⚠️ [Engine 2b] OpenAI failed:', err.message);
+      }
+    }
+
+    // Engine 3: Fall back to Pollinations AI if Gemini, Groq, and OpenAI all failed
     if (!text) {
       try {
         console.log('🌸 [Engine 3] Trying Pollinations AI fallback...');
@@ -1890,7 +2027,7 @@ DO NOT exceed 5 bracketed variables under any circumstances. Keep the majority o
     if (!text) {
       return res.status(503).json({
         message: 'All AI engines are currently busy. Please try again in a moment.',
-        details: 'Gemini, Groq, and Pollinations engines were temporarily unavailable.'
+        details: 'Gemini, Groq, OpenAI, and Pollinations engines were temporarily unavailable.'
       });
     }
 
