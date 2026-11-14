@@ -691,7 +691,7 @@ CRITICAL MANDATORY RULES (STRICTLY ENFORCED):
   const finalUserContent = `Subject / Request: "${cleanUserQuery || 'Generate a high quality AI prompt'}"\nTarget Model: ${modelTarget}\nAspect Ratio: ${ar}\n\nRequired JSON Output Schema:\n${compactSchema}`;
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 75000);
+  const timeoutId = setTimeout(() => controller.abort(), 90000);
 
   try {
     console.log('🌸 [Pollinations] Querying text.pollinations.ai with streamlined instructions...');
@@ -704,6 +704,7 @@ CRITICAL MANDATORY RULES (STRICTLY ENFORCED):
           { role: 'user', content: finalUserContent }
         ],
         model: 'openai',
+        max_tokens: 4096,
         jsonMode: true,
         seed: Math.floor(Math.random() * 100000)
       }),
@@ -726,6 +727,7 @@ CRITICAL MANDATORY RULES (STRICTLY ENFORCED):
               { role: 'user', content: finalUserContent }
             ],
             model: 'openai',
+            max_tokens: 4096,
             jsonMode: true,
             seed: Math.floor(Math.random() * 100000)
           }),
